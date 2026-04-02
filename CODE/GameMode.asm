@@ -272,28 +272,28 @@ AnimatedBGTileInits:
     .dw $3D00 | VRAMWRITE       ; VRAM ADR
     .db $04 * $20               ; TILES PER FRAME IN BYTE COUNT
     .dw AnimiatedBGTiles@Coin   ; FRAME TABLE ADR
-    .db $03, $08, $08           ; TILE FRAMES, FRAMES PER TILE, FRAMES PER TILE RESET VALUE
+    .db $04, $08, $08           ; TOTAL SPRITE FRAMES, FRAMES PER TILE, FRAMES PER TILE RESET VALUE
 @Grass:
     .dw $3D80 | VRAMWRITE
     .db $06 * $20
     .dw AnimiatedBGTiles@Grass
-    .db $03, $10, $10
+    .db $04, $10, $10
 .ENDS
 
 .SECTION "Animated Background Tile Tables" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
 AnimiatedBGTiles:
 @Coin:
-    .dw CoinFrame0, CoinFrame1, CoinFrame2, $0000
+    .dw CoinFrame0, CoinFrame1, CoinFrame2, CoinFrame1, $0000
 @Grass:
-    .dw GrassFrame0, GrassFrame1, GrassFrame2, $0000
+    .dw GrassFrame0, GrassFrame1, GrassFrame2, GrassFrame1, $0000
 .ENDS
 
-;   AnimatedBGTileQueue ($00, $09, $12)
+;   AnimatedBGTileQueue
 ;   $00:        animate flag
-;   $01-$02:  vdp address
-;   $03:      number of tiles per frame
-;   $04-$05:  current frame's tile address
-;   $06:      total frame count
+;   $01-$02:    vdp address
+;   $03:        number of tiles per frame
+;   $04-$05:    current frame's tile address
+;   $06:        total frame count
 ;   $07:        frame timer
 ;   $08:        frame timer reset value
 ColorRotation:

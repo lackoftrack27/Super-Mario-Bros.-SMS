@@ -1434,8 +1434,8 @@ PlayerGraphicsTable:
     .dw $87E0, $87E0, $87E0, $87E0, $8D40, $8D60, $8D80, $8DA0	; DEATH
 @interGrow:
     .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80	; WALK 3, STAND SMALL
+    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60	; INTERMEDIATE
     .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0	; WALK 3, STAND BIG
-    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60	; INTER
 
 PlayerGraphicsTable_HFlip:
     .dw $8000, $8020, $8040, $8060, $8080, $80A0, $80C0, $80E0  ; WALK 1
@@ -1477,8 +1477,8 @@ PlayerGraphicsTable_HFlip:
     .dw $87E0, $87E0, $87E0, $87E0, $8D40, $8D60, $8D80, $8DA0  ; DEATH
 
     .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80	; WALK 3, STAND SMALL
+    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60  ; INTERMEDIATE
     .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0	; WALK 3, STAND BIG
-    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60
 .ENDS
 
 .SECTION "PlayerFixedTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8

@@ -2413,7 +2413,7 @@ RiseFallPiranhaPlant:
     LD A, (FrameCounter)
     SRL A
     JP NC, PutinPipe
-    LD A, (FrameCounter)
+    LD A, (TimerControl)
     OR A
     JP NZ, PutinPipe
 ;

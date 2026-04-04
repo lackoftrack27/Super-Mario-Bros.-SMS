@@ -815,11 +815,13 @@ PutMTileB:
     LD A, (PlayerSize)              ;add player size to offset
     addAToDE8_M
     LD A, (Player_Y_Position)       ;get player's vertical coordinate
+    ADD A, SMS_PIXELYOFFSET
     EX DE, HL
     ADD A, (HL)                     ;add value determined by size
     EX DE, HL
     AND A, $F0                      ;mask out low nybble to get 16-pixel correspondence
-    SUB A, $08                      ;(SMS)add 8 due to status bar size difference
+    ;SUB A, $08                      ;(SMS)add 8 due to status bar size difference
+    SUB A, SMS_PIXELYOFFSET
     LD L, <Block_Y_Position
     LD (HL), A                      ;save as vertical coordinate for block object
 ;

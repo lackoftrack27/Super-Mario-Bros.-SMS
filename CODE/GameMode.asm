@@ -988,8 +988,16 @@ GrowThePowerUp:
     AND A, $03
     JP NZ, ChkPUSte
 ;
+    ;LD L, <Enemy_Y_Position
+    ;DEC (HL)
     LD L, <Enemy_Y_Position
-    DEC (HL)
+    LD A, (HL)
+    SUB A, $01
+    LD (HL), A
+    LD L, <Enemy_Y_HighPos
+    LD A, (HL)
+    SBC A, $00
+    LD (HL), A
 ;
     LD L, <Enemy_State
     LD A, (HL)
@@ -1016,6 +1024,8 @@ ChkPUSte:
 RunPUSubs:
     CALL RelativeEnemyPosition
     CALL GetEnemyOffscreenBits
+    AND A, $0F
+    LD (DE), A
     CALL GetEnemyBoundBox
     CALL DrawPowerUp
     CALL PlayerEnemyCollision

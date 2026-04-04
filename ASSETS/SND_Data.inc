@@ -160,7 +160,10 @@ SFX_1UP:
 .SECTION "SFX Data - Score Tick" BANK BANK_SOUND SLOT 2 FREE
 SFX_Beep:
     smpsChanHeader  SFX_Beep + 6,           $00 $03 $00 $00
-    .db nB3, $05 ;$05
+    .db nB3, $04 ;$05
+    smpsChangeVol $03
+    .db $01
+    smpsChangeVol $FD
     smpsStop
 .ENDS
 
@@ -232,11 +235,9 @@ SFX_JumpBig:
     .db nD2, $03
     smpsNoAtk
     smpsModSetup    $00, $04, $03, $FF
-    ;smpsNoAtk
     .db $05
     smpsNoAtk
     smpsModSetup    $00, $02, $ED, $FF
-    ;smpsNoAtk
     .db $15
     smpsStop
 .ENDS
@@ -311,7 +312,7 @@ SFX_Shatter:
 .SECTION "SFX Data - Swim, Stomp" BANK BANK_SOUND SLOT 2 FREE
 SFX_Swim:
     smpsChanHeader  SFX_Swim + 6,           $00 $00 $00 $04
-    smpsModSetup    $01, $01, $F6, $FF
+    smpsModSetup    $01, $01, $F8, $FF
     .db nA2, $05
     .db nRst, $03
     .db nF3, $06

@@ -2,6 +2,7 @@
 
 .DEFINE SMSPOWERCOMP            $00
 .DEFINE SHORTTIMER              $00
+.DEFINE NOINVALIDINPUTS         $01
 
 ;-------------------------------------------------------------------------------------
 ;   SMS CONSTANTS

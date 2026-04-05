@@ -692,9 +692,9 @@ ReadJoypads:
     LD D, A                         ; SAVE FOR LATER
     AND A, %00111111                ; REMOVE CONTROLLER 2'S BITS
     LD B, A                         ; AND STORE IN B
+    AND A, %00110000                ; KEEP ONLY BTN 1 & 2
     ADD A, A                        ; MOVE D5,D4 TO D7,D6
     ADD A, A
-    AND A, $F0                      ; REMOVE LOWER NIBBLE
     LD C, A                         ; STORE IN C
     LD A, B
     AND A, $0F                      ; KEEP ONLY LOWER NIBBLE (DIRECTIONALS)
@@ -702,6 +702,20 @@ ReadJoypads:
     addAToHL8_M
     LD A, (HL)
     OR A, C                         ; COMBINE NEW DIRECTIONS AND BUTTONS
+
+    .IF NOINVALIDINPUTS != $00
+    ; CANCEL OUT OPPOSING DIRECTIONS
+    LD B, A
+    RRCA
+    AND A, B
+    AND A, %00000101
+    LD C, A
+    ADD A, A
+    OR A, C
+    CPL
+    AND A, B
+    .ENDIF
+
     LD (SavedJoypad1Bits), A
 ;   CONTROL 2
     LD A, D                         ; GET CONTROLLER 2'S DOWN, UP
@@ -726,6 +740,20 @@ ReadJoypads:
     ADD A, A
     AND A, %11000000                ; ISOLATE AND COMBINE WITH DIRECTIONALS
     OR A, B
+
+    .IF NOINVALIDINPUTS != $00
+    ; CANCEL OUT OPPOSING DIRECTIONS
+    LD B, A
+    RRCA
+    AND A, B
+    AND A, %00000101
+    LD C, A
+    ADD A, A
+    OR A, C
+    CPL
+    AND A, B
+    .ENDIF
+
     LD (SavedJoypad2Bits), A
 ;   MD CONTROLLER PAUSE CHECK
     LD A, (MDControllerFlag)

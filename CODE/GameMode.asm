@@ -644,7 +644,7 @@ SetupBubble:
     LD A, (PlayerFacingDir)         ;get player's facing direction
     RRA                             ;move d0 to carry
     JP NC, PosBubl                  ;branch to use default value if facing left
-    LD C, $08                       ;otherwise load alternate value here
+    LD C, $09 ;$08                       ;otherwise load alternate value here (+1 due to carry being set and 6502 code using 'adc' with 'clc' beforehand)
 PosBubl:
     LD A, (Player_X_Position)
     ADD A, C                        ;add to player's horizontal position
@@ -4126,7 +4126,7 @@ ShellOrBlockDefeat:
 ;
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    ADD A, $18
+    ADD A, $19 ;$18      ; (+1 due to carry being set and 6502 code using 'adc' without 'clc' beforehand) 
     LD (HL), A
 ;
 StnE:

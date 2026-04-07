@@ -1,35 +1,5 @@
 ;-------------------------------------------------------------------------------------
-    /*
-AreaParserTaskHandler:
-    LD A, (AreaParserTaskNum)           ;check number of tasks here
-    OR A
-    JP NZ, @DoAPTasks                   ;if already set, go ahead
-    LD A, $08
-    LD (AreaParserTaskNum), A           ;otherwise, set eight by default
-@DoAPTasks:
-    DEC A
-    CALL AreaParserTasks
-    LD HL, AreaParserTaskNum            ;if all tasks not complete do not
-    DEC (HL)
-    RET
-    ;RET NZ                              ;render attribute table yet
-    ;JP RenderAttributeTables
-
-
-AreaParserTasks:
-    RST JumpEngine
-
-    .dw IncrementColumnPos
-    .dw RenderAreaGraphics
-    .dw RenderAreaGraphics
-    .dw AreaParserCore
-    .dw IncrementColumnPos
-    .dw RenderAreaGraphics
-    .dw RenderAreaGraphics
-    .dw AreaParserCore
-    */
-
-    
+ 
 AreaParserTaskHandler:
     LD A, (AreaParserTaskNum)           ;check number of tasks here
     OR A

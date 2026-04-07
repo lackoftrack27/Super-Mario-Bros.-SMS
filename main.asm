@@ -502,8 +502,8 @@ NMIDone:
 
 .ORGA $0700
 
-.SECTION "Nibble Flip TBL for ReadJoypads" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-NibbleFlipTable:
+.SECTION "Nibble Bit Order Flip TBL for ReadJoypads" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+NibbleBitFlipTable:
     .db $00, $08, $04, $0C, $02, $0A, $06, $0E, $01, $09, $05, $0D, $03, $0B, $07, $0F
 .ENDS
 
@@ -520,7 +520,7 @@ ReadJoypads:
     LD C, A                         ; STORE IN C
     LD A, B
     AND A, $0F                      ; KEEP ONLY LOWER NIBBLE (DIRECTIONALS)
-    LD HL, NibbleFlipTable          ; REVERSE BIT ORDER TO MATCH NES
+    LD HL, NibbleBitFlipTable       ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
     addAToHL8_M
     LD A, (HL)
     OR A, C                         ; COMBINE NEW DIRECTIONS AND BUTTONS
@@ -554,7 +554,7 @@ ReadJoypads:
     LD C, A                         ; STORE IN C
     AND A, %00001100                ; ISOLATE BITS AND OR WITH DOWN,UP
     OR A, B
-    LD HL, NibbleFlipTable          ; REVERSE BIT ORDER TO MATCH NES
+    LD HL, NibbleBitFlipTable       ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
     addAToHL8_M
     LD B, (HL)
     LD A, C                         ; MOVE D5,D4 TO D7,D6

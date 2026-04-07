@@ -1291,6 +1291,8 @@ PlayerPhysicsSub:
     CP A, $03
     JP NZ, CheckForJumping              ;if not climbing, branch
 ;
+;   CLIMBING PHYSICS
+;
     LD DE, Climb_Y_MForceData
     LD A, (Up_Down_Buttons)             ;get controller bits for up/down
     LD HL, Player_CollisionBits
@@ -1303,7 +1305,7 @@ PlayerPhysicsSub:
 ;
     INC E
 ProcClimb:
-    LD A, (DE)                          ;load value here
+    LD A, (DE)                          ;load value here (Climb_Y_MForceData)
     LD (Player_Y_MoveForce), A          ;store as vertical movement force
 ;
     DEC E
@@ -1331,7 +1333,9 @@ CheckForJumping:
     LD HL, PreviousA_B_Buttons          ;if button not pressed in previous frame, branch
     AND A, (HL)
     JP NZ, X_Physics                    ;otherwise, jump to something else
-
+;
+;   JUMPING PHYSICS
+;
 ProcJumping:
     LD A, (Player_State)                ;check player state
     OR A
@@ -1418,7 +1422,8 @@ GetYPhy:
     LD A, SNDID_SWIM                    ;load swim/goomba stomp sound into
     LD (SFXTrack0.SoundQueue), A        ;square 1's sfx queue
     LD A, (Player_Y_Position)           ;check vertical low byte of player position
-    CP A, $14 - SMS_PIXELYOFFSET
+    ADD A, SMS_PIXELYOFFSET
+    CP A, $14 ;- SMS_PIXELYOFFSET
     JP NC, X_Physics                    ;if below a certain point, branch
     XOR A                               ;otherwise reset player's vertical speed
     LD (Player_Y_Speed), A              ;and jump to something else to keep player
@@ -1431,6 +1436,9 @@ PJumpSnd:
     LD A, SNDID_JUMPSMALL               ;if not, load small mario's jump sound
 SJumpSnd:
     LD (SFXTrack0.SoundQueue), A
+;
+;   HORIZONTAL PHYSICS
+;
 X_Physics:
     LD DE, MaxLeftXSpdData              ;init value here
     LD BC, FrictionData
@@ -1562,9 +1570,10 @@ ImposeFriction:
     OR A
     JP Z, SetAbsSpd                     ;if player has no horizontal speed, branch ahead to last part
     JP P, RghtFrict                     ;if player moving to the right, branch to slow
-    JP M, LeftFrict                     ;otherwise logic dictates player moving left, branch to slow
+    JP LeftFrict                        ;otherwise logic dictates player moving left, branch to slow
+;
 JoypFrict:
-    SRL A                               ;put right controller bit into carry
+    RRCA                                ;put right controller bit into carry
     JP NC, RghtFrict                    ;if left button pressed, carry = 0, thus branch
 LeftFrict:
     LD A, (Player_X_MoveForce)          ;load value set here

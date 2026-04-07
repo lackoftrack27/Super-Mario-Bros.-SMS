@@ -671,7 +671,7 @@
     ;EnemyData:                      dsb $02
 
     TileDataLoadedFlag:             dsb $01
-    PauseFlag:                      dsb $01
+    PauseButtonFlag:                dsb $01
     BlockBufferColumnPos:           dsb $01
     MetatileBuffer:                 dsb $0D
     JumpCoinMiscOffset:             dsb $01

@@ -128,9 +128,8 @@ VdpVector:
 .ORGA $0066
 PauseBtnVector:
     PUSH AF                     ; SAVE AF
-    LD A, (PauseFlag)           ; TOGGLE PAUSE FLAG
-    CPL
-    LD (PauseFlag), A
+    LD A, $01 << SMS_BTN_START
+    LD (PauseButtonFlag), A
     POP AF                      ; RESTORE AF
     RETN                        ; RETURN FROM NMI
 
@@ -335,8 +334,8 @@ ChkPauseTimer:
     LD (GamePauseTimer), A          ;if so, decrement and leave
     JP TickPRNG
 ChkStart:
-    LD A, (PauseFlag)               ;check to see if start is pressed
-    OR A
+    LD A, (SavedJoypad1Bits)        ;check to see if start is pressed
+    AND A, $01 << SMS_BTN_START
     JP Z, ClrPauseTimer
     LD A, (GamePauseStatus)         ;check to see if timer flag is set
     AND A, $80                      ;and if so, do not reset timer
@@ -755,6 +754,13 @@ ReadJoypads:
     .ENDIF
 
     LD (SavedJoypad2Bits), A
+;   ACCOUNT FOR PAUSE BUTTON FOR 1ST PLAYER
+    LD HL, SavedJoypad1Bits
+    LD A, (PauseButtonFlag)
+    OR A, (HL)
+    LD (HL), A
+    XOR A
+    LD (PauseButtonFlag), A
 ;   MD CONTROLLER PAUSE CHECK
     LD A, (MDControllerFlag)
     OR A
@@ -771,21 +777,19 @@ ReadJoypads:
     ; SET TH TO LOW INPUT
     LD A, $01 << P1_TR_DIR | $01 << P1_TH_DIR | $01 << P2_TR_DIR | $01 << P2_TH_DIR
     OUT (IO_CONTROL), A
-    ; DEBOUNCE INPUTS
+    ; DEBOUNCE INPUTS AND SET START BUTTON IF NEWLY PRESSED
     LD B, (HL)
     LD A, (MDControllerBitsOld)
     XOR A, (HL)
     AND A, (HL)
     LD (HL), A
+    LD HL, SavedJoypad1Bits
+    AND A, $01 << P1_BTN_2
+    RRCA            ; MOVE TO SMS_BTN_START INDEX
+    OR A, (HL)
+    LD (HL), A
     LD A, B
     LD (MDControllerBitsOld), A
-    ; CHECK IF START WAS PRESSED
-    BIT P1_BTN_2, (HL)
-    RET Z
-    ; INVERT PAUSE FLAG
-    LD A, (PauseFlag)
-    CPL
-    LD (PauseFlag), A
     RET
 
 ;-------------------------------------------------------------------------------------

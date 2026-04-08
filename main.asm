@@ -171,8 +171,6 @@ Start:
     LD (IX + 3), $02    ; BANK SELECT FOR SLOT 2
 ;   MUTE PSG CHANNELS
     CALL SndStopAll@WritePSG
-;   CHECK IF PLAYER 1 IS USING A MD CONTROLLER
-    CALL MDControllerCheck
 ;   LOAD CONSTANT BACKGROUND TILES
     LD A, :Tiles_BG_Comm
     LD (MAPPER_SLOT2), A 
@@ -508,6 +506,9 @@ NibbleBitFlipTable:
 .ENDS
 
 ReadJoypads:
+;   SET PORT 1'S TH TO HIGH OUTPUT
+    LD A, ~($01 << P1_TH_DIR)
+    OUT (IO_CONTROL), A
 ;   CONTROL 1
     IN A, (CONTROLPORT1)
     CPL                             ; INVERT SO 1 = PRESSED, 0 = NO PRESS
@@ -577,7 +578,7 @@ ReadJoypads:
     .ENDIF
 
     LD (SavedJoypad2Bits), A
-;   ACCOUNT FOR PAUSE BUTTON FOR 1ST PLAYER
+;   ACCOUNT FOR PAUSE BUTTON
     LD HL, SavedJoypad1Bits
     LD A, (PauseButtonFlag)
     OR A, (HL)
@@ -585,21 +586,21 @@ ReadJoypads:
     XOR A
     LD (PauseButtonFlag), A
 ;   MD CONTROLLER PAUSE CHECK
-    LD A, (MDControllerFlag)
-    OR A
-    RET Z
     LD HL, MDControllerBits
-    ; SET TH TO LOW OUTPUT
-    LD A, ~($01 << P1_TH_DIR | $01 << P2_TH_DIR) & $0F
+    ; SET PORT 1'S TH TO LOW OUTPUT
+    LD A, ~($01 << P1_TH_LVL | $01 << P1_TH_DIR)
     OUT (IO_CONTROL), A
     ; GET INPUTS (A, START)
-    LD A, (IX + 0)  ; TIME WASTE
+    ;LD A, (IX + 0)  ; TIME WASTE
+    ;LD A, (IX + 0)  ; TIME WASTE
+    ;NOP             ; TIME WASTE
     IN A, CONTROLPORT1
     CPL
     LD (HL), A
-    ; SET TH TO LOW INPUT
-    LD A, $01 << P1_TR_DIR | $01 << P1_TH_DIR | $01 << P2_TR_DIR | $01 << P2_TH_DIR
-    OUT (IO_CONTROL), A
+    ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN
+    AND A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
+    CP A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
+    RET NZ
     ; DEBOUNCE INPUTS AND SET START BUTTON IF NEWLY PRESSED
     LD B, (HL)
     LD A, (MDControllerBitsOld)
@@ -782,28 +783,6 @@ MoveSpritesOffscreen:
     .REPEAT $3F
     LDI
     .ENDR
-    RET
-
-;-------------------------------------------------------------------------------------
-
-MDControllerCheck:
-;   CHECK FOR MD CONTROLLER IN PORT 1
-    LD HL, MDControllerFlag
-    LD (HL), $00    ; CLEAR FLAG (ASSUME NO MD CONTROLLER)
-    ; SET TH TO LOW OUTPUT
-    LD A, ~($01 << P1_TH_DIR | $01 << P2_TH_DIR) & $0F
-    OUT (IO_CONTROL), A
-    ; GET INPUTS (UP, LEFT, *DOWN, *RIGHT, A, START)
-    LD A, (IX + 0)  ; TIME WASTE
-    IN A, CONTROLPORT1
-    CPL
-    ; CHECK IF LEFT AND RIGHT ARE PRESSED
-    AND A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
-    ; SET TH TO LOW INPUT
-    LD A, $01 << P1_TR_DIR | $01 << P1_TH_DIR | $01 << P2_TR_DIR | $01 << P2_TH_DIR
-    OUT (IO_CONTROL), A
-    RET Z           ; IF BOTH DIRECTIONS ARE NOT PRESSED, SKIP
-    INC (HL)        ; ELSE, SET FLAG
     RET
 
 ;-------------------------------------------------------------------------------------

@@ -193,8 +193,10 @@ ProcELoop:
     JP NZ, ProcELoop
 ;
     LD H, $C0 + OBJ_PLAYER  ; 92
-    CALL GetPlayerOffscreenBits             ;get offscreen bits for player object
-    CALL RelativePlayerPosition             ;get relative coordinates for player object
+    ;CALL GetPlayerOffscreenBits             ;get offscreen bits for player object
+    GetPlayerOffscreenBits_M
+    ;CALL RelativePlayerPosition             ;get relative coordinates for player object
+    RelativePlayerPosition_M
     LD A, (HidePlayerFlag)
     OR A
     CALL Z, PlayerGfxHandler                ;draw the player if he isn't hidden by end-of-level castle
@@ -549,8 +551,10 @@ ProcAirBubbles:
 BublLoop:
     LD (ObjectOffset), HL
     CALL BubbleCheck                ;check timers and coordinates, create air bubble
-    CALL RelativeBubblePosition     ;get relative coordinates
-    CALL GetBubbleOffscreenBits     ;get offscreen information
+    ;CALL RelativeBubblePosition     ;get relative coordinates
+    RelativeBubblePosition_M
+    ;CALL GetBubbleOffscreenBits     ;get offscreen information
+    GetBubbleOffscreenBits_M
     CALL DrawBubble                 ;draw the air bubble                
     DJNZ BublLoop                   ;do this until all three are handled
     RET
@@ -613,8 +617,10 @@ RunFB:
     CALL MoveObjectHorizontally     ;do another sub to move it horizontally
 ;
     ;LD HL, (ObjectOffset)
-    CALL RelativeFireballPosition   ;get relative coordinates
-    CALL GetFireballOffscreenBits   ;get offscreen information
+    ;CALL RelativeFireballPosition   ;get relative coordinates
+    RelativeFireballPosition_M
+    ;CALL GetFireballOffscreenBits   ;get offscreen information
+    GetFireballOffscreenBits_M
     CALL GetFireballBoundBox        ;get bounding box coordinates
     CALL FireballBGCollision        ;do fireball to background collision detection
     LD A, (Fireball_OffscrBits)     ;get fireball offscreen bits
@@ -628,7 +634,8 @@ EraseFB:
     RET
 
 FireballExplosion:
-    CALL RelativeFireballPosition
+    ;CALL RelativeFireballPosition
+    RelativeFireballPosition_M
     JP DrawExplosion_Fireball
 
 BubbleCheck:
@@ -1033,8 +1040,8 @@ ChkPUSte:
 RunPUSubs:
     CALL RelativeEnemyPosition
     CALL GetEnemyOffscreenBits
-    AND A, $0F
-    LD (DE), A
+    ;AND A, $0F
+    ;LD (DE), A
     CALL GetEnemyBoundBox
     CALL DrawPowerUp
     CALL PlayerEnemyCollision
@@ -2703,6 +2710,11 @@ MoveLiftPlatforms:
     LD L, <Enemy_Y_Position
     ADC A, (HL)
     LD (HL), A
+    ;INC L
+    ;LD A, (HL)
+    ;ADC A, $00
+    ;LD (HL), A
+    ; RANGE FROM $00E8 - $01E7
     RET
 
 ChkSmallPlatCollision:
@@ -3153,7 +3165,8 @@ BlockObjectsCore:
     DEC H
     DEC H
     CALL RelativeBlockPosition      ;get relative coordinates
-    CALL GetBlockOffscreenBits      ;get offscreen information
+    ;CALL GetBlockOffscreenBits      ;get offscreen information
+    GetBlockOffscreenBits_M
     CALL DrawBrickChunks            ;draw the brick chunks
 ;
     LD L, <Block_Y_HighPos
@@ -3180,7 +3193,8 @@ BouncingBlockHandler:
     CALL ImposeGravityBlock         ;do sub to impose gravity on block object
     ;LD HL, (ObjectOffset)          ;get block object offset
     CALL RelativeBlockPosition      ;get relative coordinates
-    CALL GetBlockOffscreenBits      ;get offscreen information
+    ;CALL GetBlockOffscreenBits      ;get offscreen information
+    GetBlockOffscreenBits_M
     CALL DrawBlock                  ;draw the block
 ;
     LD L, <Block_Y_Position
@@ -3583,8 +3597,10 @@ JCoinRun:
     LD L, <Misc_State
     INC (HL)                            ;otherwise increment state to change to floatey number
 RunJCSubs:
-    CALL RelativeMiscPosition           ;get relative coordinates
-    CALL GetMiscOffscreenBits           ;get offscreen information
+    ;CALL RelativeMiscPosition           ;get relative coordinates
+    RelativeMiscPosition_M
+    ;CALL GetMiscOffscreenBits           ;get offscreen information
+    GetMiscOffscreenBits_M
     ;CALL GetMiscBoundBox
     CALL JCoinGfxHandler                ;draw the coin or floatey number
 
@@ -3919,7 +3935,7 @@ AlterYP:
     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
     LD (HL), A                      ;store as new vertical position
 ;
-    LD L, <SprObject_Y_HighPos
+    INC L                           ; <SprObject_Y_HighPos
     LD A, (HL)
     ADC A, C                        ;add carry plus contents of $07 to vertical high byte
     LD (HL), A                      ;store as new vertical high byte
@@ -5064,7 +5080,7 @@ PositionPlayerOnVPlat:
     LD A, C
     SUB A, $20
     LD (Player_Y_Position), A
-    LD A, (Enemy_Y_HighPos)
+    LD A, (HL)
     SBC A, $00
     LD (Player_Y_HighPos), A
     XOR A
@@ -6683,32 +6699,22 @@ RetC:
 ;-------------------------------------------------------------------------------------
 ;$00 (IXL) - used in adding to get proper offset
 
-RelativePlayerPosition:
-    LD H, >Player_Rel_XPos
-    LD D, H
-    JP GetObjRelativePosition
+; RelativePlayerPosition:
+;     LD H, >Player_Rel_XPos
+;     LD D, H
+;     JP GetObjRelativePosition
 
-RelativeBubblePosition:
-    LD D, >Bubble_Rel_XPos
-    JP GetObjRelativePosition
+; RelativeBubblePosition:
+;     LD D, >Bubble_Rel_XPos
+;     JP GetObjRelativePosition
 
-RelativeFireballPosition:
-    LD D, >Fireball_Rel_XPos
-    JP GetObjRelativePosition
-    /*
-RelWOfs:
-    CALL GetObjRelativePosition
-    LD HL, (ObjectOffset)
-    RET
-    */
+; RelativeFireballPosition:
+;     LD D, >Fireball_Rel_XPos
+;     JP GetObjRelativePosition
 
-RelativeMiscPosition:
-    LD D, >Misc_Rel_XPos
-    JP GetObjRelativePosition
-
-RelativeEnemyPosition:
-    LD D, >Enemy_Rel_XPos
-    JP GetObjRelativePosition
+; RelativeMiscPosition:
+;     LD D, >Misc_Rel_XPos
+;     JP GetObjRelativePosition
 
 RelativeBlockPosition:
     LD D, >Block_Rel_XPos
@@ -6735,6 +6741,9 @@ VariableObjOfsRelPos:
     RET
     */
 
+RelativeEnemyPosition:
+    LD D, >Enemy_Rel_XPos
+
 ;   HL - OBJECT OFFSET
 ;   DE - XXX_Rel_XPos/YPos OFFSET
 GetObjRelativePosition:
@@ -6755,42 +6764,44 @@ GetObjRelativePosition:
 ;-------------------------------------------------------------------------------------
 ;$00 (IXL) - used as temp variable to hold offscreen bits
 
-GetPlayerOffscreenBits:
-    LD H, >Player_OffscrBits
-    LD D, H
-    JP GetOffScreenBitsSet
+; GetPlayerOffscreenBits:
+;     LD H, >Player_OffscrBits
+;     LD D, H
+;     JP GetOffScreenBitsSet
 
-GetFireballOffscreenBits:
-    LD D, >Fireball_OffscrBits
-    JP GetOffScreenBitsSet
+; GetFireballOffscreenBits:
+;     LD D, >Fireball_OffscrBits
+;     JP GetOffScreenBitsSet
 
-GetBubbleOffscreenBits:
-    LD D, >Bubble_OffscrBits
-    JP GetOffScreenBitsSet
+; GetBubbleOffscreenBits:
+;     LD D, >Bubble_OffscrBits
+;     JP GetOffScreenBitsSet
 
-GetMiscOffscreenBits:
-    LD D, >Misc_OffscrBits
-    JP GetOffScreenBitsSet
+; GetMiscOffscreenBits:
+;     LD D, >Misc_OffscrBits
+;     JP GetOffScreenBitsSet
+
+; GetEnemyOffscreenBits:
+;     LD D, >Enemy_OffscrBits
+;     JP GetOffScreenBitsSet
+
+; GetBlockOffscreenBits:
+;     LD D, >Block_OffscrBits
 
 GetEnemyOffscreenBits:
     LD D, >Enemy_OffscrBits
-    JP GetOffScreenBitsSet
-
-GetBlockOffscreenBits:
-    LD D, >Block_OffscrBits
 
 ;   HL - OBJECT OFFSET
 ;   DE - OffscreenBits OFFSET
 GetOffScreenBitsSet:
     PUSH DE                                 ;save offscreen bits offset to stack for now
-    ;CALL RunOffscrBitsSubs
-    CALL GetXOffscreenBits
-    RRCA
+    CALL GetXOffscreenBits                  ;do subroutine here
+    RRCA                                    ;move high nybble to low
     RRCA
     RRCA
     RRCA
     AND A, $0F
-    LD IXL, A
+    LD IXL, A                               ;store here
     CALL GetYOffscreenBits
     ADD A, A                                ;move low nybble to high nybble
     ADD A, A
@@ -6802,18 +6813,6 @@ GetOffScreenBitsSet:
     LD (DE), A
     ;LD HL, (ObjectOffset)
     RET
-
-    /*
-RunOffscrBitsSubs:
-    CALL GetXOffscreenBits                  ;do subroutine here
-    RRCA                                    ;move high nybble to low
-    RRCA
-    RRCA
-    RRCA
-    AND A, $0F
-    LD IXL, A                               ;store here
-    JP GetYOffscreenBits
-    */
 
 ;--------------------------------
 ;(these apply to these three subsections)
@@ -6829,65 +6828,7 @@ XOffscreenBitsData:
     ; $08
     .db $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
 
-;DefaultXOnscreenOfs:
-;    .db $07, $0f, $07
 .ENDS
-
-; GetXOffscreenBits:
-; ;   LOOP 1 (RIGHT SIDE CHECK?)
-;     LD L, <SprObject_X_Position
-;     LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
-;     SUB A, (HL)                             ;get difference between pixel coordinate of edge
-;     LD IYH, A                               ;store here
-; ;
-;     LD L, <SprObject_PageLoc
-;     LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
-;     SBC A, (HL)                             ;subtract from page location of object position
-; ;
-;     LD DE, DefaultXOnscreenOfs + $01        ;load offset value here
-;     JP M, XLdBData                          ;if beyond right edge or in front of left edge, branch
-;     INC E                                   ;if not, load alternate offset value here
-;     CP A, $01
-;     JP P, XLdBData                          ;if one page or more to the left of either edge, branch
-;     LD IYL, $38                             ;if no branching, load value here and store
-;     LD A, $08                               ;load some other value and execute subroutine
-;     CALL DividePDiff
-;     JP XLdBData@DividePDiff_Ret
-; XLdBData:
-;     LD A, (DE)                              
-; @DividePDiff_Ret:
-;     LD DE, XOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)                              ;get bits here
-;     OR A                                    ;if bits not zero, branch to leave
-;     RET NZ
-; ;   LOOP 2 (LEFT SIDE CHECK?)
-;     LD L, <SprObject_X_Position
-;     LD A, (ScreenEdge_X_Pos)
-;     SUB A, (HL)
-;     LD IYH, A
-; ;
-;     LD L, <SprObject_PageLoc
-;     LD A, (ScreenEdge_PageLoc)
-;     SBC A, (HL)
-; ;
-;     LD DE, DefaultXOnscreenOfs
-;     JP M, XLdBData_2
-;     INC E
-;     CP A, $01
-;     JP P, XLdBData_2
-;     LD IYL, $38
-;     LD A, $08
-;     CALL DividePDiff_2
-;     JP XLdBData_2@DividePDiff_Ret
-; XLdBData_2:
-;     LD A, (DE)
-; @DividePDiff_Ret:
-;     LD DE, XOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)
-;     RET
-
 
 GetXOffscreenBits:
 ;   LOOP 1 (RIGHT SIDE CHECK)
@@ -6958,70 +6899,7 @@ YOffscreenBitsData:
     .db $0f, $07, $03, $01
     ; $08
     .db $00
-
-;DefaultYOnscreenOfs:
-;    .db $04, $00, $04
-
-;HighPosUnitData:
-;    .db $ff, $00
 .ENDS
-
-;   1, 0
-; GetYOffscreenBits:
-; ;   LOOP 1 (TOP SIDE CHECK?)
-;     LD L, <SprObject_Y_Position
-;     LD A, $E8 ;LD A, (HighPosUnitData + $01)
-;     SUB A, (HL)
-;     LD IYH, A
-; ;
-;     LD L, <SprObject_Y_HighPos
-;     LD A, $00 ;LD A, $01
-;     SBC A, (HL)
-; ;
-;     LD DE, DefaultYOnscreenOfs + $01
-;     JP M, YLdBData
-;     INC E
-;     CP A, $01
-;     JP P, YLdBData
-;     LD IYL, $20
-;     LD A, $04
-;     CALL DividePDiff
-;     JP YLdBData@DividePDiff_Ret
-; YLdBData:
-;     LD A, (DE)
-; @DividePDiff_Ret:
-;     LD DE, YOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)
-;     OR A
-;     RET NZ
-; ;   LOOP 2 (BOTTOM SIDE CHECK?)
-;     LD L, <SprObject_Y_Position
-;     LD A, $E7 ;LD A, (HighPosUnitData)
-;     SUB A, (HL)
-;     LD IYH, A
-; ;
-;     LD L, <SprObject_Y_HighPos
-;     LD A, $01
-;     SBC A, (HL)
-; ;
-;     LD DE, DefaultYOnscreenOfs
-;     JP M, YLdBData_2
-;     INC E
-;     CP A, $01
-;     JP P, YLdBData_2
-;     LD IYL, $20
-;     LD A, $04
-;     CALL DividePDiff_2
-;     JP YLdBData_2@DividePDiff_Ret
-; YLdBData_2:
-;     LD A, (DE)
-; @DividePDiff_Ret:
-;     LD DE, YOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)
-;     RET
-
 
 GetYOffscreenBits:
 ;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $00E8
@@ -7054,11 +6932,11 @@ YLdBData:
     OR A
     RET NZ
 ;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01E7
-    LD L, <SprObject_Y_Position
+    DEC L                               ; <SprObject_Y_Position
     LD A, $E7
     SUB A, (HL)
     LD IYH, A
-    LD L, <SprObject_Y_HighPos
+    INC L                               ; <SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
 ;
@@ -7084,34 +6962,3 @@ YLdBData_2:
     RET
 
 ;--------------------------------
-/*
-DividePDiff:
-    LD IXH, A                           ;store current value in A here
-    LD A, IYH                           ;get pixel difference
-    CP A, IYL                           ;compare to preset value
-    LD A, (DE)                          ;(SMS)reload offset from DefaultYOnscreenOfs/DefaultXOnscreenOfs in case of RET
-    RET NC                              ;if pixel difference >= preset value, branch
-;
-    LD A, IYH
-    RRCA                                ;divide by eight
-    RRCA
-    RRCA
-    AND A, $07                          ;mask out all but 3 LSB
-    RET
-
-DividePDiff_2:
-    LD IXH, A                           ;store current value in A here
-    LD A, IYH                           ;get pixel difference
-    CP A, IYL                           ;compare to preset value
-    LD A, (DE)                          ;(SMS)reload offset from DefaultYOnscreenOfs/DefaultXOnscreenOfs in case of RET
-    RET NC                              ;if pixel difference >= preset value, branch
-;
-    LD A, IYH
-    RRCA                                ;divide by eight
-    RRCA
-    RRCA
-    AND A, $07                          ;mask out all but 3 LSB
-    ADD A, IXH                          ;if not, add value to difference / 8
-    RET
-*/
-;-------------------------------------------------------------------------------------

@@ -529,8 +529,10 @@ SetMoveDir:
     LD (Player_MovingDir), A            ;set moving direction
 PlayerSubs:
     CALL ScrollHandler                  ;move the screen if necessary
-    CALL GetPlayerOffscreenBits         ;get player's offscreen bits
-    CALL RelativePlayerPosition         ;get coordinates relative to the screen
+    ;CALL GetPlayerOffscreenBits         ;get player's offscreen bits
+    GetPlayerOffscreenBits_M
+    ;CALL RelativePlayerPosition         ;get coordinates relative to the screen
+    RelativePlayerPosition_M
     LD H, >Player_BoundBoxCtrl          ;set offset for player object
     LD D, H
     CALL BoundingBoxCore                ;get player's bounding box coordinates

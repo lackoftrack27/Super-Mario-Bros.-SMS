@@ -1,3 +1,4 @@
+;   Special Functions
 .FUNCTION BG_MACRO(val) val + BG_TILE_OFFSET
 
 .FUNCTION xyToNameTbl_M(x, y) (VRAM_ADR_NAMETBL + ((y * 32 + x) * 2)) | VRAMWRITE
@@ -5,6 +6,56 @@
 .FUNCTION swapBytes(v) (v << $08 | v >> $08) & $FFFF
 
 .FUNCTION bitValue(v) $01 << v
+
+
+;   Macros for relative position
+.MACRO RelativePlayerPosition_M
+    LD H, >Player_Rel_XPos
+    LD D, H
+    CALL GetObjRelativePosition
+.ENDM
+
+.MACRO RelativeBubblePosition_M
+    LD D, >Bubble_Rel_XPos
+    CALL GetObjRelativePosition
+.ENDM
+
+.MACRO RelativeFireballPosition_M
+    LD D, >Fireball_Rel_XPos
+    CALL GetObjRelativePosition
+.ENDM
+
+.MACRO RelativeMiscPosition_M
+    LD D, >Misc_Rel_XPos
+    CALL GetObjRelativePosition
+.ENDM
+
+;   Macros for offscreen bits
+.MACRO GetPlayerOffscreenBits_M
+    LD H, >Player_OffscrBits
+    LD D, H
+    CALL GetOffScreenBitsSet
+.ENDM
+
+.MACRO GetFireballOffscreenBits_M
+    LD D, >Fireball_OffscrBits
+    CALL GetOffScreenBitsSet
+.ENDM
+
+.MACRO GetBubbleOffscreenBits_M
+    LD D, >Bubble_OffscrBits
+    CALL GetOffScreenBitsSet
+.ENDM
+
+.MACRO GetMiscOffscreenBits_M
+    LD D, >Misc_OffscrBits
+    CALL GetOffScreenBitsSet
+.ENDM
+
+.MACRO GetBlockOffscreenBits_M
+    LD D, >Block_OffscrBits
+    CALL GetOffScreenBitsSet
+.ENDM
 
 ;   8 bit ADD to 16 bit value
 .MACRO addAToHL_M

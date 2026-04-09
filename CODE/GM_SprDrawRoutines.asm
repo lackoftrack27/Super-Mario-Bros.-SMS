@@ -166,8 +166,131 @@ DumpTwoSpr:
 ;-------------------------------------------------------------------------------------
 
 DrawLargePlatform:
-    RET
+    LD D, >Sprite_Data
+;   X POSITION & TILE
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    SLA E
+    SET 7, E
+    LD A, (CloudTypeOverride)
+    OR A
+    LD B, $47
+    JP Z, +
+    LD B, $46
++:
+    LD A, (Enemy_Rel_XPos)
+    EX DE, HL
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    EX DE, HL
+;   Y POSITION
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD B, A
+    LD A, (AreaType)
+    CP A, $03
+    LD A, YPOS_OFFSCREEN
+    JP Z, SetLast2Platform
+    LD A, (SecondaryHardMode)
+    OR A
+    LD A, YPOS_OFFSCREEN
+    JP NZ, SetLast2Platform
+    LD A, B
 
+SetLast2Platform:
+    LD (DE), A
+    INC E
+    LD (DE), A
+;   OFFSCREEN CHECK
+    CALL GetXOffscreenBits
+    LD D, >Sprite_Data
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD C, A
+    LD A, YPOS_OFFSCREEN
+    SLA C
+    JP NC, SChk2
+    LD (DE), A
+SChk2:
+    INC E
+    SLA C
+    JP NC, SChk3
+    LD (DE), A
+SChk3:
+    INC E
+    SLA C
+    JP NC, SChk4
+    LD (DE), A
+SChk4:
+    INC E
+    SLA C
+    JP NC, SChk5
+    LD (DE), A
+SChk5:
+    INC E
+    SLA C
+    JP NC, SChk6
+    LD (DE), A
+SChk6:
+    INC E
+    SLA C
+    JP NC, SLChk
+    LD (DE), A
+SLChk:
+    LD A, (Enemy_OffscrBits)
+    ADD A, A
+    RET NC
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD A, YPOS_OFFSCREEN
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    RET
 
 ;-------------------------------------------------------------------------------------
 
@@ -1351,6 +1474,120 @@ DrawExplosion_Fireworks:
 ;-------------------------------------------------------------------------------------
 
 DrawSmallPlatform:
+;   X POSITION & TILE
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    SLA E
+    SET 7, E
+    LD A, (Enemy_Rel_XPos)
+    LD B, $47
+    EX DE, HL
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    SUB A, $10
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    LD (HL), B
+    EX DE, HL
+;   Y POSITION
+    ; FIRST 3
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    CP A, $20 - SMS_PIXELYOFFSET
+    JP NC, TopSP
+    LD A, YPOS_OFFSCREEN
+TopSP:
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    ; SECOND 3
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    ADD A, $80
+    CP A, $20 - SMS_PIXELYOFFSET
+    JP NC, BotSP
+    LD A, YPOS_OFFSCREEN
+BotSP:
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+;   OFFSCREEN CHECK
+    ; 1ST THREE
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    INC E
+    INC E
+    LD A, (Enemy_OffscrBits)
+    LD C, A
+    LD A, YPOS_OFFSCREEN
+    SRL C
+    SRL C
+    JP NC, +
+    LD (DE), A
++:
+    DEC E
+    SRL C
+    JP NC, +
+    LD (DE), A
++:
+    DEC E
+    SRL C
+    JP NC, +
+    LD (DE), A
++:
+    ; 2ND THREE
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    INC E
+    INC E
+    INC E
+    INC E
+    INC E
+    LD A, (Enemy_OffscrBits)
+    LD C, A
+    LD A, YPOS_OFFSCREEN
+    SRL C
+    SRL C
+    JP NC, +
+    LD (DE), A
++:
+    DEC E
+    SRL C
+    JP NC, +
+    LD (DE), A
++:
+    DEC E
+    SRL C
+    RET NC
+    LD (DE), A
     RET
 
 

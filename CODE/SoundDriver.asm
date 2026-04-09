@@ -1120,3 +1120,17 @@ SpeedUpTempoTable:
     .db $00, $00, $00, $00, $00, $00, $00
 .ENDS
 */
+
+
+.SECTION "Sound FM Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+SndFMFreqTable:
+;         C     C#    D     Eb    E     F     F#    G     G#    A     Bb    B
+    .dw $00AC,$00B7,$00C2,$00CD,$00D9,$00E6,$00F4,$0102,$0112,$0122,$0133,$0146; Octave 0 - (81 - 8C)   0
+	.dw $02AC,$02B7,$02C2,$02CD,$02D9,$02E6,$02F4,$0302,$0312,$0322,$0333,$0346; Octave 1 - (8D - 98)   1
+	.dw $04AC,$04B7,$04C2,$04CD,$04D9,$04E6,$04F4,$0502,$0512,$0522,$0533,$0546; Octave 2 - (99 - A4)   2
+	.dw $06AC,$06B7,$06C2,$06CD,$06D9,$06E6,$06F4,$0702,$0712,$0722,$0733,$0746; Octave 3 - (A5 - B0)   3
+	.dw $08AC,$08B7,$08C2,$08CD,$08D9,$08E6,$08F4,$0902,$0912,$0922,$0933,$0946; Octave 4 - (B1 - BC)   4
+	.dw $0AAC,$0AB7,$0AC2,$0ACD,$0AD9,$0AE6,$0AF4,$0B02,$0B12,$0B22,$0B33,$0B46; Octave 5 - (BD - C8)   5
+	.dw $0CAC,$0CB7,$0CC2,$0CCD,$0CD9,$0CE6,$0CF4,$0D02,$0D12,$0D22,$0D33,$0D46; Octave 6 - (C9 - D4)   6
+	.dw $0EAC,$0EB7,$0EC2,$0ECD,$0ED9,$0EE6,$0EF4,$0F02,$0F12,$0F22,$0F33,$0F46; Octave 7 - (D5 - E0)   7
+.ENDS

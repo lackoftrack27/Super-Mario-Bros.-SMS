@@ -506,17 +506,10 @@ ProcFireball_Bubble:
     OR A
     JP NZ, ProcFireballs            ;if not inactive, branch
 ;
-    EX DE, HL
-    LD HL, (Player_Y_Position)      ;if player too high, branch
-    LD BC, $00E8
-    SBC HL, BC
-    JP C, ProcFireballs
-    ADD HL, BC
-    LD BC, $01E8                    ;if player too low, branch
-    SBC HL, BC
-    JP NC, ProcFireballs
+    LD A, (Player_Y_HighPos)
+    DEC A
+    JP NZ, ProcFireballs
 ;
-    EX DE, HL
     LD A, (CrouchingFlag)           ;if player crouching, branch
     OR A
     JP NZ, ProcFireballs
@@ -551,10 +544,8 @@ ProcAirBubbles:
 BublLoop:
     LD (ObjectOffset), HL
     CALL BubbleCheck                ;check timers and coordinates, create air bubble
-    ;CALL RelativeBubblePosition     ;get relative coordinates
-    RelativeBubblePosition_M
-    ;CALL GetBubbleOffscreenBits     ;get offscreen information
-    GetBubbleOffscreenBits_M
+    RelativeBubblePosition_M        ;get relative coordinates
+    GetBubbleOffscreenBits_M        ;get offscreen information
     CALL DrawBubble                 ;draw the air bubble                
     DJNZ BublLoop                   ;do this until all three are handled
     RET
@@ -589,9 +580,8 @@ FireballObjCore:
     LD L, <Fireball_Y_Position
     LD (HL), A
 ;
-    LD A, (Player_Y_HighPos)
     LD L, <Fireball_Y_HighPos
-    LD (HL), A                      ;set high byte of vertical position
+    LD (HL), $01                    ;set high byte of vertical position
 ;
     LD A, (PlayerFacingDir)         ;get player's facing direction
     DEC A
@@ -617,10 +607,8 @@ RunFB:
     CALL MoveObjectHorizontally     ;do another sub to move it horizontally
 ;
     ;LD HL, (ObjectOffset)
-    ;CALL RelativeFireballPosition   ;get relative coordinates
-    RelativeFireballPosition_M
-    ;CALL GetFireballOffscreenBits   ;get offscreen information
-    GetFireballOffscreenBits_M
+    RelativeFireballPosition_M      ;get relative coordinates
+    GetFireballOffscreenBits_M      ;get offscreen information
     CALL GetFireballBoundBox        ;get bounding box coordinates
     CALL FireballBGCollision        ;do fireball to background collision detection
     LD A, (Fireball_OffscrBits)     ;get fireball offscreen bits
@@ -634,7 +622,6 @@ EraseFB:
     RET
 
 FireballExplosion:
-    ;CALL RelativeFireballPosition
     RelativeFireballPosition_M
     JP DrawExplosion_Fireball
 
@@ -676,9 +663,8 @@ PosBubl:
     LD L, <Bubble_Y_Position
     LD (HL), A                      ;save as vertical position for air bubble
 ;
-    LD A, (Player_Y_HighPos)
     LD L, <Bubble_Y_HighPos
-    LD (HL), A                    ;set vertical high byte for air bubble
+    LD (HL), $01                    ;set vertical high byte for air bubble
 ;
     LD A, IYL                       ;get pseudorandom bit, use as offset
     LD DE, BubbleTimerData
@@ -699,7 +685,7 @@ MoveBubl:
     LD L, <Bubble_Y_Position
     LD A, (HL)
     SBC A, $00                      ;subtract borrow from airbubble's vertical coordinate
-    CP A, $08   ; $20               ;if below the status bar,
+    CP A, $20                       ;if below the status bar,
     JP NC, Y_Bubl                   ;branch to go ahead and use to move air bubble upwards
     LD A, YPOS_OFFSCREEN            ;otherwise set offscreen coordinate
 Y_Bubl:
@@ -755,8 +741,8 @@ LoopCmdPageNumber:
     .db $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
 
 LoopCmdYPosition:
-    ;.db $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
-    .db $28, $98, $98, $68, $28, $28, $68, $28, $D8, $D8, $D8
+    .db $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
+    ;.db $28, $98, $98, $68, $28, $28, $68, $28, $D8, $D8, $D8
 
 AreaDataOfsLoopback:
     .db $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
@@ -1004,16 +990,8 @@ GrowThePowerUp:
     AND A, $03
     JP NZ, ChkPUSte
 ;
-    ;LD L, <Enemy_Y_Position
-    ;DEC (HL)
     LD L, <Enemy_Y_Position
-    LD A, (HL)
-    SUB A, $01
-    LD (HL), A
-    LD L, <Enemy_Y_HighPos
-    LD A, (HL)
-    SBC A, $00
-    LD (HL), A
+    DEC (HL)
 ;
     LD L, <Enemy_State
     LD A, (HL)
@@ -1040,8 +1018,6 @@ ChkPUSte:
 RunPUSubs:
     CALL RelativeEnemyPosition
     CALL GetEnemyOffscreenBits
-    ;AND A, $0F
-    ;LD (DE), A
     CALL GetEnemyBoundBox
     CALL DrawPowerUp
     CALL PlayerEnemyCollision
@@ -1492,10 +1468,10 @@ HammerBroJumpCode:
     LD C, $FA
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    CP A, $80 - SMS_PIXELYOFFSET
+    CP A, $80
     JP NC, SetHJ
     LD C, $FD
-    CP A, $70 - SMS_PIXELYOFFSET
+    CP A, $70
     LD A, (Temp_Bytes + $00)
     INC A
     LD (Temp_Bytes + $00), A
@@ -2274,7 +2250,7 @@ RaiseFlagSetoffFWorks:
 ;
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    CP A, $72 - SMS_PIXELYOFFSET
+    CP A, $72
     JP C, SetoffF
     DEC (HL)
     JP DrawStarFlag
@@ -2294,6 +2270,7 @@ DrawStarFlag:
     LD D, >Sprite_Y_Position
     EX DE, HL
     LD A, (Enemy_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD C, A
     ADD A, $08
     LD (HL), A
@@ -2476,7 +2453,6 @@ SpinCounterClockwise:
 BalancePlatform:
     POP HL
 ;
-    ; might change to account for high pos?
     LD L, <Enemy_Y_HighPos
     LD A, (HL)
     CP A, $03
@@ -2501,7 +2477,7 @@ CheckBalPlatform:
     JP NZ, PlatformFall
 
 ChkForFall:
-    LD A, $2D - SMS_PIXELYOFFSET
+    LD A, $2D
     LD L, <Enemy_Y_Position
     CP A, (HL)
     JP C, ChkOtherForFall
@@ -2510,7 +2486,7 @@ ChkForFall:
     CP A, B
     JP Z, InitPlatformFall
 ;
-    LD A, $2D - SMS_PIXELYOFFSET
+    LD A, $2D
     ADD A, $02
     LD L, <Enemy_Y_Position
     LD (HL), A
@@ -2710,11 +2686,6 @@ MoveLiftPlatforms:
     LD L, <Enemy_Y_Position
     ADC A, (HL)
     LD (HL), A
-    ;INC L
-    ;LD A, (HL)
-    ;ADC A, $00
-    ;LD (HL), A
-    ; RANGE FROM $00E8 - $01E7
     RET
 
 ChkSmallPlatCollision:
@@ -2864,11 +2835,6 @@ ScoreUpdateData:
 .ENDS
 
 FloateyNumbersRoutine:
-    ;LD L, <FloateyNum_Control
-    ;LD A, (HL)                              ;load control for floatey number
-    ;OR A
-    ;RET Z                                   ;if zero, branch to leave
-;
     CP A, $0B                               ;if less than $0b, branch
     JP C, ChkNumTimer
     LD A, $0B
@@ -2944,14 +2910,14 @@ GetAltOffset:
 FloateyPart:
     LD L, <FloateyNum_Y_Pos
     LD A, (HL)                              ;get vertical coordinate for
-    CP A, $18 - SMS_PIXELYOFFSET            ;floatey number, if coordinate in the
+    CP A, $18                               ;floatey number, if coordinate in the
     JP C, SetupNumSpr                       ;status bar, branch
     DEC (HL)                                ;otherwise subtract one and store as new                             
 SetupNumSpr:
     LD E, C
     LD D, >Sprite_Y_Position
     LD A, (HL)                              ;get vertical coordinate
-    SUB A, $08                              ;subtract eight and dump into the
+    SUB A, $08 + SMS_PIXELYOFFSET           ;subtract eight and dump into the
     LD (DE), A                              ;left and right sprite's Y coordinates
     INC E
     LD (DE), A
@@ -3011,7 +2977,6 @@ RunGameTimer:
     CP A, $0B                               ;if running death routine,
     RET Z                                   ;branch to leave
 ;
-    ; might change to account for high pos?
     LD A, (Player_Y_HighPos)
     CP A, $02                               ;if player below the screen,
     RET NC                                  ;branch to leave regardless of level type
@@ -3090,11 +3055,11 @@ FlagpoleRoutine:
 ;
     LD L, <Enemy_Y_Position
     LD A, (HL)                              ;check flagpole flag's vertical coordinate
-    CP A, $AA - SMS_PIXELYOFFSET            ;if flagpole flag down to a certain point,
+    CP A, $AA                               ;if flagpole flag down to a certain point,
     JP NC, GiveFPScr                        ;branch to end the level
 ;
     LD A, (Player_Y_Position)               ;check player's vertical coordinate
-    CP A, $A2 - SMS_PIXELYOFFSET            ;if player down to a certain point,
+    CP A, $A2                               ;if player down to a certain point,
     JP NC, GiveFPScr                        ;branch to end the level
 ;
     LD L, <Enemy_YMF_Dummy
@@ -3165,8 +3130,7 @@ BlockObjectsCore:
     DEC H
     DEC H
     CALL RelativeBlockPosition      ;get relative coordinates
-    ;CALL GetBlockOffscreenBits      ;get offscreen information
-    GetBlockOffscreenBits_M
+    GetBlockOffscreenBits_M         ;get offscreen information
     CALL DrawBrickChunks            ;draw the brick chunks
 ;
     LD L, <Block_Y_HighPos
@@ -3177,7 +3141,7 @@ BlockObjectsCore:
     INC H
     INC H
     LD L, <Block_Y_Position         ;Block_Y_Position+2
-    LD A, $F0 - SMS_PIXELYOFFSET   ; CHANGE???
+    LD A, $F0
     CP A, (HL)                      ;check to see if bottom block object went
     JP NC, ChkTop                   ;to the bottom of the screen, and branch if not
     LD (HL), A                      ;otherwise set offscreen coordinate
@@ -3193,13 +3157,11 @@ BouncingBlockHandler:
     CALL ImposeGravityBlock         ;do sub to impose gravity on block object
     ;LD HL, (ObjectOffset)          ;get block object offset
     CALL RelativeBlockPosition      ;get relative coordinates
-    ;CALL GetBlockOffscreenBits      ;get offscreen information
-    GetBlockOffscreenBits_M
+    GetBlockOffscreenBits_M         ;get offscreen information
     CALL DrawBlock                  ;draw the block
 ;
     LD L, <Block_Y_Position
     LD A, (HL)                      ;get vertical coordinate
-    ADD A, $08
     AND A, $0F                      ;mask out high nybble
     CP A, $05                       ;check to see if low nybble wrapped around
     JP NC, UpdSte                   ;if still above amount, not time to kill block yet, thus branch
@@ -3597,10 +3559,8 @@ JCoinRun:
     LD L, <Misc_State
     INC (HL)                            ;otherwise increment state to change to floatey number
 RunJCSubs:
-    ;CALL RelativeMiscPosition           ;get relative coordinates
-    RelativeMiscPosition_M
-    ;CALL GetMiscOffscreenBits           ;get offscreen information
-    GetMiscOffscreenBits_M
+    RelativeMiscPosition_M              ;get relative coordinates
+    GetMiscOffscreenBits_M              ;get offscreen information
     ;CALL GetMiscBoundBox
     CALL JCoinGfxHandler                ;draw the coin or floatey number
 
@@ -5169,21 +5129,15 @@ SetFallS:
 SetPSte:
     LD (Player_State), A                ;set whatever player state is appropriate
 ChkOnScr:
-    OR A
-    LD HL, (Player_Y_Position)          ;check if player is too high
-    LD DE, $00E8
-    SBC HL, DE
-    RET C                               ;branch to leave if so
+    LD A, (Player_Y_HighPos)
+    DEC A
+    RET NZ
 ;
     LD A, $FF                           ;initialize player's collision flag
     LD (Player_CollisionBits), A
 ;
-    ADD HL, DE
-    DEC H                               ;if player is above screen, skip next check
-    JP M, ChkCollSize
-    RET NZ
-    LD A, L                             ;check player's vertical coordinate
-    CP A, $B7                           ;if not too close to the bottom of screen, continue
+    LD A, (Player_Y_Position)
+    CP A, $CF                           ;if not too close to the bottom of screen, continue
     RET NC                              ;otherwise leave
 
 ChkCollSize:
@@ -5206,15 +5160,15 @@ GBBAdr:
     LD A, (DE)                          ;get value using offset
     LD (Temp_Bytes + $08), A
     LD C, A                             ;put value into Y, as offset for block buffer routine
-    LD DE, $0108
+    LD E, $20
     LD A, (PlayerSize)
     LD HL, CrouchingFlag
     OR A, (HL)
     JP Z, HeadChk
-    LD DE, $00F8
+    LD E, $10
 HeadChk:
-    LD HL, (Player_Y_Position)          ;get player's vertical coordinate
-    SBC HL, DE                          ;compare with upper extent value based on offset
+    LD A, (Player_Y_Position)
+    CP A, E
     JP C, DoFootCheck                   ;if player is too high, skip this part
 ;
     XOR A
@@ -5261,10 +5215,8 @@ NYSpd:
 DoFootCheck:
     LD A, (Temp_Bytes + $08)
     LD C, A
-    OR A
-    LD HL, (Player_Y_Position)          ;check to see how low player is
-    LD DE, $01B7
-    SBC HL, DE
+    LD A, (Player_Y_Position)
+    CP A, $CF
     JP NC, DoPlayerSideCheck            ;if player is too far down on screen, skip all of this
 ;
     CALL BlockBufferColli_Feet          ;do player-to-bg collision detection on bottom left of player
@@ -5315,10 +5267,10 @@ ChkFootMTile:
 LandPlyr:
     LD A, C ; need mt back
     CALL ChkForLandJumpSpring           ;do sub to check for jumpspring metatiles and deal with it
-    LD A, (Player_Y_Position)
-    AND A, $F0                          ;mask out lower nybble of player's vertical position
-    ADD A, $08
-    LD (Player_Y_Position), A           ;and store as new vertical position to land player properly
+    LD HL, Player_Y_Position
+    LD A, $F0                           
+    AND A, (HL)                         ;mask out lower nybble of player's vertical position
+    LD (HL), A                          ;and store as new vertical position to land player properly
     CALL HandlePipeEntry                ;do sub to process potential pipe entry
     XOR A
     LD (Player_Y_Speed), A              ;initialize vertical speed and fractional
@@ -5341,14 +5293,10 @@ SideCheckLoop:
     LD A, C
     LD (Temp_Bytes + $08), A
 ;
-    OR A
-    LD HL, (Player_Y_Position)          ;check player's vertical position
-    LD DE, $0008
-    SBC HL, DE
-    JP C, BHalf                         ;if player is in status bar area, branch ahead to skip this part
-    ADD HL, DE
-    LD A, L
-    CP A, $CC
+    LD A, (Player_Y_Position)
+    CP A, $20
+    JP C, BHalf
+    CP A, $E4
     RET NC                              ;branch to leave if player is too far down
     LD A, $01
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on one half of player
@@ -5364,15 +5312,12 @@ BHalf:
     LD A, (Temp_Bytes + $08)
     LD C, A
     INC C                               ;increment it
-    OR A
-    LD HL, (Player_Y_Position)          ;get player's vertical position
-    LD DE, $00F0
-    SBC HL, DE
-    RET C                               ;if too high, branch to leave
-    ADD HL, DE
-    LD DE, $01B8
-    SBC HL, DE
-    RET NC                              ;if too low, branch to leave
+        
+    LD A, (Player_Y_Position)
+    CP A, $08
+    RET C
+    CP A, $D0
+    RET NC
     LD A, $01
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on other half of player
     JP NZ, CheckSideMTiles              ;if something found, branch
@@ -5497,8 +5442,8 @@ ClimbPLocAdder:
 
 .SECTION "FlagpoleYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlagpoleYPosData:
-    ;.db $18, $22, $50, $68, $90
-    .db $00, $0A, $38, $50, $78
+    .db $18, $22, $50, $68, $90
+    ;.db $00, $0A, $38, $50, $78
 .ENDS
 
 HandleClimbing:
@@ -5520,8 +5465,6 @@ FlagpoleCollision:
     LD A, $01
     LD (PlayerFacingDir), A             ;set player's facing direction to right
     LD (ScrollLock), A
-    ;LD HL, ScrollLock                   ;set scroll lock flag
-    ;INC (HL)
     LD A, (GameEngineSubroutine)
     CP A, $04                           ;check for flagpole slide routine running
     JP Z, RunFR                         ;if running, branch to end of flagpole code here
@@ -5554,7 +5497,7 @@ VineCollision:
     CP A, MT_VINEBLANK                  ;check for climbing metatile used on vines
     JP NZ, PutPlayerOnVine
     LD A, (Player_Y_Position)           ;check player's vertical coordinate
-    CP A, $20 - SMS_PIXELYOFFSET        ;for being in status bar area
+    CP A, $20                           ;for being in status bar area
     JP NC, PutPlayerOnVine              ;branch if not that far up
     LD A, $01
     LD (GameEngineSubroutine), A        ;otherwise set to run autoclimb routine next frame
@@ -5818,7 +5761,7 @@ EnemyToBGCollisionDet:
 ;
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    CP A, $25 - SMS_PIXELYOFFSET
+    CP A, $25
     RET C
 
 DoIDCheckBGColl:
@@ -6051,7 +5994,7 @@ SetD6Ste:
 DoEnemySideCheck:
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    CP A, $20 - SMS_PIXELYOFFSET
+    CP A, $20
     RET C
 ;
     LD C, $16
@@ -6119,7 +6062,7 @@ EnemyLanding:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     AND A, %11110000
-    ;OR A, %00001000
+    OR A, %00001000
     LD (HL), A
     RET
 
@@ -6127,7 +6070,7 @@ SubtEnemyYPos:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     ADD A, $3E
-    CP A, $44 - SMS_PIXELYOFFSET
+    CP A, $44
     RET
 
 EnemyJump:
@@ -6207,14 +6150,10 @@ ChkForNonSolids:
 ;-------------------------------------------------------------------------------------
 
 FireballBGCollision:
-    ;LD L, <Fireball_Y_Position
-    ;LD A, (HL)
-    ;CP A, $18 - SMS_PIXELYOFFSET
-    ;JP C, ClearBounceFlag
-    LD L, <Fireball_Y_HighPos
+    LD L, <Fireball_Y_Position
     LD A, (HL)
-    OR A
-    JP Z, ClearBounceFlag
+    CP A, $18
+    JP C, ClearBounceFlag
 ;
     CALL BlockBufferChk_FBall
     JP Z, ClearBounceFlag
@@ -6632,13 +6571,13 @@ BlockBufferCollision:
     RRCA                                ;d4 at this point
     ;;;
     ;CALL GetBlockBufferAddr             ;get address of block buffer into $06, $07
-    LD DE, Block_Buffer_1
+    LD DE, Block_Buffer_1               ;get address of block buffer into $06, $07
     BIT 4, A
     JP Z, +
     LD E, <Block_Buffer_2
 +:
-    AND A, $0F                      ;mask out high nybble
-    addAToDE8_M                     ;add to low byte    
+    AND A, $0F                          ;mask out high nybble
+    addAToDE8_M                         ;add to low byte    
     LD (Temp_Bytes + $06), DE
     ;;;
 ;
@@ -6646,26 +6585,18 @@ BlockBufferCollision:
     LD A, (BC)
     LD L, <SprObject_Y_Position         ;get vertical coordinate of object
     ADD A, (HL)                         ;add it to value obtained using Y as offset
-    SUB A, $08  ; $20                   ;subtract 8 pixels for the status bar     
     AND A, %11110000                    ;mask out low nybble
-    INC L
-    BIT 0, (HL)
-    JP NZ, +
-    XOR A
-+:
+    SUB A, $20                          ;subtract 32 pixels for the status bar
     LD IXL, A                           ;store result here
 ;
     addAToDE_M
 ;
     POP AF                              ;pull A from stack
     OR A
-    LD L, <SprObject_X_Position
-    LD A, (HL)
-    JP NZ, RetC                         ;if A = 1, load horizontal coordinate
-    LD L, <SprObject_Y_Position         ;if A = 0, load vertical coordinate
-    LD A, (HL)
-    ADD A, SMS_PIXELYOFFSET 
+    JP Z, RetC                         ;if A = 1, load horizontal coordinate
+    LD L, <SprObject_X_Position         ;if A = 0, load vertical coordinate
 RetC:
+    LD A, (HL)
     AND A, %00001111                    ;and mask out high nybble
     LD IXH, A                           ;store masked out result here
     LD A, (DE)                          ;get content of block buffer
@@ -6902,13 +6833,13 @@ YOffscreenBitsData:
 .ENDS
 
 GetYOffscreenBits:
-;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $00E8
+;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
     LD L, <SprObject_Y_Position
-    LD A, $E8
+    LD A, $00
     SUB A, (HL)
     LD IYH, A
     INC L                               ; <SprObject_Y_HighPos
-    LD A, $00
+    LD A, $01
     SBC A, (HL)
 ;
     LD A, $00
@@ -6931,9 +6862,9 @@ YLdBData:
     LD A, (DE)
     OR A
     RET NZ
-;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01E7
+;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
     DEC L                               ; <SprObject_Y_Position
-    LD A, $E7
+    LD A, $FF
     SUB A, (HL)
     LD IYH, A
     INC L                               ; <SprObject_Y_HighPos

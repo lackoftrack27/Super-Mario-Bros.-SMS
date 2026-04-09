@@ -1055,7 +1055,7 @@ NotTall:
     LD L, <Enemy_Y_HighPos
     LD (HL), $01                        ;set vertical high byte
     LD L, <Enemy_Y_Position
-    LD (HL), $90 - SMS_PIXELYOFFSET     ;set vertical coordinate
+    LD (HL), $90                        ;set vertical coordinate
     RET
 PlayerStop:
     LD A, MT_BRICK                      ;put brick at floor to stop player at end of level
@@ -1345,9 +1345,9 @@ FlagpoleObject:
     LD A, (CurrentPageLoc)
     SBC A, $00                          ;subtract borrow from page location and use as
     LD (Enemy_PageLoc+5*$100), A             ;page location for the flag
-    LD A, $30 - SMS_PIXELYOFFSET
+    LD A, $30
     LD (Enemy_Y_Position+5*$100), A          ;set vertical coordinate for flag
-    LD A, $B0 - SMS_PIXELYOFFSET
+    LD A, $B0
     LD (FlagpoleFNum_Y_Pos), A          ;set initial vertical coordinate for flagpole's floatey number
     LD A, OBJECTID_FlagpoleFlagObject
     LD (Enemy_ID+5*$100), A                  ;set flag identifier, note that identifier and coordinates
@@ -1773,7 +1773,7 @@ GetAreaObjYPosition:
     ADD A, A                    ;this will give us the proper vertical pixel coordinate
     ADD A, A
     ADD A, A
-    ADD A, $08                  ;add 8 pixels for the status bar
+    ADD A, $20                  ;add 32 pixels for the status bar
     RET
 
 ;-------------------------------------------------------------------------------------

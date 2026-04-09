@@ -65,6 +65,7 @@ FlagpoleGfxHandler:
 ;
     LD L, <Enemy_Y_Position
     LD A, (HL)                      ;get vertical coordinate
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A                      ;and do sub to dump into first and second sprites
     INC E
     LD (DE), A
@@ -97,6 +98,7 @@ FlagpoleGfxHandler:
     ADD A, $0C + $08                ;add twelve more pixels and
     LD C, A;LD (Temp_Bytes + $05), A        ;store here to be used later by floatey number
     LD A, (FlagpoleFNum_Y_Pos)      ;get vertical coordinate for floatey number
+    SUB A, SMS_PIXELYOFFSET
     LD B, A;LD (Temp_Bytes + $02), A        ;store it here
 ;
     LD A, (FlagpoleCollisionYPos)   ;get vertical coordinate at time of collision
@@ -214,6 +216,7 @@ DrawLargePlatform:
     LD E, (HL)
     LD L, <Enemy_Y_Position
     LD A, (HL)
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     INC E
     LD (DE), A
@@ -302,6 +305,7 @@ DrawFloateyNumber_Coin:
     DEC (HL)                        ;otherwise, decrement vertical coordinate
 NotRsNum:
     LD A, (HL)                      ;get vertical coordinate
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A                      ;dump into both sprites
     INC E
     LD (DE), A
@@ -328,9 +332,6 @@ JumpingCoinTiles:
 .ENDS
 
 JCoinGfxHandler:
-    ;LD A, H
-    ;ADD A, SPRDATA_MISC1 - OBJ_MISC1
-    ;LD D, A
     LD D, H
     INC D
     INC D
@@ -347,6 +348,7 @@ JCoinGfxHandler:
 ;
     LD L, <Misc_Y_Position
     LD A, (HL)                      ;store vertical coordinate as
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A                      ;Y coordinate for first sprite
     ADD A, $08                      ;add eight pixels
     INC E
@@ -402,7 +404,7 @@ DrawPowerUp:
     LD D, >Sprite_Y_Position
 ;
     LD A, (Enemy_Rel_YPos)
-    ADD A, $08
+    ADD A, $08 - SMS_PIXELYOFFSET
     LD B, A ;LD (Temp_Bytes + $02), A
     LD A, (Enemy_Rel_XPos)
     LD C, A ;LD (Temp_Bytes + $05), A
@@ -644,6 +646,7 @@ EnemyGfxHandler:
     LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     LD A, (HL)
     ;LD (Temp_Bytes + $02), A
+    SUB A, SMS_PIXELYOFFSET
     LD D, A
     LD A, (Enemy_Rel_XPos)                  ;get enemy object horizontal position
     LD (Temp_Bytes + $05), A                ;relative to screen
@@ -1163,6 +1166,7 @@ DefaultBlockObjTiles:
 
 DrawBlock:
     LD A, (Block_Rel_YPos)          ;get relative vertical coordinate of block object
+    SUB A, SMS_PIXELYOFFSET
     LD B, A ;LD (Temp_Bytes + $02), A        ;store here
 ;
     LD A, (Block_Rel_XPos)          ;get relative horizontal coordinate of block object
@@ -1235,10 +1239,12 @@ DrawBrickChunks:
     LD IXH, A
 ;   STORE Y POSITIONS
     LD A, (Block_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     INC E
     LD (DE), A
     LD A, (Block_Rel_YPos_01)
+    SUB A, SMS_PIXELYOFFSET
     INC E
     LD (DE), A
     INC E
@@ -1353,6 +1359,7 @@ DrawFireball:
     LD D, >Sprite_Y_Position
 ;
     LD A, (Fireball_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
 ;
     SLA E
@@ -1421,6 +1428,7 @@ DrawExplosion_Fireworks:
     ;
     LD E, IXL
     LD A, (Fireball_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     LD A, YPOS_OFFSCREEN
     INC E
@@ -1460,7 +1468,7 @@ DrawExplosion_Fireworks:
 ;
     LD E, IXL
     LD A, (Fireball_Rel_YPos)
-    SUB A, $04
+    SUB A, $04 + SMS_PIXELYOFFSET
     LD (DE), A
     INC E
     LD (DE), A
@@ -1517,10 +1525,11 @@ DrawSmallPlatform:
     LD E, (HL)
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    CP A, $20 - SMS_PIXELYOFFSET
+    CP A, $20
     JP NC, TopSP
     LD A, YPOS_OFFSCREEN
 TopSP:
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     INC E
     LD (DE), A
@@ -1530,10 +1539,11 @@ TopSP:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     ADD A, $80
-    CP A, $20 - SMS_PIXELYOFFSET
+    CP A, $20
     JP NC, BotSP
     LD A, YPOS_OFFSCREEN
 BotSP:
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     INC E
     LD (DE), A
@@ -1614,6 +1624,7 @@ DrawBubble:
 
     LD D, >Sprite_Y_Position
     LD A, (Bubble_Rel_YPos)         ;get relative vertical coordinate
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A                      ;store as Y coordinate here
 ;
     SLA E
@@ -1905,6 +1916,7 @@ RenderPlayerSub:
     LD C, A ;LD (Temp_Bytes + $05), A            ;store it here also
 ;
     LD A, (Player_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD B, A ;LD (Temp_Bytes + $02), A            ;store player's vertical position
     
 

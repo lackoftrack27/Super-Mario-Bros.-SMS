@@ -119,7 +119,6 @@ CheckRightExtBounds:
     ADD A, A                        ;coordinate
     ADD A, A
     ADD A, A
-    SUB A, SMS_PIXELYOFFSET         ;!!!COULD BE AN ISSUE IF YPOS < 2!!!
     LD L, <Enemy_Y_Position
     LD (HL), A
 ;
@@ -386,14 +385,12 @@ InitPodoboo:
     POP HL
 InitPodoboo_NOPOP:
     LD L, <Enemy_Y_HighPos          ;set enemy position to below
-    LD (HL), $01;$02
+    LD (HL), $02
     LD L, <Enemy_Y_Position         ;the bottom of the screen
-    LD (HL), $02 - SMS_PIXELYOFFSET;$02
+    LD (HL), $02
     LD L, <Enemy_State
     LD (HL), $00                    ;initialize enemy state
 ;
-    ;LD L, <EnemyIntervalTimer
-    ;LD (HL), $01
     LD A, H
     SUB A, $C1
     LD BC, EnemyIntervalTimer
@@ -409,13 +406,10 @@ InitRetainerObj:
     POP HL
 ;
     LD L, <Enemy_Y_Position         ;set fixed vertical position for
-    LD (HL), $B8 - SMS_PIXELYOFFSET ;princess/mushroom retainer object
+    LD (HL), $B8                    ;princess/mushroom retainer object
     RET
 
 ;--------------------------------
-
-;NormalXSpdData:
-;    .db $f8, $f4
 
 InitNormalEnemy:
     POP HL
@@ -443,9 +437,6 @@ InitRedKoopa:
 
 ;--------------------------------
 
-;HBroWalkingTimerData:
-;    .db $80, $50
-
 InitHammerBro:
     POP HL
 ;
@@ -460,9 +451,9 @@ InitHammerBro:
     LD (HL), $00
     LD A, (SecondaryHardMode)       ;get secondary hard mode flag
     OR A
-    LD A, $80
+    LD A, $80                       ;HBroWalkingTimerData
     JP Z, +
-    LD A, $50
+    LD A, $50                       ;HBroWalkingTimerData + $01
 +:
     LD (BC), A                      ;set value as delay for hammer bro to walk left
     LD A, $0B                       ;set specific value for bounding box size control
@@ -497,9 +488,9 @@ InitRedPTroopa:
     LD L, <RedPTroopaOrigXPos       ;be used as original vertical coordinate
     LD (HL), A
 ;
-    CP A, $80 - SMS_PIXELYOFFSET
+    OR A
     LD A, $30                       ;load central position adder for 48 pixels down
-    JP C, GetCent                   ;if vertical coordinate < $80
+    JP P, GetCent                   ;if vertical coordinate < $80
     LD A, $E0                       ;if => $80, load position adder for 32 pixels up
 GetCent:
     LD L, <Enemy_Y_Position         ;add to current vertical coordinate
@@ -627,7 +618,7 @@ CreateL:
     LD L, <Enemy_ID                     ;create lakitu enemy object
     LD (HL), OBJECTID_Lakitu
     CALL SetupLakitu                    ;do a sub to set up lakitu
-    LD A, $20 - SMS_PIXELYOFFSET
+    LD A, $20
     CALL PutAtRightExtent               ;finish setting up lakitu
 RetEOfs:
     LD HL, (ObjectOffset)               ;get enemy object buffer offset again and leave
@@ -637,7 +628,7 @@ RetEOfs:
 
 CreateSpiny:
     LD A, (Player_Y_Position)           ;if player above a certain point, branch to leave
-    CP A, $2C - SMS_PIXELYOFFSET
+    CP A, $2C
     RET C
 ;
     LD E, <Enemy_State                  ;if lakitu is not in normal state, branch to leave
@@ -940,7 +931,7 @@ FinCCSt:
     LD L, <Enemy_Y_HighPos
     LD (HL), $01
     LD L, <Enemy_Y_Position
-    LD (HL), $F8 - SMS_PIXELYOFFSET
+    LD (HL), $F8
     RET
 
 ;--------------------------------
@@ -1028,12 +1019,10 @@ FSLoop:
 
 .SECTION "FlameYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlameYPosData:
-    ;.db $90, $80, $70, $90
-    .db $78, $68, $58, $78
+    .db $90, $80, $70, $90
+    ;.db $78, $68, $58, $78
 .ENDS
 
-;FlameYMFAdderData:
-;    .db $ff, $01
 
 InitBowserFlame:
     POP HL
@@ -1162,8 +1151,8 @@ FireworksXPosData:
     .db $00, $30, $60, $60, $00, $20
 
 FireworksYPosData:
-    ;.db $60, $40, $70, $40, $60, $30
-    .db $48, $28, $58, $28, $48, $18
+    .db $60, $40, $70, $40, $60, $30
+    ;.db $48, $28, $58, $28, $48, $18
 .ENDS
 
 InitFireworks:
@@ -1245,8 +1234,8 @@ Bitmasks:
 
 .SECTION "Enemy17YPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 Enemy17YPosData:
-    ;.db $40, $30, $90, $50, $20, $60, $a0, $70
-    .db $28, $18, $78, $38, $08, $48, $88, $58
+    .db $40, $30, $90, $50, $20, $60, $a0, $70
+    ;.db $28, $18, $78, $38, $08, $48, $88, $58
 .ENDS
 
 .SECTION "SwimCC_IDData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -1386,9 +1375,9 @@ PullID:
 SnglID:
     LD IXL, C
     AND A, $02
-    LD A, $B0 - SMS_PIXELYOFFSET
+    LD A, $B0
     JP Z, SetYGp
-    LD A, $70 - SMS_PIXELYOFFSET
+    LD A, $70
 SetYGp:
     LD B, A ;LD (Temp_Bytes + $00), A
     LD A, (ScreenRight_PageLoc)
@@ -1464,9 +1453,9 @@ PullID:
     POP AF
 SnglID:
     AND A, $02
-    LD A, $B0 - SMS_PIXELYOFFSET
+    LD A, $B0
     JP Z, SetYGp
-    LD A, $70 - SMS_PIXELYOFFSET
+    LD A, $70
 SetYGp:
     LD C, A
     LD A, (ScreenRight_PageLoc)

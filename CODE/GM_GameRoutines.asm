@@ -31,10 +31,10 @@ AltYPosOffset:
 
 .SECTION "Player Initial Y Pos TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PlayerStarting_Y_Pos:
-    ;.db $00, $20, $b0, $50, $00, $00, $b0, $b0
-    ;.db $f0
-    .db $E8, $08, $98, $38, $E8, $E8, $98, $98
-    .db $D8
+    .db $00, $20, $b0, $50, $00, $00, $b0, $b0
+    .db $f0
+    ;.db $E8, $08, $98, $38, $E8, $E8, $98, $98
+    ;.db $D8
 .ENDS
 
 .SECTION "Player Priority TBL & Game Timer TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -95,11 +95,6 @@ SetStPos:
     addAToHL8_M
     LD A, (HL)                          ;AltEntranceControl as offset for horizontal and either $0710
     LD (Player_Y_Position), A           ;or value that overwrote $0710 as offset for vertical
-    CP A, $E8                           ; Check if starting y position is $E8
-    JP NZ, +                            ; If not, skip
-    LD HL, Player_Y_HighPos             ; Decrement high position byte because we are above screen
-    DEC (HL)
-+:
 ;
     LD HL, PlayerBGPriorityData
     LD A, B
@@ -160,7 +155,7 @@ Vine_AutoClimb:
     OR A
     JP NZ, AutoClimb                    ;above the status bar yet and if so, set modes
     LD A, (Player_Y_Position)
-    CP A, $E4 - SMS_PIXELYOFFSET
+    CP A, $E4
     JP C, SetEntr
 AutoClimb:
     LD A, %00001000                     ;set controller bits override to up
@@ -240,7 +235,7 @@ FlagpoleSlide:
     XOR A
     LD (FlagpoleSoundQueue), A          ;init flagpole sound queue
     LD A, (Player_Y_Position)
-    CP A, $9E - SMS_PIXELYOFFSET        ;check to see if player has slid down
+    CP A, $9E                           ;check to see if player has slid down
     LD A, $00
     JP NC, SlidePlayer                  ;far enough, and if so, branch with no controller bits set
     LD A, bitValue(SMS_BTN_DOWN)        ;otherwise force player to climb down (to slide)
@@ -262,7 +257,7 @@ PlayerEndLevel:
     LD A, $01                           ;force player to walk to the right
     CALL AutoControlPlayer
     LD A, (Player_Y_Position)           ;check player's vertical position
-    CP A, $AE - SMS_PIXELYOFFSET
+    CP A, $AE
     JP C, ChkStop                       ;if player is not yet off the flagpole, skip this part
     LD A, (ScrollLock)                  ;if scroll lock not set, branch ahead to next part
     OR A
@@ -391,7 +386,7 @@ PlayerEntrance:
     CP A, $02
     JP Z, EntrMode2                     ;if found, branch to enter from pipe or with vine
     LD A, (Player_Y_Position)           ;if vertical position above a certain
-    CP A, $30 - SMS_PIXELYOFFSET        ;point, nullify controller bits and continue
+    CP A, $30                           ;point, nullify controller bits and continue
     LD C, A
     LD A, $00
     JP C, AutoControlPlayer             ;with player movement code, do not return
@@ -421,7 +416,7 @@ EntrMode2:
     LD A, $FF                           ;otherwise, set value here then execute sub
     CALL MovePlayerYAxis                ;to move player upwards (note $ff = -1)
     LD A, (Player_Y_Position)           ;check to see if player is at a specific coordinate
-    CP A, $91 - SMS_PIXELYOFFSET        ;if player risen to a certain point (this requires pipes
+    CP A, $91                           ;if player risen to a certain point (this requires pipes
     JP C, PlayerRdy                     ;to be at specific height to look/function right) branch
     RET                                 ;to the last part, otherwise leave
 VineEntr:
@@ -429,7 +424,7 @@ VineEntr:
     CP A, $60                           ;check vine height
     RET NZ                              ;if vine not yet reached maximum height, branch to leave
     LD A, (Player_Y_Position)           ;get player's vertical coordinate
-    CP A, $99 - SMS_PIXELYOFFSET        ;check player's vertical coordinate against preset value
+    CP A, $99                           ;check player's vertical coordinate against preset value
     LD C, $00                           ;load default values to be written to 
     LD A, $01                           ;this value moves player to the right off the vine
     JP C, OffVine                       ;if vertical coordinate < preset value, use defaults
@@ -437,7 +432,7 @@ VineEntr:
     LD (Player_State), A                ;otherwise set player state to climbing
     INC C                               ;increment value in Y
     LD A, $08                           ;set block in block buffer to cover hole, then
-    LD (Block_Buffer_1+$b4), A  ; CHANGE??? ;use same value to force player to climb
+    LD (Block_Buffer_1+$b4), A          ;use same value to force player to climb
 OffVine:
     LD HL, DisableCollisionDet
     LD (HL), C                          ;set collision detection disable flag
@@ -472,14 +467,12 @@ PlayerCtrlRoutine:
     OR A
     JP NZ, SaveJoyp                     ;if not, branch
 ;
-    LD HL, (Player_Y_Position)
-    LD DE, $00E8
-    SBC HL, DE                          ;if not in vertical area between
-    JP C, DisJoyp                       ;status bar and bottom, branch
-    ADD HL, DE
-    LD DE, $01B8
-    SBC HL, DE                          ;if nearing the bottom of the screen or
-    JP C, SaveJoyp                      ;not in the vertical area between status bar or bottom,
+    LD A, (Player_Y_HighPos)
+    DEC A
+    JP NZ, DisJoyp
+    LD A, (Player_Y_Position)
+    CP A, $D0
+    JP C, SaveJoyp
 DisJoyp:
     XOR A                               ;disable controller bits
     LD (SavedJoypadBits), A
@@ -529,16 +522,14 @@ SetMoveDir:
     LD (Player_MovingDir), A            ;set moving direction
 PlayerSubs:
     CALL ScrollHandler                  ;move the screen if necessary
-    ;CALL GetPlayerOffscreenBits         ;get player's offscreen bits
-    GetPlayerOffscreenBits_M
-    ;CALL RelativePlayerPosition         ;get coordinates relative to the screen
-    RelativePlayerPosition_M
+    GetPlayerOffscreenBits_M            ;get player's offscreen bits
+    RelativePlayerPosition_M            ;get coordinates relative to the screen
     LD H, >Player_BoundBoxCtrl          ;set offset for player object
     LD D, H
     CALL BoundingBoxCore                ;get player's bounding box coordinates
     CALL PlayerBGCollision              ;do collision detection and process
     LD A, (Player_Y_Position)
-    CP A, $40 - SMS_PIXELYOFFSET        ;check to see if player is higher than 64th pixel
+    CP A, $40                           ;check to see if player is higher than 64th pixel
     JP C, PlayerHole                    ;if so, branch ahead
     LD A, (GameEngineSubroutine)
     CP A, $05                           ;if running end-of-level routine, branch ahead
@@ -823,13 +814,10 @@ PutMTileB:
     LD A, (PlayerSize)              ;add player size to offset
     addAToDE8_M
     LD A, (Player_Y_Position)       ;get player's vertical coordinate
-    ADD A, SMS_PIXELYOFFSET
     EX DE, HL
     ADD A, (HL)                     ;add value determined by size
     EX DE, HL
     AND A, $F0                      ;mask out low nybble to get 16-pixel correspondence
-    ;SUB A, $08                      ;(SMS)add 8 due to status bar size difference
-    SUB A, SMS_PIXELYOFFSET
     LD L, <Block_Y_Position
     LD (HL), A                      ;save as vertical coordinate for block object
 ;
@@ -1158,7 +1146,7 @@ ProcSwim:
 ;
     CALL GetPlayerAnimSpeed             ;do a sub to get animation frame timing
     LD A, (Player_Y_Position)
-    CP A, $14 - SMS_PIXELYOFFSET        ;check vertical position against preset value
+    CP A, $14                           ;check vertical position against preset value
     JP NC, LRWater                      ;if not yet reached a certain position, branch ahead
 ;
     LD A, $18
@@ -1430,8 +1418,7 @@ GetYPhy:
     LD A, SNDID_SWIM                    ;load swim/goomba stomp sound into
     LD (SFXTrack0.SoundQueue), A        ;square 1's sfx queue
     LD A, (Player_Y_Position)           ;check vertical low byte of player position
-    ADD A, SMS_PIXELYOFFSET
-    CP A, $14 ;- SMS_PIXELYOFFSET
+    CP A, $14
     JP NC, X_Physics                    ;if below a certain point, branch
     XOR A                               ;otherwise reset player's vertical speed
     LD (Player_Y_Speed), A              ;and jump to something else to keep player

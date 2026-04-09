@@ -504,10 +504,17 @@ ProcFireball_Bubble:
     OR A
     JP NZ, ProcFireballs            ;if not inactive, branch
 ;
-    LD A, (Player_Y_HighPos)        ;if player too high or too low, branch
-    DEC A
-    JP NZ, ProcFireballs
+    EX DE, HL
+    LD HL, (Player_Y_Position)      ;if player too high, branch
+    LD BC, $00E8
+    SBC HL, BC
+    JP C, ProcFireballs
+    ADD HL, BC
+    LD BC, $01E8                    ;if player too low, branch
+    SBC HL, BC
+    JP NC, ProcFireballs
 ;
+    EX DE, HL
     LD A, (CrouchingFlag)           ;if player crouching, branch
     OR A
     JP NZ, ProcFireballs
@@ -578,8 +585,9 @@ FireballObjCore:
     LD L, <Fireball_Y_Position
     LD (HL), A
 ;
+    LD A, (Player_Y_HighPos)
     LD L, <Fireball_Y_HighPos
-    LD (HL), $01                    ;set high byte of vertical position
+    LD (HL), A                      ;set high byte of vertical position
 ;
     LD A, (PlayerFacingDir)         ;get player's facing direction
     DEC A
@@ -661,8 +669,9 @@ PosBubl:
     LD L, <Bubble_Y_Position
     LD (HL), A                      ;save as vertical position for air bubble
 ;
+    LD A, (Player_Y_HighPos)
     LD L, <Bubble_Y_HighPos
-    LD (HL), $01                    ;set vertical high byte for air bubble
+    LD (HL), A                    ;set vertical high byte for air bubble
 ;
     LD A, IYL                       ;get pseudorandom bit, use as offset
     LD DE, BubbleTimerData
@@ -1321,7 +1330,7 @@ RunLargePlatform:
 ;--------------------------------
 
 LargePlatformSubroutines:
-    POP HL
+    ;POP HL
     PUSH HL
     LD L, <Enemy_ID
     LD A, (HL)
@@ -2460,6 +2469,7 @@ SpinCounterClockwise:
 BalancePlatform:
     POP HL
 ;
+    ; might change to account for high pos?
     LD L, <Enemy_Y_HighPos
     LD A, (HL)
     CP A, $03
@@ -2691,7 +2701,7 @@ MoveLiftPlatforms:
     LD L, <Enemy_Y_Speed
     LD A, (HL)
     LD L, <Enemy_Y_Position
-    ADD A, (HL)
+    ADC A, (HL)
     LD (HL), A
     RET
 
@@ -2989,6 +2999,7 @@ RunGameTimer:
     CP A, $0B                               ;if running death routine,
     RET Z                                   ;branch to leave
 ;
+    ; might change to account for high pos?
     LD A, (Player_Y_HighPos)
     CP A, $02                               ;if player below the screen,
     RET NC                                  ;branch to leave regardless of level type
@@ -4101,8 +4112,8 @@ SetDBSte:
     LD L, <Enemy_State
     LD (HL), A
 ;
-    ;lda #Sfx_BowserFall
-    ;sta Square2SoundQueue
+    LD A, SNDID_FALL
+    LD (SFXTrack1.SoundQueue), A
 ;
     LD A, (Temp_Bytes + $01)
     LD H, A
@@ -5102,11 +5113,13 @@ GetEnemyBoundBoxOfsArg:
 ;$05(IYL) - modified x coordinate
 ;$06-$07(DE) - block buffer address
 
+    /*
 .SECTION "PlayerBGUpperExtent" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PlayerBGUpperExtent:
     .db $20, $10
     ;.db $08, $00        ; big, small or crouch
 .ENDS
+    */
 
 .SECTION "BlockBufferAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 BlockBufferAdderData:
@@ -5140,15 +5153,21 @@ SetFallS:
 SetPSte:
     LD (Player_State), A                ;set whatever player state is appropriate
 ChkOnScr:
-    LD A, (Player_Y_HighPos)
-    CP A, $01                           ;check player's vertical high byte for still on the screen
-    RET NZ                              ;branch to leave if not
+    OR A
+    LD HL, (Player_Y_Position)          ;check if player is too high
+    LD DE, $00E8
+    SBC HL, DE
+    RET C                               ;branch to leave if so
 ;
     LD A, $FF                           ;initialize player's collision flag
     LD (Player_CollisionBits), A
 ;
-    LD A, (Player_Y_Position)           ;check player's vertical coordinate
-    CP A, $CF - SMS_PIXELYOFFSET        ;if not too close to the bottom of screen, continue
+    ADD HL, DE
+    DEC H                               ;if player is above screen, skip next check
+    JP M, ChkCollSize
+    RET NZ
+    LD A, L                             ;check player's vertical coordinate
+    CP A, $B7                           ;if not too close to the bottom of screen, continue
     RET NC                              ;otherwise leave
 
 ChkCollSize:
@@ -5171,17 +5190,18 @@ GBBAdr:
     LD A, (DE)                          ;get value using offset
     LD (Temp_Bytes + $08), A
     LD C, A                             ;put value into Y, as offset for block buffer routine
-    LD HL, PlayerBGUpperExtent
-    LD A, (PlayerSize)                  ;use player's size as offset
-    addAToHL8_M
-    LD A, (CrouchingFlag)               ;use crouching flag as offset
-    addAToHL8_M
+    LD DE, $0108
+    LD A, (PlayerSize)
+    LD HL, CrouchingFlag
+    OR A, (HL)
+    JP Z, HeadChk
+    LD DE, $00F8
 HeadChk:
-    LD A, (Player_Y_Position)           ;get player's vertical coordinate
-    ADD A, SMS_PIXELYOFFSET
-    CP A, (HL)                          ;compare with upper extent value based on offset
+    LD HL, (Player_Y_Position)          ;get player's vertical coordinate
+    SBC HL, DE                          ;compare with upper extent value based on offset
     JP C, DoFootCheck                   ;if player is too high, skip this part
 ;
+    XOR A
     CALL BlockBufferColli_Head          ;do player-to-bg collision detection on top of
     JP Z, DoFootCheck                   ;player, and branch if nothing above player's head
 ;
@@ -5225,8 +5245,10 @@ NYSpd:
 DoFootCheck:
     LD A, (Temp_Bytes + $08)
     LD C, A
-    LD A, (Player_Y_Position)
-    CP A, $CF - SMS_PIXELYOFFSET        ;check to see how low player is
+    OR A
+    LD HL, (Player_Y_Position)          ;check to see how low player is
+    LD DE, $01B7
+    SBC HL, DE
     JP NC, DoPlayerSideCheck            ;if player is too far down on screen, skip all of this
 ;
     CALL BlockBufferColli_Feet          ;do player-to-bg collision detection on bottom left of player
@@ -5303,11 +5325,16 @@ SideCheckLoop:
     LD A, C
     LD (Temp_Bytes + $08), A
 ;
-    LD A, (Player_Y_Position)
-    CP A, $20 - SMS_PIXELYOFFSET        ;check player's vertical position
+    OR A
+    LD HL, (Player_Y_Position)          ;check player's vertical position
+    LD DE, $0008
+    SBC HL, DE
     JP C, BHalf                         ;if player is in status bar area, branch ahead to skip this part
-    CP A, $E4 - SMS_PIXELYOFFSET
+    ADD HL, DE
+    LD A, L
+    CP A, $CC
     RET NC                              ;branch to leave if player is too far down
+    LD A, $01
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on one half of player
     JP Z, BHalf                         ;branch ahead if nothing found
     CP A, MT_SIDEPIPE_END_TOP           ;otherwise check for pipe metatiles
@@ -5321,12 +5348,16 @@ BHalf:
     LD A, (Temp_Bytes + $08)
     LD C, A
     INC C                               ;increment it
-    LD A, (Player_Y_Position)           ;get player's vertical position
-    ADD A, SMS_PIXELYOFFSET
-    CP A, $08 ;$00;$08 - SMS_PIXELYOFFSET
+    OR A
+    LD HL, (Player_Y_Position)          ;get player's vertical position
+    LD DE, $00F0
+    SBC HL, DE
     RET C                               ;if too high, branch to leave
-    CP A, $D0 ;- SMS_PIXELYOFFSET
+    ADD HL, DE
+    LD DE, $01B8
+    SBC HL, DE
     RET NC                              ;if too low, branch to leave
+    LD A, $01
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on other half of player
     JP NZ, CheckSideMTiles              ;if something found, branch
     LD HL, Temp_Bytes + $00
@@ -6160,10 +6191,14 @@ ChkForNonSolids:
 ;-------------------------------------------------------------------------------------
 
 FireballBGCollision:
-    LD L, <Fireball_Y_Position
+    ;LD L, <Fireball_Y_Position
+    ;LD A, (HL)
+    ;CP A, $18 - SMS_PIXELYOFFSET
+    ;JP C, ClearBounceFlag
+    LD L, <Fireball_Y_HighPos
     LD A, (HL)
-    CP A, $18 - SMS_PIXELYOFFSET
-    JP C, ClearBounceFlag
+    OR A
+    JP Z, ClearBounceFlag
 ;
     CALL BlockBufferChk_FBall
     JP Z, ClearBounceFlag
@@ -6597,6 +6632,11 @@ BlockBufferCollision:
     ADD A, (HL)                         ;add it to value obtained using Y as offset
     SUB A, $08  ; $20                   ;subtract 8 pixels for the status bar     
     AND A, %11110000                    ;mask out low nybble
+    INC L
+    BIT 0, (HL)
+    JP NZ, +
+    XOR A
++:
     LD IXL, A                           ;store result here
 ;
     addAToDE_M
@@ -6704,7 +6744,6 @@ GetObjRelativePosition:
     LD (DE), A                              ;store here
 ;
     LD L, <SprObject_X_Position
-    ;LD E, <SprObject_Rel_XPos
     DEC E                                   ;<SprObject_Rel_XPos
     LD A, (ScreenLeft_X_Pos)
     LD C, A
@@ -6787,64 +6826,123 @@ RunOffscrBitsSubs:
 XOffscreenBitsData:
     ; $00
     .db $7f, $3f, $1f, $0f, $07, $03, $01, $00
-    ; $07
+    ; $08
     .db $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
-    ; $0F
 
-DefaultXOnscreenOfs:
-    .db $07, $0f, $07
+;DefaultXOnscreenOfs:
+;    .db $07, $0f, $07
 .ENDS
 
+; GetXOffscreenBits:
+; ;   LOOP 1 (RIGHT SIDE CHECK?)
+;     LD L, <SprObject_X_Position
+;     LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
+;     SUB A, (HL)                             ;get difference between pixel coordinate of edge
+;     LD IYH, A                               ;store here
+; ;
+;     LD L, <SprObject_PageLoc
+;     LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
+;     SBC A, (HL)                             ;subtract from page location of object position
+; ;
+;     LD DE, DefaultXOnscreenOfs + $01        ;load offset value here
+;     JP M, XLdBData                          ;if beyond right edge or in front of left edge, branch
+;     INC E                                   ;if not, load alternate offset value here
+;     CP A, $01
+;     JP P, XLdBData                          ;if one page or more to the left of either edge, branch
+;     LD IYL, $38                             ;if no branching, load value here and store
+;     LD A, $08                               ;load some other value and execute subroutine
+;     CALL DividePDiff
+;     JP XLdBData@DividePDiff_Ret
+; XLdBData:
+;     LD A, (DE)                              
+; @DividePDiff_Ret:
+;     LD DE, XOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)                              ;get bits here
+;     OR A                                    ;if bits not zero, branch to leave
+;     RET NZ
+; ;   LOOP 2 (LEFT SIDE CHECK?)
+;     LD L, <SprObject_X_Position
+;     LD A, (ScreenEdge_X_Pos)
+;     SUB A, (HL)
+;     LD IYH, A
+; ;
+;     LD L, <SprObject_PageLoc
+;     LD A, (ScreenEdge_PageLoc)
+;     SBC A, (HL)
+; ;
+;     LD DE, DefaultXOnscreenOfs
+;     JP M, XLdBData_2
+;     INC E
+;     CP A, $01
+;     JP P, XLdBData_2
+;     LD IYL, $38
+;     LD A, $08
+;     CALL DividePDiff_2
+;     JP XLdBData_2@DividePDiff_Ret
+; XLdBData_2:
+;     LD A, (DE)
+; @DividePDiff_Ret:
+;     LD DE, XOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)
+;     RET
+
+
 GetXOffscreenBits:
-;   LOOP 1 (RIGHT SIDE CHECK?)
+;   LOOP 1 (RIGHT SIDE CHECK)
     LD L, <SprObject_X_Position
     LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
     SUB A, (HL)                             ;get difference between pixel coordinate of edge
     LD IYH, A                               ;store here
-;
     LD L, <SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
     SBC A, (HL)                             ;subtract from page location of object position
 ;
-    LD DE, DefaultXOnscreenOfs + $01        ;load offset value here
+    LD A, $0F                               ;load offset value here
     JP M, XLdBData                          ;if beyond right edge or in front of left edge, branch
-    INC E                                   ;if not, load alternate offset value here
-    CP A, $01
-    JP P, XLdBData                          ;if one page or more to the left of either edge, branch
-    LD IYL, $38                             ;if no branching, load value here and store
-    LD A, $08                               ;load some other value and execute subroutine
-    CALL DividePDiff
-    JP XLdBData@DividePDiff_Ret
+    LD A, $07
+    JP NZ, XLdBData                         ;if one page or more to the left of either edge, branch
+    ; DividePDiff
+    LD A, IYH
+    CP A, $38
+    LD A, $07
+    JP NC, XLdBData
+    LD A, IYH
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
 XLdBData:
-    LD A, (DE)                              
-@DividePDiff_Ret:
     LD DE, XOffscreenBitsData
     addAToDE8_M
     LD A, (DE)                              ;get bits here
     OR A                                    ;if bits not zero, branch to leave
     RET NZ
-;   LOOP 2 (LEFT SIDE CHECK?)
+;   LOOP 2 (LEFT SIDE CHECK)
     LD L, <SprObject_X_Position
     LD A, (ScreenEdge_X_Pos)
     SUB A, (HL)
     LD IYH, A
-;
     LD L, <SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc)
     SBC A, (HL)
 ;
-    LD DE, DefaultXOnscreenOfs
+    LD A, $07
     JP M, XLdBData_2
-    INC E
-    CP A, $01
-    JP P, XLdBData_2
-    LD IYL, $38
-    LD A, $08
-    CALL DividePDiff_2
-    JP XLdBData_2@DividePDiff_Ret
+    LD A, $0F
+    JP NZ, XLdBData_2
+    LD A, IYH
+    CP A, $38
+    LD A, $0F
+    JP NC, XLdBData_2
+    LD A, IYH
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+    ADD A, $08
 XLdBData_2:
-    LD A, (DE)
-@DividePDiff_Ret:
     LD DE, XOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
@@ -6861,70 +6959,132 @@ YOffscreenBitsData:
     ; $08
     .db $00
 
-DefaultYOnscreenOfs:
-    .db $04, $00, $04
+;DefaultYOnscreenOfs:
+;    .db $04, $00, $04
 
-HighPosUnitData:
-    .db $ff, $00
+;HighPosUnitData:
+;    .db $ff, $00
 .ENDS
 
 ;   1, 0
+; GetYOffscreenBits:
+; ;   LOOP 1 (TOP SIDE CHECK?)
+;     LD L, <SprObject_Y_Position
+;     LD A, $E8 ;LD A, (HighPosUnitData + $01)
+;     SUB A, (HL)
+;     LD IYH, A
+; ;
+;     LD L, <SprObject_Y_HighPos
+;     LD A, $00 ;LD A, $01
+;     SBC A, (HL)
+; ;
+;     LD DE, DefaultYOnscreenOfs + $01
+;     JP M, YLdBData
+;     INC E
+;     CP A, $01
+;     JP P, YLdBData
+;     LD IYL, $20
+;     LD A, $04
+;     CALL DividePDiff
+;     JP YLdBData@DividePDiff_Ret
+; YLdBData:
+;     LD A, (DE)
+; @DividePDiff_Ret:
+;     LD DE, YOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)
+;     OR A
+;     RET NZ
+; ;   LOOP 2 (BOTTOM SIDE CHECK?)
+;     LD L, <SprObject_Y_Position
+;     LD A, $E7 ;LD A, (HighPosUnitData)
+;     SUB A, (HL)
+;     LD IYH, A
+; ;
+;     LD L, <SprObject_Y_HighPos
+;     LD A, $01
+;     SBC A, (HL)
+; ;
+;     LD DE, DefaultYOnscreenOfs
+;     JP M, YLdBData_2
+;     INC E
+;     CP A, $01
+;     JP P, YLdBData_2
+;     LD IYL, $20
+;     LD A, $04
+;     CALL DividePDiff_2
+;     JP YLdBData_2@DividePDiff_Ret
+; YLdBData_2:
+;     LD A, (DE)
+; @DividePDiff_Ret:
+;     LD DE, YOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)
+;     RET
+
+
 GetYOffscreenBits:
-;   LOOP 1 (TOP SIDE CHECK?)
+;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $00E8
     LD L, <SprObject_Y_Position
-    LD A, (HighPosUnitData + $01)
+    LD A, $E8
     SUB A, (HL)
     LD IYH, A
-;
-    LD L, <SprObject_Y_HighPos
-    LD A, $01
+    INC L                               ; <SprObject_Y_HighPos
+    LD A, $00
     SBC A, (HL)
 ;
-    LD DE, DefaultYOnscreenOfs + $01
+    LD A, $00
     JP M, YLdBData
-    INC E
-    CP A, $01
-    JP P, YLdBData
-    LD IYL, $20
     LD A, $04
-    CALL DividePDiff
-    JP YLdBData@DividePDiff_Ret
+    JP NZ, YLdBData
+    ; DividePDiff
+    LD A, IYH
+    CP A, $20
+    LD A, $04
+    JP NC, YLdBData
+    LD A, IYH
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
 YLdBData:
-    LD A, (DE)
-@DividePDiff_Ret:
     LD DE, YOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
     OR A
     RET NZ
-;   LOOP 2 (BOTTOM SIDE CHECK?)
+;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01E7
     LD L, <SprObject_Y_Position
-    LD A, (HighPosUnitData)
+    LD A, $E7
     SUB A, (HL)
     LD IYH, A
-;
     LD L, <SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
 ;
-    LD DE, DefaultYOnscreenOfs
-    JP M, YLdBData_2
-    INC E
-    CP A, $01
-    JP P, YLdBData_2
-    LD IYL, $20
     LD A, $04
-    CALL DividePDiff_2
-    JP YLdBData_2@DividePDiff_Ret
+    JP M, YLdBData_2
+    LD A, $00
+    JP NZ, YLdBData_2
+    ; DividePDiff_2
+    LD A, IYH
+    CP A, $20
+    LD A, $00
+    JP NC, YLdBData_2
+    LD A, IYH
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+    ADD A, $04
 YLdBData_2:
-    LD A, (DE)
-@DividePDiff_Ret:
     LD DE, YOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
     RET
 
 ;--------------------------------
+/*
 DividePDiff:
     LD IXH, A                           ;store current value in A here
     LD A, IYH                           ;get pixel difference
@@ -6953,5 +7113,5 @@ DividePDiff_2:
     AND A, $07                          ;mask out all but 3 LSB
     ADD A, IXH                          ;if not, add value to difference / 8
     RET
-    
+*/
 ;-------------------------------------------------------------------------------------

@@ -38,8 +38,8 @@
     SprObject_PageLoc:              dsb $01 ; [$19]
     SprObject_X_Position:           dsb $01 ; [$19]
     SprObject_Y_Speed:              dsb $01 ; [$16]
-    SprObject_Y_HighPos:            dsb $01 ; [$19]
     SprObject_Y_Position:           dsb $01 ; [$19]
+    SprObject_Y_HighPos:            dsb $01 ; [$19]
     SprObject_X_MoveForce:          dsb $01 ; [$16]
     SprObject_YMF_Dummy:            dsb $01 ; [$19]
     SprObject_Y_MoveForce:          dsb $01 ; [$16]
@@ -147,8 +147,8 @@
     ExplosionTimerCounter:          .dsb $01
     PiranhaPlant_MoveFlag:          dsb $01
         ; ---
-    Enemy_Y_HighPos:                dsb $01 ; [$19]
     Enemy_Y_Position:               dsb $01 ; [$19]
+    Enemy_Y_HighPos:                dsb $01 ; [$19]
     YPlatformTopYPos:               .dsb $01
     RedPTroopaOrigXPos:             .dsb $01
     Enemy_X_MoveForce:              dsb $01 ; [$16]
@@ -431,8 +431,8 @@
     Fireball_PageLoc:               dsb $01 ; [$19]
     Fireball_X_Position:            dsb $01 ; [$19]
     Fireball_Y_Speed:               dsb $01 ; [$16]
-    Fireball_Y_HighPos:             dsb $01 ; [$19]
     Fireball_Y_Position:            dsb $01 ; [$19]
+    Fireball_Y_HighPos:             dsb $01 ; [$19]
     Fireball_X_MoveForce:           dsb $01 ; [$16]
     Fireball_YMF_Dummy:             dsb $01 ; [$19]
     Fireball_Y_MoveForce:           dsb $01 ; [$16]
@@ -493,8 +493,8 @@
     Block_PageLoc:                  dsb $01 ; [$19]
     Block_X_Position:               dsb $01 ; [$19]
     Block_Y_Speed:                  dsb $01 ; [$16]
-    Block_Y_HighPos:                dsb $01 ; [$19]
     Block_Y_Position:               dsb $01 ; [$19]
+    Block_Y_HighPos:                dsb $01 ; [$19]
     Block_X_MoveForce:              dsb $01 ; [$16]
     Block_YMF_Dummy:                dsb $01 ; [$19]
     Block_Y_MoveForce:              dsb $01 ; [$16]
@@ -562,8 +562,8 @@
     Misc_PageLoc:                   dsb $01 ; [$19]
     Misc_X_Position:                dsb $01 ; [$19]
     Misc_Y_Speed:                   dsb $01 ; [$16]
-    Misc_Y_HighPos:                 dsb $01 ; [$19]
     Misc_Y_Position:                dsb $01 ; [$19]
+    Misc_Y_HighPos:                 dsb $01 ; [$19]
     Misc_X_MoveForce:               dsb $01 ; [$16]
     Misc_YMF_Dummy:                 dsb $01 ; [$19]
     Misc_Y_MoveForce:               dsb $01 ; [$16]
@@ -607,8 +607,8 @@
     Bubble_PageLoc:                 dsb $01
     Bubble_X_Position:              dsb $01
     .                               dsb $01 ; UNUSED
-    Bubble_Y_HighPos:               dsb $01
     Bubble_Y_Position:              dsb $01
+    Bubble_Y_HighPos:               dsb $01
     .                               dsb $01 ; UNUSED
     Bubble_YMF_Dummy:               dsb $01
     .                               dsb $01 ; UNUSED
@@ -707,8 +707,8 @@
     SwimmingFlag:                   dsb $01
     Player_X_MoveForce:             dsb $01
     DiffToHaltJump:                 dsb $01
-    JumpOrigin_Y_HighPos:           dsb $01
     JumpOrigin_Y_Position:          dsb $01
+    JumpOrigin_Y_HighPos:           dsb $01
     VerticalForce:                  dsb $01
     VerticalForceDown:              dsb $01
     PlayerChangeSizeFlag:           dsb $01
@@ -890,7 +890,6 @@
 .RAMSECTION "RAM Page 1F" SLOT 34
     FrameDoneFlag:                  dsb $01
 ;
-    MDControllerFlag:               dsb $01
     MDControllerBits:               dsb $01
     MDControllerBitsOld:            dsb $01
 ;

@@ -33,7 +33,7 @@ AltYPosOffset:
 PlayerStarting_Y_Pos:
     ;.db $00, $20, $b0, $50, $00, $00, $b0, $b0
     ;.db $f0
-    .db $00, $08, $98, $38, $00, $00, $98, $98
+    .db $E8, $08, $98, $38, $E8, $E8, $98, $98
     .db $D8
 .ENDS
 
@@ -95,6 +95,11 @@ SetStPos:
     addAToHL8_M
     LD A, (HL)                          ;AltEntranceControl as offset for horizontal and either $0710
     LD (Player_Y_Position), A           ;or value that overwrote $0710 as offset for vertical
+    CP A, $E8                           ; Check if starting y position is $E8
+    JP NZ, +                            ; If not, skip
+    LD HL, Player_Y_HighPos             ; Decrement high position byte because we are above screen
+    DEC (HL)
++:
 ;
     LD HL, PlayerBGPriorityData
     LD A, B
@@ -467,12 +472,13 @@ PlayerCtrlRoutine:
     OR A
     JP NZ, SaveJoyp                     ;if not, branch
 ;
-    LD A, (Player_Y_HighPos)
-    DEC A                               ;if not in vertical area between
-    JP NZ, DisJoyp                      ;status bar and bottom, branch
-;
-    LD A, (Player_Y_Position)
-    CP A, $D0 - SMS_PIXELYOFFSET        ;if nearing the bottom of the screen or
+    LD HL, (Player_Y_Position)
+    LD DE, $00E8
+    SBC HL, DE                          ;if not in vertical area between
+    JP C, DisJoyp                       ;status bar and bottom, branch
+    ADD HL, DE
+    LD DE, $01B8
+    SBC HL, DE                          ;if nearing the bottom of the screen or
     JP C, SaveJoyp                      ;not in the vertical area between status bar or bottom,
 DisJoyp:
     XOR A                               ;disable controller bits

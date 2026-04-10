@@ -932,7 +932,8 @@ AllUnder:
     LD C, $0F                           ;set $0f to render all way down
     JP RenderUnderPart                  ;now render the stem of mushroom
 NoUnder:
-    LD BC, $0700                        ;load row of ledge, set 0 for no bottom on this part
+    LD B, IXH
+    LD C, $00                        ;load row of ledge, set 0 for no bottom on this part
     JP RenderUnderPart      
 
 ;--------------------------------

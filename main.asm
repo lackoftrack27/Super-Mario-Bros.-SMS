@@ -1930,7 +1930,8 @@ Palette1_MTiles:
     .dw BG_MACRO($0192), BG_MACRO($0192), BG_MACRO($0192), BG_MACRO($0192)  ; entry bottom
     .dw BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4)  ; brick wall PRIORITY (NEW)
     ; Tree Ledge Stump
-    .dw $00, $00, $00, $00
+    ;.dw $00, $00, $00, $00
+    .dw BG_MACRO($0133), BG_MACRO($0134), BG_MACRO($0135), BG_MACRO($0136)  ; MODIFY FOR ALL-STARS TILES
     ; Fence
     .dw BG_MACRO($017F), BG_MACRO($0180), BG_MACRO($0181), BG_MACRO($0182)
     ; Tree Trunk

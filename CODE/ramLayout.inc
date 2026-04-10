@@ -22,7 +22,8 @@
     VineObjOffset:                  dsb $01 ; [$02]
     VineFlagOffset:                 dsb $01
     VineHeight:                     dsb $01
-    VineStart_Y_Position:           dsb $01
+    ;VineStart_Y_Position:           dsb $01
+    TreeLedgeLength:                dsb $01
     ; $14
     SprShuffleAmt:                  dsb $01 ; [$03]
     BalPlatformAlignment:           dsb $01
@@ -111,7 +112,7 @@
     VineObjOffset_01:               dsb $01 ; VineObjOffset[1]
     BowserHitPoints:                dsb $01
     StompChainCounter:              dsb $01
-    .                               dsb $01 ; UNUSED
+    .                               dsb $01 ; TreeLedgeLength[1]
     ; $14
     SprShuffleAmt_01:               dsb $01 ; SprShuffleAmt[1]
     FirebarSpinSpeed:               dsb $01 ; [6]
@@ -197,11 +198,13 @@
     EnemyOffscrBitsMasked_01:       dsb $01 ; [6]
     Temp_Bytes:                     dsb $0C ; $00 - $07, $EB - $EF
     ; $0D
-    .                               dsb $01 ; AreaObjOffsetBuffer[01]
-    .                               dsb $01 ; AreaObjectLength[01]
-    .                               dsb $01 ; MushroomLedgeHalfLen[01]
+    .                               dsb $01 ; AreaObjOffsetBuffer[02]
+    .                               dsb $01 ; AreaObjectLength[02]
+    .                               dsb $01 ; MushroomLedgeHalfLen[02]
     ; $10
-    .                               dsb $04 ; UNUSED
+    .                               dsb $02 ; UNUSED
+    VineStart_Y_Position:           dsb $01
+    .                               dsb $01 ; TreeLedgeLength[02]
     ; $14
     SprShuffleAmt_02:               dsb $01 ; SprShuffleAmt[2]
     FirebarSpinSpeed_01:            dsb $01

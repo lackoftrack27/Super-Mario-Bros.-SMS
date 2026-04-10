@@ -843,15 +843,15 @@ FrenzyIDData:
 
 AreaFrenzy:
     LD A, IXL                           ;use area object identifier bit as offset
-    LD HL, FrenzyIDData-8               ;note that it starts at 8, thus weird address here
+    SUB A, $08
+    LD HL, FrenzyIDData                 ;note that it starts at 8, thus weird address here
     addAToHL8_M
     LD A, (HL)
     LD HL, Enemy_ID + ($05 * $100)
-    LD B, $05
+    LD B, $06
 FreCompLoop:
     DEC H                               ;check regular slots of enemy object buffer
-    DEC B
-    JP M, ExitAFrenzy                   ;if all slots checked and enemy object not found, branch to store
+    DJNZ ExitAFrenzy                    ;if all slots checked and enemy object not found, branch to store
     CP A, (HL)                          ;check for enemy object in buffer versus frenzy object
     JP NZ, FreCompLoop
     XOR A                               ;if enemy object already present, nullify queue and leave
@@ -878,6 +878,8 @@ TreeLedge:
     JP Z, EndTreeL
     JP P, MidTreeL
     LD (HL), C                          ;store lower nybble into buffer flag as length of ledge
+    LD L, <TreeLedgeLength
+    LD (HL), C
     LD A, (CurrentPageLoc)
     LD E, A
     LD A, (CurrentColumnPos)
@@ -891,7 +893,34 @@ MidTreeL:
     LD A, B
     addAToHL8_M
     LD (HL), MT_TREELEDGE_MID           ;at the start of level for continuous effect
-    LD A, MT_TREELEDGE_TRUCK
+    ;LD A, MT_TREELEDGE_TRUCK
+    ; ALL-STARS
+    EX DE, HL
+    ; CHECK IF TOTAL LENGTH IS 2
+    LD HL, (ObjectOffset)
+    LD L, <TreeLedgeLength
+    LD A, (HL)
+    CP A, $02
+    LD A, MT_TREELEDGE_TRUCK_ST
+    JP Z, MidTreeLSetMT
+    ; CHECK IF AT 1ST COLUMN OF TRUNK
+    LD A, (HL)
+    LD L, <AreaObjectLength
+    SUB A, (HL)
+    DEC A
+    LD A, MT_TREELEDGE_TRUCK_LT         ; LEFT EDGE
+    JP Z, MidTreeLSetMT
+    ; CHECK IF LAST COLUMN OF TRUNK
+    LD A, (HL)
+    DEC A
+    LD A, MT_TREELEDGE_TRUCK            ; CENTER
+    JP NZ, MidTreeLSetMT
+    LD A, MT_TREELEDGE_TRUCK_RT         ; RIGHT EDGE
+MidTreeLSetMT:
+    INC E
+    LD (DE), A
+    INC B
+    ADD A, $04
     JP AllUnder                         ;now render the part underneath
 EndTreeL:
     LD A, MT_TREELEDGE_RIGHT            ;render end of tree ledge
@@ -1702,6 +1731,11 @@ RenderUnderPart:
     LD A, (HL)                          ;check current spot to see if there's something
     OR A
     JP Z, DrawThisRow                   ;we need to keep, if nothing, go ahead
+    CP A, MT_TREELEDGE_TRUCK
+    JP C, +
+    CP A, MT_TREELEDGE_TRUCK_SB + $01
+    JP C, WaitOneRow
++:
     CP A, MT_TREELEDGE_MID
     JP Z, WaitOneRow                    ;if middle part (tree ledge), wait until next row
     CP A, MT_MUSHROOM_MID

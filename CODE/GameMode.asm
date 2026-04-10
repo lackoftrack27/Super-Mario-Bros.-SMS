@@ -1754,8 +1754,8 @@ XMoveCntr_Platform:
     LD A, (HL)
     SRL A
     JP C, DecSeXM
-    LD A, C
-    CP A, $01
+    LD A, (Temp_Bytes + $01)
+    CP A, C
     JP Z, IncPXM
     LD L, <XMoveSecondaryCounter
     INC (HL)
@@ -2465,6 +2465,8 @@ BalancePlatform:
 
 CheckBalPlatform:
     LD C, A
+    ADD A, $C1
+    LD D, A
 ;
     LD L, <PlatformCollisionFlag
     LD A, (HL)
@@ -2493,11 +2495,85 @@ ChkForFall:
     JP StopPlatforms
 
 ChkOtherForFall:
-    RET
+    LD E, <Enemy_Y_Position
+    EX DE, HL
+    CP A, (HL)
+    EX DE, HL
+    JP C, ChkToMoveBalPlat
+;
+    EX AF, AF'
+    LD A, (Temp_Bytes + $00)
+    ADD A, $C0
+    CP A, H
+    JP Z, InitPlatformFall
+;
+    EX AF, AF'
+    ADD A, $02
+    LD (DE), A
+    JP StopPlatforms
 
 ChkToMoveBalPlat:
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    PUSH AF
+;
+    LD L, <PlatformCollisionFlag
+    LD A, (HL)
+    OR A
+    JP P, ColFlg
+;
+    LD L, <Enemy_Y_MoveForce
+    LD A, (HL)
+    ADD A, $05
+    LD (Temp_Bytes + $00), A
+    LD L, <Enemy_Y_Speed
+    ADC A, $00
+    JP M, PlatDn
+    JP NZ, PlatUp
+    LD A, (Temp_Bytes + $00)
+    CP A, $0B
+    JP C, PlatSt
+    JP PlatUp
+ColFlg:
+    EX AF, AF'
+    LD A, (ObjectOffset + $01)
+    SUB A, $C0
+    LD B, A
+    EX AF, AF'
+    CP A, B
+    JP Z, PlatDn
+PlatUp:
+    CALL MovePlatformUp
+    JP DoOtherPlatform
+PlatSt:
+    CALL StopPlatforms
+    JP DoOtherPlatform
+PlatDn:
+    CALL MovePlatformDown
 
 DoOtherPlatform:
+    LD L, <Enemy_State
+    LD A, (HL)
+    ADD A, $C1
+    LD D, A
+    LD E, <Enemy_Y_Position
+;
+    POP AF
+    LD L, <Enemy_Y_Position
+    SUB A, (HL)
+    EX DE, HL
+    ADD A, (HL)
+    LD (HL), A
+    EX DE, HL
+;
+    LD L, <PlatformCollisionFlag
+    LD A, (HL)
+    OR A
+    JP M, DrawEraseRope
+;
+    ADD A, $C1
+    LD H, A
+    CALL PositionPlayerOnVPlat
 
 DrawEraseRope:
 
@@ -2506,9 +2582,10 @@ OtherRope:
 SetupPlatformRope:
 
 InitPlatformFall:
-    LD A, C
-    ADD A, $C1
-    LD H, A
+    ;LD A, C
+    ;ADD A, $C1
+    ;LD H, A
+    LD H, D
     CALL GetEnemyOffscreenBits
 ;
     LD A, $06
@@ -2523,13 +2600,10 @@ InitPlatformFall:
 ;
     LD L, <Enemy_MovingDir
     LD (HL), $01
+    LD D, $C1
 
 StopPlatforms:
     CALL InitVStf
-;
-    LD A, C
-    ADD A, $C1
-    LD D, A
 ;
     XOR A
     LD E, <Enemy_Y_Speed
@@ -2539,7 +2613,24 @@ StopPlatforms:
     RET
 
 PlatformFall:
-    
+    LD A, C
+    PUSH AF
+;   
+    CALL MoveFallingPlatform
+;
+    POP AF
+    ADD A, $C1
+    LD H, A
+    CALL MoveFallingPlatform
+;
+    LD HL, (ObjectOffset)
+    LD L, <PlatformCollisionFlag
+    LD A, (HL)
+    OR A
+    JP M, ExPF
+    ADD A, $C1
+    LD H, A
+    CALL PositionPlayerOnVPlat
 ExPF:
     LD HL, (ObjectOffset)
     RET
@@ -2619,7 +2710,7 @@ PositionPlayerOnHPlat:
     ADC A, $00
     JP SetPVar
 PPHSubt:
-    SBC A, $00
+    ADC A, $FF
 SetPVar:
     LD (Player_PageLoc), A
 ;
@@ -3467,7 +3558,7 @@ SetupJumpCoin:
 ;
     LD E, <Misc_Y_Position
     LD A, IXL
-    ADD A, $08
+    ADD A, $20
     LD (DE), A
 ;
 JCoinC:
@@ -3847,21 +3938,16 @@ MovePlatformDown:
 MovePlatformUp:
     LD A, $01
 @SaveVal:
-    PUSH AF                         ;save value to stack
-    LD L, <Enemy_ID
-    LD C, (HL)                      ;get enemy object identifier
-    ;INC B                           ;increment offset for enemy object
-    INC H
+    ;PUSH AF                         ;save value to stack
     LD IXL, $05                     ;save downward movement amount here
     LD IXH, $0A                     ;save upward movement amount here
     LD IYL, $03                     ;save maximum vertical speed here
-    POP AF                          ;get value from stack
+    ;POP AF                          ;get value from stack
     LD C, A                         ;use as Y, then move onto code shared by red koopa
     
 RedPTroopaGrav:
     CALL ImposeGravity              ;do a sub to move object gradually
     ;LD HL, (ObjectOffset)          ;get enemy object offset and leave
-    ;LD B, (HL)
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -3983,6 +4069,7 @@ FireballEnemyCDLoop:
     JP Z, NoFToECol
 ;
     LD L, <Enemy_ID
+    LD A, (HL)
     CP A, $24
     JP C, GoombaDie
     CP A, $2B

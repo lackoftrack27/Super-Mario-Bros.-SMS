@@ -122,9 +122,7 @@ CheckRightExtBounds:
     LD L, <Enemy_Y_Position
     LD (HL), A
 ;
-    LD A, (DE)
-    AND A, %00001111
-    CP A, $0E                       ;do one last check for special row $0e
+    CP A, $E0                       ;do one last check for special row $0e
     JP Z, ParseRow0e                ;(necessary if branched to $c1cb)???
 ;
     INC E
@@ -1667,7 +1665,7 @@ SetYO:
     ADD A, (HL)
     LD L, <YPlatformCenterYPos
     LD (HL), A
-    RET
+    ; FALL THROUGH
 
 ;--------------------------------
 

@@ -280,6 +280,11 @@ AnimatedBGTileInits:
     .db $06 * $20
     .dw AnimiatedBGTiles@Grass
     .db $04, $10, $10
+@Latern:
+    .dw $3D80 | VRAMWRITE
+    .db $04 * $20
+    .dw AnimiatedBGTiles@Latern
+    .db $04, $10, $10
 .ENDS
 
 .SECTION "Animated Background Tile Tables" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
@@ -288,6 +293,8 @@ AnimiatedBGTiles:
     .dw CoinFrame0, CoinFrame1, CoinFrame2, CoinFrame1, $0000
 @Grass:
     .dw GrassFrame0, GrassFrame1, GrassFrame2, GrassFrame1, $0000
+@Latern:
+    .dw LaternFrame0, LaternFrame1, LaternFrame2, LaternFrame1, $0000 
 .ENDS
 
 ;   AnimatedBGTileQueue
@@ -331,10 +338,12 @@ ColorRotation:
     DEC L
     LD (BGTileQueue0.TileAdr), HL
 @UpdateSlot1:
-;   SLOT 1
     LD HL, BGTileQueue1.Timer
+    LD A, (HL)
+    OR A
+    JP M, @UpdateSlot2
     DEC (HL)
-    RET NZ;JP NZ, @UpdateSlot1
+    JP NZ, @UpdateSlot2
     INC L
     LD A, (HL)
     DEC L
@@ -357,8 +366,36 @@ ColorRotation:
 +:
     DEC L
     LD (BGTileQueue1.TileAdr), HL
+@UpdateSlot2:
+    LD HL, BGTileQueue2.Timer
+    LD A, (HL)
+    OR A
+    RET M
+    DEC (HL)
+    RET NZ
+    INC L
+    LD A, (HL)
+    DEC L
+    LD (HL), A
+    LD A, $01
+    LD (BGTileQueue2.UpdateFlag), A
+    ;
+    LD HL, (BGTileQueue2.TileAdr)           ; get address of current tile data
+    INC L
+    INC L
+    INC L
+    LD A, (HL)                              ; high byte of next frame's tile address
+    OR A
+    JP NZ, +
+    LD A, (BGTileQueue2.FrameCount)
+    ADD A, A
+    SUB A, L
+    NEG
+    LD L, A
++:
+    DEC L
+    LD (BGTileQueue2.TileAdr), HL
     RET
-
 
 ;-------------------------------------------------------------------------------------
 ;   $00 (IXL)
@@ -867,8 +904,9 @@ ChkEnemyFrenzy:
     LD (HL), A                      ;store as enemy object identifier here
     LD L, <Enemy_Flag
     LD (HL), $01                    ;activate enemy object flag
+    XOR A
     LD L, <Enemy_State
-    LD (HL), $00                    ;initialize state and frenzy queue
+    LD (HL), A                      ;initialize state and frenzy queue
     LD (EnemyFrenzyQueue), A
 ;
     JP InitEnemyObject              ;and then jump to deal with this enemy
@@ -2801,51 +2839,46 @@ OffscreenBoundsCheck:
     CP A, OBJECTID_HammerBro
     JP Z, LimitB
     CP A, OBJECTID_PiranhaPlant
-    JP NZ, +
+    JP NZ, ExtendLB
 LimitB:
     LD A, (ScreenLeft_X_Pos)
-    ADD A, $39  ;ADD A, $38
-    JP ExtendLB
-+:
-    LD A, (ScreenLeft_X_Pos)
-ExtendLB:
+    ADD A, $39
+    CCF
     SBC A, $48
-    LD C, A ;LD (Temp_Bytes + $01), A
+    JP +
+ExtendLB:
+    LD A, (ScreenLeft_X_Pos)
+    SUB A, $49
++:
+    LD C, A
 ;
     LD A, (ScreenLeft_PageLoc)
     SBC A, $00
-    LD B, A ;LD (Temp_Bytes + $00), A
+    LD B, A
 ;
     LD A, (ScreenRight_X_Pos)
-    ADD A, $48
-    LD E, A ;LD (Temp_Bytes + $03), A
+    CCF
+    ADC A, $48
+    LD E, A
 ;
     LD A, (ScreenRight_PageLoc)
     ADC A, $00
-    LD D, A ;LD (Temp_Bytes + $02), A
+    LD D, A
 ;
-    ;LD A, (Temp_Bytes + $01)
-    ;LD C, A
     LD L, <Enemy_X_Position
     LD A, (HL)
     CP A, C
-    ;LD A, (Temp_Bytes + $00)
-    ;LD C, A
-    DEC L ;LD L, <Enemy_PageLoc
+    DEC L ; <Enemy_PageLoc
     LD A, (HL)
-    SBC A, B ;SBC A, C
+    SBC A, B
     JP M, EraseEnemyObject
 ;
-    ;LD A, (Temp_Bytes + $03)
-    ;LD C, A
-    INC L ;LD L, <Enemy_X_Position
+    INC L ; <Enemy_X_Position
     LD A, (HL)
-    CP A, E ;CP A, C
-    ;LD A, (Temp_Bytes + $02)
-    ;LD C, A
-    DEC L ;LD L, <Enemy_PageLoc
+    CP A, E
+    DEC L ; <Enemy_PageLoc
     LD A, (HL)
-    SBC A, D ;SBC A, C
+    SBC A, D
     RET M
 ;
     LD L, <Enemy_State
@@ -5663,11 +5696,11 @@ HandlePipeEntry:
     RET Z
 ;
     LD A, (Temp_Bytes + $00)
-    CP A, $11
+    CP A, MT_WARPPIPE_TOP_RIGHT
     RET NZ
 ;
     LD A, (Temp_Bytes + $01)
-    CP A, $10
+    CP A, MT_WARPPIPE_TOP_LEFT
     RET NZ
 ;
     LD A, $30

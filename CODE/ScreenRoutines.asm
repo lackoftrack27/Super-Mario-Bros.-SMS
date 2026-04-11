@@ -411,6 +411,12 @@ LoadLevelTileData:
     OUT (VDPCON_PORT), A
 ;   UPLOAD TILES FOR AREA
     DI
+    ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
+    LD HL, AnimatedBGTileInits@Coin
+    LD DE, BGTileQueue0 + $01
+    LD BC, $0008
+    LDIR
+    ; LOAD OVERWORLD GFX AS BASE
     LD A, :Tiles_BG_Overworld
     LD (MAPPER_SLOT2), A
     LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
@@ -418,11 +424,34 @@ LoadLevelTileData:
     LD HL, Tiles_BG_Overworld
     LD BC, _sizeof_Tiles_BG_Overworld
     CALL copyToVDP
-    LD A, BANK_SLOT2
-    LD (MAPPER_SLOT2), A
+    ; LOAD SPECIAL TILES DEPENDING ON AREATYPE
     LD A, (AreaType)
-    CP A, $02
-    JP NZ, +
+    OR A
+    JP Z, WaterAreaSetup
+    DEC A
+    JP Z, OverWorldSetup
+    DEC A
+    JP Z, UndergroundSetup
+CastleSetup:
+    JP TileLoadDone
+WaterAreaSetup:
+    JP TileLoadDone
+OverWorldSetup:
+    ; NOTHING FOR SLOT 1
+    LD HL, BGTileQueue1.Timer
+    LD (HL), $FF
+    LD HL, BGTileQueue1.UpdateFlag
+    LD (HL), $00
+    ; SLOT 2 'GRASS'
+    LD A, :AnimatedBGTileInits
+    LD (MAPPER_SLOT2), A
+    LD HL, AnimatedBGTileInits@Grass
+    LD DE, BGTileQueue2 + $01
+    LD BC, $0008
+    LDIR
+    JP TileLoadDone
+UndergroundSetup:
+    ; UNIQUE TILES FOR UNDERGROUND AREA
     LD A, :Tiles_BG_Underground
     LD (MAPPER_SLOT2), A
     LD HL, $3A80 | VRAMWRITE
@@ -430,19 +459,20 @@ LoadLevelTileData:
     LD HL, Tiles_BG_Underground
     LD BC, _sizeof_Tiles_BG_Underground
     CALL copyToVDP
-    LD A, BANK_SLOT2
+    ; SLOT 1 'LATERN'
+    LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
-+:
-    EI
-;   ANIMATED BG TILE SETUP
-    ; SLOT 0 'COIN'
-    LD HL, AnimatedBGTileInits@Coin
-    LD DE, BGTileQueue0 + $01
-    LD BC, $0008
-    LDIR
-    ; SLOT 1 'GRASS'
-    LD HL, AnimatedBGTileInits@Grass
+    LD HL, AnimatedBGTileInits@Latern
     LD DE, BGTileQueue1 + $01
     LD BC, $0008
     LDIR
+    ; NOTHING FOR SLOT 2
+    LD HL, BGTileQueue2.Timer
+    LD (HL), $FF
+    LD HL, BGTileQueue2.UpdateFlag
+    LD (HL), $00
+TileLoadDone:
+    LD A, BANK_SLOT2
+    LD (MAPPER_SLOT2), A
+    EI
     RET

@@ -1315,13 +1315,48 @@ StreamAnimatedBGTiles:
     LD IXH, >OutiBlock128
     CALL IndirectCallIX
 @CheckSlot1:
-;   SLOT 1 (FIXED 6)
-    ;RET
+;   SLOT 1 (4 or less)
     ; CHECK ANIMATE FLAG
     LD DE, BGTileQueue1.UpdateFlag
     LD A, (DE)
     OR A
-    RET Z;JP Z, @CheckSlot1
+    JP Z, @CheckSlot2
+    XOR A
+    LD (DE), A
+    INC E
+    ; SET VDP ADDRESS
+    LD A, (DE)
+    INC E
+    OUT (VDPCON_PORT), A
+    LD A, (DE)
+    INC E
+    OUT (VDPCON_PORT), A
+    ; GET COUNT AND POINTER   
+    LD A, (DE)
+    INC E
+    ADD A, A
+    NEG
+    LD IXL, A
+    LD A, (DE)
+    INC E
+    LD L, A
+    LD A, (DE)
+    LD H, A
+    ; DEREFERENCE POINTER
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    ; WRITE TO VRAM
+    LD IXH, >OutiBlock128
+    CALL IndirectCallIX
+@CheckSlot2:
+;   SLOT 2 (FIXED 6)
+    ; CHECK ANIMATE FLAG
+    LD DE, BGTileQueue2.UpdateFlag
+    LD A, (DE)
+    OR A
+    RET Z
     XOR A
     LD (DE), A
     INC E
@@ -1476,7 +1511,7 @@ GroundPaletteData:
 UndergroundPaletteData:
     .dw swapBytes($C000)
     .db $20
-    .db $00, $00, $10, $24, $38, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $3C;$3D
+    .db $00, $00, $10, $24, $38, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $15, $3C;$3D
     .db $00, $00, $10, $24, $38, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
@@ -1852,6 +1887,11 @@ Palette0_MTiles:
     .dw BG_MACRO($0183), BG_MACRO($0189), BG_MACRO($0185), BG_MACRO($018A)  ; tall top, top half
     .dw BG_MACRO($0183), BG_MACRO($0184), BG_MACRO($0185), BG_MACRO($0186)  ; short top
     .dw BG_MACRO($0189), BG_MACRO($0184), BG_MACRO($018A), BG_MACRO($0186)  ; tall top, bottom half
+    ; Latern (NEW)
+    .dw BLANKTILE, BLANKTILE, BG_MACRO($01B8), BG_MACRO($01B4)              ; top left
+    .dw BG_MACRO($01B9), BG_MACRO($01B6), BLANKTILE, BLANKTILE              ; top right
+    .dw BLANKTILE, BLANKTILE, BG_MACRO($01B5), BLANKTILE                    ; bottom left
+    .dw BG_MACRO($01B7), BLANKTILE, BLANKTILE, BLANKTILE                    ; bottom right
     ; --- METATILES WITH COLLISION START HERE ---
     ; Vertical Pipe
     .dw BG_MACRO($1160), BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163)  ; warp pipe end left, points up
@@ -2126,6 +2166,7 @@ Tiles_SPR_Enemies:
 
     .INCLUDE "ANI_Coin.inc"
     .INCLUDE "ANI_Grass.inc"
+    .INCLUDE "ANI_Latern.inc"
 
 .ENDS
 

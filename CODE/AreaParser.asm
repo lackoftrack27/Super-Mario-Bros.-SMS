@@ -60,7 +60,7 @@ IncrementColumnPos:
 ;   ONLY 1,2,3 HAVE INDEXES
 ;   VALUES ARE OFFSETS INTO BackSceneryData
 BSceneDataOffsets:
-    .db $00, $30, $60
+    .db $00, $30, $60, $90
 .ENDS
 
 .SECTION "BG Scenery Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -94,6 +94,15 @@ BackSceneryData:
 
     .db $12, $13, $00, $00, $00, $00, $aa, $aa
     .db $9c, $aa, $00, $8b, $00, $01, $02, $03
+;   laterns
+    .db $00, $00, $00, $00, $00, $00, $4D, $4E
+    .db $00, $00, $00, $00, $00, $00, $00, $00
+
+    .db $00, $00, $00, $00, $00, $00, $4D, $4E
+    .db $00, $00, $00, $00, $00, $00, $00, $00
+
+    .db $00, $00, $00, $00, $00, $00, $00, $1D
+    .db $1E, $00, $00, $00, $00, $00, $00, $00
 .ENDS
 
 .SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -116,6 +125,9 @@ BackSceneryMetatiles:
 ;   Trees
     .db MT_TALLTREE_TOP, MT_TALLTREE_BOT, MT_TREE_TRUNK         ; tall
     .db MT_SMALLTREE_TOP, MT_TREE_TRUNK, MT_TREE_TRUNK          ; short
+;   Latern
+    .db MT_LATERN_LT, MT_LATERN_LB, MT_BLANK
+    .db MT_LATERN_RT, MT_LATERN_RB, MT_BLANK
 .ENDS
 ; ---
 
@@ -771,12 +783,15 @@ AlterAreaAttributes:
     PUSH AF                             ;pull and push offset to copy to A
     AND A, %00001111                    ;mask out high nybble and store as
     LD (TerrainControl), A              ;new terrain height type bits
+    LD A, (BackgroundScenery)
+    LD B, A
     POP AF
     AND A, %00110000                    ;pull and mask out all but d5 and d4
     RRCA                                ;move bits to lower nybble and store
     RRCA                                ;as new background scenery bits
     RRCA
     RRCA
+    OR A, B
     LD (BackgroundScenery), A           ;then leave
     RET
 Alter2:
@@ -1246,8 +1261,6 @@ WarpPipe:
     LD (HL), $01                        ;activate enemy flag
     LD L, <Enemy_ID
     LD (HL), OBJECTID_PiranhaPlant      ;write piranha plant's value into buffer
-
-    ;INC H
     LD L, <Enemy_X_Position
     ADD A, $08                          ;add eight to put the piranha plant in the center
     LD (HL), A                          ;store as enemy's horizontal coordinate
@@ -2006,7 +2019,6 @@ GetAreaDataAddrs:
     INC HL
     LD H, (HL)
     LD L, A
-    ;LD (EnemyData), HL
     PUSH HL
 ;   Calculate AreaData pointer for current level
     LD A, B                         ;use area type as offset
@@ -2021,13 +2033,11 @@ GetAreaDataAddrs:
     INC HL
     LD H, (HL)
     LD L, A
-    ;LD (AreaData), HL
-    PUSH HL
 ;   Parse the two header bytes of AreaData
     LD A, BANK_AREAENEMY            ;set bank
     LD (MAPPER_SLOT2), A
     LD A, (HL)                      ;load first byte of header
-    PUSH AF                         ;save it to the stack for now
+    LD B, A
     AND A, %00000111                ;save 3 LSB for foreground scenery or bg color control
     CP A, $04
     JP C, @StoreFore
@@ -2035,32 +2045,30 @@ GetAreaDataAddrs:
     XOR A
 @StoreFore:
     LD (ForegroundScenery), A       ;if less, save value here as foreground scenery
-    POP AF                          ;pull byte from stack and push it back
-    PUSH AF
+    LD A, B
     AND A, %00111000                ;save player entrance control bits
     RRCA                            ;shift bits over to LSBs
     RRCA
     RRCA
     LD (PlayerEntranceCtrl), A      ;save value here as player entrance control
-    POP AF                          ;pull byte again but do not push it back
+    LD A, B                         ;pull byte again but do not push it back
     AND A, %11000000                ;save 2 MSB for game timer setting
     RLCA                            ;rotate bits over to LSBs
     RLCA
     LD (GameTimerSetting), A        ;save value here as game timer setting
     INC HL
     LD A, (HL)                      ;load second byte of header
-    PUSH AF                         ;save to stack
+    LD B, A                         ;save
     AND A, %00001111                ;mask out all but lower nybble
     LD (TerrainControl), A
-    POP AF                          ;pull and push byte to copy it to A
-    PUSH AF
+    LD A, B
     AND A, %00110000                ;save 2 MSB for background scenery type
     RRCA                            ;shift bits to LSBs
     RRCA
     RRCA
     RRCA
     LD (BackgroundScenery), A       ;save as background scenery
-    POP AF
+    LD A, B
     AND A, %11000000
     RLCA                            ;rotate bits over to LSBs
     RLCA
@@ -2070,26 +2078,31 @@ GetAreaDataAddrs:
     XOR A
 @StoreStyle:
     LD (AreaStyle), A
+    ; POTENTIAL 3RD BYTE
+    INC HL
+    LD A, (HL)
+    LD B, A
+    AND A, $F0
+    CP A, $F0
+    JP NZ, +
+    LD A, (BackgroundScenery)
+    LD C, A
+    LD A, B
+    AND A, %00000001
+    RLCA
+    RLCA
+    OR A, C
+    LD (BackgroundScenery), A
 ;   Upload AreaData to aligned area in RAM
-    ;LD HL, (AreaData)
-    POP HL
     INC HL
-    INC HL
++:
     LD DE, AreaDataBank
     LD BC, $0100
     LDIR
 ;   Upload EnemyData to aligned area in RAM
-    ;LD HL, (EnemyData)
     POP HL
     LD BC, $0100
     LDIR
-;   Set new pointers
-    /*
-    LD HL, AreaDataBank + $02
-    LD (AreaData), HL
-    LD HL, EnemyDataBank
-    LD (EnemyData), HL
-    */
 ;   Upload AreaType's graphics to VRAM???
     LD A, BANK_SLOT2                ;restore bank
     LD (MAPPER_SLOT2), A

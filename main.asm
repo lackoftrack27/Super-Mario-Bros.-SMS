@@ -102,7 +102,6 @@ JumpEngine:
 ;   VDP VECTOR
 .ORGA $0038
 VdpVector:
-    ;JP NonMaskableInterrupt     ; NOT REALLY NON MASKABLE...
     PUSH AF
 ;   CHECK IF H-INT OCCURED
     IN A, (VDPCON_PORT)
@@ -187,7 +186,8 @@ Start:
     LD HL, Tiles_SPR_Comm
     LD BC, _sizeof_Tiles_SPR_Comm
     CALL copyToVDP
-;   LOAD (most) ENEMY SPRITE TILES
+    /*
+;   LOAD (most) ENEMY SPRITE TILES (TEST)
     LD A, :Tiles_SPR_Enemies
     LD (MAPPER_SLOT2), A
     LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
@@ -195,6 +195,7 @@ Start:
     LD HL, Tiles_SPR_Enemies
     LD BC, _sizeof_Tiles_SPR_Enemies
     CALL copyToVDP
+    */
     /*
 ;   LOAD LEVEL BACKGROUND TILES (TEST)
     LD A, :Tiles_BG_Overworld
@@ -2158,6 +2159,8 @@ Tiles_SPR_Comm:
 
 Tiles_SPR_Enemies:
     .INCLUDE "SPR_Enemies.inc"
+Tiles_SPR_Enemies_B:
+    .INCLUDE "SPR_Enemies_B.inc"
 
 .ENDS
 

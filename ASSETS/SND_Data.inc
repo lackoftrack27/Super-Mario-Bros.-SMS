@@ -623,12 +623,11 @@ Mus_Castle:
     smpsJump Mus_Castle@ch0
 @ch1:
     .db nRst, $04
-@@loopPoint:
     .db nD3, $08, nCs3, nC3, nCs3, nD3, nEb3, nD3, nCs3, nD3, nCs3, nC3, nCs3, nD3
     .db nEb3, nD3, nCs3, $08, $08, nC3, nCs3, nD3, nCs3, nD3, nCs3, nC3, nCs3, nC3, nCs3, nD3
     .db nCs3, nD3, nCs3, nC3, nF3, nFs3, nF3, nE3, nF3, nE3, nEb3, nE3, nF3, nFs3, nF3, nE3
-    .db nF3, nE3, nEb3, nE3, $0C
-    smpsJump Mus_Castle@ch1@loopPoint
+    .db nF3, nE3, nEb3, nE3, $04
+    smpsJump Mus_Castle@ch1
 @ch2:
     .db nG2, $04, nBb2, nG2, nA2, nG2, nGs2, nG2, nA2, nG2, nBb2, nG2, nB2, nG2, nBb2, nG2
     .db nA2, nG2, nBb2, nG2, nA2, nG2, nGs2, nG2, nA2, nG2, nBb2, nG2, nB2, nG2, nBb2, nG2

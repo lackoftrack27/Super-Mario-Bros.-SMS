@@ -2329,19 +2329,19 @@ DrawStarFlag:
     ADD A, $08
     LD (HL), A
     INC L
+    LD (HL), $45
+    INC L
+    LD (HL), C
+    INC L
+    LD (HL), $44
+    INC L
+    LD (HL), A
+    INC L
     LD (HL), $43
     INC L
     LD (HL), C
     INC L
     LD (HL), $42
-    INC L
-    LD (HL), A
-    INC L
-    LD (HL), $41
-    INC L
-    LD (HL), C
-    INC L
-    LD (HL), $40
     EX DE, HL
     RET
 

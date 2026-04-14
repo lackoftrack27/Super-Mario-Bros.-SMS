@@ -7,6 +7,27 @@
 
 .FUNCTION bitValue(v) $01 << v
 
+;   Macros for sprite drawing
+.MACRO DrawSpriteObject_YPos
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    ADD A, $08
+.ENDM
+
+.MACRO DrawSpriteObject_XT
+    LD A, C
+    LD (DE), A
+    INC E
+    LDI
+    INC BC
+    ADD A, $08
+    LD (DE), A
+    INC E
+    LDI
+    INC BC
+.ENDM
 
 ;   Macros for relative position
 .MACRO RelativePlayerPosition_M

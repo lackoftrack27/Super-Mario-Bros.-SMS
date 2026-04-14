@@ -404,14 +404,19 @@ IncModeTask_B:
 
 
 LoadLevelTileData:
+;   TURN OFF INTERRUPTS
+    DI
 ;   MANUALLY TURN OFF THE SCREEN
     LD A, %10100000
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
+;   LOAD ENEMY SPRITES
+    CALL LoadEnemySprites
 ;   UPLOAD TILES FOR AREA
-    DI
     ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
+    LD A, :AnimatedBGTileInits
+    LD (MAPPER_SLOT2), A
     LD HL, AnimatedBGTileInits@Coin
     LD DE, BGTileQueue0 + $01
     LD BC, $0008
@@ -424,14 +429,6 @@ LoadLevelTileData:
     LD HL, Tiles_BG_Overworld
     LD BC, _sizeof_Tiles_BG_Overworld
     CALL copyToVDP
-    ; LOAD BASE ENEMY SPRITESHEET
-    LD A, :Tiles_SPR_Enemies
-    LD (MAPPER_SLOT2), A
-    LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
-    RST setVDPAddress
-    LD HL, Tiles_SPR_Enemies
-    LD BC, _sizeof_Tiles_SPR_Enemies
-    CALL copyToVDP
     ; LOAD SPECIAL TILES DEPENDING ON AREATYPE
     LD A, (AreaType)
     OR A
@@ -441,8 +438,14 @@ LoadLevelTileData:
     DEC A
     JP Z, UndergroundSetup
 CastleSetup:
+    ; UNIQUE TILES FOR CASTLE AREA
+    ; PODOBOO SPRITE
+    ; FIRE PROJECTILE SPRITES
+    ; BOWSER SPRITES
+    ; RETAINER/PRINCESS SPRITE
     JP TileLoadDone
 WaterAreaSetup:
+    ; UNIQUE TILES FOR WATER AREA
     JP TileLoadDone
 OverWorldSetup:
     ; NOTHING FOR SLOT 1
@@ -479,16 +482,83 @@ UndergroundSetup:
     LD (HL), $FF
     LD HL, BGTileQueue2.UpdateFlag
     LD (HL), $00
-    ; LOAD BLUE GOOMBA
-    LD A, :Tiles_SPR_Enemies_B
-    LD (MAPPER_SLOT2), A
-    LD HL, $0B80 | VRAMWRITE
-    RST setVDPAddress
-    LD HL, Tiles_SPR_Enemies_B
-    LD BC, _sizeof_Tiles_SPR_Enemies_B
-    CALL copyToVDP
 TileLoadDone:
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
     EI
     RET
+
+
+LoadEnemySprites:
+;   LOAD BASE ENEMY SPRITE SHEET
+    LD A, :Tiles_SPR_Enemies
+    LD (MAPPER_SLOT2), A
+    LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
+    RST setVDPAddress
+    LD HL, Tiles_SPR_Enemies
+    LD BC, _sizeof_Tiles_SPR_Enemies
+    CALL copyToVDP
+;   LOAD LAKITU ON CERTAIN LEVELS (4-2,6-1,8-2)
+    LD A, (WorldNumber)
+    LD H, A
+    LD A, (LevelNumber)
+    LD L, A
+    OR A
+    LD DE, $0301
+    SBC HL, DE
+    JP Z, LoadLakitu
+    ADD HL, DE
+    OR A
+    LD DE, $0500
+    SBC HL, DE
+    JP Z, LoadLakitu
+    ADD HL, DE
+    OR A
+    LD DE, $0701
+    SBC HL, DE
+    JP NZ, CheckHammerLevels
+LoadLakitu:
+    PUSH HL
+    LD A, :Tiles_SPR_Lakitu
+    LD (MAPPER_SLOT2), A
+    LD HL, $1380 | VRAMWRITE
+    RST setVDPAddress
+    LD HL, Tiles_SPR_Lakitu
+    LD BC, _sizeof_Tiles_SPR_Lakitu
+    CALL copyToVDP
+    POP HL
+CheckHammerLevels:
+;   LOAD HAMMER BRO ON CERTAIN LEVELS (3-1,5-2,7-1,8-3,8-4)
+    ADD HL, DE
+    OR A
+    LD DE, $0200
+    SBC HL, DE
+    JP Z, LoadHammerBro
+    ADD HL, DE
+    OR A
+    LD DE, $0401
+    SBC HL, DE
+    JP Z, LoadHammerBro
+    ADD HL, DE
+    OR A
+    LD DE, $0600
+    SBC HL, DE
+    JP Z, LoadHammerBro
+    ADD HL, DE
+    OR A
+    LD DE, $0702
+    SBC HL, DE
+    JP Z, LoadHammerBro
+    ADD HL, DE
+    OR A
+    LD DE, $0703
+    SBC HL, DE
+    RET NZ
+LoadHammerBro:
+    LD A, :Tiles_SPR_Hammerbro
+    LD (MAPPER_SLOT2), A
+    LD HL, $1900 | VRAMWRITE
+    RST setVDPAddress
+    LD HL, Tiles_SPR_Hammerbro
+    LD BC, _sizeof_Tiles_SPR_Hammerbro
+    JP copyToVDP

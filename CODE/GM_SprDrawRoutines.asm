@@ -81,16 +81,16 @@ FlagpoleGfxHandler:
     LD A, (Enemy_Rel_XPos)          ;get relative horizontal coordinate
     LD (HL), A                      ;store as X coordinate for first sprite
     INC L
-    LD (HL), $45                    ;put triangle shaped tile into first
+    LD (HL), $47                    ;put triangle shaped tile into first
     ADD A, $08                      ;add eight pixels and store
     INC L
     LD (HL), A                      ;as X coordinate for second sprite
     INC L
-    LD (HL), $44                    ;put skull tile into second sprite
+    LD (HL), $46                    ;put skull tile into second sprite
     INC L
     LD (HL), A                      ;as X coordinate for third sprite
     INC L
-    LD (HL), $45                    ;put triangle shaped tile into third
+    LD (HL), $47                    ;put triangle shaped tile into third
     EX DE, HL
 ;
     LD E, (HL)                      ;get sprite data offset for flagpole flag
@@ -118,52 +118,21 @@ FlagpoleGfxHandler:
     
 ChkFlagOffscreen:
     ;LD HL, (ObjectOffset)
-    LD IXL, E
-    LD IXH, D
     LD A, (Enemy_OffscrBits)        ;get offscreen bits
     AND A, %00001110                ;mask out all but d3-d1
     RET Z                           ;if none of these bits set, branch to leave
-
-;-------------------------------------------------------------------------------------
-;   IX - OFFSET INTO Sprite_Y_Position
-;   DE
-;   COULD PROBABLY BE CHANGED TO USE A NORMAL REGISTER PAIR
-
-MoveSixSpritesOffscreen:
-    LD A, YPOS_OFFSCREEN            ;set offscreen coordinate if jumping here
-
-DumpSixSpr:
-    LD (IX + 5), A                  ;dump A contents
-    LD (IX + 4), A                  ;into third row sprites
-
-DumpFourSpr:
-    LD (IX + 3), A                  ;into second row sprites
-
-DumpThreeSpr:
-    LD (IX + 2), A
-
-DumpTwoSpr:
-    LD (IX + 1), A                  ;and into first row sprites
-    LD (IX + 0), A
-    RET
-/*
-DumpSixSpr:
+    LD D, >Sprite_Y_Position
+    LD A, YPOS_OFFSCREEN
     LD (DE), A
     INC E
     LD (DE), A
     INC E
-DumpFourSpr:
     LD (DE), A
     INC E
-DumpThreeSpr:
-    LD (DE), A
-    INC E
-DumpTwoSpr:
     LD (DE), A
     INC E
     LD (DE), A
     RET
-*/
 
 ;-------------------------------------------------------------------------------------
 
@@ -176,9 +145,9 @@ DrawLargePlatform:
     SET 7, E
     LD A, (CloudTypeOverride)
     OR A
-    LD B, $47
+    LD B, $40
     JP Z, +
-    LD B, $46
+    INC B
 +:
     LD A, (Enemy_Rel_XPos)
     EX DE, HL
@@ -448,8 +417,8 @@ EnemyGraphicsTable:
     .db $00, $00, $A4, $A5, $A6, $A7  ;spiny's egg frame 1  [X, $30]
     .db $00, $00, $A8, $A9, $AA, $AB  ;            frame 2  [X]
     ; ---
-    .db $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
-    .db $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
+    .db $00, $00, $A8, $A9, $AE, $AF  ;bloober frame 1
+    .db $A8, $A9, $AA, $AB, $AC, $AD  ;        frame 2
     ; ---
     .db $00, $00, $90, $91, $92, $93  ;cheep-cheep frame 1
     .db $00, $00, $94, $91, $95, $93  ;            frame 2
@@ -473,29 +442,30 @@ EnemyGraphicsTable:
     .db $9C, $9D, $9E, $9F, $A0, $A1  ;lakitu frame 1
     .db $00, $00, $A2, $A3, $A0, $A1  ;       frame 2
     ; ---
-    .db $7a, $7b, $da, $db, $d8, $d8  ;princess             [X, $9C]
-    .db $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer    [X, $A2]
+    .db $00, $00, $9C, $9D, $9E, $9F  ;cheep-cheep frame 1 (red) [$9C]
+    .db $00, $00, $A0, $9D, $A1, $9F  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
-    .db $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
-    .db $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
-    .db $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
+    .db $C8, $C9, $CA, $CB, $CC, $CD  ;hammer bro frame 1
+    .db $C8, $C9, $CE, $CF, $D0, $D1  ;           frame 2
+    .db $D2, $D3, $D4, $D5, $CC, $CD  ;           frame 3
+    .db $D2, $D3, $D4, $D5, $D0, $D1  ;           frame 4
     ; ---
     .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
     .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
     ; ---
-    .db $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
+    .db $00, $64, $C8, $C9, $CA, $CB  ;koopa troopa frame 1 (red) ($CC)
+    .db $00, $69, $CC, $CD, $CE, $CF  ;             frame 2 (red)
     ; ---
-    .db $bf, $be, $c1, $c0, $c2, $fc  ;bowser front frame 1
-    .db $c4, $c3, $c6, $c5, $c8, $c7  ;bowser rear frame 1
-    .db $bf, $be, $ca, $c9, $c2, $fc  ;       front frame 2 [X, $DE]
-    .db $c4, $c3, $c6, $c5, $cc, $cb  ;       rear frame 2  [X, $E4]
+    .db $6E, $64, $D0, $C9, $CA, $CB  ;koopa paratroopa frame 1 (red) ($D8)
+    .db $70, $69, $D1, $CD, $CE, $CF  ;                 frame 2 (red)
     ; ---
     .db $00, $00, $C0, $C1, $C2, $C3  ;bullet bill
     ; ---
-    .db $48, $49, $4A, $4B, $4C, $4D  ;jumpspring frame 1
-    .db $4E, $4F, $50, $51, $00, $00  ;           frame 2
-    .db $52, $53, $00, $00, $00, $00  ;           frame 3
+    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (upside-down) (red) ($EA)
+    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    ; ---
+    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (rightsideup) ($F6)
+    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
 .ENDS
 
 .SECTION "EnemyGraphicsTable_HFlip" BANK BANK_SLOT2 SLOT 2 ALIGN $100
@@ -516,8 +486,8 @@ EnemyGraphicsTable_HFlip:
     .db $00, $00, $A4, $A5, $A6, $A7  ;spiny's egg frame 1  [X, $30]
     .db $00, $00, $A8, $A9, $AA, $AB  ;            frame 2  [X]
     ; ---
-    .db $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
-    .db $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
+    .db $00, $00, $A8, $A9, $AE, $AF  ;bloober frame 1
+    .db $A8, $A9, $AA, $AB, $AC, $AD  ;        frame 2
     ; ---
     .db $00, $00, $96, $97, $98, $99  ;cheep-cheep frame 1
     .db $00, $00, $96, $9A, $98, $9B  ;            frame 2
@@ -541,111 +511,80 @@ EnemyGraphicsTable_HFlip:
     .db $B4, $B5, $B6, $B7, $A0, $A1  ;lakitu frame 1
     .db $00, $00, $A2, $A3, $A0, $A1  ;       frame 2
     ; ---
-    .db $7a, $7b, $da, $db, $d8, $d8  ;princess             [X, $9C]
-    .db $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer    [X, $A2]
+    .db $00, $00, $A2, $A3, $A4, $A5  ;cheep-cheep frame 1 (red)
+    .db $00, $00, $A2, $A6, $A4, $A7  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
-    .db $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
-    .db $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
-    .db $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
+    .db $D6, $D7, $D8, $D9, $DA, $DB  ;hammer bro frame 1
+    .db $D6, $D7, $DC, $DD, $DE, $DF  ;           frame 2
+    .db $E0, $E1, $E2, $E3, $DA, $DB  ;           frame 3
+    .db $E0, $E1, $E2, $E3, $DE, $DF  ;           frame 4
     ; ---
     .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
     .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
     ; ---
-    .db $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
+    .db $78, $00, $D8, $D9, $DA, $DB  ;koopa troopa frame 1 (red)
+    .db $7D, $00, $DC, $DD, $DE, $DF  ;             frame 2 (red)
     ; ---
-    .db $bf, $be, $c1, $c0, $c2, $fc  ;bowser front frame 1
-    .db $c4, $c3, $c6, $c5, $c8, $c7  ;bowser rear frame 1
-    .db $bf, $be, $ca, $c9, $c2, $fc  ;       front frame 2 [X, $DE]
-    .db $c4, $c3, $c6, $c5, $cc, $cb  ;       rear frame 2  [X, $E4]
+    .db $78, $82, $D8, $E0, $DA, $DB  ;koopa paratroopa frame 1 (red)
+    .db $7D, $84, $DC, $E1, $DE, $DF  ;                 frame 2 (red)
     ; ---
     .db $00, $00, $C4, $C5, $C6, $C7  ;bullet bill
     ; ---
-    .db $48, $49, $4A, $4B, $4C, $4D  ;jumpspring frame 1
-    .db $4E, $4F, $50, $51, $00, $00  ;           frame 2
-    .db $52, $53, $00, $00, $00, $00  ;           frame 3
+    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (upside-down) (red)
+    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    ; ---
+    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (rightsideup)
+    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
 .ENDS
 
 .SECTION "EnemyGfxTableOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
 EnemyGfxTableOffsets:
-    .db $0c, $0c, $00, $0c, $0c, $a8, $54, $3c  ; $00 - $07
-    .db $ea, $18, $48, $48, $cc, $c0, $18, $18  ; $08 - $0F
-    .db $18, $90, $24, $FF, $48, $9c, $d2, $d8  ; $10 - $17         $30 WAS $FF
-    .db $f0, $f6, $fc, $8A, $A2, $DE, $E4       ; $18 - $1A
+    .db $0c, $CC, $00, $CC, $0C, $a8, $54, $3c  ; $00 - $07
+    .db $E4, $18, $48, $9C, $FF, $c0, $18, $D8  ; $08 - $0F
+    .db $18, $90, $24, $FF, $9C, $FF, $FF, $FF  ; $10 - $17
+    .db $FF, $FF, $FF, $8A, $FF, $FF, $FF       ; $18 - $1A
 .ENDS
 
-/*
-.ENUM $00
-    GFXID_GreenKoopa                    DB
-    GFXID_GreenKoopa_01                 DB
-    GFXID_BuzzyBeetle                   DB
-    GFXID_RedKoopa                      DB
-    GFXID_RedKoopa_01                   DB
-    GFXID_HammerBro                     DB
-    GFXID_Goomba                        DB
-    GFXID_Bloober                       DB
-    ;
-    GFXID_BulletBill_FrenzyVar          DB
-    GFXID_TallEnemy                     DB  ;Paratroopa?
-    GFXID_GreyCheepCheep                DB
-    GFXID_RedCheepCheep                 DB
-    GFXID_Podoboo                       DB
-    GFXID_PiranhaPlant                  DB
-    GFXID_GreenParatroopaJump           DB
-    GFXID_RedParatroopa                 DB
-    ;
-    GFXID_GreenParatroopaFly            DB
-    GFXID_Lakitu                        DB
-    GFXID_Spiny                         DB
-    GFXID_SpinyEgg                      DB
-    GFXID_FlyingCheepCheep              DB  ;OBJECTID_FlyCheepCheepFrenzy
-    GFXID_Princess                      DB  ;OBJECTID_BowserFlame
-    GFXID_BowserFront                   DB  ;OBJECTID_Fireworks
-    GFXID_BowserRear                    DB  ;OBJECTID_BBill_CCheep_Frenzy
-    ;
-    GFXID_JumpSpring_00                 DB
-    GFXID_JumpSpring_01                 DB
-    GFXID_JumpSpring_02                 DB
-    GFXID_GoombaDefeated                DB
-    GFXID_RetainerObject                DB
-    GFXID_BowserFront_01                DB
-    GFXID_BowserRear_01                 DB
-.ENDE
-*/
-/*
-; -----
-.DEFINE GFXID_Bowser                 $2d [SPECIAL CASE]
-.DEFINE GFXID_PowerUpObject          $2e [NOT RENDERED HERE]
-.DEFINE GFXID_VineObject             $2f [NOT RENDERED HERE]
-.DEFINE GFXID_FlagpoleFlagObject     $30 [NOT RENDERED HERE]
-.DEFINE GFXID_StarFlagObject         $31 [NOT RENDERED HERE]
-.DEFINE GFXID_JumpspringObject       $32 [SPECIAL CASE]
-.DEFINE GFXID_BulletBill_CannonVar   $33 [???]
-.DEFINE GFXID_RetainerObject         $35 [SPECIAL CASE]
-*/
-/*
-EnemyAttributeData:
-    .db $01, $02, $03, $02, $01, $01, $03, $03
-    .db $03, $01, $01, $02, $02, $21, $01, $02
-    .db $01, $01, $02, $ff, $02, $02, $01, $01
-    .db $02, $02, $02
-*/
-/*
-.SECTION "EnemyAnimTimingBMask" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
-EnemyAnimTimingBMask:
-    .db $08, $18
-.ENDS
-*/
-
-.SECTION "JumpspringFrameOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
-JumpspringFrameOffsets:
-    .db $18, $19, $1a, $19, $18
-.ENDS
+; .ENUM $00
+;     GFXID_GreenKoopa                    DB
+;     GFXID_GreenKoopa_01                 DB
+;     GFXID_BuzzyBeetle                   DB
+;     GFXID_RedKoopa                      DB
+;     GFXID_RedKoopa_01                   DB
+;     GFXID_HammerBro                     DB
+;     GFXID_Goomba                        DB
+;     GFXID_Bloober                       DB
+;     ;
+;     GFXID_BulletBill_FrenzyVar          DB
+;     GFXID_TallEnemy                     DB  ;Paratroopa?
+;     GFXID_GreyCheepCheep                DB
+;     GFXID_RedCheepCheep                 DB
+;     GFXID_Podoboo                       DB
+;     GFXID_PiranhaPlant                  DB
+;     GFXID_GreenParatroopaJump           DB
+;     GFXID_RedParatroopa                 DB
+;     ;
+;     GFXID_GreenParatroopaFly            DB
+;     GFXID_Lakitu                        DB
+;     GFXID_Spiny                         DB
+;     GFXID_SpinyEgg                      DB
+;     GFXID_FlyingCheepCheep              DB  ;OBJECTID_FlyCheepCheepFrenzy
+;     GFXID_Princess                      DB  ;OBJECTID_BowserFlame
+;     GFXID_BowserFront                   DB  ;OBJECTID_Fireworks
+;     GFXID_BowserRear                    DB  ;OBJECTID_BBill_CCheep_Frenzy
+;     ;
+;     GFXID_JumpSpring_00                 DB
+;     GFXID_JumpSpring_01                 DB
+;     GFXID_JumpSpring_02                 DB
+;     GFXID_GoombaDefeated                DB
+;     GFXID_RetainerObject                DB
+;     GFXID_BowserFront_01                DB
+;     GFXID_BowserRear_01                 DB
+; .ENDE
 
 EnemyGfxHandler:
     LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     LD A, (HL)
-    ;LD (Temp_Bytes + $02), A
     SUB A, SMS_PIXELYOFFSET
     LD D, A
     LD A, (Enemy_Rel_XPos)                  ;get enemy object horizontal position
@@ -659,7 +598,7 @@ EnemyGfxHandler:
 ;
     LD L, <Enemy_MovingDir                  ;get enemy object moving direction
     LD A, (HL)
-    LD IXL, A;LD (Temp_Bytes + $03), A
+    LD IXL, A
 ;
     ;LD L, <Enemy_SprAttrib                 ;get enemy object sprite attributes
     ;LD A, (HL)
@@ -668,12 +607,12 @@ EnemyGfxHandler:
     LD L, <Enemy_ID
     LD A, (HL)
     CP A, OBJECTID_PiranhaPlant             ;is enemy object piranha plant?
-    JP NZ, CheckForRetainerObj              ;if not, branch
+    JP NZ, CheckForBulletBillCV             ;if not, branch
 ;
     LD L, <PiranhaPlant_Y_Speed
     LD A, (HL)
     OR A
-    JP M, CheckForRetainerObj               ;if piranha plant moving upwards, branch
+    JP M, CheckForBulletBillCV              ;if piranha plant moving upwards, branch
 ;
     LD A, H                                 ;if timer for movement expired, branch
     SUB A, $C1
@@ -683,177 +622,72 @@ EnemyGfxHandler:
     OR A
     RET NZ                                  ;if all conditions fail, leave
 
-CheckForRetainerObj:
+CheckForBulletBillCV:
     LD L, <Enemy_State                      ;store enemy state
     LD A, (HL)
-    LD IYL, A ;LD (Temp_Bytes + $0A), A
+    LD IYL, A
     AND A, %00011111                        ;nullify all but 5 LSB and use as Y
     LD C, A
 ;
-    LD L, <Enemy_ID                         ;check for mushroom retainer/princess object
+    LD L, <Enemy_ID
     LD A, (HL)
-    CP A, OBJECTID_RetainerObject
-    JP NZ, CheckForBulletBillCV             ;if not found, branch
-;
-    LD C, $00                               ;if found, nullify saved state in Y
-    LD IXL, $01
-    ;LD A, $01                               ;set value that will not be used
-    ;LD (Temp_Bytes + $03), A
-    LD A, $15                               ;set value $15 as code for mushroom retainer/princess object
-
-CheckForBulletBillCV:
     CP A, OBJECTID_BulletBill_CannonVar     ;otherwise check for bullet bill object
-    JP NZ, CheckForJumpspring               ;if not found, branch again
+    JP NZ, CheckForGoomba                   ;if not found, branch again
 ;
-    DEC D
-    ;LD A, (Temp_Bytes + $02)                ;decrement saved vertical position
-    ;DEC A
-    ;LD (Temp_Bytes + $02), A
-    /*
+    DEC D                                   ;decrement saved vertical position
 ;
-    PUSH BC
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
-    LD A, (BC)
-    POP BC
-    OR A
-    LD A, $03
-    JP Z, SBBAt
-    LD A, $23
-SBBAt:
-    LD (Temp_Bytes + $04), A
-    */
+;     PUSH BC
+;     LD A, H
+;     SUB A, $C1
+;     LD BC, EnemyFrameTimer
+;     addAToBC8_M
+;     LD A, (BC)
+;     POP BC
+;     OR A
+;     LD A, $03
+;     JP Z, SBBAt
+;     LD A, $23
+; SBBAt:
+;     LD (Temp_Bytes + $04), A
 ;
     XOR A                                   ;nullify saved enemy state both in Y and in
     LD C, A                                 ;memory location here
-    LD IYL, A ;LD (Temp_Bytes + $0A), A
+    LD IYL, A
     LD A, $08                               ;set specific value to unconditionally branch once
 
-CheckForJumpspring:
-    CP A, OBJECTID_JumpspringObject         ;check for jumpspring object
-    JP NZ, CheckForPodoboo
-;
-    LD C, $03                               ;set enemy state -2 MSB here for jumpspring object
-    LD A, (JumpspringAnimCtrl)              ;get current frame number for jumpspring object
-    LD HL, JumpspringFrameOffsets           ;load data using frame number as offset
-    addAToHL8_M
-    LD A, (HL)
-
-CheckForPodoboo:
-    LD IYH, A ;LD (Temp_Bytes + $0B), A                ;store saved enemy object value here
-;
-    ;LD HL, Temp_Bytes + $09                 ;and Y here (enemy state -2 MSB if not changed)
-    ;LD (HL), C
-    LD IXH, C
-;
-    LD HL, (ObjectOffset)                   ;get enemy object offset
-    CP A, $0C                               ;check for podoboo object
-    JP NZ, CheckBowserGfxFlag               ;branch if not found
-;
-    LD L, <Enemy_Y_Speed                    ;if moving upwards, branch
-    LD A, (HL)
-    OR A
-    JP M, CheckBowserGfxFlag
-;
-    ;LD A, (VerticalFlipFlag)                ;otherwise, set flag for vertical flip
-    ;INC A
-    ;LD (VerticalFlipFlag), A
-
-CheckBowserGfxFlag:
-    LD A, (BowserGfxFlag)                   ;if not drawing bowser at all, skip to something else
-    OR A
-    JP Z, CheckForGoomba
-;
-    DEC A
-    LD A, $16                               ;if set to 1, draw bowser's front
-    JP Z, SBwsrGfxOfs
-    INC A                                   ;otherwise draw bowser's rear
-SBwsrGfxOfs:
-    LD IYH, A ;LD (Temp_Bytes + $0B), A
-
 CheckForGoomba:
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)                ;check value for goomba object
+    LD IYH, A                               ;store saved enemy object value here
+    LD IXH, C                               ;and Y here (enemy state -2 MSB if not changed)
+    ;LD A, IYH                
     LD C, A
-    CP A, OBJECTID_Goomba
-    JP NZ, CheckBowserFront                 ;branch if not found
+    CP A, OBJECTID_Goomba                   ;check value for goomba object
+    JP NZ, CheckForSpiny                    ;branch if not found
 ;
     LD L, <Enemy_State
     LD A, (HL)
     CP A, $02                               ;check for defeated state
     JP C, GmbaAnim                          ;if not defeated, go ahead and animate
-    ;LD HL, Temp_Bytes + $09                 ;if defeated, write new value here
-    ;LD (HL), $04
-    LD IXH, $04
+    LD IXH, $04                             ;if defeated, write new value here
 GmbaAnim:
     AND A, %00100000                        ;check for d5 set in enemy object state
     LD HL, TimerControl
     OR A, (HL)                              ;or timer disable flag set
-    JP NZ, CheckBowserFront                 ;if either condition true, do not animate goomba
+    JP NZ, CheckForSpiny                    ;if either condition true, do not animate goomba
     LD A, (FrameCounter)
     AND A, %00001000                        ;check for every eighth frame
-    JP NZ, CheckBowserFront
+    JP NZ, CheckForSpiny
     LD A, %00000011
-    XOR A, IXL
-    LD IXL, A
-    ;LD A, (Temp_Bytes + $03)
-    ;XOR A, %00000011                        ;invert bits to flip horizontally every eight frames
-    ;LD (Temp_Bytes + $03), A                ;leave alone otherwise
+    XOR A, IXL                              ;invert bits to flip horizontally every eight frames
+    LD IXL, A                               ;leave alone otherwise              
 
-CheckBowserFront:
+CheckForSpiny:
     LD A, C
     LD HL, EnemyGfxTableOffsets             ;load value based on enemy object as offset
     addAToHL8_M
     LD L, (HL)
 ;
-    ;LD A, (Temp_Bytes + $09)                ;get previously saved value
-    ;LD C, A
     LD C, IXH
 ;
-    LD A, (BowserGfxFlag)
-    OR A
-    JP Z, CheckForSpiny                     ;if not drawing bowser object at all, skip all of this
-;
-    DEC A
-    JP NZ, CheckBowserRear
-    LD A, (BowserBodyControls)
-    OR A
-    JP P, DrawEnemyObject;ChkFrontSte
-    LD L, $DE
-ChkFrontSte:
-    JP DrawEnemyObject
-    /*
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
-    AND A, %00100000
-    JP Z, DrawEnemyObject
-
-FlipBowserOver:
-    LD (VerticalFlipFlag), A
-    JP DrawEnemyObject
-    */
-
-CheckBowserRear:
-    LD A, (BowserBodyControls)
-    AND A, $01
-    JP Z, ChkRearSte
-    LD L, $E4
-ChkRearSte:
-    JP DrawEnemyObject
-    /*
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
-    AND A, %00100000
-    JP Z, DrawEnemyObject
-;
-    LD A, (Temp_Bytes + $02)
-    SUB A, $10
-    LD (Temp_Bytes + $02), A
-;
-    LD A, $01
-    JP FlipBowserOver
-    */
-
-CheckForSpiny:
     LD A, L
     CP A, $24
     JP NZ, CheckForLakitu
@@ -863,11 +697,7 @@ CheckForSpiny:
     JP NZ, CheckForHammerBro
 ;
     LD L, $30
-    ;LD A, $02
-    ;LD (Temp_Bytes + $03), A
     LD IXL, $02
-    ;LD A, $05
-    ;LD (Temp_Bytes + $09), A
     LD IXH, $05
     JP CheckForHammerBro
 
@@ -875,7 +705,7 @@ CheckForLakitu:
     CP A, $90
     JP NZ, CheckUpsideDownShell
 ;
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
+    LD A, IYL
     AND A, %00100000
     JP NZ, CheckDefeatedState
 ;
@@ -887,7 +717,7 @@ CheckForLakitu:
     JP CheckDefeatedState
 
 CheckUpsideDownShell:
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
+    LD A, IYH
     CP A, $04
     JP NC, CheckRightSideUpShell
 ;
@@ -895,38 +725,45 @@ CheckUpsideDownShell:
     CP A, $02
     JP C, CheckRightSideUpShell
 ;
-    LD L, $5A
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
-    LD C, A
-    CP A, OBJECTID_BuzzyBeetle
-    JP NZ, CheckRightSideUpShell
-;
     LD L, $7E
     INC D
-    ;LD A, (Temp_Bytes + $02)
-    ;INC A
-    ;LD (Temp_Bytes + $02), A
+    LD A, IYH
+    LD C, A
+    CP A, OBJECTID_BuzzyBeetle
+    JP Z, CheckRightSideUpShell
+    DEC D
+    LD L, $5A
+    OR A
+    JP Z, CheckRightSideUpShell
+    LD L, $EA
 
 CheckRightSideUpShell:
-    LD A, IXH ;LD A, (Temp_Bytes + $09)
+    LD A, IXH
     CP A, $04
     JP NZ, CheckForHammerBro
 ;
     LD L, $72
     INC D
-    ;LD A, (Temp_Bytes + $02)
-    ;INC A
-    ;LD (Temp_Bytes + $02), A
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
+    LD A, IYH
     LD C, A
     CP A, OBJECTID_BuzzyBeetle
     JP Z, CheckForDefdGoomba
 ;
-    LD L, $66
     INC D
-    ;LD A, (Temp_Bytes + $02)
-    ;INC A
-    ;LD (Temp_Bytes + $02), A
+    LD L, $66
+    CP A, $01
+    JP NZ, +
+    LD L, $F6
+    JP CheckForDefdGoomba
++:
+    CP A, OBJECTID_RedKoopa
+    JP NZ, +
+    LD L, $F6
+    JP CheckForDefdGoomba
++:
+    CP A, OBJECTID_RedParatroopa
+    JP NZ, CheckForDefdGoomba
+    LD L, $F6
 
 CheckForDefdGoomba:
     LD A, C
@@ -934,25 +771,22 @@ CheckForDefdGoomba:
     JP NZ, CheckForHammerBro
 ;
     LD L, $54
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
+    LD A, IYL
     AND A, %00100000
     JP NZ, CheckForHammerBro
 ;
     LD L, $8A
     DEC D
-    ;LD A, (Temp_Bytes + $02)
-    ;DEC A
-    ;LD (Temp_Bytes + $02), A
 
 CheckForHammerBro:
     LD A, (ObjectOffset + $01)
     LD C, A
 ;
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
+    LD A, IYH
     CP A, OBJECTID_HammerBro
     JP NZ, CheckForBloober
 ;
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
+    LD A, IYL
     OR A
     JP Z, CheckToAnimateEnemy
 ;
@@ -987,34 +821,16 @@ CheckForBloober:
     INC D
     INC D
     INC D
-    ;LD A, (Temp_Bytes + $02)
-    ;ADD A, $03
-    ;LD (Temp_Bytes + $02), A
     JP CheckAnimationStop
 
 CheckToAnimateEnemy:
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
+    LD A, IYH
     CP A, OBJECTID_Goomba
     JP Z, CheckDefeatedState
     CP A, $08
     JP Z, CheckDefeatedState
-    CP A, OBJECTID_Podoboo
-    JP Z, CheckDefeatedState
     CP A, $18
     JP NC, CheckDefeatedState
-;
-    CP A, $15
-    JP NZ, CheckForSecondFrame
-;
-    LD A, (WorldNumber)
-    CP A, WORLD8
-    JP NC, CheckDefeatedState
-;
-    LD L, $A2
-    ;LD A, $03
-    ;LD (Temp_Bytes + $09), A
-    LD IXH, $03
-    JP CheckDefeatedState
 
 CheckForSecondFrame:
     LD A, (FrameCounter)
@@ -1024,7 +840,7 @@ CheckForSecondFrame:
 CheckAnimationStop:
     LD A, (TimerControl)
     LD C, A
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
+    LD A, IYL
     AND A, %10100000
     OR A, C
     JP NZ, CheckDefeatedState
@@ -1033,23 +849,19 @@ CheckAnimationStop:
     addAToHL8_M
 
 CheckDefeatedState:
-    LD A, IYL ;LD A, (Temp_Bytes + $0A)
+    LD A, IYL
     AND A, %00100000
     JP Z, DrawEnemyObject
 ;
-    LD A, IYH ;LD A, (Temp_Bytes + $0B)
+    LD A, IYH
     CP A, $04
     JP C, DrawEnemyObject
 ;
     ;LD A, $01
     ;LD (VerticalFlipFlag), A
-    ;DEC A
-    ;LD (Temp_Bytes + $09), A
     LD IXH, $00
 
 DrawEnemyObject:
-    ;LD A, D
-    ;LD (Temp_Bytes + $02), A
     LD B, D
     LD A, (Temp_Bytes + $05)
     LD C, A
@@ -1057,35 +869,28 @@ DrawEnemyObject:
     LD D, >Sprite_Y_Position
     LD H, >EnemyGraphicsTable
     DEC IXL
-    ;LD A, (Temp_Bytes + $03)
-    ;DEC A
     JP Z, +
     LD H, >EnemyGraphicsTable_HFlip
 ;
 +:
-    CALL DrawSpriteObject
-    CALL DrawSpriteObject
-    CALL DrawSpriteObject
-;
-/*
-    LD HL, (ObjectOffset)
-    LD L, <Enemy_SprDataOffset
-    LD E, (HL)
-    LD A, (Temp_Bytes + $0B)
-    CP A, $08
-    JP Z, SprObjectOffscrChk
-
-CheckForVerticalFlip:
-    LD A, (VerticalFlipFlag)
-    OR A
-    JP Z, CheckForESymmetry
-;
-
-CheckForESymmetry:
-*/
+    ;CALL DrawSpriteObject
+    ;CALL DrawSpriteObject
+    ;CALL DrawSpriteObject
+    LD IXL, E
+    LD A, B
+    DrawSpriteObject_YPos
+    DrawSpriteObject_YPos
+    DrawSpriteObject_YPos
+    LD E, IXL
+    SLA E
+    SET 7, E
+    DrawSpriteObject_XT
+    DrawSpriteObject_XT
+    DrawSpriteObject_XT
 
 
 SprObjectOffscrChk:
+    LD D, >Sprite_Y_Position
     LD HL, (ObjectOffset)
     LD A, (Enemy_OffscrBits)
     LD C, A
@@ -1197,6 +1002,7 @@ DrawBlock:
 ;
     ;LD A, (Temp_Bytes + $04)
     ;LD E, A
+    LD D, >Sprite_Y_Position
     LD E, IYL
     LD A, (Block_OffscrBits)
     PUSH AF
@@ -1488,7 +1294,7 @@ DrawSmallPlatform:
     SLA E
     SET 7, E
     LD A, (Enemy_Rel_XPos)
-    LD B, $47
+    LD B, $40
     EX DE, HL
     LD (HL), A
     INC L
@@ -1878,6 +1684,7 @@ DrawPlayer_Intermediate:
 ;
     LD HL, PlayerFixedTiles             ;load fixed tile indexes allocated for streamed player tiles
     LD DE, Sprite_Y_Position + $01      ;load sprite data offset
+    ;LD DE, Sprite_Y_Position            ;load sprite data offset
     JP DrawPlayerLoop
 
 ;-------------------------------------------------------------------------------------
@@ -1909,6 +1716,7 @@ RenderPlayerSub:
     LD HL, PlayerFixedTiles             ;load fixed tile indexes allocated for streamed player tiles
     LD A, (Player_SprDataOffset)        ;get player's sprite data offset
     LD E, A
+    ;LD E, $00
     LD D, >Sprite_Y_Position
 ;
     LD A, (Player_Rel_XPos)
@@ -1923,10 +1731,24 @@ RenderPlayerSub:
 ;   X - PlayerFixedTiles (HL)
 ;   Y - OFFSET FOR OAM (DE)
 DrawPlayerLoop:
-    CALL DrawSpriteObject               ;draw sprite row 1
-    CALL DrawSpriteObject               ;draw sprite row 2
-    CALL DrawSpriteObject               ;draw sprite row 3
-    JP DrawSpriteObject                 ;draw sprite row 4
+    LD IXL, E
+    LD A, B
+    DrawSpriteObject_YPos
+    DrawSpriteObject_YPos
+    DrawSpriteObject_YPos
+    DrawSpriteObject_YPos
+    LD E, IXL
+    SLA E
+    SET 7, E
+    DrawSpriteObject_XT
+    DrawSpriteObject_XT
+    DrawSpriteObject_XT
+    DrawSpriteObject_XT
+    RET
+    ;CALL DrawSpriteObject               ;draw sprite row 1
+    ;CALL DrawSpriteObject               ;draw sprite row 2
+    ;CALL DrawSpriteObject               ;draw sprite row 3
+    ;JP DrawSpriteObject                 ;draw sprite row 4
 
 ProcessPlayerAction:
     LD A, (Player_State)                ;get player's state
@@ -2114,9 +1936,9 @@ ShrinkPlayer:
 ;   IXL - temp
 
 DrawSpriteObject:
-    LD IXL, E ;LD C, E
+    LD IXL, E 
 ;   Sprite Y Position
-    LD A, B ;LD A, (Temp_Bytes + $02)
+    LD A, B
         ; Tile 0
     LD (DE), A
         ; Tile 1
@@ -2124,33 +1946,25 @@ DrawSpriteObject:
     LD (DE), A
         ; Prepare for next loop
     ADD A, $08
-    LD B, A ;LD (Temp_Bytes + $02), A
-;   Sprite X Position
+    LD B, A
+;   Sprite X Position & Tile
     DEC E
     SLA E
     SET 7, E
         ; Tile 0
-    LD A, C ;LD A, (Temp_Bytes + $05)
+    LD A, C
     LD (DE), A
+    INC E
+    LDI
+    INC BC
         ; Tile 1
-    INC E
-    INC E
     ADD A, $08
     LD (DE), A
-;   Sprite Tile Index
-        ; Tile 0
-    DEC E
-    LD A, (HL)
-    LD (DE), A
-        ; Tile 1
     INC E
-    INC E
-    INC L
-    LD A, (HL)
-    LD (DE), A
+    LDI
+    INC BC
 ;   Prepare for next loop
-    INC L
-    LD E, IXL ;LD E, C
+    LD E, IXL
     INC E
     INC E
     RET

@@ -2151,7 +2151,6 @@ Tiles_BG_Underground:
 
 Tiles_SPR_Comm:
     .INCLUDE "SPR_Comm.inc"
-    .INCLUDE "SPR_Comm_01.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -2159,8 +2158,10 @@ Tiles_SPR_Comm:
 
 Tiles_SPR_Enemies:
     .INCLUDE "SPR_Enemies.inc"
-Tiles_SPR_Enemies_B:
-    .INCLUDE "SPR_Enemies_B.inc"
+Tiles_SPR_Hammerbro:
+    .INCLUDE "SPR_Hammerbro.inc"
+Tiles_SPR_Lakitu:
+    .INCLUDE "SPR_Lakitu.inc"
 
 .ENDS
 

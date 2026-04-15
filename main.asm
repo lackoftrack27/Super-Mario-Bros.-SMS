@@ -499,8 +499,6 @@ NMIDone:
 
 ;-------------------------------------------------------------------------------------
 
-.ORGA $0700
-
 .SECTION "Nibble Bit Order Flip TBL for ReadJoypads" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 NibbleBitFlipTable:
     .db $00, $08, $04, $0C, $02, $0A, $06, $0E, $01, $09, $05, $0D, $03, $0B, $07, $0F
@@ -1158,7 +1156,7 @@ CarryOne:
 ;   DE - PlayerGfxOffset
 ;   BC - N/A
 ;   IXL 
-;   PlayerGfxOffset - %PPMMMMMMMMMMMMMM [P = PALETTE, M = MAPPING POINTER]
+;   PlayerGfxOffset - %MBPPMMMMMMMMMMMM [B = BANK LSB, P = PALETTE, M = MAPPING POINTER]
 ;   PlayerGfxBank   - %00000BBB [B = Bank : B2, = 1, B1 = CHARACTER, B0 = DIRECTION] 
 StreamPlayerTiles:
     LD (PlayerGfxOffset_Old), DE
@@ -1173,96 +1171,134 @@ StreamPlayerTiles:
     LD (MAPPER_SLOT2), A
 ;   ISOLATE PALETTE BITS INTO IXL
     LD A, D
-    AND A, %11000000
-    RRCA
-    RRCA
+    AND A, %10110000
     LD IXL, A
+;   REMOVE PALETTE BITS AND BANK LSB FROM OFFSET
     LD A, D
-    AND A, %00111111
+    AND A, %10001111
     LD D, A
 ;   WRITE TILE DATA
-    ; TILE 0 [38 + 512 = 550]
+    ; TILE 0
     LD A, (DE)
-    LD L, A
-    INC DE
-    LD A, (DE)
+    LD L, $00
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 1 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 1
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 2 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 2
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 3 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 3
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 4 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 4
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 5 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 5
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 6 [38 + 512 = 550]
-    LD A, (DE)
+    ; TILE 6
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
-    INC DE
+    INC E
     .REPEAT $20
     OUTI
     .ENDR
-    ; TILE 7 [32 + 512 = 544]
-    LD A, (DE)
+    ; TILE 7
+    XOR A
     LD L, A
-    INC DE
     LD A, (DE)
+    RRA
+    RR L
+    RRA
+    RR L
+    RRA
+    RR L
     OR A, IXL
     LD H, A
     .REPEAT $20

@@ -1446,93 +1446,95 @@ DrawBubble:
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
 
-.SECTION "PlayerGraphicsTable" BANK BANK_CODE SLOT 0 FREE WINDOW $0000 $1000
+.SECTION "PlayerGraphicsTable" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $0F20
 PlayerGraphicsTable:
 @bigWalk:
-    .dw $8000, $8020, $8040, $8060, $8080, $80A0, $80C0, $80E0	; WALK 1
-    .dw $8100, $8120, $8140, $8160, $8180, $81A0, $81C0, $81E0	; WALK 2
+    .db $00, $01, $02, $03, $04, $05, $06, $07
+    .db $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
+    .db $10, $11, $12, $13, $14, $15, $16, $17
 @bigStand:
-    .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0	; WALK 3, STAND
+    .db $10, $11, $12, $13, $14, $15, $16, $17  ; $18
 @bigSkid:
-    .dw $8300, $8320, $8340, $8360, $8380, $83A0, $83C0, $83E0	; SKID
+    .db $18, $19, $1A, $1B, $1C, $1D, $1E, $1F
 @bigJump:
-    .dw $8000, $8400, $8040, $8420, $8080, $8440, $80C0, $80E0	; JUMP
+    .db $00, $20, $02, $21, $04, $22, $06, $07
 @bigSwim:
-    .dw $8460, $8480, $84A0, $84C0, $84E0, $8500, $8520, $8540	; SWIM 1
-    .dw $8460, $8480, $84A0, $84C0, $8560, $8580, $85A0, $8540	; SWIM 2
-    .dw $8460, $8480, $84A0, $84C0, $85C0, $85E0, $8600, $8540	; SWIM 3
+    .db $23, $24, $25, $26, $27, $28, $29, $2A
+    .db $23, $24, $25, $26, $2B, $2C, $2D, $2A
+    .db $23, $24, $25, $26, $2E, $2F, $30, $2A
 @bigClimb:
-    .dw $8200, $8220, $8620, $8640, $8660, $8680, $86A0, $86C0	; CLIMB 1
-    .dw $86E0, $8700, $8720, $8740, $8760, $8780, $87A0, $87C0	; CLIMB 2
+    .db $10, $11, $31, $32, $33, $34, $35, $36
+    .db $37, $38, $39, $3A, $3B, $3C, $3D, $3E
 @bigCrouch:
-    .dw $87E0, $87E0, $8200, $8220, $8800, $8820, $8840, $8860	; CROUCH
+    .db $3F, $3F, $10, $11, $40, $41, $42, $43
 @bigAction:
-    .dw $8100, $8880, $88A0, $88C0, $88E0, $8900, $8920, $8940	; ACTION
+    .db $08, $44, $45, $46, $47, $48, $49, $4A
 @smlWalk:
-    .dw $87E0, $87E0, $87E0, $87E0, $8960, $8980, $89A0, $89C0	; WALK 1
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A20, $8A40	; WALK 2
+    .db $3F, $3F, $3F, $3F, $4B, $4C, $4D, $4E
+    .db $3F, $3F, $3F, $3F, $4F, $50, $51, $52
+    .db $3F, $3F, $3F, $3F, $4F, $50, $53, $54
 @smlStand:
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80	; WALK 3, STAND
+    .db $3F, $3F, $3F, $3F, $4F, $50, $53, $54  ; $80
 @smlSkid:
-    .dw $87E0, $87E0, $87E0, $87E0, $8AA0, $8AC0, $8AE0, $8B00	; SKID
+    .db $3F, $3F, $3F, $3F, $55, $56, $57, $58
 @smlJump:
-    .dw $87E0, $87E0, $87E0, $87E0, $8B20, $8B40, $8B60, $8B80	; JUMP
+    .db $3F, $3F, $3F, $3F, $59, $5A, $5B, $5C
 @smlSwim:
-    .dw $87E0, $87E0, $87E0, $87E0, $8B20, $8BA0, $8BC0, $8BE0	; SWIM 1
-    .dw $87E0, $87E0, $87E0, $87E0, $8B20, $8980, $8C00, $8C20	; SWIM 2
-    .dw $87E0, $87E0, $87E0, $87E0, $8C40, $8980, $8C60, $8C20	; SWIM 3
+    .db $3F, $3F, $3F, $3F, $59, $5D, $5E, $5F
+    .db $3F, $3F, $3F, $3F, $59, $4C, $60, $61
+    .db $3F, $3F, $3F, $3F, $62, $4C, $63, $61
 @smlClimb:
-    .dw $87E0, $87E0, $87E0, $87E0, $8C80, $8CA0, $8CC0, $8CE0	; CLIMB 1
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8D00, $8D20	; CLIMB 2
+    .db $3F, $3F, $3F, $3F, $64, $65, $66, $67
+    .db $3F, $3F, $3F, $3F, $4F, $50, $68, $69
 @smlKill:
-    .dw $87E0, $87E0, $87E0, $87E0, $8D40, $8D60, $8D80, $8DA0	; DEATH
+    .db $3F, $3F, $3F, $3F, $6A, $6B, $6C, $6D
 @interGrow:
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80	; WALK 3, STAND SMALL
-    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60	; INTERMEDIATE
-    .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0	; WALK 3, STAND BIG
+    .db $3F, $3F, $6E, $6F, $70, $71, $72, $73  ; $C8
+.ENDS
 
-PlayerGraphicsTable_HFlip:
-    .dw $8000, $8020, $8040, $8060, $8080, $80A0, $80C0, $80E0  ; WALK 1
-    .dw $8100, $8120, $8140, $8160, $8180, $81A0, $81C0, $81E0  ; WALK 2
+.SECTION "PlayerGraphicsTable_HFLIP" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $0F20
+    ; BIG
+    .db $00, $01, $02, $03, $04, $05, $06, $07
+    .db $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
+    .db $10, $11, $12, $13, $14, $15, $16, $17
 
-    .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0  ; WALK 3, STAND
+    .db $10, $11, $12, $13, $14, $15, $16, $17
 
-    .dw $8300, $8320, $8340, $8360, $8380, $83A0, $83C0, $83E0  ; SKID
+    .db $18, $19, $1A, $1B, $1C, $1D, $1E, $1F
 
-    .dw $8400, $8020, $8420, $8060, $8440, $80A0, $80C0, $80E0  ; JUMP
+    .db $20, $01, $21, $03, $22, $05, $06, $07
 
-    .dw $8460, $8480, $84A0, $84C0, $84E0, $8500, $8520, $8540  ; SWIM 1
-    .dw $8460, $8480, $84A0, $84C0, $8560, $8580, $8520, $85A0  ; SWIM 2
-    .dw $8460, $8480, $84A0, $84C0, $85C0, $85E0, $8520, $8600  ; SWIM 3
+    .db $23, $24, $25, $26, $27, $28, $29, $2A
+    .db $23, $24, $25, $26, $2B, $2C, $29, $2D
+    .db $23, $24, $25, $26, $2E, $2F, $29, $30
 
-    .dw $8200, $8220, $8620, $8640, $8660, $8680, $86A0, $86C0  ; CLIMB 1
-    .dw $86E0, $8700, $8720, $8740, $8760, $8780, $87A0, $87C0  ; CLIMB 2
+    .db $10, $11, $31, $32, $33, $34, $35, $36
+    .db $37, $38, $39, $3A, $3B, $3C, $3D, $3E
 
-    .dw $87E0, $87E0, $8200, $8220, $8800, $8820, $8840, $8860  ; CROUCH
+    .db $3F, $3F, $10, $11, $40, $41, $42, $43
 
-    .dw $8880, $8120, $88A0, $88C0, $88E0, $8900, $8920, $8940  ; ACTION
+    .db $44, $09, $45, $46, $47, $48, $49, $4A
+    ; SMALL
+    .db $3F, $3F, $3F, $3F, $4B, $4C, $4D, $4E
+    .db $3F, $3F, $3F, $3F, $4F, $50, $51, $52
+    .db $3F, $3F, $3F, $3F, $4F, $50, $53, $54
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8960, $8980, $89A0, $89C0  ; WALK 1
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A20, $8A40  ; WALK 2
+    .db $3F, $3F, $3F, $3F, $4F, $50, $53, $54
 
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80  ; WALK 3, STAND
+    .db $3F, $3F, $3F, $3F, $55, $56, $57, $58
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8AA0, $8AC0, $8AE0, $8B00  ; SKID
+    .db $3F, $3F, $3F, $3F, $59, $5A, $5B, $5C
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8B20, $8B40, $8B60, $8B80  ; JUMP
+    .db $3F, $3F, $3F, $3F, $5D, $5A, $5E, $5F
+    .db $3F, $3F, $3F, $3F, $4B, $5A, $60, $61
+    .db $3F, $3F, $3F, $3F, $4B, $62, $60, $63
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8BA0, $8B40, $8BC0, $8BE0  ; SWIM 1
-    .dw $87E0, $87E0, $87E0, $87E0, $8960, $8B40, $8C00, $8C20  ; SWIM 2
-    .dw $87E0, $87E0, $87E0, $87E0, $8960, $8C40, $8C00, $8C60  ; SWIM 3
+    .db $3F, $3F, $3F, $3F, $64, $65, $66, $67
+    .db $3F, $3F, $3F, $3F, $4F, $50, $68, $69
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8C80, $8CA0, $8CC0, $8CE0  ; CLIMB 1
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8D00, $8D20  ; CLIMB 2
+    .db $3F, $3F, $3F, $3F, $6A, $6B, $6C, $6D
 
-    .dw $87E0, $87E0, $87E0, $87E0, $8D40, $8D60, $8D80, $8DA0  ; DEATH
-
-    .dw $87E0, $87E0, $87E0, $87E0, $89E0, $8A00, $8A60, $8A80	; WALK 3, STAND SMALL
-    .dw $87E0, $87E0, $8DC0, $8DE0, $8E00, $8E20, $8E40, $8E60  ; INTERMEDIATE
-    .dw $8200, $8220, $8240, $8260, $8280, $82A0, $82C0, $82E0	; WALK 3, STAND BIG
+    .db $3F, $3F, $6E, $6F, $70, $71, $72, $73
 .ENDS
 
 .SECTION "PlayerFixedTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -1598,12 +1600,40 @@ DoChangeSize:
     JP PlayerGfxProcessing              ;draw player, then process for fireball throwing
 
 PlayerKilled:
-    LD HL, PlayerGraphicsTable@smlKill  ;load offset for player killed
+    LD L, <PlayerGraphicsTable@smlKill  ;load offset for player killed
 
 
-;   HL - Absolute Offset from PlayerGraphicsTable
+;   L - Absolute Offset from PlayerGraphicsTable
 PlayerGfxProcessing:
+;   STORE OFFSET
     LD (PlayerGfxOffset), HL            ;store offset to graphics table here
+;   SET BANK BASED ON PLAYER'S FACING DIR
+    LD A, (PlayerFacingDir)
+    AND A, %00000010
+    RRCA
+    LD B, A
+    LD HL, PlayerGfxBank
+    LD A, (HL)
+    AND A, %11111110
+    OR A, B
+    LD (HL), A
+;   MERGE PALETTE BITS AND BANK LSB INTO OFFSET
+    LD HL, PlayerGfxOffset + 1
+    LD A, (Player_SprAttrib)
+    AND A, %00000011
+    RRCA
+    RRCA
+    RRCA
+    RRCA
+    LD B, A
+    LD A, (PlayerGfxBank)
+    AND A, %00000001
+    RRCA
+    RRCA
+    OR A, B
+    OR A, >PlayerGraphicsTable
+    LD (HL), A                          ; [%MBPPMMMMMMMMMMMM]
+;
     CALL RenderPlayerSub                ;draw player based on offset loaded
 ;   FIREBALL 'THROW' ANIMATION PROCESSING
     LD HL, FireballThrowingTimer
@@ -1616,29 +1646,11 @@ PlayerGfxProcessing:
     LD (HL), $00                        ;initialize fireball throw timer
     JP NC, PlayerOffscreenChk           ;if animation frame timer => fireball throw timer skip to end
     LD (HL), A                          ;otherwise store animation timer into fireball throw timer
-    LD HL, PlayerGraphicsTable@bigAction    ;load offset for player throwing
-    LD (PlayerGfxOffset), HL
+    LD A, <PlayerGraphicsTable@bigAction    ;load offset for player throwing
+    LD (PlayerGfxOffset), A
 
 
 PlayerOffscreenChk:
-;   SET MAPPING FOR DIRECTION
-    LD HL, (PlayerGfxOffset)
-    LD A, (PlayerFacingDir)
-    AND A, %00000010
-    JP Z, +
-    LD DE, _sizeof_PlayerGraphicsTable
-    ADD HL, DE
-    LD (PlayerGfxOffset), HL
-+:
-;   SET PALETTE BITS [%PPMMMMMMMMMMMMMM]
-    LD HL, PlayerGfxOffset + 1
-    LD A, (Player_SprAttrib)
-    AND A, %00000011
-    RRCA
-    RRCA
-    OR A, (HL)
-    LD (HL), A
-;
     LD A, (Player_OffscrBits)           ;get player's offscreen bits
     RRCA
     RRCA                                ;move vertical bits to low nybble
@@ -1684,7 +1696,6 @@ DrawPlayer_Intermediate:
 ;
     LD HL, PlayerFixedTiles             ;load fixed tile indexes allocated for streamed player tiles
     LD DE, Sprite_Y_Position + $01      ;load sprite data offset
-    ;LD DE, Sprite_Y_Position            ;load sprite data offset
     JP DrawPlayerLoop
 
 ;-------------------------------------------------------------------------------------
@@ -1697,16 +1708,6 @@ DrawPlayer_Intermediate:
 ;these also used in IntermediatePlayerData
 
 RenderPlayerSub:
-;   SET BANK BASED ON PLAYER'S FACING DIR
-    LD A, (PlayerFacingDir)
-    AND A, %00000010
-    RRCA
-    LD B, A
-    LD HL, PlayerGfxBank
-    LD A, (HL)
-    AND A, %11111110
-    OR A, B
-    LD (HL), A
     ;LD (Temp_Bytes + $03), A            ;store player's facing direction
 ;
     ;LD A, (Player_SprAttrib)
@@ -1716,7 +1717,6 @@ RenderPlayerSub:
     LD HL, PlayerFixedTiles             ;load fixed tile indexes allocated for streamed player tiles
     LD A, (Player_SprDataOffset)        ;get player's sprite data offset
     LD E, A
-    ;LD E, $00
     LD D, >Sprite_Y_Position
 ;
     LD A, (Player_Rel_XPos)
@@ -1759,7 +1759,7 @@ ProcessPlayerAction:
     DEC A
     JP Z, ActionFalling                 ;if falling, branch here
 ActionClimbing:
-    LD HL, PlayerGraphicsTable@bigClimb ;load offset for climbing
+    LD L, <PlayerGraphicsTable@bigClimb ;load offset for climbing
     LD A, (Player_Y_Speed)              ;check player's vertical speed
     OR A
     JP Z, NonAnimatedActs               ;if no speed, branch, use offset as-is
@@ -1768,12 +1768,12 @@ ActionClimbing:
     JP AnimationControl                 ;jump to get offset and animate player object
 
 ProcOnGroundActs:
-    LD HL, PlayerGraphicsTable@bigCrouch;load offset for crouching
+    LD L, <PlayerGraphicsTable@bigCrouch;load offset for crouching
     LD A, (CrouchingFlag)               ;get crouching flag
     OR A
     JP NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
 ;
-    LD HL, PlayerGraphicsTable@bigStand ;load offset for standing
+    LD L, <PlayerGraphicsTable@bigStand ;load offset for standing
     LD A, (Player_X_Speed)              ;check player's horizontal speed
     LD B, A
     LD A, (Left_Right_Buttons)          ;and left/right controller bits
@@ -1790,7 +1790,7 @@ ProcOnGroundActs:
     AND A, B
     JP NZ, ActionWalkRun                ;if moving direction = facing direction, branch, don't skid
 ;
-    LD HL, PlayerGraphicsTable@bigSkid  ;else, load offset for skiding
+    LD L, <PlayerGraphicsTable@bigSkid  ;else, load offset for skiding
 
 NonAnimatedActs:
     CALL GetGfxOffsetAdder              ;do a sub here to get offset adder for graphics table
@@ -1799,12 +1799,12 @@ NonAnimatedActs:
     RET
 
 ActionFalling:
-    LD HL, PlayerGraphicsTable@bigWalk  ;load offset for walking/running
+    LD L, <PlayerGraphicsTable@bigWalk  ;load offset for walking/running
     CALL GetGfxOffsetAdder              ;get offset to graphics table
     JP GetCurrentAnimOffset             ;execute instructions for falling state
 
 ActionWalkRun:
-    LD HL, PlayerGraphicsTable@bigWalk  ;load offset for walking/running
+    LD L, <PlayerGraphicsTable@bigWalk  ;load offset for walking/running
     CALL GetGfxOffsetAdder              ;get offset to graphics table
     JP FourFrameExtent                  ;execute instructions for normal state
 
@@ -1813,16 +1813,16 @@ ActionSwimmingChk:
     OR A
     JP NZ, ActionSwimming               ;if swimming flag set, branch elsewhere
 ;
-    LD HL, PlayerGraphicsTable@bigCrouch;load offset for crouching
+    LD L, <PlayerGraphicsTable@bigCrouch;load offset for crouching
     LD A, (CrouchingFlag)               ;get crouching flag
     OR A
     JP NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
 ;
-    LD HL, PlayerGraphicsTable@bigJump  ;otherwise load offset for jumping
+    LD L, <PlayerGraphicsTable@bigJump  ;otherwise load offset for jumping
     JP NonAnimatedActs                  ;go to get offset to graphics table
 
 ActionSwimming:
-    LD HL, PlayerGraphicsTable@bigSwim  ;load offset for swimming
+    LD L, <PlayerGraphicsTable@bigSwim  ;load offset for swimming
     CALL GetGfxOffsetAdder
 ;
     LD A, (JumpSwimTimer)               ;check jump/swim timer
@@ -1837,7 +1837,11 @@ ActionSwimming:
 
 GetCurrentAnimOffset:
     LD A, (PlayerAnimCtrl)              ;get animation frame control
-    JP GetOffsetFromAnimCtrl            ;jump to get proper offset to graphics table
+    ADD A, A                            ;multiply animation frame control
+    ADD A, A                            ;by 8 to get proper amount
+    ADD A, A                            ;to add to our offset
+    addAToHL8_M                         ;add to offset to graphics table
+    RET
 
 FourFrameExtent:
     LD A, $03                           ;load upper extent for frame control
@@ -1868,15 +1872,15 @@ GetGfxOffsetAdder:
     LD A, (PlayerSize)                  ;get player's size
     OR A
     RET Z                               ;if player big, use current offset as-is
-    LD A, PlayerGraphicsTable@smlWalk - PlayerGraphicsTable
-    addAToHL_M                          ;otherwise add offset for small player
+    LD A, <PlayerGraphicsTable@smlWalk - <PlayerGraphicsTable
+    addAToHL8_M                         ;otherwise add offset for small player
     RET
 
 .SECTION "ChangeSizeOffsetAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 ChangeSizeOffsetAdder:
     ;   SMALL -> BIG
     ;   SML, GRW, SML, GRW, SML, GRW, BIG, SML, GRW, BIG
-    .db $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
+    .db $80, $C8, $80, $C8, $80, $C8, $18, $80, $C8, $18
     ;   BIG -> SMALL
     ;   SML, BIG, SML, BIG, SML, BIG, SML, BIG, SML, BIG
     .db $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
@@ -1908,14 +1912,8 @@ GorSLog:
     LD HL, ChangeSizeOffsetAdder        ;get offset adder based on frame control as offset
     addAToHL8_M
     LD A, (HL)
-    LD HL, PlayerGraphicsTable@interGrow;load offset for player growing
-
-GetOffsetFromAnimCtrl:
-    ADD A, A                            ;multiply animation frame control
-    ADD A, A                            ;by 16 to get proper amount
-    ADD A, A                            ;to add to our offset
-    ADD A, A
-    addAToHL_M                          ;add to offset to graphics table
+    ADD A, <PlayerGraphicsTable         ;use as relative offset from table base
+    LD L, A
     RET
 
 ShrinkPlayer:
@@ -1924,9 +1922,9 @@ ShrinkPlayer:
     addAToHL8_M
     LD A, (HL)                          ;get what would normally be offset adder
     OR A
-    LD HL, PlayerGraphicsTable@smlSwim  ;load offset for small player swimming
+    LD L, <PlayerGraphicsTable@smlSwim  ;load offset for small player swimming
     RET NZ                              ;branch to use offset if nonzero
-    LD HL, PlayerGraphicsTable@bigSwim  ;otherwise load offset for big player swimming
+    LD L, <PlayerGraphicsTable@bigSwim  ;otherwise load offset for big player swimming
     RET
 
 ;-------------------------------------------------------------------------------------

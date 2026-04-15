@@ -406,23 +406,21 @@ StrBlock:
     JP NZ, ChkMTLow                 ;continue until we pass last row, then leave
     RET
 
-/*
-    BLOCK BUFFER DATA LAYOUT:
-    HN: ROW,  LN: COL
-    00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
-    10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
-    20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
-    30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
-    40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
-    50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
-    60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
-    70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
-    80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
-    90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
-    A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
-    B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
-    C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
-*/
+    ; BLOCK BUFFER DATA LAYOUT:
+    ; HN: ROW,  LN: COL
+    ; 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+    ; 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+    ; 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+    ; 30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
+    ; 40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
+    ; 50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
+    ; 60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
+    ; 70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
+    ; 80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
+    ; 90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
+    ; A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
+    ; B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
+    ; C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
 
 .SECTION "Metatile Index Collision Floor TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 ;numbers lower than these with the same attribute bits
@@ -463,20 +461,13 @@ ProcADLoop:
     LD A, (AreaObjectPageSel)               ;check page select
     OR A
     JP NZ, Chk1Row13
-    /*
-    EXX
-    LD HL, AreaObjectPageSel                ;if not already set, set it now
-    INC (HL)
-    LD HL, AreaObjectPageLoc                ;and increment page location
-    INC (HL)
-    EXX
-    */
-    LD A, (AreaObjectPageSel)
-    INC A
-    LD (AreaObjectPageSel), A
-    LD A, (AreaObjectPageLoc)
-    INC A
-    LD (AreaObjectPageLoc), A
+    PUSH HL
+    LD HL, AreaObjectPageSel
+    LD (HL), $01                            ;if not already set, set it now
+    ;INC (HL)                                
+    DEC L                                   ;AreaObjectPageLoc
+    INC (HL)                                ;and increment page location
+    POP HL
     ; Check object row position
 Chk1Row13:
     DEC E
@@ -1007,20 +998,18 @@ RenderPul:
 
 .SECTION "Castle Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 CastleMetatiles:
-    /*
-    .db MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_BLANK
-    .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK, MT_CASTLE_WINDOWLEFT, MT_BLANK
-    .db MT_CASTLE_TOP, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOP
-    .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_BRICK
-    .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_BRICK
+    ; .db MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_BLANK
+    ; .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK, MT_CASTLE_WINDOWLEFT, MT_BLANK
+    ; .db MT_CASTLE_TOP, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOP
+    ; .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_BRICK
+    ; .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_BRICK
 
-    .db MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK
-    .db MT_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK
-    .db MT_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK
-    .db MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK
-    .db MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP
-    .db MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT
-    */
+    ; .db MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK
+    ; .db MT_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK
+    ; .db MT_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK
+    ; .db MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK
+    ; .db MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP
+    ; .db MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT
     .db MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_BLANK
     .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK_PRI, MT_CASTLE_WINDOWLEFT, MT_BLANK
     .db MT_CASTLE_TOP, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOP
@@ -1827,19 +1816,17 @@ GetAreaObjYPosition:
 ;-------------------------------------------------------------------------------------
 ;$06-$07 - used to store block buffer address used as indirect
 
-    /*
 ;   A - Offset into the buffer (High nibble - block buffer x, Low Nibble - Column)
-GetBlockBufferAddr:
-    LD DE, Block_Buffer_1
-    BIT 4, A
-    JP Z, +
-    LD E, <Block_Buffer_2
-+:
-    AND A, $0F              ;mask out high nybble
-    addAToDE8_M             ;add to low byte    
-    LD (Temp_Bytes + $06), DE
-    RET
-    */
+; GetBlockBufferAddr:
+;     LD DE, Block_Buffer_1
+;     BIT 4, A
+;     JP Z, +
+;     LD E, <Block_Buffer_2
+; +:
+;     AND A, $0F              ;mask out high nybble
+;     addAToDE8_M             ;add to low byte    
+;     LD (Temp_Bytes + $06), DE
+;     RET
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp vram buffer offset

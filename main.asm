@@ -1480,33 +1480,31 @@ WriteHoriBlock:
 .ENDR
     RET
 
-    /*
 ;   0x0101 - 0x0341
-.REPT $40           ; 09 (8 + 1) bytes per iteration
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE BYTE FOR CURRENT ROW
-.ENDR
-WriteVeriBlock_B:
-    RET
-    */
-    /*
+; .REPT $40           ; 09 (8 + 1) bytes per iteration
+;     EXX
+;     OUT (C), L      ; WRITE VDP ADDRESS
+;     OUT (C), H
+;     ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+;     EXX
+;     OUTI            ; WRITE BYTE FOR CURRENT ROW
+; .ENDR
+; WriteVeriBlock_B:
+;     RET
+    
 ;   0x0342 - 0x0602
 .REPT $40           ; 11 (8 + 3) bytes per iteration
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE WORD FOR CURRENT ROW
-    OUTI
-.ENDR
-WriteVeriBlock_W:
-    RET
-    */
+;     EXX
+;     OUT (C), L      ; WRITE VDP ADDRESS
+;     OUT (C), H
+;     ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+;     EXX
+;     OUTI            ; WRITE WORD FOR CURRENT ROW
+;     OUTI
+; .ENDR
+; WriteVeriBlock_W:
+;     RET
+    
 WriteVeriBlock_W:
 .REPT $17           ; 11 (8 + 3) bytes per iteration
     EXX
@@ -1521,7 +1519,6 @@ WriteVeriBlock_W:
 
 .ENDS
 ;-------------------------------------------------------------------------------------
-;.SECTION "jUNK!!!!" BANK BANK_SLOT2 SLOT 2 FORCE ORG $0700
 
 /*
 PALETTE DATA LAYOUT:
@@ -1530,8 +1527,9 @@ PALETTE DATA LAYOUT:
 .SECTION "Water AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 WaterPaletteData:
     .dw swapBytes($C000)
-    .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $20
+    .db $39, $00, $22, $26, $27, $24, $28, $29, $2B, $00, $3E, $2F, $00, $3F, $21, $2E
+    .db $39, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
     .db $00
 .ENDS
 
@@ -1556,40 +1554,44 @@ UndergroundPaletteData:
 .SECTION "Castle AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 CastlePaletteData:
     .dw swapBytes($C000)
-    .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $20
+    .db $00, $00, $10, $15, $2A, $01, $08, $0C, $05, $0A, $2B, $0F, $02, $3F, $07, $2D
+    .db $00, $00, $10, $15, $2A, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
 .SECTION "Day Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 DaySnowPaletteData:
     .dw swapBytes($C000)
-    .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $20
+    .db $39, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
+    .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
 .SECTION "Night Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 NightSnowPaletteData:
     .dw swapBytes($C000)
-    .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $20
+    .db $00, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
+    .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
 .SECTION "Mushroom AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 MushroomPaletteData:
     .dw swapBytes($C000)
-    .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $20
+    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $2D
+    .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
 .SECTION "Bowser Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 BowserPaletteData:
-    .dw swapBytes($C000)
+    .dw swapBytes($C010)
     .db $10
-    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $10, $15, $2A, $24, $0E, $06, $1B, $07, $04, $3F, $03, $02, $10, $09
     .db $00
 .ENDS
 

@@ -73,7 +73,7 @@ InitializeArea:
 @DoneInitArea:
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A
-    LD A, $01                       ;disable screen output
+    XOR A                           ;disable screen output
     LD (DisableScreenFlag), A
     LD HL, OperMode_Task            ;increment one of the modes
     INC (HL)
@@ -82,7 +82,7 @@ InitializeArea:
 ;-------------------------------------------------------------------------------------
 
 SecondaryGameSetup:
-    XOR A
+    LD A, $40
     LD (DisableScreenFlag), A           ;enable screen output
 ;   !!! THIS CLEARS WAY MORE STUFF THAN JUST THE VRAM BUFFERS !!!
     /*
@@ -106,6 +106,7 @@ SecondaryGameSetup:
     ;LD HL, VRAM_Buffer2
     ;LD (VRAM_Buffer2_Ptr), HL
 ;   !!!
+    XOR A
     LD (GameTimerExpiredFlag), A        ;clear game timer exp flag
     LD (DisableIntermediate), A         ;clear skip lives display flag
     LD (BackloadingFlag), A             ;clear value here
@@ -272,17 +273,17 @@ RunParser:
 AnimatedBGTileInits:
 @Coin:
     .dw $3D00 | VRAMWRITE       ; VRAM ADR
-    .db $04 * $20               ; TILES PER FRAME IN BYTE COUNT
+    .db StripeCount($04 * $20)  ; TILES PER FRAME IN LDI COUNT
     .dw AnimiatedBGTiles@Coin   ; FRAME TABLE ADR
     .db $04, $08, $08           ; TOTAL SPRITE FRAMES, FRAMES PER TILE, FRAMES PER TILE RESET VALUE
 @Grass:
     .dw $3D80 | VRAMWRITE
-    .db $06 * $20
+    .db $00                     ; N/A
     .dw AnimiatedBGTiles@Grass
     .db $04, $10, $10
 @Latern:
     .dw $3D80 | VRAMWRITE
-    .db $04 * $20
+    .db StripeCount($04 * $20)
     .dw AnimiatedBGTiles@Latern
     .db $04, $10, $10
 .ENDS
@@ -1877,16 +1878,16 @@ MoveSwimmingCheepCheep:
     RET
 
 ;--------------------------------
-;$00 - used as counter for firebar parts
-;$01 - used for oscillated high byte of spin state or to hold horizontal adder
-;$02 - used for oscillated high byte of spin state or to hold vertical adder
-;$03 - used for mirror data
-;$04 - used to store player's sprite 1 X coordinate
-;$05 - used to evaluate mirror data
-;$06 - used to store either screen X coordinate or sprite data offset
-;$07 - used to store screen Y coordinate
-;$ed - used to hold maximum length of firebar
-;$ef - used to hold high byte of spinstate
+;$00(IXH) - used as counter for firebar parts
+;$01(C) - used for oscillated high byte of spin state or to hold horizontal adder
+;$02(IXL) - used for oscillated high byte of spin state or to hold vertical adder
+;$03(B) - used for mirror data
+;$04(C) - used to store player's sprite 1 X coordinate
+;$05(IYL) - used to evaluate mirror data
+;$06(DE) - used to store either screen X coordinate or sprite data offset
+;$07(DE) - used to store screen Y coordinate
+;$ed(IYH) - used to hold maximum length of firebar
+;$ef(UNUSED) - used to hold high byte of spinstate
 
 ;horizontal adder is at first byte + high byte of spinstate,
 ;vertical adder is same + 8 bytes, two's compliment
@@ -1913,12 +1914,302 @@ FirebarTblOffsets:
     .db $00, $09, $12, $1b, $24, $2d
     .db $36, $3f, $48, $51, $5a, $63
 
-FirebarYPos:
-    .db $0c, $18
+;FirebarYPos:
+;    .db $0c, $18
 .ENDS
 
 ProcFirebar:
+    CALL GetEnemyOffscreenBits
+    LD A, (Enemy_OffscrBits)
+    AND A, %00001000
+    RET NZ
+;
+    LD A, (TimerControl)
+    OR A
+    JP NZ, SusFbar
+;
+    LD L, <FirebarSpinSpeed
+    LD B, (HL)
+;FirebarSpin:
+    LD L, <FirebarSpinDirection
+    LD A, (HL)
+    OR A
+    JP NZ, SpinCounterClockwise
+    LD L, <FirebarSpinState_Low
+    LD A, (HL)
+    ADD A, B
+    LD (HL), A
+    LD L, <FirebarSpinState_High
+    LD A, (HL)
+    ADC A, $00
+    JP FirebarSpinDone
+
+SpinCounterClockwise:
+    LD L, <FirebarSpinState_Low
+    LD A, (HL)
+    SUB A, B
+    LD (HL), A
+    LD L, <FirebarSpinState_High
+    LD A, (HL)
+    SBC A, $00
+
+FirebarSpinDone:
+    AND A, %00011111
+    LD (HL), A
+;
+SusFbar:
+    LD L, <Enemy_ID
+    LD A, (HL)
+    CP A, $1F
+    LD L, <FirebarSpinState_High
+    LD A, (HL)
+    JP C, SetupGFB
+    CP A, $08
+    JP Z, SkpFSte
+    CP A, $18
+    JP NZ, SetupGFB
+SkpFSte:
+    INC (HL)
+;
+SetupGFB:
+    ;LD A, (HL)
+    ;sta $ef
+    CALL RelativeEnemyPosition
+    ;CALL GetFirebarPosition
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD D, >Sprite_Y_Position
+    LD A, (Enemy_Rel_YPos)
+    LD (Temp_Bytes + $07), A
+    SUB A, SMS_PIXELYOFFSET
+    LD (DE), A
+    LD A, (Enemy_Rel_XPos)
+    SLA E
+    SET 7, E
+    LD (DE), A
+    LD (Temp_Bytes + $06), A
+    CALL FirebarCollision
+;
+    LD IYH, $05
+    LD L, <Enemy_ID
+    LD A, (HL)
+    CP A, $1F
+    JP C, SetMFbar
+    LD IYH, $0B
+SetMFbar:
+    LD IXH, $00
+;
+DrawFbar:
+    LD L, <FirebarSpinState_High
+    LD A, (HL)
+    PUSH HL
+    CALL GetFirebarPosition
+    POP HL
+    CALL DrawFirebar_Collision
+    LD A, IXH
+    CP A, $04
+    JP NZ, NextFbar
+    LD DE, (DuplicateObj_Offset - 1)
+    LD E, <Enemy_SprDataOffset
+    LD A, (DE)
+    LD (Temp_Bytes + $06), A
+    LD D, >Sprite_X_Position
+NextFbar:
+    INC IXH
+    CP A, IYH
+    JP C, DrawFbar
     RET
+
+GetFirebarPosition:
+    PUSH AF
+    AND A, %00001111
+    CP A, $09
+    JP C, GetHAdder
+;
+    NEG
+GetHAdder:
+    LD C, A ;sta $01
+    LD A, IXH
+    LD HL, FirebarTblOffsets
+    addAToHL8_M
+    LD A, (HL)
+    ADD A, C
+    LD L, <FirebarPosLookupTbl
+    addAToHL8_M
+    LD C, (HL)
+    POP AF
+    PUSH AF
+    ADD A, $08
+    AND A, %00001111
+    CP A, $09
+    JP C, GetVAdder
+    NEG
+GetVAdder:
+    LD IXL, A
+    LD A, IXH
+    LD L, <FirebarTblOffsets
+    addAToHL8_M
+    LD A, (HL)
+    ADD A, IXL
+    LD L, <FirebarPosLookupTbl
+    addAToHL8_M
+    LD A, (HL)
+    LD IXL, A
+    POP AF
+    RRCA
+    RRCA
+    RRCA
+    AND A, $1F
+    LD L, <FirebarMirrorData
+    addAToHL8_M
+    LD B, (HL)
+    RET
+
+DrawFirebar_Collision:
+    PUSH HL
+    LD HL, Enemy_Rel_XPos
+
+    LD A, (Temp_Bytes + $06)
+    SLA E
+    SET 7, E
+    LD E, A
+
+    LD A, C
+    SRL B
+    JP C, AddHA
+    NEG
+AddHA:
+    ADD A, (HL)
+    LD (DE), A
+    LD (Temp_Bytes + $06), A ;sta $06
+    CP A, (HL)
+    JP NC, SubtR1
+    LD A, (HL)
+    LD HL, Temp_Bytes + $06
+    SUB A, (HL)
+    JP ChkFOfs
+SubtR1:
+    SUB A, (HL)
+ChkFOfs:
+    CP A, $59
+    JP C, VAHandl
+    LD A, YPOS_OFFSCREEN
+    JP SetVFbr
+VAHandl:
+    LD HL, Enemy_Rel_YPos
+    LD A, (HL)
+    CP A, YPOS_OFFSCREEN
+    JP Z, SetVFbr
+    LD A, IXL
+    SRL B
+    JP C, AddVA
+    NEG
+AddVA:
+    ADD A, (HL)
+SetVFbr:
+    LD (Temp_Bytes + $07), A
+    SUB A, SMS_PIXELYOFFSET
+    RES 7, E
+    SRL E
+    LD (DE), A
+    SLA E
+    SET 7, E
+    POP HL
+
+;   DE - Sprite X Pos PTR
+FirebarCollision:
+    CALL DrawFirebar
+    DEC E
+    RES 7, E
+    SRL E
+    PUSH DE
+;
+    LD A, (TimerControl)
+    LD B, A
+    LD A, (StarInvincibleTimer)
+    OR A, B
+    JP NZ, NoColFB
+;
+    LD B, A
+    LD A, (Player_Y_Position)
+    LD C, A
+    LD A, (Player_Y_HighPos)
+    DEC A
+    JP NZ, NoColFB
+    LD A, (PlayerSize)
+    OR A
+    JP NZ, AdjSm
+    LD A, (CrouchingFlag)
+    OR A
+    JP Z, BigJp
+AdjSm:
+    INC B
+    INC B
+    LD A, $18
+    ADD A, C
+    LD C, A
+BigJp:
+    LD A, C
+;
+FBCLoop:
+    LD HL, Temp_Bytes + $07
+    SUB A, (HL)
+    JP P, ChkVFBD
+    NEG
+ChkVFBD:
+    CP A, $08
+    JP NC, Chk2Ofs
+    DEC L
+    LD A, (HL)
+    CP A, $F0
+    JP NC, Chk2Ofs
+    LD A, (Sprite_X_Position + $02)
+    ADD A, $04
+    LD C, A ;sta $04
+    SUB A, (HL)
+    JP P, ChkFBCl
+    NEG
+ChkFBCl:
+    CP A, $08
+    JP C, ChgSDir
+Chk2Ofs:
+    LD A, B
+    CP A, $02
+    JP Z, NoColFB
+    LD A, (Player_Y_Position)
+    DEC B
+    JP NZ, +
+    ADD A, $18
+    JP ++
++:
+    ADD A, $0C
+++:
+    INC B
+    INC B
+    RES 7, E
+    SRL E
+    JP FBCLoop
+;
+ChgSDir:
+    LD A, C
+    CP A, (HL)
+    LD A, $01
+    JP NC, SetSDir
+    INC A
+SetSDir:
+    LD (Enemy_MovingDir), A
+    PUSH IX
+    CALL InjurePlayer
+    POP IX
+NoColFB:
+    POP DE
+    INC E
+    LD A, E
+    LD (Temp_Bytes + $06), A
+    ;ldx ObjectOffset
+    RET
+
+
 
 ;--------------------------------
 
@@ -2474,14 +2765,6 @@ PutinPipe:
     ;LD L, <Enemy_SprAttrib
     ;LD (HL), A
     RET
-
-;-------------------------------------------------------------------------------------
-;$07 - spinning speed
-
-FirebarSpin:
-
-SpinCounterClockwise:
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold collision flag, Y movement force + 5 or low byte of name table for rope
@@ -3475,7 +3758,7 @@ PutBlockMetatile:
     LD (DE), A  ; LOW BYTE
     INC E
 ;   WRITE VRAM BUFFER (COUNT)
-    LD A, $02 | STRIPE_HWRITE_W
+    LD A, StripeCount($04)
     LD (DE), A
     INC E
 ;   WRITE VRAM BUFFER (TOP LEFT TILE, TOP RIGHT TILE)
@@ -3504,7 +3787,7 @@ PutBlockMetatile:
     LD (DE), A  ; LOW BYTE
     INC E
 ;   WRITE VRAM BUFFER (COUNT)
-    LD A, $02 | STRIPE_HWRITE_W
+    LD A, StripeCount($04)
     LD (DE), A
     INC E
 ;   WRITE VRAM BUFFER (BOT LEFT TILE, BOT RIGHT TILE)
@@ -4322,8 +4605,6 @@ HandlePowerUpCollision:
     LD A, $23
     LD (StarInvincibleTimer), A
 ;
-    ;LD A, (SndHurryUpFlag)
-    ;ADD A, SNDID_INVINCIBLE
     LD A, SNDID_INVINCIBLE
     LD (MusicTrack0.SoundQueue), A 
     RET
@@ -5200,27 +5481,25 @@ GetEnemyBoundBoxOfsArg:
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used to hold many values, essentially temp variables
 ;$04(IXH) - holds lower nybble of vertical coordinate from block buffer routine
-;$eb($08) - used to hold block buffer adder
+;$eb(UNUSED) - used to hold block buffer adder
 
 ; BLOCK BUFFER TEMP VARS
 ;$02(IXL) - modified y coordinate
-;$03(NOT USED) - stores metatile involved in block buffer collisions
+;$03(UNUSED) - stores metatile involved in block buffer collisions
 ;$04(IXH) - comes in with offset to block buffer adder data, goes out with low nybble x/y coordinate
 ;$05(IYL) - modified x coordinate
 ;$06-$07(DE) - block buffer address
 
-    /*
-.SECTION "PlayerBGUpperExtent" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-PlayerBGUpperExtent:
-    .db $20, $10
-    ;.db $08, $00        ; big, small or crouch
-.ENDS
-    */
+; .SECTION "PlayerBGUpperExtent" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; PlayerBGUpperExtent:
+;     .db $20, $10
+;     ;.db $08, $00        ; big, small or crouch
+; .ENDS
 
-.SECTION "BlockBufferAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-BlockBufferAdderData:
-    .db $00, $07, $0e   ; big, swim, small or crouch
-.ENDS
+; .SECTION "BlockBufferAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; BlockBufferAdderData:
+;     .db $00, $07, $0e   ; big, swim, small or crouch
+; .ENDS
 
 PlayerBGCollision:
     LD A, (DisableCollisionDet)         ;if collision detection disabled flag set,
@@ -5261,7 +5540,7 @@ ChkOnScr:
     RET NC                              ;otherwise leave
 
 ChkCollSize:
-    LD DE, BlockBufferAdderData + $02   ;otherwise leave
+    LD C, $0E                           ;block offset for crouching
     LD A, (CrouchingFlag)
     OR A
     JP NZ, GBBAdr                       ;if player crouching, skip ahead
@@ -5270,16 +5549,13 @@ ChkCollSize:
     OR A
     JP NZ, GBBAdr                       ;if player small, skip ahead
 ;
-    DEC E                               ;otherwise decrement offset for big player not crouching
+    LD C, $07                           ;block offset for big
     LD A, (SwimmingFlag)
     OR A
     JP NZ, GBBAdr                       ;if swimming flag set, skip ahead
 ;
-    DEC E                               ;otherwise decrement offset
+    LD C, $00                           ;block offset for small
 GBBAdr:
-    LD A, (DE)                          ;get value using offset
-    LD (Temp_Bytes + $08), A
-    LD C, A                             ;put value into Y, as offset for block buffer routine
     LD E, $20
     LD A, (PlayerSize)
     LD HL, CrouchingFlag
@@ -5291,8 +5567,7 @@ HeadChk:
     CP A, E
     JP C, DoFootCheck                   ;if player is too high, skip this part
 ;
-    XOR A
-    CALL BlockBufferColli_Head          ;do player-to-bg collision detection on top of
+    BlockBufferColli_Head               ;do player-to-bg collision detection on top of
     JP Z, DoFootCheck                   ;player, and branch if nothing above player's head
 ;
     CALL CheckForCoinMTiles             ;check to see if player touched coin with their head
@@ -5319,7 +5594,9 @@ HeadChk:
     JP NZ, NYSpd                        ;branch ahead, do not process collision
 ;
     LD A, (DE)
+    PUSH BC                             ;save block buffer offset in C
     CALL PlayerHeadCollision            ;otherwise do a sub to process collision
+    POP BC                              ;restore block buffer offset
     JP DoFootCheck                      ;jump ahead to skip these other parts here
 
 
@@ -5333,18 +5610,18 @@ NYSpd:
     LD (Player_Y_Speed), A              ;jump or swim
 
 DoFootCheck:
-    LD A, (Temp_Bytes + $08)
-    LD C, A
     LD A, (Player_Y_Position)
     CP A, $CF
     JP NC, DoPlayerSideCheck            ;if player is too far down on screen, skip all of this
 ;
-    CALL BlockBufferColli_Feet          ;do player-to-bg collision detection on bottom left of player
+    BlockBufferColli_Feet               ;do player-to-bg collision detection on bottom left of player
     CALL CheckForCoinMTiles             ;check to see if player touched coin with their left foot
     JP Z, HandleCoinMetatile            ;if so, branch to some other part of code
 ;
     PUSH AF                             ;save bottom left metatile to stack
-    CALL BlockBufferColli_Feet          ;do player-to-bg collision detection on bottom right of player
+    BlockBufferColli_Feet               ;do player-to-bg collision detection on bottom right of player
+    DEC C
+    DEC C
     LD (Temp_Bytes + $00), A            ;save bottom right metatile here
     POP AF
     LD (Temp_Bytes + $01), A            ;pull bottom left metatile and save here
@@ -5372,7 +5649,6 @@ ChkFootMTile:
     CALL ChkInvisibleMTiles             ;do sub to check for hidden coin or 1-up blocks
     JP Z, DoPlayerSideCheck             ;if either found, branch
 ;
-    LD C, A
     LD A, (JumpspringAnimCtrl)          ;if jumpspring animating right now,
     OR A
     JP NZ, InitSteP                     ;branch ahead
@@ -5385,7 +5661,7 @@ ChkFootMTile:
     LD (Temp_Bytes + $00), A            ;use player's moving direction as temp variable
     JP ImpedePlayerMove                 ;jump to impede player's movement in that direction
 LandPlyr:
-    LD A, C ; need mt back
+    LD A, (DE)                          ;(SMS) get metatile
     CALL ChkForLandJumpSpring           ;do sub to check for jumpspring metatiles and deal with it
     LD HL, Player_Y_Position
     LD A, $F0                           
@@ -5401,8 +5677,6 @@ InitSteP:
     LD (Player_State), A                ;set player's state to normal
 
 DoPlayerSideCheck:
-    LD A, (Temp_Bytes + $08)
-    LD C, A
     INC C
     INC C                               ;increment offset 2 bytes to use adders for side collisions
     LD A, $02                           ;set value here to be used as counter
@@ -5410,37 +5684,35 @@ DoPlayerSideCheck:
 
 SideCheckLoop:
     INC C                               ;move onto the next one
-    LD A, C
-    LD (Temp_Bytes + $08), A
 ;
     LD A, (Player_Y_Position)
     CP A, $20
     JP C, BHalf
     CP A, $E4
     RET NC                              ;branch to leave if player is too far down
-    LD A, $01
+;
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on one half of player
     JP Z, BHalf                         ;branch ahead if nothing found
     CP A, MT_SIDEPIPE_END_TOP           ;otherwise check for pipe metatiles
     JP Z, BHalf                         ;if collided with sideways pipe (top), branch ahead
     CP A, MT_WATERPIPE_TOP              
     JP Z, BHalf                         ;if collided with water pipe (top), branch ahead
+;
     CALL CheckForClimbMTiles            ;do sub to see if player bumped into anything climbable
     JP C, CheckSideMTiles               ;if not, branch to alternate section of code
 ;
 BHalf:
-    LD A, (Temp_Bytes + $08)
-    LD C, A
     INC C                               ;increment it
-        
+; 
     LD A, (Player_Y_Position)
     CP A, $08
     RET C
     CP A, $D0
     RET NC
-    LD A, $01
+;
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on other half of player
     JP NZ, CheckSideMTiles              ;if something found, branch
+;
     LD HL, Temp_Bytes + $00
     DEC (HL)                            ;otherwise decrement counter
     JP NZ, SideCheckLoop                ;run code until both sides of player are checked
@@ -5465,7 +5737,6 @@ CheckSideMTiles:
 ;
     JP ImpedePlayerMove                 ;otherwise jump to impede player's movement
 ChkPBtm:
-    LD C, A
     LD A, (Player_State)                ;get player's state
     OR A                                ;check for player's state set to normal
     JP NZ, ImpedePlayerMove             ;if not, branch to impede player's movement
@@ -5474,7 +5745,7 @@ ChkPBtm:
     DEC A
     JP NZ, ImpedePlayerMove             ;if facing left, branch to impede movement
 ;
-    LD A, C ; need to get tile id back
+    LD A, (DE)                          ;(SMS) get metatile
     CP A, MT_WATERPIPE_BOT              ;otherwise check for pipe metatiles
     JP Z, PipeDwnS                      ;if collided with sideways pipe (bottom), branch
     CP A, MT_SIDEPIPE_END_BOT           ;if collided with water pipe (bottom), continue
@@ -5563,7 +5834,6 @@ ClimbPLocAdder:
 .SECTION "FlagpoleYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlagpoleYPosData:
     .db $18, $22, $50, $68, $90
-    ;.db $00, $0A, $38, $50, $78
 .ENDS
 
 HandleClimbing:
@@ -5572,6 +5842,7 @@ HandleClimbing:
     RET C                               ;makes actual physical part of vine or flagpole thinner
     CP A, $0A                           ;than 16 pixels
     RET NC                              ;leave if too far left or too far right
+;
     LD A, (DE)                          ;(SMS)get metatile id back from last call to BlockBufferColli_Side
     CP A, MT_FLAGPOLE_BALL              ;check climbing metatiles
     JP Z, FlagpoleCollision             ;branch if flagpole ball found
@@ -5582,18 +5853,22 @@ FlagpoleCollision:
     LD A, (GameEngineSubroutine)
     CP A, $05                           ;check for end-of-level routine running
     JP Z, PutPlayerOnVine               ;if running, branch to end of climbing code
+;
     LD A, $01
     LD (PlayerFacingDir), A             ;set player's facing direction to right
     LD (ScrollLock), A
     LD A, (GameEngineSubroutine)
     CP A, $04                           ;check for flagpole slide routine running
     JP Z, RunFR                         ;if running, branch to end of flagpole code here
+;
     LD A, OBJECTID_BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
     CALL KillEnemies                    ;get rid of them
+;
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A      ; EVENT
     LD A, SNDID_FLAGPOLE                ;load flagpole sound
     LD (FlagpoleSoundQueue), A
+;
     LD HL, FlagpoleYPosData + $04       ;start at end of vertical coordinate data
     LD A, (Player_Y_Position)
     LD (FlagpoleCollisionYPos), A       ;store player's vertical coordinate here to be used later
@@ -5602,9 +5877,7 @@ ChkFlagpoleYPosLoop:
     CP A, (HL)                          ;compare with current vertical coordinate data
     JP NC, MtchF                        ;if player's => current, branch to use current offset
     DEC L                               ;otherwise decrement offset to use
-    DJNZ ChkFlagpoleYPosLoop
-    ;DEC B
-    ;JP NZ, ChkFlagpoleYPosLoop          ;do this until all data is checked (use last one if all checked)
+    DJNZ ChkFlagpoleYPosLoop            ;do this until all data is checked (use last one if all checked)      
 MtchF:
     LD A, B
     LD (FlagpoleScore), A               ;store offset here to be used later
@@ -5616,9 +5889,11 @@ RunFR:
 VineCollision:
     CP A, MT_VINEBLANK                  ;check for climbing metatile used on vines
     JP NZ, PutPlayerOnVine
+;
     LD A, (Player_Y_Position)           ;check player's vertical coordinate
     CP A, $20                           ;for being in status bar area
     JP NC, PutPlayerOnVine              ;branch if not that far up
+;
     LD A, $01
     LD (GameEngineSubroutine), A        ;otherwise set to run autoclimb routine next frame
 
@@ -5812,12 +6087,10 @@ CheckForSolidMTiles:
     AND A, %11000000                ;mask out all but 2 MSB
     RLCA                            ;shift and rotate d7-d6 to d1-d0
     RLCA
-    LD BC, SolidMTileUpperExt       ;use as offset for metatile data
-    addAToBC8_M
-    LD A, (BC)
-    LD B, A
+    LD HL, SolidMTileUpperExt       ;use as offset for metatile data
+    addAToHL8_M
     POP AF                          ;get original metatile value back
-    CP A, B                         ;compare current metatile with solid metatiles
+    CP A, (HL)                      ;compare current metatile with solid metatiles
     RET
 
 .SECTION "ClimbMTileUpperExt" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -5832,12 +6105,10 @@ CheckForClimbMTiles:
     AND A, %11000000                ;mask out all but 2 MSB
     RLCA                            ;shift and rotate d7-d6 to d1-d0
     RLCA
-    LD BC, ClimbMTileUpperExt       ;use as offset for metatile data
-    addAToBC8_M
-    LD A, (BC)
-    LD B, A
+    LD HL, ClimbMTileUpperExt       ;use as offset for metatile data
+    addAToHL8_M
     POP AF                          ;get original metatile value back
-    CP A, B                         ;compare current metatile with climbable metatiles
+    CP A, (HL)                      ;compare current metatile with climbable metatiles
     RET
 
 ;   NZ  - NO COIN MT
@@ -6275,7 +6546,10 @@ FireballBGCollision:
     CP A, $18
     JP C, ClearBounceFlag
 ;
-    CALL BlockBufferChk_FBall
+    ;CALL BlockBufferChk_FBall
+    LD C, $1A 
+    XOR A
+    CALL BlockBufferCollision
     JP Z, ClearBounceFlag
 ;
     CALL ChkForNonSolids
@@ -6644,18 +6918,18 @@ BlockBuffer_Y_Adder:
 ;BlockBufferChk_Enemy:
 ;    JP BlockBufferCollision
 
-BlockBufferChk_FBall:
-    LD C, $1A 
-    XOR A
-    JP BlockBufferCollision
+; BlockBufferChk_FBall:
+;     LD C, $1A 
+;     XOR A
+;     JP BlockBufferCollision
     ;ldx ObjectOffset
 
-BlockBufferColli_Feet:
-    INC C
+; BlockBufferColli_Feet:
+;     INC C
 
-BlockBufferColli_Head:
-    XOR A
-    JP BlockBufferColli_Side@SetPlayerOffset
+; BlockBufferColli_Head:
+;     XOR A
+;     JP BlockBufferColli_Side@SetPlayerOffset
 
 BlockBufferColli_Side:
     LD A, $01

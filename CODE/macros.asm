@@ -7,6 +7,21 @@
 
 .FUNCTION bitValue(v) $01 << v
 
+.FUNCTION StripeCount(v) -(v << $01) & $00FF
+
+
+;   Macros for player BG collision
+.MACRO BlockBufferColli_Head
+    XOR A
+    CALL BlockBufferColli_Side@SetPlayerOffset
+.ENDM
+
+.MACRO BlockBufferColli_Feet
+    INC C
+    XOR A
+    CALL BlockBufferColli_Side@SetPlayerOffset
+.ENDM
+
 ;   Macros for sprite drawing
 .MACRO DrawSpriteObject_YPos
     LD (DE), A

@@ -186,36 +186,30 @@ Start:
     LD HL, Tiles_SPR_Comm
     LD BC, _sizeof_Tiles_SPR_Comm
     CALL copyToVDP
-    /*
 ;   LOAD (most) ENEMY SPRITE TILES (TEST)
-    LD A, :Tiles_SPR_Enemies
-    LD (MAPPER_SLOT2), A
-    LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
-    RST setVDPAddress
-    LD HL, Tiles_SPR_Enemies
-    LD BC, _sizeof_Tiles_SPR_Enemies
-    CALL copyToVDP
-    */
-    /*
+    ; LD A, :Tiles_SPR_Enemies
+    ; LD (MAPPER_SLOT2), A
+    ; LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
+    ; RST setVDPAddress
+    ; LD HL, Tiles_SPR_Enemies
+    ; LD BC, _sizeof_Tiles_SPR_Enemies
+    ; CALL copyToVDP
 ;   LOAD LEVEL BACKGROUND TILES (TEST)
-    LD A, :Tiles_BG_Overworld
-    LD (MAPPER_SLOT2), A
-    LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
-    RST setVDPAddress
-    LD HL, Tiles_BG_Overworld
-    LD BC, _sizeof_Tiles_BG_Overworld
-    CALL copyToVDP
-    */
-    /*
+    ; LD A, :Tiles_BG_Overworld
+    ; LD (MAPPER_SLOT2), A
+    ; LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
+    ; RST setVDPAddress
+    ; LD HL, Tiles_BG_Overworld
+    ; LD BC, _sizeof_Tiles_BG_Overworld
+    ; CALL copyToVDP
 ;   LOAD BACKGROUND PALETTE (TEST)
-    LD A, :GroundPaletteData
-    LD (MAPPER_SLOT2), A 
-    LD HL, $C000 | VRAMWRITE
-    RST setVDPAddress
-    LD HL, GroundPaletteData + $03
-    LD BC, $2000 + VDPDATA_PORT
-    OTIR
-    */
+    ; LD A, :GroundPaletteData
+    ; LD (MAPPER_SLOT2), A 
+    ; LD HL, $C000 | VRAMWRITE
+    ; RST setVDPAddress
+    ; LD HL, GroundPaletteData + $03
+    ; LD BC, $2000 + VDPDATA_PORT
+    ; OTIR
 ;
     LD A, BANK_SLOT2                ; restore bank
     LD (MAPPER_SLOT2), A 
@@ -238,29 +232,12 @@ ColdBoot:
     CALL InitializeMemory           ;clear memory using pointer in HL
     XOR A
     LD (OperMode), A                ;reset primary mode of operation
+    LD (FrameDoneFlag), A
     LD A, $A5
     LD (WarmBootValidation), A      ;set warm boot flag
     LD (PseudoRandomBitReg), A      ;set seed for pseudorandom register
     CALL MoveAllSpritesOffscreen
     CALL InitializeNameTables       ;initialize name table
-    LD A, $01                       ;set flag to disable screen output
-    LD (DisableScreenFlag), A
-    LD A, (Mirror_VDP_REG1)         ;enable NMIs
-    OR A, %10100000
-    LD (Mirror_VDP_REG1), A         ;write contents of A to PPU register 1
-    OUT (VDPCON_PORT), A            ;and its mirror
-    LD A, $81
-    OUT (VDPCON_PORT), A
-
-    ; SET LINE COUNTER
-    LD A, $07
-    OUT (VDPCON_PORT), A
-    LD A, $8A
-    OUT (VDPCON_PORT), A
-
-    XOR A
-    LD (FrameDoneFlag), A
-
     CALL waitForVblank
     IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
     EI                              ;enable Z80 interrupts
@@ -389,7 +366,6 @@ NonMaskableInterrupt:
     PUSH HL
     PUSH IX
 ;   INITIALIZE H SCROLL REG
-InitHScroll:
     XOR A
     OUT (VDPCON_PORT), A
     LD A, $88
@@ -399,17 +375,10 @@ InitHScroll:
     SRL A
     JP NC, LagFrame
     LD (FrameDoneFlag), A
-;   TURN OFF SCREEN IF FLAG IS SET
-CheckScreenFlag:
-    LD A, (Mirror_VDP_REG1)         ;disable display in mirror reg
-    AND A, %10111111                ;save all other bits
-    LD HL, DisableScreenFlag        ;get screen disable flag
-    BIT 0, (HL)
-    JP NZ, ScreenOff                ;if set, used bits as-is
-    OR A, %01000000                 ;otherwise reenable display bit and save them
-ScreenOff:
-    LD (Mirror_VDP_REG1), A         ;save bits for later but not in register at the moment
-    AND A, %10111111                ;disable screen for now
+;   TURN OFF SCREEN IF FLAG IS CLEAR
+    LD A, %10100000
+    LD HL, DisableScreenFlag
+    OR A, (HL)
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
@@ -421,7 +390,7 @@ ScreenOff:
     OUT (VDPCON_PORT), A
     LD HL, Sprite_Y_Position
     LD C, VDPDATA_PORT
-    CALL OutiBlock128 + $80   ; SKIP THE FIRST 64 OUTIs
+    CALL OutiBlock128 + $80         ; SKIP THE FIRST 64 OUTIs
     ; WRITE X POSITIONS AND TILE INDEXES
     LD A, <VRAM_ADR_SPRTBL + $80
     OUT (VDPCON_PORT), A
@@ -431,7 +400,7 @@ ScreenOff:
     CALL OutiBlock128
 ;   NAMETABLE UPDATE
     LD A, (VRAM_Buffer_AddrCtrl)    ;load control for pointer to buffer contents
-    LD B, A                         ; SAVE
+    LD B, A                         ;save for UpdateScreen
     ADD A, A
     LD HL, VRAM_AddrTable
     addAToHL8_M
@@ -458,13 +427,9 @@ ScreenOff:
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
     SBC HL, DE
-    JP NZ, StreamPlayerTiles        ;[CPU TIME: 20 LINES]
+    JP NZ, StreamPlayerTiles        ;[CPU TIME: 21 LINES]
     JP StreamAnimatedBGTiles        ;[CPU TIME: ~25 LINES]
 TileStreamRet:
-    LD A, (Mirror_VDP_REG1)         ;this is where the screen is re-enabled if DisableScreenFlag is clear  
-    OUT (VDPCON_PORT), A
-    LD A, $81
-    OUT (VDPCON_PORT), A
     CALL ReadJoypads
 ;   DO SPRITE SHUFFLE IF (SPRITE 0 FLAG ISN'T SET && GAME ISN'T PAUSED)
     LD A, (Sprite0HitDetectFlag)
@@ -472,7 +437,7 @@ TileStreamRet:
     JP Z, DoSound
     LD A, (GamePauseStatus)
     RRCA
-    CALL NC, SpriteShuffler
+    CALL NC, SpriteShuffler         ;[CPU TIME: 05 LINES]
 LagFrame:
 ;   ONLY SET H-INT IF FLAG IS SET
     LD A, (Sprite0HitDetectFlag)
@@ -509,6 +474,7 @@ ReadJoypads:
     LD A, ~($01 << P1_TH_DIR)
     OUT (IO_CONTROL), A
 ;   CONTROL 1
+    LD HL, NibbleBitFlipTable
     IN A, (CONTROLPORT1)
     CPL                             ; INVERT SO 1 = PRESSED, 0 = NO PRESS
     LD D, A                         ; SAVE FOR LATER
@@ -520,8 +486,7 @@ ReadJoypads:
     LD C, A                         ; STORE IN C
     LD A, B
     AND A, $0F                      ; KEEP ONLY LOWER NIBBLE (DIRECTIONALS)
-    LD HL, NibbleBitFlipTable       ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
-    addAToHL8_M
+    addAToHL8_M                     ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
     LD A, (HL)
     OR A, C                         ; COMBINE NEW DIRECTIONS AND BUTTONS
 
@@ -540,6 +505,7 @@ ReadJoypads:
 
     LD (SavedJoypad1Bits), A
 ;   CONTROL 2
+    LD L, <NibbleBitFlipTable
     LD A, D                         ; GET CONTROLLER 2'S DOWN, UP
     RLCA                            ; AND MOVE THEM FROM D7,D6 TO D1,D0
     RLCA
@@ -553,9 +519,8 @@ ReadJoypads:
     ADD A, A
     LD C, A                         ; STORE IN C
     AND A, %00001100                ; ISOLATE BITS AND OR WITH DOWN,UP
-    OR A, B
-    LD HL, NibbleBitFlipTable       ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
-    addAToHL8_M
+    OR A, B   
+    addAToHL8_M                     ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
     LD B, (HL)
     LD A, C                         ; MOVE D5,D4 TO D7,D6
     ADD A, A
@@ -617,50 +582,24 @@ ReadJoypads:
 
 ;-------------------------------------------------------------------------------------
 
-;   EDITED STRIPE FORMAT: 
-;   D7 - 0 = WRITE HORIZONTALLY, 1 = WRITE VERTICALLY
-;   D6 - 0 = WRITE BYTE, 1 = WRITE WORD
-;   D5->D0 = LENGTH
-
-;   00 - WRITE BYTES HORIZONTAL
-;   01 - WRITE WORDS HORIZONTAL
-;   02 - WRITE BYTES VERTICAL
-;   03 - WRITE WORDS VERTICAL
-
 UpdateScreen:
     LD A, B
     CP A, VRAMTBL_BUFFER2
     JP Z, WriteVertColumnBuff2
     LD IXH, >WriteHoriBlock
 @SkipBuff2Chk:
-;   Push new return address after writing is done
-    ;LD DE, ScreenWriteReturn
-    ;PUSH DE
 ;   Write Address to VDP
     INC HL
-    LD A, (HL)
-    OUT (VDPCON_PORT), A        ;write low byte
-    DEC HL
-    LD A, (HL)
-    OUT (VDPCON_PORT), A        ;write high byte
+    INC C                       ;VDPCON_PORT
+    OUTD
+    OUTI
+    DEC C                       ;VDPDATA_PORT
+;   Set count and write data
     INC HL
-;   Do appropriate mode (horizontal)
-    INC HL
-    LD A, (HL)                  ;get write type
-    AND A, %11000000            ;and check if write mode is 2 or greater (D7 set)
-    ;JP M, VertWritePrep         ;if so, prepare to do vertical write
     LD A, (HL)
-    JP Z, HoriWriteMode_B       ; 40
-HoriWriteMode_W:    ; OVERHEAD: 50
-    ADD A, A                    ; count*4
-HoriWriteMode_B:    ; OVERHEAD: 46
-    ADD A, A                    ; count*2
-    NEG
     LD IXL, A
     INC HL
-    LD C, VDPDATA_PORT
     CALL IndirectCallIX
-ScreenWriteReturn:
 ;   check if buffer is empty
     LD A, (HL)
     OR A
@@ -672,7 +611,6 @@ WriteVertColumnBuff2:
 ;   ADVANCE POINTER TO TILE DATA
     INC L
     INC L
-    LD C, VDPDATA_PORT
 ;   PREPARE SHADOW REGS
     EXX
     LD HL, (VRAM_Buffer2)
@@ -721,67 +659,58 @@ GetScoreDiff:
 SpriteShuffler:
 ;   PLACE ALL SPRITES OFFSCREEN
     CALL MoveAllSpritesOffscreen
-;   
-    LD BC, $0F0A                ;load preset value which will put it at sprite #10
-    LD A, (SprShuffleAmtOffset)
-    ADD A, $C0
-    LD H, A
-    LD L, <SprShuffleAmt
-    LD DE, SprDataOffset + (SPRDATA_FIRE2 * $100)  ;start at the end of OAM data offsets
-@ShuffleLoop:
-    LD A, (DE)                  ;check for offset value against
-    CP A, C                     ;the preset value
-    JP C, @NextSprOffset        ;if less, skip this part
-    ADD A, (HL)                 ;add shuffle amount to current sprite offset
-    CP A, $40                   
-    JP C, @StrSprOffset         ;if not exceeded $3f, skip second add
-    AND A, %00111111
-    ADD A, C                    ;otherwise add preset value to offset
-@StrSprOffset:
-    LD (DE), A                  ;store new offset here or old one if branched to here
-@NextSprOffset:
-    DEC D                       ;move backwards to next one
-    DJNZ @ShuffleLoop
-    LD A, (SprShuffleAmtOffset) ;load offset
-    INC A
-    CP A, $03                   ;check if offset + 1 goes to 3
-    JP NZ, @SetAmtOffset        ;if offset + 1 not 3, store
-    XOR A                       ;otherwise, init to 0
-@SetAmtOffset:
-    LD (SprShuffleAmtOffset), A
-    LD DE, SprDataOffset + (SPRDATA_MISC7 * $100)
-    LD HL, SprDataOffset + (SPRDATA_SLOT7 * $100)
-    ;LD B, $03
-;@SetMiscOffset:
-.REPEAT $03
-    LD A, (HL)  ; OFFSET: SLOT 7*, SLOT 6, SLOT 5   *I don't think slot 7 is used/valid      
-    LD (DE), A  ; OFFSET: MISC 7, MISC 4, MISC 1
-    ADD A, $02  ; $08
+;   UPDATE SHUFFLE OFFSET
+    LD HL, SprShuffleAmtOffset
+    LD A, (HL)
+    INC (HL)
+    CP A, $02
+    JP NZ, +
+    LD (HL), $00
+;   USE AS OFFSET INTO SpriteSlotTable
++:
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    LD B, A
+    ADD A, A
+    ADD A, B
+    ADD A, <SpriteSlotTable
+    LD L, A
+    LD H, >SpriteSlotTable
+    LD DE, SprDataOffset
+;   WRITE TABLE DATA TO OBJECT SPRITE SLOTS
+    .REPEAT $18
+    LD A, (HL)
+    LD (DE), A
+    INC L
     INC D
-    LD (DE), A  ; OFFSET: MISC 8, MISC 5, MISC 2
-    ADD A, $02  ; $08
-    INC D
-    LD (DE), A  ; OFFSET: MISC 9, MISC 6, MISC 3
-    LD A, D
-    SUB A, $05
-    LD D, A
-    DEC H
-.ENDR
-    ;DJNZ @SetMiscOffset         ;do this until all misc spr offsets are loaded
+    .ENDR
     RET
+
+.SECTION "Sprite Slot Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+SpriteSlotTable:
+    .db 1, 34, 40, 46, 52, 58, 10, 16, 22, 26, 9, 30, 31, 32, 33, 58, 60, 62, 10, 12, 14, 16, 18, 20
+    .db 1, 52, 58, 10, 16, 22, 28, 34, 40, 44, 9, 48, 49, 50, 51, 22, 24, 26, 28, 30, 32, 34, 36, 38
+    .db 1, 12, 18, 24, 30, 36, 42, 48, 54, 58, 9, 62, 63, 10, 11, 36, 38, 40, 42, 44, 46, 48, 50, 52
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
 MoveAllSpritesOffscreen:
 MoveSpritesOffscreen:
-    LD HL, Sprite_Y_Position
-    LD DE, Sprite_Y_Position + $01
-    LD (HL), YPOS_OFFSCREEN
-    ;LD BC, $003F
-    ;LDIR
-    .REPEAT $3F
-    LDI
+;   SAVE SP IN DE
+    LD HL, $0000
+    ADD HL, SP
+    EX DE, HL
+;   MEMSET Sprite_Y_Position WITH OFFSCREEN VALUE
+    LD HL, YPOS_OFFSCREEN * $100 + YPOS_OFFSCREEN
+    LD SP, Sprite_Y_Position + $40
+    .REPEAT $20
+    PUSH HL
     .ENDR
+;   RESTORE SP
+    EX DE, HL
+    LD SP, HL
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -830,8 +759,6 @@ InitializeNameTables:
 ;
     LD HL, VRAM_Buffer1
     LD (VRAM_Buffer1_Ptr), HL
-    ;LD HL, VRAM_Buffer2
-    ;LD (VRAM_Buffer2_Ptr), HL
     LD (VRAM_Buffer1), A
 ;
     LD (HorizontalScroll), A
@@ -845,17 +772,18 @@ InitializeNameTables:
 ;   HL - RAM Address to start initializing
 
 InitializeMemory:
--:
+    LD E, L
+    LD D, H
+    DEC E
+    LD C, L
+    LD A, H
+    SUB A, $C0
+    LD B, A
     LD (HL), $00
-    DEC HL
-    BIT 6, H
-    JP NZ, -
+    LDDR
 ;
     LD HL, VRAM_Buffer1
     LD (VRAM_Buffer1_Ptr), HL
-    ;LD HL, VRAM_Buffer2
-    ;LD (VRAM_Buffer2_Ptr), HL
-;
     LD A, BANK_PLAYERGFX00
     LD (PlayerGfxBank), A
     LD HL, PlayerGraphicsTable@smlStand
@@ -1021,44 +949,35 @@ WriteGameText:
 
 .SECTION "Status Bar VDP Address and Length Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 StatusBarData:
-    /*
-    .db $f0, $06 ; top score display on title screen
-    .db $62, $06 ; player score
-    .db $62, $06
-    .db $6d, $02 ; coin tally
-    .db $6d, $02
-    .db $7a, $03 ; game timer
-    */
-    .dw swapBytes(xyToNameTbl_M(16, 20)), $0C   ; top score display on title screen
-    .dw swapBytes(xyToNameTbl_M(3, 0)), $0C     ; player score
-    .dw swapBytes(xyToNameTbl_M(3, 0)), $0C     ; 2nd player score
-    .dw swapBytes(xyToNameTbl_M(14, 0)), $04    ; coin tally
-    .dw swapBytes(xyToNameTbl_M(14, 0)), $04    ; 2nd coin tally
-    .dw swapBytes(xyToNameTbl_M(27, 0)), $06    ; game timer
+    .dw swapBytes(xyToNameTbl_M(16, 20))    ; top score display on title screen
+    .db StripeCount($0C), $06
+    .dw swapBytes(xyToNameTbl_M(3, 0))      ; player score
+    .db StripeCount($0C), $06
+    .dw swapBytes(xyToNameTbl_M(3, 0))      ; 2nd player score
+    .db StripeCount($0C), $06
+    .dw swapBytes(xyToNameTbl_M(14, 0))     ; coin tally
+    .db StripeCount($04), $02
+    .dw swapBytes(xyToNameTbl_M(14, 0))     ; 2nd coin tally
+    .db StripeCount($04), $02
+    .dw swapBytes(xyToNameTbl_M(27, 0))     ; game timer
+    .db StripeCount($06), $03
 .ENDS
 
 .SECTION "Status Bar RAM Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 ;   RAM ADDRESSES FOR DIGITS
 StatusBarOffset:
-    ;.db $06, $0c, $12, $18, $1e, $24
     .dw TopScoreDisplay                         ; top score display on title screen
     .dw PlayerScoreDisplay                      ; player score
     .dw OffScr_ScoreDisplay                     ; 2nd player score
     .dw PlayerCoinDisplay                       ; coin tally
     .dw OffScr_CoinDisplay                      ; 2nd coin tally
     .dw GameTimerDisplay                        ; game timer
-    ;.dw DisplayDigits+($06-$06) ; top score display on title screen
-    ;.dw DisplayDigits+($0C-$06) ; player score
-    ;.dw DisplayDigits+($12-$06)
-    ;.dw DisplayDigits+($18-$02) ; coin tally
-    ;.dw DisplayDigits+($1E-$02)
-    ;.dw DisplayDigits+($24-$03) ; game timer
 .ENDS
 
 PrintStatusBarNumbers:
-    LD IXL, A ;LD I, A                     ;store player-specific offset
+    LD IXL, A                   ;store player-specific offset
     CALL OutputNumbers          ;use first nybble to print the coin display
-    LD A, IXL ;LD A, I
+    LD A, IXL
     RRCA                        ;move high nybble to low                     
     RRCA                        ;and print to score display
     RRCA
@@ -1078,11 +997,10 @@ OutputNumbers:
     LD DE, (VRAM_Buffer1_Ptr)   ;get current buffer pointer
     LDI                         ;WRITE VDP ADDRESS
     LDI
-    LD B, (HL)                  ;STORE COUNT IN B FOR LATER
-    SRL B
-    LDI                         ;WRITE COUNT
+    LDI                         ;write VDP count
+    LD B, (HL)                  ;load word count
     POP AF
-    ADD A, A ;
+    ADD A, A
     LD HL, StatusBarOffset      ;load offset to value we want to write
     addAToHL8_M
     LD A, (HL)                  ;DEREFERENCE POINTER
@@ -1096,7 +1014,7 @@ DigitPLoop:
     INC E
     LD A, $01                   ;ATTRIBUTE BYTE
     LD (DE), A
-    INC HL
+    INC L
     INC E
     DJNZ DigitPLoop             ;do this until all the digits are written
     XOR A                       ;put null terminator at end
@@ -1315,104 +1233,84 @@ StreamPlayerTiles:
 ;   HL
 ;   IXL
 StreamAnimatedBGTiles:
-    LD C, VDPDATA_PORT
-;   SLOT 0 (4 or less)
+    LD C, VDPCON_PORT
+    LD IXH, >OutiBlock128
+;   SLOT 0 (4 or less) [MAX CYCLES: 2235]
     ; CHECK ANIMATE FLAG
-    LD DE, BGTileQueue0.UpdateFlag
-    LD A, (DE)
+    LD HL, BGTileQueue0.UpdateFlag
+    LD A, (HL)
     OR A
     JP Z, @CheckSlot1
-    XOR A
-    LD (DE), A
-    INC E
+    LD (HL), $00
+    INC L
     ; SET VDP ADDRESS
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
+    OUTI
+    OUTI
+    DEC C
     ; GET COUNT AND POINTER   
-    LD A, (DE)
-    INC E
-    ADD A, A
-    NEG
+    LD A, (HL)
     LD IXL, A
-    LD A, (DE)
-    INC E
+    INC L
+    LD A, (HL)
+    INC L
+    LD H, (HL)
     LD L, A
-    LD A, (DE)
-    LD H, A
     ; DEREFERENCE POINTER
     LD A, (HL)
     INC L
     LD H, (HL)
     LD L, A
     ; WRITE TO VRAM
-    LD IXH, >OutiBlock128
     CALL IndirectCallIX
+    INC C
 @CheckSlot1:
-;   SLOT 1 (4 or less)
+;   SLOT 1 (4 or less) [MAX CYCLES: 2235]
     ; CHECK ANIMATE FLAG
-    LD DE, BGTileQueue1.UpdateFlag
-    LD A, (DE)
+    LD HL, BGTileQueue1.UpdateFlag
+    LD A, (HL)
     OR A
     JP Z, @CheckSlot2
-    XOR A
-    LD (DE), A
-    INC E
+    LD (HL), $00
+    INC L
     ; SET VDP ADDRESS
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
+    OUTI
+    OUTI
+    DEC C
     ; GET COUNT AND POINTER   
-    LD A, (DE)
-    INC E
-    ADD A, A
-    NEG
+    LD A, (HL)
     LD IXL, A
-    LD A, (DE)
-    INC E
+    INC L
+    LD A, (HL)
+    INC L
+    LD H, (HL)
     LD L, A
-    LD A, (DE)
-    LD H, A
     ; DEREFERENCE POINTER
     LD A, (HL)
     INC L
     LD H, (HL)
     LD L, A
     ; WRITE TO VRAM
-    LD IXH, >OutiBlock128
     CALL IndirectCallIX
+    INC C
 @CheckSlot2:
-;   SLOT 2 (FIXED 6)
+;   SLOT 2 (FIXED 6) [MAX CYCLES: 3250]
     ; CHECK ANIMATE FLAG
-    LD DE, BGTileQueue2.UpdateFlag
-    LD A, (DE)
+    LD HL, BGTileQueue2.UpdateFlag
+    LD A, (HL)
     OR A
     RET Z
-    XOR A
-    LD (DE), A
-    INC E
+    LD (HL), $00
+    INC L
     ; SET VDP ADDRESS
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
-    LD A, (DE)
-    INC E
-    OUT (VDPCON_PORT), A
-    ; GET COUNT AND POINTER   
-    LD A, (DE)
-    INC E
-    LD B, A
-    LD A, (DE)
-    INC E
+    OUTI
+    OUTI
+    DEC C
+    ; GET POINTER   
+    INC L
+    LD A, (HL)
+    INC L
+    LD H, (HL)
     LD L, A
-    LD A, (DE)
-    LD H, A
     ; DEREFERENCE POINTER
     LD A, (HL)
     INC L
@@ -1438,7 +1336,7 @@ vdpInitData:
     .db $24         ; ENABLE MODE 4 AND HIDE LEFTMOST 8 PIXELS...
     .db $80         ; FOR REG 00 (MODE CONTROL 1)
     ;----------------------
-    .db $80         ; SET BIT 7...
+    .db $A0         ; SET BIT 7 AND ENABLE LINE INTERRUPTS
     .db $81         ; FOR REG 01 (MODE CONTROL 2)
     ;----------------------
     .db ((VRAM_ADR_NAMETBL >> $0A) | $01) & $FF
@@ -1465,7 +1363,7 @@ vdpInitData:
     .db $00         ; NO Y SCROLL...
     .db $89         ; FOR REG 09 (BACKGROUND Y SCROLL)
     ;----------------------
-    .db $FF         ; DISABLE LINE COUNTER...
+    .db $07         ; LINE COUNTER AT $07
     .db $8A         ; FOR REG 0A (LINE COUNTER)
 .ENDS
 
@@ -1493,7 +1391,7 @@ WriteHoriBlock:
 ;     RET
     
 ;   0x0342 - 0x0602
-.REPT $40           ; 11 (8 + 3) bytes per iteration
+; .REPT $40           ; 11 (8 + 3) bytes per iteration
 ;     EXX
 ;     OUT (C), L      ; WRITE VDP ADDRESS
 ;     OUT (C), H
@@ -1527,7 +1425,7 @@ PALETTE DATA LAYOUT:
 .SECTION "Water AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 WaterPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $39, $00, $22, $26, $27, $24, $28, $29, $2B, $00, $3E, $2F, $00, $3F, $21, $2E
     .db $39, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
     .db $00
@@ -1536,7 +1434,7 @@ WaterPaletteData:
 .SECTION "Ground AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 GroundPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $2D
     .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1545,7 +1443,7 @@ GroundPaletteData:
 .SECTION "Underground AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 UndergroundPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $00, $00, $10, $24, $38, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $15, $3C;$3D
     .db $00, $00, $10, $24, $38, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1554,7 +1452,7 @@ UndergroundPaletteData:
 .SECTION "Castle AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 CastlePaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $00, $00, $10, $15, $2A, $01, $08, $0C, $05, $0A, $2B, $0F, $02, $3F, $07, $2D
     .db $00, $00, $10, $15, $2A, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1563,7 +1461,7 @@ CastlePaletteData:
 .SECTION "Day Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 DaySnowPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $39, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
     .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1572,7 +1470,7 @@ DaySnowPaletteData:
 .SECTION "Night Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 NightSnowPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $00, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
     .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1581,7 +1479,7 @@ NightSnowPaletteData:
 .SECTION "Mushroom AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 MushroomPaletteData:
     .dw swapBytes($C000)
-    .db $20
+    .db StripeCount($20)
     .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $2D
     .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
@@ -1590,7 +1488,7 @@ MushroomPaletteData:
 .SECTION "Bowser Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 BowserPaletteData:
     .dw swapBytes($C010)
-    .db $10
+    .db StripeCount($10)
     .db $00, $00, $10, $15, $2A, $24, $0E, $06, $1B, $07, $04, $3F, $03, $02, $10, $09
     .db $00
 .ENDS
@@ -1671,78 +1569,78 @@ WorldSelectMessage2:
 TitleScreenData:
 ;   ROW 0
     .dw swapBytes(xyToNameTbl_M(5, 1))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08B9, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BA, $08BB
 ;   ROW 1
     .dw swapBytes(xyToNameTbl_M(5, 2))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08BD, $08BE, $08BF, $08BF, $08C0, $0ABD, $08BD, $08C1, $08C0, $0ABD, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C3
 ;   ROW 2
     .dw swapBytes(xyToNameTbl_M(5, 3))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08C4, $08C5, $08C6, $08C6, $08C6, $08C7, $08C8, $08C9, $08C6, $08CA, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C3
 ;   ROW 3
     .dw swapBytes(xyToNameTbl_M(5, 4))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08CB, $08CC, $08CD, $08CE, $08CF, $08D0, $08CD, $08D1, $08CF, $08D2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C3
 ;   ROW 4
     .dw swapBytes(xyToNameTbl_M(5, 5))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08D3, $08D4, $08D3, $08D4, $08D5, $08C2, $08D3, $08D6, $08D5, $08D6, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08C2, $08D7, $08D8, $08C3
 ;   ROW 5
     .dw swapBytes(xyToNameTbl_M(5, 6))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08BD, $08D9, $0ABD, $08BD, $0ABD, $08C0, $0ABD, $08BF, $08BD, $0ABD, $08C2, $08C0, $0ABD, $08C0, $0ABD, $08BD, $0ABD, $08BD, $0ABD, $08C2, $08C3
 ;   ROW 6
     .dw swapBytes(xyToNameTbl_M(5, 7))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08DA, $08DB, $08DB, $08DA, $08DB, $08DA, $08DC, $08DA, $08DA, $08DC, $08C2, $08DA, $08DC, $08DA, $08DC, $08DA, $08DC, $08DA, $08DD, $08C2, $08C3
 ;   ROW 7
     .dw swapBytes(xyToNameTbl_M(5, 8))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08DA, $08DA, $08DA, $08DA, $08DA, $08DA, $08DE, $08DA, $08DA, $08DA, $08C2, $08DA, $08DE, $08DA, $08DE, $08DA, $08DA, $08DF, $08E0, $08C2, $08C3
 ;   ROW 8
     .dw swapBytes(xyToNameTbl_M(5, 9))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08C6, $08C6, $08C6, $08E1, $08E2, $08C6, $08E3, $08C6, $08C6, $08C6, $08C2, $08C6, $08E3, $08C6, $08E3, $08C6, $08C6, $08E4, $08E5, $08C2, $08C3
 ;   ROW 9
     .dw swapBytes(xyToNameTbl_M(5, 10))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08BC, $08CF, $08CF, $08CF, $08CF, $08E6, $08CF, $08CF, $08CF, $08CD, $08CE, $08C2, $08CF, $08E7, $08CF, $08CF, $08CD, $08CE, $08CD, $08CE, $08E8, $08C3
 ;   ROW A
     .dw swapBytes(xyToNameTbl_M(5, 11))
-    .db $16 | STRIPE_HWRITE_W
+    .db StripeCount($2C)
     .dw $08E9, $08EA, $08EA, $08EA, $08EA, $08EA, $08EA, $08EA, $08EA, $08EB, $08EC, $08ED, $08EA, $08EE, $08EA, $08EA, $08EB, $08EC, $08EB, $08EC, $08EA, $08EF
 ;   "C1985 NINTENDO"
     .dw swapBytes(xyToNameTbl_M(13, 12))
-    .db $0E | STRIPE_HWRITE_W
+    .db StripeCount($1C)
     .dw $08F0, BG_MACRO($0101), BG_MACRO($0109), BG_MACRO($0108), BG_MACRO($0105), BLANKTILE, $08F1, $08F2, $08F1, $08F3, $08F4, $08F1, $08F5, $08F6 
 ;   "1 PLAYER GAME"
     .dw swapBytes(xyToNameTbl_M(11, 15))
-    .db $0D | STRIPE_HWRITE_W
+    .db StripeCount($1A)
     .dw BG_MACRO($0101), BLANKTILE, $08F7, $08F8, $08F9, $08FA, $08F4, $08FB, BLANKTILE, $08FC, $08F9, $08FD, $08F4
     
     .IF SMSPOWERCOMP == $00
 ;   "2 PLAYER GAME"
     .dw swapBytes(xyToNameTbl_M(11, 17))
-    .db $0D | STRIPE_HWRITE_W
+    .db StripeCount($1A)
     .dw BG_MACRO($0102), BLANKTILE, $08F7, $08F8, $08F9, $08FA, $08F4, $08FB, BLANKTILE, $08FC, $08F9, $08FD, $08F4
     .ENDIF
 
 ;   "V0.12"
     .dw swapBytes(xyToNameTbl_M(22, 13))
-    .db $05 | STRIPE_HWRITE_W
+    .db StripeCount($0A)
     .dw $00B7, BG_MACRO($0100), $00B8, BG_MACRO($0101), BG_MACRO($0102)
 ;   "TOP-      0"
     .dw swapBytes(xyToNameTbl_M(12, 20))
-    .db $04 | STRIPE_HWRITE_W
+    .db StripeCount($08)
     .dw $08F3, $08F6, $08F7, BG_MACRO($010B)
     .dw swapBytes(xyToNameTbl_M(22, 20))
-    .db $01 | STRIPE_HWRITE_W
+    .db StripeCount($02)
     .dw BG_MACRO($0100)
 ;   COLOR
     .dw swapBytes($C013)
-    .db $01
+    .db StripeCount($01)
     .db $07
 ;   TERMINATOR
     .db $00
@@ -1755,19 +1653,19 @@ TopStatusBarLine:
     .db @end-TopStatusBarLine - 1
     ; MARIO ICON
     .dw swapBytes(xyToNameTbl_M(1, 0))
-    .db $01 << $01
+    .db StripeCount($02)
     .dw BG_MACRO($090F)
     ; 'W'
     .dw swapBytes(xyToNameTbl_M(19, 0))
-    .db $01 << $01
+    .db StripeCount($02)
     .dw BG_MACRO($010A)
     ; CLOCK ICON
     .dw swapBytes(xyToNameTbl_M(26, 0))
-    .db $01 << $01
+    .db StripeCount($02)
     .dw BG_MACRO($010E)
     ; '0  [COIN]x' 
     .dw swapBytes(xyToNameTbl_M(9, 0))
-    .db $05 << $01
+    .db StripeCount($0A)
     .dw BG_MACRO($0100), BLANKTILE, BLANKTILE, BG_MACRO($090D), BG_MACRO($010C)
 @end:
 .ENDS
@@ -1781,15 +1679,15 @@ WorldLivesDisplay:
     .db @end-WorldLivesDisplay - 1
     ; '  x  [CROWN][LIFE]'
     .dw swapBytes(xyToNameTbl_M(13, 11))
-    .db $07 << $01
+    .db StripeCount($0E)
     .dw BLANKTILE, BLANKTILE, BG_MACRO($010C), BLANKTILE, BLANKTILE, BG_MACRO($0100), BLANKTILE
     ; 'WORLD [WORLD]-[LEVEL]'
     .dw swapBytes(xyToNameTbl_M(11, 07))
-    .db $09 << $01
+    .db StripeCount($12)
     .dw BG_MACRO($010A), BG_MACRO($0114), BG_MACRO($0112), BG_MACRO($0115), BG_MACRO($011C), BLANKTILE, BG_MACRO($0100), BG_MACRO($010B), BG_MACRO($0100)
     ; Clear "Time Up" Area
     .dw swapBytes(xyToNameTbl_M(12, 13))
-    .db $07 << $01
+    .db StripeCount($0E)
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
 @end:
 .ENDS
@@ -1839,7 +1737,7 @@ GameOverDisplay:
     ;.db $ff
     .db @end-GameOverDisplay - 1
     .dw swapBytes(xyToNameTbl_M(11, 13))
-    .db $09 << $01
+    .db StripeCount($12)
     .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
 @end:
 .ENDS
@@ -1850,7 +1748,7 @@ TimeUpDisplay:
     ;.db $ff
     .db @end-TimeUpDisplay - 1
     .dw swapBytes(xyToNameTbl_M(12, 13))
-    .db $07 << $01
+    .db StripeCount($0E)
     .dw BG_MACRO($011A), BG_MACRO($0113), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0116), BG_MACRO($011B)
 @end:
 .ENDS
@@ -1874,7 +1772,7 @@ MarioName:
     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
     .db @end-MarioName - 1
     .dw swapBytes(xyToNameTbl_M(13, 11))
-    .db $05 << $01
+    .db StripeCount($0A)
     .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
 @end:
 .ENDS
@@ -1884,7 +1782,7 @@ LuigiName:
     ;.db $15, $1e, $12, $10, $12    ; "LUIGI", no address or length
     .db @end-LuigiName - 1
     .dw swapBytes(xyToNameTbl_M(13, 11))
-    .db $05 << $01
+    .db StripeCount($0A)
     .dw BG_MACRO($0115), BG_MACRO($0116), BG_MACRO($0113), BG_MACRO($0117), BG_MACRO($0113)
 @end:
 .ENDS

@@ -41,7 +41,7 @@ PrimaryGameSetup:
 .SECTION "World Select Stripe Command for GameMenuRoutine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 WSelectBufferTemplate:
     .dw swapBytes(xyToNameTbl_M(20, 0))     ; ADDRESS
-    .db $01 << $01                          ; COUNT
+    .db StripeCount($02)                    ; COUNT
     .dw BG_MACRO($0100)                     ; PLACEHOLDER FOR WORLD NUMBER
     .db $00                                 ; TERMINATOR
 .ENDS
@@ -127,7 +127,6 @@ GameMenuRoutine:
     LD (OperMode), A                ;sprite 0 check and disable
     LD (OperMode_Task), A           ;screen output
     LD (Sprite0HitDetectFlag), A
-    INC A
     LD (DisableScreenFlag), A
     RET
 @ChkContinue:
@@ -183,11 +182,11 @@ MushroomIconData:
     ;.dw $08FE, BLANKTILE, BLANKTILE
     ;.db $00                                 ; TERMINATOR
 
-    .db $01 << $01
+    .db StripeCount($02)
     .dw $08FE                               ; $03-$04
 
     .dw swapBytes(xyToNameTbl_M(9, 17))
-    .db $01 << $01
+    .db StripeCount($02)
     .dw BLANKTILE                           ; $08-$09
     .db $00
 .ENDS

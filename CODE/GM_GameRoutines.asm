@@ -183,8 +183,7 @@ ChgAreaMode:
    XOR A
    LD (OperMode_Task), A                ;set secondary mode of operation
    LD (Sprite0HitDetectFlag), A         ;disable sprite 0 check
-   INC A
-   LD (DisableScreenFlag), A            ;set flag to disable screen output
+   LD (DisableScreenFlag), A            ;disable screen output
    RET
 
 EnterSidePipe:
@@ -307,6 +306,7 @@ NextArea:
     CALL ChgAreaMode                    ;do sub to set secondary mode, disable screen and sprite 0
     XOR A
     LD (HalfwayPage), A                 ;reset halfway page to 0 (beginning)
+    LD (SndHurryUpFlag), A              ;reset hurry up flag for sound driver
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A      ; EVENT
 
@@ -334,7 +334,6 @@ PlayerLoseLife:
     XOR A
     LD (Sprite0HitDetectFlag), A        ;disable screen and sprite 0 check
     LD (SndHurryUpFlag), A
-    INC A
     LD (DisableScreenFlag), A
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A      ; EVENT

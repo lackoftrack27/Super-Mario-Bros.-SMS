@@ -67,7 +67,7 @@ WriteBottomStatusLine:
     INC L
     LD (HL), <xyToNameTbl_M(20, 0)
     INC L
-    LD (HL), $06                    ;write length for it [$03]
+    LD (HL), StripeCount($06)       ;write length for it [$03]
     INC L
     LD A, (WorldNumber)             ;first the world number
     ADD A, BG_TILE_OFFSET + $01
@@ -142,7 +142,7 @@ PlayerInter:
 OutputInter:
     CALL WriteGameText
     CALL ResetScreenTimer
-    XOR A
+    LD A, $40
     LD (DisableScreenFlag), A       ;reenable screen output
     ;upload intermediate graphics
     DI
@@ -188,9 +188,10 @@ AreaParserTaskControl:
     LD A, (TileDataLoadedFlag)
     OR A
     CALL Z, LoadLevelTileData
-    LD A, $01
+    XOR A
     LD (DisableScreenFlag), A
-    LD (TileDataLoadedFlag), A
+    INC A
+    LD (TileDataLoadedFlag), A    
 ;
 TaskLoop:
     CALL AreaParserTaskHandler      ;render column set of current area

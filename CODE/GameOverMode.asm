@@ -14,9 +14,9 @@ SetupGameOver:
     XOR A                           ;reset screen routine task control for title screen, game,
     LD (ScreenRoutineTask), A       ;and game over modes
     LD (Sprite0HitDetectFlag), A    ;disable sprite 0 check
-    INC A
     LD (DisableScreenFlag), A       ;disable screen output
-    LD (OperMode_Task), A           ;set secondary mode to 1
+    INC A
+    LD (OperMode_Task), A           ;set secondary mode to 1    
     LD A, SNDID_GAMEOVER
     LD (MusicTrack0.SoundQueue), A    ; EVENT
     RET
@@ -24,7 +24,7 @@ SetupGameOver:
 ;-------------------------------------------------------------------------------------
 
 RunGameOver:
-    XOR A                           ;reenable screen
+    LD A, $40                       ;reenable screen
     LD (DisableScreenFlag), A
     LD A, (SavedJoypad1Bits)
     AND A, bitValue(SMS_BTN_1)      ;check controller for start pressed (button 1)

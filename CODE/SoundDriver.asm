@@ -55,12 +55,18 @@ SoundEngine:
     ; UPDATE ONLY SFX TRACK 0 FOR PAUSE SFX
     LD A, BANK_SOUND
     LD (MAPPER_SLOT2), A
-    LD H, >SFXTrack0
+    ;LD H, >SFXTrack0
+    ;CALL SndChannelProcessSFXTone
+    LD HL, SFXTrack0.SoundQueue
+    LD A, (HL)
+    LD (HL), $00
+    CP A, SNDID_PAUSE
+    CALL Z, SndProcessQueueSFX
     CALL SndChannelProcessSFXTone
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-    XOR A
-    LD (SFXTrack0.SoundQueue), A
+    ;XOR A
+    ;LD (SFXTrack0.SoundQueue), A
     ; STOP HERE IF GAME IS PAUSED
     LD A, (GamePauseStatus)
     RRA
@@ -157,13 +163,13 @@ SndInitMemory:
     INC H
     DEC C
     JP NZ, --
+@InitSndLinearMem:
 ;   GLOBAL MEMORY
     LD HL, SndTempoTimeout
-    LD B, $08
--:
-    LD (HL), A
-    INC L
-    DJNZ -
+    LD DE, SndTempoTimeout + $01
+    LD (HL), $00
+    LD BC, $0007
+    LDIR
 @InitChanBits:
     ; MUSIC TRACKS
     LD HL, MusicTrack0.ChanBits
@@ -352,7 +358,7 @@ SndProcessQueueSFX:
     INC L
     EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
     LD HL, SndIndexTable
-    addAToHL_M
+    addAToHL8_M
 ;
     LD A, (HL)
     INC L
@@ -387,18 +393,26 @@ SndProcessQueueSFX:
 SndProcessQueueMusic:
     INC L           ; SoundPlaying
     LD (HL), A
+;   STOP SFX TRACK 0 AND 1 IF QUEUEING DEATH MUSIC
+    CP A, SNDID_DEATH
+    JP NZ, +
+    XOR A
+    LD DE, SFXTrack0
+    LD (DE), A
+    INC D
+    LD (DE), A
+    LD A, (HL)
+;   COPY GLOBAL TRACK DATA
++:
     SUB A, $81    
     ADD A, A
-;
     EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
     LD HL, SndIndexTable
-    addAToHL_M
-;
+    addAToHL8_M
     LD A, (HL)
     INC L
     LD H, (HL)
     LD L, A
-;
     INC HL          ; UNUSED (FM VOICE)
     INC HL          ; UNUSED (FM VOICE)
     INC HL          ; UNUSED
@@ -407,13 +421,11 @@ SndProcessQueueMusic:
 ;   SETUP TEMPO
     XOR A
     LD (SndTempoTimeout), A
-    /*
-    LD E, <MusicTrack0.SoundPlaying
-    LD A, (DE)
-    SUB A, SNDID_WATER
-    LD BC, SpeedUpTempoTable
-    addAToBC8_M
-    */
+    ; LD E, <MusicTrack0.SoundPlaying
+    ; LD A, (DE)
+    ; SUB A, SNDID_WATER
+    ; LD BC, SpeedUpTempoTable
+    ; addAToBC8_M
     LD A, (SndHurryUpFlag)
     OR A
     LD A, (HL)

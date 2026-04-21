@@ -840,27 +840,12 @@ GameTextOffsets:
     .dw WorldLivesDisplay, WorldLivesDisplay
     .dw TimeUpDisplay, TimeUpDisplay
     .dw GameOverDisplay, GameOverDisplay
-    ;.dw TwoPlayerTimeUp, OnePlayerTimeUp
-    ;.dw TwoPlayerGameOver, OnePlayerGameOver
     .dw WarpZoneWelcome, WarpZoneWelcome
 .ENDS
 
 WriteGameText:
     PUSH AF                                 ;save text number to stack
     ADD A, A                                ;multiply by 2 and use as offset
-    /*
-    CP A, $04                               ;if set to do top status bar or world/lives display,
-    JP C, @LdGameText                       ;branch to use current offset as-is
-    CP A, $08                               ;if set to do time-up or game over,
-    JP C, @Chk2Players                      ;branch to check players
-    LD A, $08                               ;otherwise warp zone, therefore set offset
-@Chk2Players:                               ;check for number of players
-    LD HL, NumberOfPlayers
-    BIT 0, (HL)
-    JP NZ, @LdGameText                      ;if there are two, use current offset to also print name
-    INC A                                   ;otherwise increment offset by one to not print name
-    */
-@LdGameText:
     LD HL, GameTextOffsets                  ;get offset to message we want to print
     ADD A, A
     addAToHL_M
@@ -920,27 +905,26 @@ WriteGameText:
     RET
 
 @PrintWarpZoneNumbers:
-    RET
-    /*
     SUB A, $04                              ;subtract 4 and then shift to the left
     ADD A, A                                ;twice to get proper warp zone number
     ADD A, A                                ;offset
     LD HL, WarpZoneNumbers
-    addAToHL_M
-    LD DE, VRAM_Buffer1 + 27
-    LD B, $0C
-@WarpNumLoop:
-    LD A, (HL)                              ;print warp zone numbers into the
-    LD (DE), A                              ;placeholders from earlier
-    INC HL
-    INC E                                   ;put a number in every fourth space
+    addAToHL8_M
+    LD DE, VRAM_Buffer1 + $30
+    LDI                                     ;print warp zone numbers into the
+    LDI                                     ;placeholders from earlier
     INC E
     INC E
     INC E
-    DJNZ @WarpNumLoop
-    LD A, $2C                               ;load new buffer pointer at end of message
-    JP SetVRAMOffset
-    */
+    LDI
+    LDI
+    INC E
+    INC E
+    INC E
+    LDI
+    LDI
+    LD (VRAM_Buffer1_Ptr), DE               ;load new buffer pointer at end of message
+    RET
 
 ;-------------------------------------------------------------------------------------
 ;$00(IXL) - used to store status bar nybbles
@@ -1755,15 +1739,36 @@ TimeUpDisplay:
 
 .SECTION "WarpZone Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
 WarpZoneWelcome:
-    .db $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
-    .db $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
-    .db $24, $23, $18, $17, $0e, $2b
-    .db $26, $25, $01, $24         ; placeholder for left pipe
-    .db $26, $2d, $01, $24         ; placeholder for middle pipe
-    .db $26, $35, $01, $24         ; placeholder for right pipe
-    .db $27, $d9, $46, $aa         ; attribute data
-    .db $27, $e1, $45, $aa
-    .db $ff
+    ; .db $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
+    ; .db $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
+    ; .db $24, $23, $18, $17, $0e, $2b
+    ; .db $26, $25, $01, $24         ; placeholder for left pipe
+    ; .db $26, $2d, $01, $24         ; placeholder for middle pipe
+    ; .db $26, $35, $01, $24         ; placeholder for right pipe
+    ; .db $27, $d9, $46, $aa         ; attribute data
+    ; .db $27, $e1, $45, $aa
+    ; .db $ff
+    .db @end-WarpZoneWelcome - 1
+    ; "WELCOME TO WARP ZONE!"
+    .dw swapBytes(xyToNameTbl_M(04, 09))
+    .db StripeCount($2A)
+    .dw $0142, $01F4, $01F5, $01F6, $01F7, $01F8, $01F4, BLANKTILE
+    .dw $01F9, $01F7, BLANKTILE
+    .dw $0142, $01FA, $01FB, $01FC, BLANKTILE
+    .dw $01FD, $01F7, $01FE, $01F4, $01FF
+    ; placeholder for left pipe
+    .dw swapBytes(xyToNameTbl_M(05, 14))
+    .db StripeCount($02)
+    .dw $0000   ; $30
+    ; placeholder for middle pipe
+    .dw swapBytes(xyToNameTbl_M(13, 14))
+    .db StripeCount($02)
+    .dw $0000   ; $35
+    ; placeholder for right pipe
+    .dw swapBytes(xyToNameTbl_M(21, 14))
+    .db StripeCount($02)
+    .dw $0000   ; $3A
+@end:
 .ENDS
 
 
@@ -1789,9 +1794,12 @@ LuigiName:
 
 .SECTION "WarpZone Numbers Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
 WarpZoneNumbers:
-    .db $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
-    .db $24, $05, $24, $00         ; zone, partly responsible for
-    .db $08, $07, $06, $00         ; the minus world
+    ; .db $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
+    ; .db $24, $05, $24, $00         ; zone, partly responsible for
+    ; .db $08, $07, $06, $00         ; the minus world
+    .dw BG_MACRO($0104), BG_MACRO($0103), BG_MACRO($0102)
+    .dw BLANKTILE, BG_MACRO($0105), BLANKTILE
+    .dw BG_MACRO($0108), BG_MACRO($0107), BG_MACRO($0106)
 .ENDS
 
 ;-------------------------------------------------------------------------------------

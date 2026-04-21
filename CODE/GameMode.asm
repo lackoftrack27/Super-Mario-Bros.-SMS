@@ -5994,12 +5994,14 @@ HandlePipeEntry:
     CP A, $60
     JP C, GetWNum
     INC L
+    INC L
     CP A, $A0
     JP C, GetWNum
     INC L
+    INC L
 GetWNum:
     LD A, (HL)
-    DEC A
+    SUB A, BG_TILE_OFFSET + 1
     LD (WorldNumber), A
     ADD A, A
     LD HL, WorldAddrOffsets

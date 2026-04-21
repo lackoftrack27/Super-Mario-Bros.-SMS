@@ -625,7 +625,7 @@
     MetaTileBuffer_EXOffset:        dsb $01
     MetaTileBuffer_EX:              dsb $60 ; $0C * $08
     ;
-    ;AnimatedBGTileQueue:            dsb $1B ; 9 bytes per entry (VDP ADDRESS, COUNT, TILE ADDRESS, CURRENT COUNT)
+    ; 9 bytes per entry (VDP ADDRESS, COUNT, TILE ADDRESS, CURRENT COUNT)
     BGTileQueue0                    INSTANCEOF _AnimatedBGTileQueue
     BGTileQueue1                    INSTANCEOF _AnimatedBGTileQueue
     BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
@@ -738,8 +738,8 @@
 
     ColumnSets:                     dsb $01
     ColumnSide:                     dsb $01
-    AreaParserTaskNum:              dsb $01
-    UseDelayedMTBuffFlag:           dsb $01
+    ;AreaParserTaskNum:              dsb $01
+    ;UseDelayedMTBuffFlag:           dsb $01
 
     CurrentNTAddr:                  dsb $02 ; ptr
     Sprite0HitDetectFlag:           dsb $01

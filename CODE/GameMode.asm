@@ -16,12 +16,13 @@ GameMode:
 InitializeArea:
     LD HL, InitAreaOffset           ;clear all memory again, only as far as $074b
     CALL InitializeMemory           ;this is only necessary if branching from
-;@ClrTimersLoop:
+;
     LD HL, Timers                   ;clear out memory between
     LD DE, Timers + $01             ;$0780 and $07a1
     LD BC, $22 - $01
     LD (HL), $00
     LDIR
+;
     LD A, (AltEntranceControl)
     OR A
     LD A, (HalfwayPage)             ;if AltEntranceControl not set, use halfway page, if any found
@@ -103,8 +104,6 @@ SecondaryGameSetup:
     LD BC, _sizeof_VRAM_Buffer2 - 1
     LD (HL), $00
     LDIR
-    ;LD HL, VRAM_Buffer2
-    ;LD (VRAM_Buffer2_Ptr), HL
 ;   !!!
     XOR A
     LD (GameTimerExpiredFlag), A        ;clear game timer exp flag
@@ -252,18 +251,15 @@ UpdScrollVar:
     LD A, (VRAM_Buffer_AddrCtrl)
     CP A, VRAMTBL_BUFFER2
     RET Z
-    LD A, (AreaParserTaskNum)
-    OR A
-    JP NZ, AreaParserTaskHandler
+    ;LD A, (AreaParserTaskNum)
+    ;OR A
+    ;JP NZ, AreaParserTaskHandler
     LD HL, ScrollThirtyTwo
     LD A, (HL)
     CP A, $08   ;   $20, $08
     RET M
     SUB A, $08  ;   $20, $08
     LD (HL), A
-    ;LD HL, VRAM_Buffer2
-    ;LD (VRAM_Buffer2_Ptr), HL
-RunParser:
     JP AreaParserTaskHandler
 
 
@@ -3666,8 +3662,6 @@ RemovePriBlock:
 
 RemoveCoin_Axe:
     LD DE, (VRAM_Buffer1_Ptr)    
-    ;LD DE, (VRAM_Buffer2_Ptr)
-    ;LD DE, VRAM_Buffer2             ;set low byte so offset points to $0341 (VRAM_Buffer2)
     LD A, (AreaType)                ;check area type
     OR A
     LD A, $03                       ;load offset for default blank metatile
@@ -3675,12 +3669,9 @@ RemoveCoin_Axe:
     INC A                           ;otherwise load offset for blank metatile used in water
 WriteBlankMT:
     CALL PutBlockMetatile           ;do a sub to write blank metatile to vram buffer
-    ;LD (VRAM_Buffer2_Ptr), DE
-    ;LD A, VRAMTBL_BUFFER2
-    ;LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to $0341 and leave
     LD (VRAM_Buffer1_Ptr), DE
     XOR A
-    LD (VRAM_Buffer_AddrCtrl), A
+    LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to VRAM_Buffer1 and leave
     RET
 
 

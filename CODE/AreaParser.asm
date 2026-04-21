@@ -1,28 +1,13 @@
 ;-------------------------------------------------------------------------------------
  
 AreaParserTaskHandler:
-    LD A, (AreaParserTaskNum)           ;check number of tasks here
+    LD A, (ColumnSide)                  ;only run if processing left side of metatile
     OR A
-    JP NZ, @DoAPTasks                   ;if already set, go ahead
-    LD A, $03
-    LD (AreaParserTaskNum), A           ;otherwise, set eight by default
-@DoAPTasks:
-    DEC A
-    CALL AreaParserTasks
-    LD HL, AreaParserTaskNum            ;if all tasks not complete do not
-    DEC (HL)
-    RET
-    ;RET NZ                              ;render attribute table yet
-    ;JP RenderAttributeTables
-
-
-AreaParserTasks:
-    RST JumpEngine
-
-    .dw IncrementColumnPos      ; increment column position vars (only on right side processing)
-    .dw RenderAreaGraphics      ; render either left or right side of metatile column
-    .dw AreaParserCore          ; decode next metatile column from level data (only on left side processing)
-    
+    CALL Z, AreaParserCore              ;decode next metatile column from level data (only on left side processing)
+    LD A, (ColumnSets)                  ;only run if on visible screen when first loading a level
+    CP A, $0E
+    CALL NC, RenderAreaGraphics         ;render either left or right side of metatile column
+    ; FALL THROUGH
 
 ;-------------------------------------------------------------------------------------
 
@@ -185,21 +170,30 @@ TerrainRenderBits:
 
 
 AreaParserCore:
-    LD A, (ColumnSide)              ;check if processing left side of metatile
-    OR A
-    RET NZ                          ;if not, we are not on a new column. End
-    
     LD A, (BackloadingFlag)         ;check to see if we are starting right of start
     OR A
     CALL NZ, ProcessAreaData        ;if not, go ahead and render background, foreground and terrain
 
 RenderSceneryTerrain:
 ;   Clear Metatile Buffer
-    LD HL, MetatileBuffer           ;clear out metatile buffer
-    LD DE, MetatileBuffer + $01
-    LD BC, $000D - $01
-    LD (HL), $00
-    LDIR
+    DI
+    LD HL, $0000
+    LD E, L
+    LD D, H
+    ADD HL, SP
+    EX DE, HL
+    LD SP, MetatileBuffer + $0D
+    PUSH HL ; C, B
+    PUSH HL ; A, 9
+    PUSH HL ; 8, 7
+    PUSH HL ; 6, 5
+    PUSH HL ; 4, 3
+    PUSH HL ; 2, 1
+    INC SP
+    PUSH HL ; 1, 0
+    EX DE, HL
+    LD SP, HL
+    EI
 ;   BACKGROUND SCENERY
     LD A, (BackgroundScenery)       ;do we need to render the background scenery?
     OR A
@@ -1848,39 +1842,28 @@ MetatileGraphics:
 .ENDS
 
 RenderAreaGraphics:
-    LD A, (ColumnSets)
-    CP A, $0E
-    RET C
-;
+;   USE MetatileBuffer when first loading a level, use MetaTileBuffer_EX otherwise
     LD BC, MetatileBuffer-1
-    LD A, (UseDelayedMTBuffFlag)
     OR A
-    JP Z, +
+    JP P, +
     LD B, >MetaTileBuffer_EX
     LD A, (MetaTileBuffer_EXOffset)
     ADD A, <MetaTileBuffer_EX-1
     LD C, A
 +:
 ;   SET INITIAL ADDRESS AND COUNT FOR BUFFER
-    ;LD HL, (VRAM_Buffer2_Ptr)
     LD HL, VRAM_Buffer2
-    LD DE, (CurrentNTAddr)          ;get current name table address we're supposed to render
-    LD (HL), D      ; write high byte
+    LD DE, (CurrentNTAddr)              ;get current name table address we're supposed to render
+    LD (HL), D                          ;write high byte
     INC L
-    LD (HL), E      ; write low byte
-    ;INC L
-    ;LD (HL), 23 | $C0                   ;store length byte of 26 here with d7,d6 set to increment by 32 (in columns)
+    LD (HL), E                          ;write low byte
     EX DE, HL
 ;   CALCULATE OFFSET FOR DRAWING EITHER LEFT OR RIGHT SIDE OF METATILE
-    LD A, (ColumnSide)
-    ;LD A, (AreaParserTaskNum)           ;get current task number for level processing and
-    ;AND A, %00000001                    ;mask out all but LSB, then invert LSB, multiply by 2
-    ;XOR A, %00000001                    ;to get the correct column position in the metatile,
+    LD A, (ColumnSide)                  ;get the correct column position in the metatile,
     ADD A, A                            ;then add to the tile offset so we can draw either side
     LD IXL, A                           ;of the metatiles
 ;
     LD IXH, $0C                         ;loop counter, amount of metatiles on screen vertically
-    ;LD BC, MetatileBuffer-1
 DrawMTLoop:
     INC C
     INC E
@@ -1924,12 +1907,6 @@ DrawMTLoop:
     DEC IXH
     JP NZ, DrawMTLoop                   ;if not there yet, loop back
     ;
-    ;XOR A                               ;put null terminator at end of data for name table
-    ;LD (DE), A
-    ;DEC E
-    ;LD (DE), A
-    ;LD (VRAM_Buffer2_Ptr), DE
-    ;
     LD HL, CurrentNTAddr                ;increment name table address low
     INC (HL)
     INC (HL)
@@ -1937,21 +1914,10 @@ DrawMTLoop:
     AND A, %00111111                    ;if no wraparound, just skip this part
     JP NZ, SetVRAMCtrl
     LD (HL), $40                        ;if wraparound occurs, make sure low byte stays
-    ;JP SetVRAMCtrl                      ;jump to set buffer to $0341 and leave
-
-;-------------------------------------------------------------------------------------
-;$00 - temp attribute table address high (big endian order this time!)
-;$01 - temp attribute table address low
-
-RenderAttributeTables:
-
 SetVRAMCtrl:
     LD A, VRAMTBL_BUFFER2
     LD (VRAM_Buffer_AddrCtrl), A
     RET
-
-
-
 
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------

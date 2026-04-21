@@ -195,22 +195,13 @@ AreaParserTaskControl:
 ;
 TaskLoop:
     CALL AreaParserTaskHandler      ;render column set of current area
-    LD A, (AreaParserTaskNum)       ;check number of tasks
-    OR A
-    JP NZ, TaskLoop                 ;if tasks still not all done, do another one
     LD HL, ColumnSets               ;do we need to render more column sets?
     DEC (HL)
-    JP P, OutputCol
+    RET P ;JP P, OutputCol
     LD HL, ScreenRoutineTask        ;if not, move on to the next task
     INC (HL)
-    ; TEST
-    LD HL, VRAM_ADR_NAMETBL + $42 | VRAMWRITE
-    LD (CurrentNTAddr), HL
-    LD A, $01
-    LD (UseDelayedMTBuffFlag), A
-OutputCol:
-    LD A, VRAMTBL_BUFFER2           ;set vram buffer to output rendered column set
-    LD (VRAM_Buffer_AddrCtrl), A    ;on next NMI
+    LD A, <VRAM_ADR_NAMETBL + $42
+    LD (CurrentNTAddr), A
     RET
 
 ;-------------------------------------------------------------------------------------

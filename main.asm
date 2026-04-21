@@ -372,7 +372,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
 ;   CHECK FOR LAG FRAME
     LD A, (FrameDoneFlag)
-    SRL A
+    RRA
     JP NC, LagFrame
     LD (FrameDoneFlag), A
 ;   TURN OFF SCREEN IF FLAG IS CLEAR
@@ -382,7 +382,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
-;   SPRITE UPDATE       [CPU TIME: 10 LINES]
+;   SPRITE UPDATE                   [CPU TIME: 10 LINES]
     ; WRITE Y POSITIONS
     XOR A
     OUT (VDPCON_PORT), A

@@ -906,8 +906,9 @@ WriteGameText:
 
 @PrintWarpZoneNumbers:
     SUB A, $04                              ;subtract 4 and then shift to the left
-    ADD A, A                                ;twice to get proper warp zone number
+    ADD A, A                                ;thrice to get proper warp zone number
     ADD A, A                                ;offset
+    ADD A, A
     LD HL, WarpZoneNumbers
     addAToHL8_M
     LD DE, VRAM_Buffer1 + $30
@@ -1797,9 +1798,9 @@ WarpZoneNumbers:
     ; .db $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
     ; .db $24, $05, $24, $00         ; zone, partly responsible for
     ; .db $08, $07, $06, $00         ; the minus world
-    .dw BG_MACRO($0104), BG_MACRO($0103), BG_MACRO($0102)
-    .dw BLANKTILE, BG_MACRO($0105), BLANKTILE
-    .dw BG_MACRO($0108), BG_MACRO($0107), BG_MACRO($0106)
+    .dw BG_MACRO($0104), BG_MACRO($0103), BG_MACRO($0102), $0000
+    .dw BLANKTILE, BG_MACRO($0105), BLANKTILE, $0000
+    .dw BG_MACRO($0108), BG_MACRO($0107), BG_MACRO($0106), $0000
 .ENDS
 
 ;-------------------------------------------------------------------------------------

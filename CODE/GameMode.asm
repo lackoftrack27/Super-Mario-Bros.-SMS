@@ -448,12 +448,6 @@ ScrollScreen:
     LD A, (ScreenLeft_PageLoc)
     ADC A, $00                              ;add carry to page location for left
     LD (ScreenLeft_PageLoc), A              ;side of the screen
-    ;AND A, $01
-    ;LD IXL, A
-    ;LD A, (Mirror_PPU_CTRL_REG1)
-    ;AND A, %11111110
-    ;OR A, IXL
-    ;LD (Mirror_PPU_CTRL_REG1), A
     CALL GetScreenPosition                  ;figure out where the right side is
     JP ChkPOffscr                           ;skip this part
 InitScrlAmt:
@@ -3649,31 +3643,17 @@ BlockGfxData:
     .dw BG_MACRO($01A5), BG_MACRO($01A7), BG_MACRO($01A6), BG_MACRO($01A8)  ; EMPTY BLOCK MT (NO PRI)
 .ENDS
 
-    /*
-RemovePriBlock:
-    CALL GetBlockBufferAddr
-    EX DE, HL
-    LD DE, (VRAM_Buffer1_Ptr)
-    LD A, $05
-    CALL PutBlockMetatile
-    LD (VRAM_Buffer1_Ptr), DE
-    RET
-    */
-
 RemoveCoin_Axe:
-    LD DE, (VRAM_Buffer1_Ptr)    
+    LD DE, (VRAM_Buffer1_Ptr)
+    XOR A
+    LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to VRAM_Buffer1
+;
     LD A, (AreaType)                ;check area type
     OR A
     LD A, $03                       ;load offset for default blank metatile
-    JP NZ, WriteBlankMT             ;if not water type, use offset
+    JP NZ, PutBlockMetatile         ;if not water type, use offset
     INC A                           ;otherwise load offset for blank metatile used in water
-WriteBlankMT:
-    CALL PutBlockMetatile           ;do a sub to write blank metatile to vram buffer
-    LD (VRAM_Buffer1_Ptr), DE
-    XOR A
-    LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to VRAM_Buffer1 and leave
-    RET
-
+    JP PutBlockMetatile             ;do a sub to write blank metatile to vram buffer
 
 DestroyBlockMetatile:
     XOR A                           ;force blank metatile if branched/jumped to this point
@@ -3694,12 +3674,12 @@ WriteBlockMetatile:
     JP Z, UseBOffset                ;use offset if metatile is breakable brick w/o line
     INC C                           ;if any other metatile, increment offset for empty block
 UseBOffset:
-    LD A, C                         ;put Y in A
     LD DE, (VRAM_Buffer1_Ptr)       ;get vram buffer offset
-    CALL PutBlockMetatile           ;get appropriate block data and write to vram buffer
-MoveVOffset:
-    LD (VRAM_Buffer1_Ptr), DE       ;store new vram buffer offset
-    RET
+    LD A, C                         ;put Y in A
+    JP PutBlockMetatile             ;get appropriate block data and write to vram buffer
+; MoveVOffset:
+;     LD (VRAM_Buffer1_Ptr), DE       ;store new vram buffer offset
+;     RET
 
 
 ;   X - N/A but needs to be saved since it holds SprDataOffset_Ctrl? (NOT NEEDED???)
@@ -3710,6 +3690,7 @@ MoveVOffset:
 ;   HL - Block_Buffer Ptr
 ;   DE - VRAM_Buffer Ptr
 ;   BC - BlockGfxData Ptr
+;   IXL - Block_Buffer Row
 PutBlockMetatile:
     PUSH BC
 ;   PREPARE BlockGfxData PTR
@@ -3718,34 +3699,41 @@ PutBlockMetatile:
     ADD A, A
     ADD A, <BlockGfxData
     LD C, A
-    LD B, >BlockGfxData
+;   PREPARE B TO CHECK IF OBJECT IS OFF THE LEFT EDGE OF THE VISIBLE SCREEN
+    LD A, (CurrentNTAddr)
+    SUB A, $02
+    AND A, $3F
+    LD B, A
 ;   CONVERT BLOCK BUFFER COLUMN TO NAMETABLE COLUMN
     LD A, L
     AND A, $0F
     ADD A, A
     ADD A, A
-    LD IXH, A   ;LD I, A
-;   MULTIPLY BLOCK BUFFER ROW TO NAMETABLE ROW
-    LD A, IXL   ; CHANGE REG?
-    ADD A, $08
+    CP A, B     ; IF COLUMNS ARE THE SAME, ONLY DRAW THE RIGHT HALF
+    LD B, A
+    JP Z, PutBlockMetatile_RHalf
+;   CONVERT BLOCK BUFFER ROW TO NAMETABLE ROW
+    LD A, IXL
+    ADD A, $08  ; SKIP 1ST ROW (STATUS BAR)
     LD L, A
-    LD H, $00
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE)  >> $03
     ADD HL, HL
     ADD HL, HL
     ADD HL, HL
 ;   NAMETABLE ROW LOW BYTE + COLUMN
-    LD A, IXH   ;LD A, I
+    LD A, B
     ADD A, L
     LD L, A
-;   NAMETABLE ROW HIGH BYTE + CARRY + BASE NT
-    LD A, H
-    ADC A, $00
-    ADD A, $20 | >VRAMWRITE  ; BASE NT ADDR
-    LD H, A
+;   MOVE TO BC
+    LD L, C
+    LD C, A
+    LD B, H
+    LD H, >BlockGfxData
 ;   WRITE VRAM BUFFER (VDP ADDRESS)
+    LD A, B
     LD (DE), A  ; HIGH BYTE
     INC E
-    LD A, L
+    LD A, C
     LD (DE), A  ; LOW BYTE
     INC E
 ;   WRITE VRAM BUFFER (COUNT)
@@ -3753,28 +3741,16 @@ PutBlockMetatile:
     LD (DE), A
     INC E
 ;   WRITE VRAM BUFFER (TOP LEFT TILE, TOP RIGHT TILE)
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
+    LDI
+    LDI
+    LDI
+    LDI
 ;   WRITE VRAM BUFFER (VDP ADDRESS)
-    LD A, $40
-    addAToHL_M
+    LD A, $44
+    addAToBC_M
     LD (DE), A  ; HIGH BYTE
     INC E
-    LD A, L
+    LD A, C
     LD (DE), A  ; LOW BYTE
     INC E
 ;   WRITE VRAM BUFFER (COUNT)
@@ -3782,25 +3758,76 @@ PutBlockMetatile:
     LD (DE), A
     INC E
 ;   WRITE VRAM BUFFER (BOT LEFT TILE, BOT RIGHT TILE)
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC C
-    INC E
-    LD A, (BC)
-    LD (DE), A
-    INC E
+    LDI
+    LDI
+    LDI
+    LDI
 ;   SET TERMINATOR
     XOR A
     LD (DE), A
 ;
+    LD (VRAM_Buffer1_Ptr), DE
+    POP BC
+    RET
+
+PutBlockMetatile_RHalf:
+;   CONVERT BLOCK BUFFER ROW TO NAMETABLE ROW
+    LD A, IXL
+    ADD A, $08  ; SKIP 1ST ROW (STATUS BAR)
+    LD L, A
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE)  >> $03
+    ADD HL, HL
+    ADD HL, HL
+    ADD HL, HL
+;   NAMETABLE ROW LOW BYTE + COLUMN
+    LD A, B
+    ADD A, L
+    LD L, A
+;   MOVE TO BC
+    LD L, C
+    LD C, A
+    LD B, H
+    LD H, >BlockGfxData
+;   WRITE VRAM BUFFER (VDP ADDRESS)
+    INC C
+    INC C
+    LD A, B
+    LD (DE), A  ; HIGH BYTE
+    INC E
+    LD A, C
+    LD (DE), A  ; LOW BYTE
+    INC E
+;   WRITE VRAM BUFFER (COUNT)
+    LD A, StripeCount($02)
+    LD (DE), A
+    INC E
+;   WRITE VRAM BUFFER (TOP RIGHT TILE)
+    INC L
+    INC L
+    LDI
+    LDI
+;   WRITE VRAM BUFFER (VDP ADDRESS)
+    LD A, $42
+    addAToBC_M
+    LD (DE), A  ; HIGH BYTE
+    INC E
+    LD A, C
+    LD (DE), A  ; LOW BYTE
+    INC E
+;   WRITE VRAM BUFFER (COUNT)
+    LD A, StripeCount($02)
+    LD (DE), A
+    INC E
+;   WRITE VRAM BUFFER (BOT RIGHT TILE)
+    INC L
+    INC L
+    LDI
+    LDI
+;   SET TERMINATOR
+    XOR A
+    LD (DE), A
+;
+    LD (VRAM_Buffer1_Ptr), DE
     POP BC
     RET
 
@@ -5986,6 +6013,7 @@ HandlePipeEntry:
     RET Z
 ;
     AND A, %00000011
+    ADD A, A
     ADD A, A
     ADD A, A
     LD HL, WarpZoneNumbers

@@ -982,9 +982,7 @@ FSLoop:
     OR A
     JP NZ, FSLoop
 ;
-    LD A, D
-    SUB A, $C1
-    LD (DuplicateObj_Offset), A
+    LD (DuplicateObj_Offset), DE
 ;
     LD A, H
     SUB A, $C1

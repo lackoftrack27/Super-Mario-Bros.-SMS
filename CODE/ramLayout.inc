@@ -683,7 +683,7 @@
     SecondaryHardMode:              dsb $01
     EnemyFrenzyQueue:               dsb $01
     FireballCounter:                dsb $01
-    DuplicateObj_Offset:            dsb $01
+    DuplicateObj_Offset:            dsb $02
     LakituReappearTimer:            dsb $01
     ;ColorRotateOffset:              dsb $01
     PlayerGfxOffset:                dsb $02 ; became absolute address

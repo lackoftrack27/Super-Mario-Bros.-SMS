@@ -1172,9 +1172,9 @@ DrawFireball:
     SET 7, E
     LD A, (Fireball_Rel_XPos)
     LD (DE), A
-    INC E
 
 DrawFirebar:
+    INC E
     LD A, (FrameCounter)
     RRCA
     RRCA

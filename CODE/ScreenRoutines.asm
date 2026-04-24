@@ -284,36 +284,33 @@ StartClrGet:
     LD A, B
     ;JP CyclePlayerPalette
     AND A, $03                      ;mask out all but d1-d0 (previously d3-d2)
-    LD IXL, A                       ;store result here to use as palette bits
+    LD B, A                         ;store result here to use as palette bits
     LD A, (Player_SprAttrib)        ;get player attributes
     AND A, %11111100                ;save any other bits but palette bits
-    OR A, IXL                       ;add palette bits
+    OR A, B                         ;add palette bits
     LD (Player_SprAttrib), A        ;store as new player attributes
     RET
-
-    /*
 ;
-    LD HL, (VRAM_Buffer1_Ptr)       ;get current buffer offset
-    LD A, (BackgroundColorCtrl)     ;if this value is four or greater, it will be set
-    OR A
-    JP NZ, SetBGColor               ;therefore use it as offset to background color
-    LD A, (AreaType)                ;otherwise use area type bits from area offset as offset
-SetBGColor:
-    LD (HL), $C0
-    INC L
-    LD (HL), $10
-    INC L
-    LD (HL), $01
-    INC L
-    LD DE, BackgroundColors
-    addAToDE8_M
-    LD A, (DE)
-    LD (HL), A
-    INC L
-    LD (HL), $00
-    LD (VRAM_Buffer1_Ptr), HL
-    RET
-    */
+;     LD HL, (VRAM_Buffer1_Ptr)       ;get current buffer offset
+;     LD A, (BackgroundColorCtrl)     ;if this value is four or greater, it will be set
+;     OR A
+;     JP NZ, SetBGColor               ;therefore use it as offset to background color
+;     LD A, (AreaType)                ;otherwise use area type bits from area offset as offset
+; SetBGColor:
+;     LD (HL), $C0
+;     INC L
+;     LD (HL), $10
+;     INC L
+;     LD (HL), $01
+;     INC L
+;     LD DE, BackgroundColors
+;     addAToDE8_M
+;     LD A, (DE)
+;     LD (HL), A
+;     INC L
+;     LD (HL), $00
+;     LD (VRAM_Buffer1_Ptr), HL
+;     RET
 
 ;-------------------------------------------------------------------------------------
 

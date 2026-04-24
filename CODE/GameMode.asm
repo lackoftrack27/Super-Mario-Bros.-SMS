@@ -4965,7 +4965,7 @@ ChkEnemyFaceRight:
     LD L, <Enemy_MovingDir
     LD A, (HL)
     CP A, $01
-    JP NZ, InjurePlayer
+    JP Z, InjurePlayer
 LInj:
     CALL EnemyTurnAround
     JP InjurePlayer

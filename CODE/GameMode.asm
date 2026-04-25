@@ -210,7 +210,7 @@ ProcELoop:
     CALL BlockObjectsCore
 ;
     CALL MiscObjectsCore
-    ;CALL ProcessCannons
+    CALL ProcessCannons
     ;CALL ProcessWhirlpools
     CALL FlagpoleRoutine
     CALL RunGameTimer
@@ -579,8 +579,14 @@ BublLoop:
     RET
 
 .SECTION "FireballXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+
 FireballXSpdData:
+.IF PALBUILD == $00
     .db $40, $c0
+.ELSE
+    .db $4c, $b4                    ;PAL diff: Faster speed to compensate FPS difference
+.ENDIF
+
 .ENDS
     
 ;   X is either 0 or 1
@@ -620,7 +626,12 @@ FireballObjCore:
     LD (HL), A
 ;
     LD L, <Fireball_Y_Speed
+    
+    .IF PALBUILD == $00
     LD (HL), $04                    ;set vertical speed of fireball
+    .ELSE
+    LD (HL), $05                    ;PAL diff: faster speed to compensate for FPS diff
+    .ENDIF
 ;
     LD L, <Fireball_BoundBoxCtrl
     LD (HL), $07                    ;set bounding box size control for fireball
@@ -628,8 +639,14 @@ FireballObjCore:
     LD L, <Fireball_State
     DEC (HL)                        ;decrement state to 1 to skip this part from now on
 RunFB:
+    .IF PALBUILD == $00
     LD IXL, $50                     ;set downward movement force here
     LD IYL, $03                     ;set maximum speed here
+    .ELSE
+    LD IXL, $60                     ;PAL diff: Faster acceleration to compensate FPS difference
+    LD IYL, $05                     ;PAL diff: Faster maximum speed to compensate FPS difference
+    .ENDIF
+    
     XOR A
     CALL ImposeGravity              ;do sub here to impose gravity on fireball and move vertically
     CALL MoveObjectHorizontally     ;do another sub to move it horizontally
@@ -727,6 +744,334 @@ Bubble_MForceData:
 BubbleTimerData:
     .db $40, $20
 .ENDS
+
+;-------------------------------------------------------------------------------------
+
+ProcessCannons:
+    LD A, (AreaType)
+    OR A
+    RET Z
+;
+    LD H, $C3
+ThreeSChk:
+    LD L, <Enemy_Flag
+    LD A, (HL)
+    OR A
+    JP NZ, Chk_BB
+;
+    LD A, H
+    SUB A, $C1
+    LD BC, PseudoRandomBitReg+1
+    addAToBC8_M
+    LD A, (BC)
+    LD C, A
+    LD A, (SecondaryHardMode)
+    OR A
+    LD A, %00001111
+    JP Z, +
+    LD A, %00000111
++:
+    AND A, C
+    CP A, $06
+    JP NC, Chk_BB
+    ADD A, $C1
+    LD D, A
+    LD E, <Cannon_PageLoc
+    LD A, (DE)
+    OR A
+    JP Z, Chk_BB
+    LD E, <Cannon_Timer
+    LD A, (DE)
+    OR A
+    JP Z, FireCannon
+    DEC A
+    LD (DE), A
+    JP Chk_BB
+
+FireCannon:
+    LD A, (TimerControl)
+    OR A
+    JP NZ, Chk_BB
+;
+    LD A, $0E
+    LD (DE), A
+;
+    LD E, <Cannon_PageLoc
+    LD L, <Enemy_PageLoc
+    LD A, (DE)
+    LD (HL), A
+;
+    LD E, <Cannon_X_Position
+    LD L, <Enemy_X_Position
+    LD A, (DE)
+    LD (HL), A
+;
+    LD E, <Cannon_Y_Position
+    LD L, <Enemy_Y_Position
+    LD A, (DE)
+    SUB A, $08
+    LD (HL), A
+;
+    LD A, $01
+    LD L, <Enemy_Y_HighPos
+    LD (HL), A
+    LD L, <Enemy_Flag
+    LD (HL), A
+    DEC A
+    LD L, <Enemy_State
+    LD (HL), A
+;
+    LD L, <Enemy_BoundBoxCtrl
+    LD (HL), $09
+;
+    LD L, <Enemy_ID
+    LD (HL), OBJECTID_BulletBill_CannonVar
+    JP Next3Slt
+;
+Chk_BB:
+    LD L, <Enemy_ID
+    LD A, (HL)
+    CP A, OBJECTID_BulletBill_CannonVar
+    JP NZ, Next3Slt
+    CALL OffscreenBoundsCheck
+    LD L, <Enemy_Flag
+    LD A, (HL)
+    OR A
+    CALL NZ, BulletBillHandler
+Next3Slt:
+    DEC H
+    LD A, H
+    CP A, $C0
+    JP Z, ThreeSChk
+    RET
+
+;--------------------------------
+
+BulletBillHandler:
+    CALL GetEnemyOffscreenBits
+;
+    LD A, (TimerControl)
+    OR A
+    JP NZ, RunBBSubs
+;
+    LD L, <Enemy_State
+    LD A, (HL)
+    OR A
+    JP NZ, ChkDSte
+;
+    LD A, (Enemy_OffscrBits)
+    AND A, %00001100
+    CP A, %00001100
+    JP Z, EraseEnemyObject
+;
+    LD C, $01
+    CALL PlayerEnemyDiff
+    JP M, SetupBB
+    INC C
+;
+SetupBB:
+    LD L, <Enemy_MovingDir
+    LD (HL), C
+    DEC C
+
+    .IF PALBUILD == $00
+    LD A, $18
+    JP Z, +
+    LD A, $E8
+    .ELSE
+    LD A, $1C                               ;PAL diff: Faster speed to compensate FPS difference
+    JP Z, +
+    LD A, $E4
+    .ENDIF
+
++:
+    LD L, <Enemy_X_Speed
+    LD (HL), A
+;
+    LD A, IXL
+    CCF
+    ADC A, $28
+    CP A, $50
+    JP C, EraseEnemyObject
+;
+    LD L, <Enemy_State
+    LD (HL), $01
+;
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyFrameTimer
+    addAToBC8_M
+    
+    .IF PALBUILD == $00
+    LD A, $0A
+    .ELSE
+    LD A, $09                               ;PAL diff: Faster timer to compensate FPS difference
+    .ENDIF
+    
+    LD (BC), A
+;
+    LD A, SNDID_CANNON
+    LD (SFXTrack1.SoundQueue), A
+;
+ChkDSte:
+    LD L, <Enemy_State
+    LD A, (HL)
+    AND A, %00100000
+    CALL NZ, MoveD_EnemyVertically
+    CALL MoveEnemyHorizontally
+RunBBSubs:
+    CALL GetEnemyOffscreenBits
+    CALL RelativeEnemyPosition
+    CALL GetEnemyBoundBox
+    CALL PlayerEnemyCollision
+    JP EnemyGfxHandler
+
+;-------------------------------------------------------------------------------------
+
+.SECTION "HammerEnemyOfsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+HammerEnemyOfsData:
+    ; .db $04, $04, $04, $05, $05, $05
+    ; .db $06, $06, $06
+
+    .db $C5, $C5, $C5, $C6, $C6, $C6
+    .db $C7, $C7, $C7
+.ENDS
+
+.SECTION "HammerXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+
+HammerXSpdData:
+.IF PALBUILD == $00
+    .db $10, $f0
+.ELSE
+    .db $14, $EC                            ;PAL diff: Faster speed to compensate FPS difference
+.ENDIF
+
+.ENDS
+
+SpawnHammerObj:
+    LD A, (PseudoRandomBitReg+1)
+    AND A, %00000111
+    JP NZ, SetMOfs
+    LD A, (PseudoRandomBitReg+1)
+    AND A, %00001000
+SetMOfs:
+    LD L, A
+    ADD A, >Misc_State
+    LD D, A
+    LD E, >Misc_State
+    LD A, (DE)
+    OR A
+    RET NZ
+;    
+    LD A, L
+    ADD A, <HammerEnemyOfsData
+    LD L, A
+    LD H, >HammerEnemyOfsData
+    LD H, (HL)
+    LD L, <Enemy_Flag
+    LD A, (HL)
+    OR A
+    LD HL, (ObjectOffset)
+    RET NZ
+;
+    LD E, <HammerEnemyOffset
+    LD A, H
+    LD (DE), A
+    LD E, <Misc_State
+    LD A, $90
+    LD (DE), A
+    LD E, <Misc_BoundBoxCtrl
+    LD (DE), A
+    SCF
+    RET
+
+;--------------------------------
+;$00(IXL) - used to set downward force
+;$01 - used to set upward force (residual)
+;$02(IYL) - used to set maximum speed
+
+ProcHammerObj:
+    LD A, (TimerControl)
+    OR A
+    JP NZ, RunHSubs
+;
+    LD L, <Misc_State
+    LD A, (HL)
+    AND A, %01111111
+    LD L, <HammerEnemyOffset
+    LD D, (HL)
+    CP A, $02
+    JP Z, SetHSpd
+    JP NC, SetHPos
+    
+    .IF PALBUILD == $00
+    LD IXL, $10
+    .ELSE
+    LD IXL, $23                             ;PAL diff: Faster acceleration to compensate FPS difference
+    .ENDIF
+    
+    LD IYL, $04
+    XOR A
+    CALL ImposeGravity
+    CALL MoveObjectHorizontally
+    ;LD HL, (ObjectOffset)
+    JP RunAllH
+;
+SetHSpd:
+    LD L, <Misc_Y_Speed
+    
+    .IF PALBUILD == $00
+    LD (HL), $FE
+    .ELSE
+    LD (HL), $FD                            ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
+    LD E, <Enemy_State
+    LD A, (DE)
+    AND A, %11110111
+    LD (DE), A
+
+    LD E, <Enemy_MovingDir
+    LD A, (DE)
+    DEC A
+    LD BC, HammerXSpdData
+    addAToBC8_M
+    LD A, (BC)
+    LD L, <Misc_X_Speed
+    LD (HL), A
+;
+SetHPos:
+    LD L, <Misc_State
+    DEC (HL)
+
+    LD E, <Enemy_X_Position
+    LD L, <Misc_X_Position
+    LD A, (DE)
+    ADD A, $02
+    LD (HL), A
+
+    LD E, <Enemy_PageLoc
+    LD L, <Misc_PageLoc
+    LD A, (DE)
+    ADC A, $00
+    LD (HL), A
+
+    LD E, <Enemy_Y_Position
+    LD L, <Misc_Y_Position
+    LD A, (DE)
+    SUB A, $0A
+    LD (HL), A
+
+    LD L, <Misc_Y_HighPos
+    LD (HL), $01
+    JP RunHSubs
+RunAllH:
+    CALL PlayerHammerCollision
+RunHSubs:
+    GetMiscOffscreenBits_M
+    RelativeMiscPosition_M
+    CALL GetMiscBoundBox
+    JP DrawHammer
 
 ;-------------------------------------------------------------------------------------
 
@@ -1103,7 +1448,13 @@ PosJSpr:
     LD A, (PreviousA_B_Buttons)
     AND A, E
     JP NZ, BounceJS
+    
+    .IF PALBUILD == $00
     LD A, $F4
+    .ELSE
+    LD A, $F2                               ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+    
     LD (JumpspringForce), A
 BounceJS:
     LD A, C
@@ -1111,6 +1462,12 @@ BounceJS:
     JP NZ, DrawJSpr
     LD A, (JumpspringForce)
     LD (Player_Y_Speed), A
+    
+    .IF PALBUILD != $00
+    LD A, $40                               ;PAL bugfix: Define vertical acceleration on springs (was undefined on NTSC)
+    LD (VerticalForce), A
+    .ENDIF
+    
     XOR A
     LD (JumpspringAnimCtrl), A
 DrawJSpr:
@@ -1555,11 +1912,23 @@ HJump:
     LD (HL), A
 
 MoveHammerBroXDir:
+
+    .IF PALBUILD == $00
     LD C, $FC
+    .ELSE
+    LD C, $FB                               ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
     LD A, (FrameCounter)
     AND A, %01000000
     JP NZ, Shimmy
+    
+    .IF PALBUILD == $00
     LD C, $04
+    .ELSE
+    LD C, $05                               ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
 Shimmy:
     LD L, <Enemy_X_Speed
     LD (HL), C
@@ -1576,7 +1945,13 @@ Shimmy:
     OR A
     JP NZ, SetShim
     LD L, <Enemy_X_Speed
+
+    .IF PALBUILD == $00
     LD (HL), $F8
+    .ELSE
+    LD (HL), $F6                            ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
 SetShim:
     LD L, <Enemy_MovingDir
     LD (HL), C
@@ -1685,7 +2060,13 @@ MoveDefeatedEnemy:
     JP MoveEnemyHorizontally
 
 ChkKillGoomba:
+
+    .IF PALBUILD == $00
     CP A, $0E
+    .ELSE
+    CP A, $0B                           ;PAL diff: Faster timer to compensate FPS difference
+    .ENDIF
+
     RET NZ
 ;
     LD L, <Enemy_ID
@@ -1852,9 +2233,17 @@ MoveBloober:
 
     LD A, (SecondaryHardMode)
     OR A
+
+    .IF PALBUILD == $00
     LD A, %00111111
     JP Z, +
     LD A, %00000011
+    .ELSE
+    LD A, %00000111                         ;PAL diff: Faster swim to compensate FPS difference
+    JP Z, +
+    LD A, %00000001
+    .ENDIF
+
 +:
     AND A, C
     JP NZ, BlooberSwim
@@ -1986,7 +2375,13 @@ ChkNearPlayer:
     LD C, A
     LD L, <Enemy_Y_Position
     LD A, (HL)
+
+    .IF PALBUILD == $00
     ADD A, $10  ; CHECK FOR 6502 CARRY?
+    .ELSE
+    ADD A, $0C                          ;add twelve pixels;PAL bugfix: Bloopers can get closer vertically
+    .ENDIF
+
     CP A, C
     JP C, Floatdown
 ;
@@ -2426,6 +2821,8 @@ FlyCCBPriority:
 MoveFlyingCheepCheep:
     POP HL
 ;
+
+.IF PALBUILD == $00
     LD L, <Enemy_State
     AND A, %00100000
     JP NZ, MoveJ_EnemyVertically
@@ -2459,6 +2856,19 @@ AddCCF:
     ADD A, $10
     LD (HL), A
     RET
+
+.ELSE
+    LD C, $20                               ;PAL diff: reworked movement function for Cheep Cheeps
+    LD L, <Enemy_State
+    LD A, (HL)
+    AND A, %00100000
+    JP NZ, FlyCC
+    CALL MoveEnemyHorizontally
+    LD C, $17
+FlyCC:
+    LD A, $05
+    JP SetXMoveAmt
+.ENDIF
 
 ;--------------------------------
 ;$00 - used to hold horizontal difference
@@ -2566,7 +2976,13 @@ ChkPSpeed:
     JP Z, SubDifAdj
     INC C
     LD A, (Player_X_Speed)
+
+    .IF PALBUILD == $00
     CP A, $19
+    .ELSE
+    CP A, $1D                               ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+
     JP C, ChkSpinyO
     LD A, (ScrollAmount)
     CP A, $02
@@ -2950,12 +3366,23 @@ BowserGfxDraw:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$00 - used to hold movement force and tile number
+;$00(B) - used to hold movement force and tile number
 ;$01 - used to hold sprite attribute data
 
 .SECTION "FlameTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlameTimerData:
+
+    .IF PALBUILD == $00
     .db $bf, $40, $bf, $bf, $bf, $40, $40, $bf
+    .ELSE
+    .db $80, $30, $30, $80, $80, $80, $30, $50 ;PAL diff: Adjusted timing to compensate FPS difference
+    .ENDIF
+.ENDS
+
+.SECTION "FlameTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+FlameTileData:
+    .db $58, $59, $5A   ; NORMAL
+    .db $5B, $90, $91   ; VFLIP
 .ENDS
 
 SetFlameTimer:
@@ -2971,6 +3398,116 @@ SetFlameTimer:
     RET
 
 ProcBowserFlame:
+    LD A, (TimerControl)
+    OR A
+    JP NZ, SetGfxF
+;
+    LD A, (SecondaryHardMode)
+    OR A
+
+    .IF PALBUILD == $00
+    LD A, $40
+    JP Z, SFlmX
+    LD A, $60
+    .ELSE
+    LD A, $70                           ;PAL diff: Faster acceleration to compensate FPS difference
+    JP Z, SFlmX
+    LD A, $90                           ;PAL diff: Faster acceleration to compensate FPS difference
+    .ENDIF
+
+SFlmX:
+    LD B, A
+;
+    LD L, <Enemy_X_MoveForce
+    LD A, (HL)
+    SUB A, B
+    LD (HL), A
+;
+    LD L, <Enemy_X_Position
+    LD A, (HL)
+    SBC A, $01
+    LD (HL), A
+;
+    LD L, <Enemy_PageLoc
+    LD A, (HL)
+    SBC A, $00
+    LD (HL), A
+;
+    LD L, <BowserFlamePRandomOfs
+    LD A, (HL)
+    LD BC, FlameYPosData
+    addAToBC8_M
+    LD A, (BC)
+    LD L, <Enemy_Y_Position
+    CP A, (HL)
+    JP Z, SetGfxF
+    LD A, (HL)
+    LD L, <Enemy_Y_MoveForce
+    ADD A, (HL)
+    LD L, <Enemy_Y_Position
+    LD (HL), A
+;
+SetGfxF:
+    CALL RelativeEnemyPosition
+    LD L, <Enemy_State
+    LD A, (HL)
+    OR A
+    RET NZ
+;
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    LD D, >Sprite_Y_Position
+    LD HL, FlameTileData
+    LD A, (FrameCounter)
+    AND A, %00000010
+    JP Z, FlmeAt
+    LD L, <FlameTileData + $03
+FlmeAt:
+    LD BC, $03FF
+
+DrawFlameLoop:
+    LD A, (Enemy_Rel_YPos)
+    LD (DE), A
+    SLA E
+    SET 7, E
+    LDI
+    LD A, (Enemy_Rel_XPos)
+    LD (DE), A
+    INC E
+    RES 7, E
+    SRL E
+    ADD A, $08
+    LD (Enemy_Rel_XPos), A
+    DJNZ DrawFlameLoop
+;
+    LD HL, (ObjectOffset)
+    CALL GetEnemyOffscreenBits
+    LD L, <Enemy_SprDataOffset
+    LD E, (HL)
+    INC E
+    INC E
+    ;INC E
+    LD A, (Enemy_OffscrBits)
+    LD C, A
+    LD A, $F8
+    SRL C
+;     JP NC, M3FOfs
+;     LD (DE), A
+; M3FOfs:
+;     DEC E
+    SRL C
+    JP NC, M2FOfs
+    LD (DE), A
+M2FOfs:
+    DEC E
+    SRL C
+    JP NC, M1FOfs
+    LD (DE), A
+M1FOfs:
+    DEC E
+    SRL C
+    RET NC
+    LD (DE), A
     RET
 
 ;--------------------------------
@@ -3607,7 +4144,12 @@ RightPlatform:
     RET M
 ;
     LD L, <Enemy_X_Speed
+
+    .IF PALBUILD == $00
     LD (HL), $10
+    .ELSE
+    LD (HL), $13                            ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
 ;
     JP PositionPlayerOnHPlat
 
@@ -3959,7 +4501,12 @@ RunGameTimer:
     LD (SndHurryUpFlag), A
 ;
 ResGTCtrl:
+    .IF PALBUILD == $00
     LD A, $18                               ;reset game timer control
+    .ELSE
+    LD A, $14                               ;PAL diff: Game timer ticks every 20 frames (vs. 24 frames on NTSC)
+    .ENDIF
+
     LD (GameTimerCtrlTimer), A
     LD DE, GameTimerDisplay + $02           ;set offset for last digit
     LD A, $FF                               ;set value to decrement game timer digit
@@ -4375,22 +4922,6 @@ PutBlockMetatile_RHalf:
     RET
 
 ;-------------------------------------------------------------------------------------
-
-.SECTION "HammerEnemyOfsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-HammerEnemyOfsData:
-    .db $04, $04, $04, $05, $05, $05
-    .db $06, $06, $06
-.ENDS
-
-.SECTION "HammerXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-HammerXSpdData:
-    .db $10, $f0
-.ENDS
-
-SpawnHammerObj:
-    RET
-
-;-------------------------------------------------------------------------------------
 ;$02(IXL) - used to store vertical high nybble offset from block buffer routine
 ;$06 - used to store low byte of block buffer address
 
@@ -4483,7 +5014,7 @@ MiscLoop:
     OR A
     JP Z, MiscLoopBack                  ;branch to check next slot
     JP P, ProcJumpCoin                  ;if d7 not set, jumping coin, thus skip to rest of code here
-    ;CALL ProcHammerObj                  ;otherwise go to process hammer,
+    CALL ProcHammerObj                  ;otherwise go to process hammer,
     JP MiscLoopBack                     ;then check next slot
 
 ;--------------------------------
@@ -4725,7 +5256,13 @@ MovePlayerVertically:
 NoJSChk:
     LD A, (VerticalForce)           ;dump vertical force 
     LD IXL, A
+
+    .IF PALBUILD == $00
     LD A, $04                       ;set maximum vertical speed here
+    .ELSE
+    LD A, $05                       ;PAL diff: Faster maximum vertical speed to compensate FPS difference
+    .ENDIF
+
     JP ImposeGravitySprObj          ;then jump to move player vertically
 
 ;--------------------------------
@@ -4765,7 +5302,13 @@ MoveDropPlatform:
     JP SetMdMax                     ;skip ahead of other value set here
 
 MoveEnemySlowVert:
+
+    .IF PALBUILD == $00
     LD C, $0F                       ;set movement amount for bowser/other objects
+    .ELSE
+    LD C, $12                       ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
 SetMdMax:
     LD A, $02                       ;set maximum speed in A
     JP SetXMoveAmt
@@ -4773,9 +5316,17 @@ SetMdMax:
 ;--------------------------------
 
 MoveJ_EnemyVertically:
+
+    .IF PALBUILD == $00
     LD C, $1C                       ;set movement amount for podoboo/other objects
 SetHiMax:
     LD A, $03                       ;set maximum speed in A
+    .ELSE
+    LD C, $1F                       ;PAL diff: Faster speed to compensate FPS difference
+SetHiMax:
+    LD A, $04                       ;PAL diff: Faster maximum speed to compensate FPS difference
+    .ENDIF
+
 SetXMoveAmt:
     LD IXL, C                       ;set movement amount here
     ;INC B                           ;increment X for enemy offset
@@ -4792,7 +5343,11 @@ MaxSpdBlockData:
 .ENDS
 
 ImposeGravityBlock:
+    .IF PALBUILD == $00
     LD IXL, $50                     ;set movement amount here
+    .ELSE
+    LD IXL, $58                     ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
     ;LD C, $01                       ;set offset for maximum speed
     ;LD A, $01
     ;LD DE, MaxSpdBlockData
@@ -5203,15 +5758,10 @@ UpToFiery:
 
 ;--------------------------------
 
-.SECTION "KickedShellXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-KickedShellXSpdData:
-    .db $30, $d0
-.ENDS
-
-.SECTION "DemotedKoopaXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-DemotedKoopaXSpdData:
-    .db $08, $f8
-.ENDS
+; .SECTION "DemotedKoopaXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; DemotedKoopaXSpdData:
+;     .db $08, $f8
+; .ENDS
 
 PlayerEnemyCollision:
     LD A, (FrameCounter)
@@ -5301,10 +5851,16 @@ HandlePECollisions:
 ;
     CALL EnemyFacePlayer
 ;
-    LD A, C
-    LD BC, KickedShellXSpdData
-    addAToBC8_M
-    LD A, (BC)
+    .IF PALBUILD == $00
+    LD A, $30                       ;KickedShellXSpdData
+    JP Z, +
+    LD A, $D0
+    .ELSE
+    LD A, $38                       ;PAL diff: Faster speed to compensate FPS difference
+    JP Z, +
+    LD A, $C8
+    .ENDIF
++:
     LD L, <Enemy_X_Speed
     LD (HL), A
 ;
@@ -5337,10 +5893,23 @@ ChkForPlayerInjury:
 ChkInj:
     LD L, <Enemy_ID
     LD A, (HL)
+
+    .IF PALBUILD == $00 
     CP A, OBJECTID_Bloober
     JP C, ChkETmrs
     LD A, (Player_Y_Position)
     ADD A, $0C
+    .ELSE                                       ;PAL bugfix: Vertical difference deciding whether Mario stomped or got hit depends on the enemy
+    CP A, OBJECTID_FlyingCheepCheep
+    LD A, (Player_Y_Position)
+    LD C, $14
+    JP NZ, ChkInj2
+    LD C, $07
+ChkInj2:
+    CCF
+    ADC A, C
+    .ENDIF
+
     LD L, <Enemy_Y_Position
     CP A, (HL)
     JP C, EnemyStomped
@@ -5485,16 +6054,13 @@ ChkForDemoteKoopa:
 ;
     CALL InitVStf
     CALL EnemyFacePlayer
-    LD A, C
-    LD BC, DemotedKoopaXSpdData
-    addAToBC8_M
-    LD A, (BC)
+    LD A, $08
+    JP Z, +
+    LD A, $F8
++:
     LD L, <Enemy_X_Speed
     LD (HL), A
     JP SBnce
-
-;RevivalRateData:
-;    .db $10, $0b
 
 HandleStompedShellE:
     LD L, <Enemy_State
@@ -5518,9 +6084,17 @@ HandleStompedShellE:
     addAToBC8_M
     LD A, (PrimaryHardMode)
     OR A
-    LD A, $10
+
+    .IF PALBUILD == $00
+    LD A, $10                               ;RevivalRateData
     JP Z, +
     LD A, $0B
+    .ELSE
+    LD A, $0D                               ;PAL diff: Faster timer to compensate FPS difference
+    JP Z, +
+    LD A, $09
+    .ENDIF
+
 +:
     LD (BC), A
 ;
@@ -6168,8 +6742,19 @@ SolidOrClimb:
     LD A, SNDID_BUMP
     LD (SFXTrack0.SoundQueue), A
 NYSpd:
-    LD A, $01                           ;set player's vertical speed to nullify
-    LD (Player_Y_Speed), A              ;jump or swim
+
+    .IF PALBUILD == $00
+    LD A, $01                           ;set player's vertical speed to nullify...
+    .ELSE
+    LD A, (AreaType)                    ;PAL diff: Set vertical speed to 0 in water stages
+    OR A
+    LD A, $01
+    JP NZ, +
+    DEC A
++:
+    .ENDIF
+
+    LD (Player_Y_Speed), A              ;...jump or swim
 
 DoFootCheck:
     LD A, (Player_Y_Position)
@@ -6216,7 +6801,13 @@ ChkFootMTile:
     JP NZ, InitSteP                     ;branch ahead
 ;
     LD A, IXH                           ;check lower nybble of vertical coordinate returned
+
+    .IF PALBUILD == $00
     CP A, $05                           ;from collision detection routine
+    .ELSE
+    CP A, $06                           ;PAL diff: Floor is one pixel wider to accomodate for faster speeds
+    .ENDIF
+
     JP C, LandPlyr                      ;if lower nybble < 5, branch
 ;
     LD A, (Player_MovingDir)
@@ -6348,7 +6939,12 @@ ChkGERtn:
 
 .SECTION "AreaChangeTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 AreaChangeTimerData:
+
+    .IF PALBUILD == $00
     .db $a0, $34
+    .ELSE
+    .db $85, $2b                        ;PAL diff: Faster timer to accomodate FPS difference
+    .ENDIF
 .ENDS
 
 ;--------------------------------
@@ -6513,7 +7109,13 @@ ChkForLandJumpSpring:
     RET NZ
     LD A, $70
     LD (VerticalForce), A
+
+    .IF PALBUILD == $00
     LD A, $F9
+    .ELSE
+    LD A, $F8                           ;PAL diff: Faster acceleration to accomodate FPS difference
+    .ENDIF
+
     LD (JumpspringForce), A
     LD A, $03
     LD (JumpspringTimer), A
@@ -6540,7 +7142,12 @@ HandlePipeEntry:
     CP A, MT_WARPPIPE_TOP_LEFT
     RET NZ
 ;
+    .IF PALBUILD == $00
     LD A, $30
+    .ELSE
+    LD A, $28                           ;PAL diff: Faster timer to accomodate FPS difference
+    .ENDIF
+
     LD (ChangeAreaTimer), A
 ;
     LD A, $03
@@ -7170,7 +7777,13 @@ BoundBoxCtrlData:
     .db $00, $00, $30, $0d
     .db $00, $00, $08, $08
     .db $06, $04, $0a, $08
+
+    .IF PALBUILD == $00
     .db $03, $0e, $0d, $14
+    .ELSE
+    .db $03, $0c, $0d, $14                  ;PAL diff: some enemies (Piranha, Bullet Bill, Goomba, Spiny, Blooper, Cheep Cheep) has larger hitbox
+    .ENDIF
+
     .db $00, $02, $10, $15
     .db $04, $04, $0c, $1c
 .ENDS

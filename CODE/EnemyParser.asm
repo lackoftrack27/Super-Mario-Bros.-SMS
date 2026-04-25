@@ -414,9 +414,17 @@ InitNormalEnemy:
 InitNormalEnemy_NOPOP:
     LD A, (PrimaryHardMode)         ;check for primary hard mode flag set
     OR A
-    LD A, $F4                       ;load default offset
-    JP NZ, GetESpd
-    LD A, $F8                       ;if not set, load alternate offset
+
+    .IF PALBUILD == $00
+    LD A, $F8                       ;load default offset
+    JP Z, GetESpd
+    LD A, $F4                       ;if not set, load alternate offset
+    .ELSE
+    LD A, $F6                       ;PAL diff: Faster speed to compensate FPS difference
+    JP Z, GetESpd
+    LD A, $F1
+    .ENDIF
+
 GetESpd:
 SetESpd:
     LD L, <Enemy_X_Speed            ;store as speed for enemy object
@@ -676,36 +684,36 @@ DifLoop:
 ;
     ;LD HL, (ObjectOffset)              ;get enemy object buffer offset
     CALL PlayerLakituDiff               ;move enemy, change direction, get value - difference
-    /*
-    EX AF, AF'
-    LD A, (Player_X_Speed)              ;check player's horizontal speed
-    CP A, $08
-    JP NC, SetSpSpd                     ;if moving faster than a certain amount, branch elsewhere
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg + $01
-    addAToBC8_M
-    LD A, (BC)
-    AND A, %00000011                    ;get one of the LSFR parts and save the 2 LSB
-    JP Z, UsePosv                       ;branch if neither bits are set
-    EX AF, AF'
-    NEG                                 ;otherwise get two's compliment of Y
-    EX AF, AF'
-UsePosv:
-SetSpSpd:
-    EX AF, AF'                          ;put value from A in Y back to A (they will be lost anyway)
-    */
+;     EX AF, AF'
+;     LD A, (Player_X_Speed)              ;check player's horizontal speed
+    ; .IF PALBUILD == $00
+    ; CP A, $08
+    ; .ELSE
+    ; CP A, $0C                         ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    ; .ENDIF
+;     JP NC, SetSpSpd                     ;if moving faster than a certain amount, branch elsewhere
+;     LD A, H
+;     SUB A, $C1
+;     LD BC, PseudoRandomBitReg + $01
+;     addAToBC8_M
+;     LD A, (BC)
+;     AND A, %00000011                    ;get one of the LSFR parts and save the 2 LSB
+;     JP Z, UsePosv                       ;branch if neither bits are set
+;     EX AF, AF'
+;     NEG                                 ;otherwise get two's compliment of Y
+;     EX AF, AF'
+; UsePosv:
+; SetSpSpd:
+;     EX AF, AF'                          ;put value from A in Y back to A (they will be lost anyway)
     CALL SmallBBox                      ;set bounding box control, init attributes, lose contents of A
 ;
     LD L, <Enemy_X_Speed                ;set horizontal speed to zero because previous contents
     LD (HL), A
-    /*
-    OR A                                ;of A were lost...branch here will never be taken for
-    LD A, $02                           ;the same reason
-    JP M, SpinyRte
-    DEC A
-SpinyRte:
-    */
+;     OR A                                ;of A were lost...branch here will never be taken for
+;     LD A, $02                           ;the same reason
+;     JP M, SpinyRte
+;     DEC A
+; SpinyRte:
     LD A, $01
     LD L, <Enemy_MovingDir              ;set moving direction to the right
     LD (HL), A
@@ -721,7 +729,12 @@ SpinyRte:
 
 .SECTION "FirebarSpinSpdData/FirebarSpinDirData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FirebarSpinSpdData:
+    
+    .IF PALBUILD == $00
     .db $28, $38, $28, $38, $28
+    .ELSE
+    .db $30, $43, $30, $43, $30         ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
 
 FirebarSpinDirData:
     .db $00, $00, $10, $10, $00
@@ -784,9 +797,16 @@ FlyCCXPositionData:
 
 .SECTION "FlyCCXSpeedData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlyCCXSpeedData:
+
+    .IF PALBUILD == $00
     .db $0e, $05, $06, $0e
     .db $1c, $20, $10, $0c
     .db $1e, $22, $18, $14
+    .ELSE
+    .db $11, $07, $08, $0a              ;PAL diff: Faster speed to compensate FPS difference
+    .db $23, $28, $15, $10
+    .db $22, $2c, $1f, $1b
+    .ENDIF
 .ENDS
 
 .SECTION "FlyCCTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -835,14 +855,26 @@ MaxCC:
     LD (Temp_Bytes + $01), A
 ;
     LD L, <Enemy_Y_Speed                ;set vertical speed for cheep-cheep
+
+    .IF PALBUILD == $00
     LD (HL), $FB
+    .ELSE
+    LD (HL), $FA                        ;PAL diff: Faster speed to compensate FPS difference
+    .ENDIF
+
 ;
     LD A, (Player_X_Speed)              ;check player's horizontal speed
     OR A
     LD A, $00                           ;load default value
     JP Z, GSeed                         ;if player not moving left or right, skip this part
     LD A, (Player_X_Speed)              ;if moving to the right but not very quickly,
+    
+    .IF PALBUILD == $00
     CP A, $19
+    .ELSE
+    CP A, $1D                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+
     LD A, $04
     JP C, GSeed                         ;do not change A
     ADD A, A                            ;otherwise, multiply A by 2
@@ -1491,7 +1523,7 @@ GSltLp:
     LD (HL), A
     LD L, <Enemy_Flag
     LD (HL), A
-    CALL CheckpointEnemyID  ; BC ISN'T TOUCHED FOR GOOMBA, GREEN KOOPA, OR BETTLE
+    CALL CheckpointEnemyID              ; BC ISN'T TOUCHED FOR GOOMBA, GREEN KOOPA, OR BETTLE
     DJNZ GrLoop
 ;
     JP Inc2B
@@ -1580,7 +1612,13 @@ InitJumpGPTroopa:
     LD L, <Enemy_MovingDir
     LD (HL), $02
     LD L, <Enemy_X_Speed
+
+    .IF PALBUILD == $00
     LD (HL), $F8
+    .ELSE
+    LD (HL), $F6                    ;PAL diff: Faster horizontal speed to compensate FPS difference
+    .ENDIF
+
 TallBBox2:
     LD A, $03
 SetBBox2:

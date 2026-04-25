@@ -50,7 +50,12 @@ Entrance_GameTimerSetup:
     LD A, (ScreenLeft_PageLoc)          ;set current page for area objects
     LD (Player_PageLoc), A              ;as page location for player
 ;
+    .IF PALBUILD == $00
     LD A, $28                           ;store value here
+    .ELSE
+    LD A, $70                           ;PAL diff: higher initial downward accel
+    .ENDIF
+    
     LD (VerticalForceDown), A           ;for fractional movement downwards if necessary
 ;
     LD A, $01                           ;set high byte of player position and
@@ -801,7 +806,12 @@ PutMTileB:
     LD A, MT_HITBLANK
     LD (DE), A                      ;write blank metatile to block buffer
 ;
+    .IF PALBUILD == $00
     LD A, $10
+    .ELSE
+    LD A, $0C                       ;PAL diff: Faster timer to compensate FPS difference
+    .ENDIF
+    
     LD (BlockBounceTimer), A        ;set block bounce timer
 ;
     POP AF                          ;pull original metatile from stack
@@ -1252,6 +1262,8 @@ InitCSTimer:
 ;$00 - used to store offset to friction data
 
 .SECTION "Player Physics TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+
+.IF PALBUILD == $00
 JumpMForceData:
     .db $20, $20, $1e, $28, $28, $0d, $04
 
@@ -1273,6 +1285,29 @@ MaxRightXSpdData:
 
 FrictionData:
     .db $e4, $98, $d0
+.ELSE
+JumpMForceData:
+    .db $30, $30, $2d, $38, $38, $0d, $04 ;PAL diff: Faster acceleration to compensate FPS difference
+
+FallMForceData:
+    .db $a8, $a8, $90, $d0, $d0, $0a, $09 ;PAL diff: Faster acceleration to compensate FPS difference
+
+InitMForceData:
+    .db $34, $34, $34, $00, $00, $80, $00 ;PAL diff: Faster speed to compensate FPS difference
+
+PlayerYSpdData:
+    .db $fb, $fb, $fb, $fa, $fa, $fe, $ff ;PAL diff: Faster speed to compensate FPS difference
+
+MaxLeftXSpdData:
+    .db $d0, $e4, $ed                     ;PAL diff: Faster speed to compensate FPS difference
+
+MaxRightXSpdData:
+    .db $30, $1c, $13                     ;PAL diff: Faster speed to compensate FPS difference
+    .db $0e ;used for pipe intros
+
+FrictionData:
+    .db $c0, $00, $80                     ;PAL diff: Faster acceleration to compensate FPS difference
+.ENDIF
 
 Climb_Y_SpeedData:
     .db $00, $ff, $01
@@ -1366,6 +1401,8 @@ InitJS:
 ;
     LD DE, JumpMForceData
     LD A, (Player_XSpeedAbsolute)       ;check value related to walking/running speed
+    
+    .IF PALBUILD == $00
     CP A, $09
     JP C, ChkWtr                        ;branch if below certain values, increment Y
     INC E                               ;for each amount equal or exceeded
@@ -1376,6 +1413,19 @@ InitJS:
     JP C, ChkWtr
     INC E
     CP A, $1C
+    .ELSE
+    CP A, $0A                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    JP C, ChkWtr
+    INC E
+    CP A, $12                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    JP C, ChkWtr
+    INC E
+    CP A, $1D                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    JP C, ChkWtr
+    INC E
+    CP A, $22                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP C, ChkWtr                        ;note that for jumping, range is 0-4 for Y
     INC E
 ChkWtr:
@@ -1441,7 +1491,13 @@ X_Physics:
     JP Z, ProcPRun
 ;
     LD A, (Player_XSpeedAbsolute)       ;check something that seems to be related
+    
+    .IF PALBUILD == $00
     CP A, $19                           ;to mario's speed
+    .ELSE
+    CP A, $1D                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP NC, GetXPhy                      ;if =>$19 branch here
     JP C, ChkRFast                      ;if not branch elsewhere
 ProcPRun:
@@ -1471,7 +1527,13 @@ ChkRFast:
     JP NZ, FastXSp                      ;if running speed set here, branch
 ;
     LD A, (Player_XSpeedAbsolute)
+
+    .IF PALBUILD == $00
     CP A, $21                           ;otherwise check player's walking/running speed
+    .ELSE
+    CP A, $27                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP C, GetXPhy                       ;if less than a certain amount, branch ahead
 FastXSp:
     INC C                               ;if running speed set or speed => $21 increment $00
@@ -1495,7 +1557,12 @@ GetXPhy2:
     LD A, (BC)                          ;get value using value in memory as offset            
     LD (FrictionAdderLow), A
 ;
+    .IF PALBUILD == $00
     XOR A
+    .ELSE
+    LD A, $01                           ;PAL diff: Faster acceleration to compensate FPS difference
+    .ENDIF
+    
     LD (FrictionAdderHigh), A           ;init something here
 ;
     LD A, (PlayerFacingDir)
@@ -1511,18 +1578,37 @@ GetXPhy2:
 ;-------------------------------------------------------------------------------------
 
 .SECTION "PlayerAnimTmrData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+
+.IF PALBUILD == $00
 PlayerAnimTmrData:
     .db $02, $04, $07
+.ELSE
+PlayerAnimTmrData:
+    .db $02, $03, $05                   ;PAL diff: Adjusted timing data to compensate FPS difference
+.ENDIF
+
 .ENDS
 
 GetPlayerAnimSpeed:
     LD DE, PlayerAnimTmrData            ;initialize offset in Y
     LD A, (Player_XSpeedAbsolute)       ;check player's walking/running speed
+    
+    .IF PALBUILD == $00
     CP A, $1C                           ;against preset amount
+    .ELSE
+    CP A, $20                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP NC, SetRunSpd                    ;if greater than a certain amount, branch ahead
 ;
     INC E                               ;otherwise increment Y
+    
+    .IF PALBUILD == $00
     CP A, $0E                           ;compare against lower amount
+    .ELSE
+    CP A, $10                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP NC, ChkSkid                      ;if greater than this but not greater than first, skip increment
     INC E                               ;otherwise increment Y again
 ChkSkid:
@@ -1540,7 +1626,13 @@ SetRunSpd:
     JP SetAnimSpd
 ProcSkid:
     LD A, (Player_XSpeedAbsolute)       ;check player's walking/running speed
+    
+    .IF PALBUILD == $00
     CP A, $0B                           ;against one last amount
+    .ELSE
+    CP A, $0D                           ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    .ENDIF
+    
     JP NC, SetAnimSpd                   ;if greater than this amount, branch
 ;
     LD A, (PlayerFacingDir)

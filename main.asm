@@ -266,7 +266,11 @@ DecTimers:
     LD HL, IntervalTimerControl
     DEC (HL)                        ;decrement interval timer control,
     JP P, DecTimersLoop             ;if not expired, only frame timers will decrement
+    .IF PALBUILD == $00
     LD (HL), $14                    ;if control for interval timers expired,
+    .ELSE
+    LD (HL), $11                    ;PAL diff: interval timer is 18 frames (vs. 21 for NTSC)
+    .ENDIF
     LD DE, Timers + $23             ;interval timers will decrement along with frame timers
     LD B, $24
 DecTimersLoop:
@@ -420,7 +424,7 @@ NonMaskableInterrupt:
 +:
     LD (HL), $00                    ;clear buffer header
     XOR A
-    LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to $0301 (VRAM_Buffer1)
+    LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
 ;   TILE STREAMING
     LD HL, TileStreamRet
     PUSH HL
@@ -438,11 +442,13 @@ TileStreamRet:
     LD A, (GamePauseStatus)
     RRCA
     CALL NC, SpriteShuffler         ;[CPU TIME: 05 LINES]
+    ; JP SetHInt                      ;SKIP REDUNDANT CHECK
 LagFrame:
 ;   ONLY SET H-INT IF FLAG IS SET
-    LD A, (Sprite0HitDetectFlag)
-    OR A
-    JP Z, DoSound
+    ; LD A, (Sprite0HitDetectFlag)
+    ; OR A
+    ; JP Z, DoSound
+SetHInt:
     LD A, %00110100
     OUT (VDPCON_PORT), A
     LD A, $80

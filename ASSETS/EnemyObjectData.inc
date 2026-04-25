@@ -178,7 +178,13 @@ E_GroundArea18:
 
 ;level 8-2
 E_GroundArea19:
+
+    .IF PALBUILD == $00
     .db $29, $8e, $52, $11, $83, $0e, $0f, $03, $9b, $0e
+    .ELSE
+    .db $19, $8e, $52, $11, $93, $0e, $0f, $03, $9b, $0e        ; PAL diff: Koopa Paratroopas in slightly different positions
+    .ENDIF
+    
     .db $2b, $8e, $5b, $0e, $cb, $8e, $fb, $0e, $fb, $82
     .db $9b, $82, $bb, $02, $fe, $42, $e8, $bb, $8e, $0f, $0a
     .db $ab, $0e, $cb, $0e, $f9, $0e, $88, $86, $a6, $06

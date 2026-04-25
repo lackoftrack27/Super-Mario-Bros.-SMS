@@ -512,7 +512,13 @@ L_WaterArea1:
     .db $0d, $c9, $1e, $01, $6c, $01, $62, $35, $63, $53
     .db $8a, $41, $ac, $01, $b3, $53, $e9, $51, $26, $c3
     .db $27, $33, $63, $43, $64, $33, $ba, $60, $c9, $61
+    
+    .IF PALBUILD == $00
     .db $ce, $0b, $e5, $09, $ee, $0f, $7d, $ca, $7d, $47
+    .ELSE
+    .db $ce, $0b, $de, $0f, $e5, $09, $7d, $ca, $7d, $47    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .ENDIF
+    
     .db $fd
 
 ; ---
@@ -531,13 +537,26 @@ L_WaterArea2:
     .db $c3, $67, $d3, $31, $dc, $06, $f7, $42, $fa, $42
     .db $23, $b1, $43, $67, $c3, $34, $c7, $34, $d1, $51
     .db $43, $b3, $47, $33, $9a, $30, $a9, $61, $b8, $62
+    
+    .IF PALBUILD == $00
     .db $be, $0b, $d5, $09, $de, $0f, $0d, $ca, $7d, $47
+    .ELSE
+    .db $be, $0b, $ce, $0f, $d5, $09, $0d, $ca, $7d, $47    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .ENDIF
+    
     .db $fd
 
 ;water area used in level 8-4
 L_WaterArea3:
     .db $49, $0f
     .db $1e, $01, $39, $73, $5e, $07, $ae, $0b, $1e, $82
+    
+    .IF PALBUILD == $00
     .db $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $45, $09
     .db $4e, $0f, $ed, $47
+    .ELSE
+    .db $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $3e, $0f    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .db $45, $09, $ed, $47
+    .ENDIF
+    
     .db $fd

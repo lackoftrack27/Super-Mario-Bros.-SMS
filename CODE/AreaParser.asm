@@ -1593,11 +1593,14 @@ NextStair:
 Jumpspring:
     CALL GetLrgObjAttrib
     CALL FindEmptyEnemySlot             ;find empty space in enemy object buffer
+    
+    .IF PALBUILD != $00
+    RET C                               ;PAL bugfix: Stop if there are no free enemy slots
+    .ENDIF
+    
     LD (HL), $01                        ;set flag for enemy object buffer
     LD L, <Enemy_ID
     LD (HL), OBJECTID_JumpspringObject  ;write jumpspring object to enemy object buffer
-
-    ;INC H
     CALL GetAreaObjXPosition            ;get horizontal coordinate for jumpspring
     LD L, <Enemy_X_Position
     LD (HL), A                          ;and store

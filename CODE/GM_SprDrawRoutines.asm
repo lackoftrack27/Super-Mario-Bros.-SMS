@@ -35,8 +35,8 @@ FirstSprTilenum:
 SecondSprTilenum:
     .db $81, $83, $80, $82
 
-HammerSprAttrib:
-    .db $03, $03, $c3, $c3
+; HammerSprAttrib:
+;     .db $03, $03, $c3, $c3
 .ENDS
 
 DrawHammer:
@@ -1859,7 +1859,13 @@ ProcOnGroundActs:
     JP Z, NonAnimatedActs               ;if no speed or buttons pressed, use standing offset
 ;
     LD A, (Player_XSpeedAbsolute)       ;load walking/running speed
+    
+    .IF PALBUILD == $00
     CP A, $09
+    .ELSE
+    CP A, $0A                           ;PAL diff: Faster speed cutoff to accomodate FPS difference
+    .ENDIF
+
     JP C, ActionWalkRun                 ;if less than a certain amount, branch, too slow to skid
 ;
     LD A, (Player_MovingDir)            ;otherwise check to see if moving direction

@@ -1115,7 +1115,7 @@ BounceJS:
     LD (JumpspringAnimCtrl), A
 DrawJSpr:
     CALL RelativeEnemyPosition
-    CALL EnemyGfxHandler
+    CALL JumpspringGfxHandler
     CALL OffscreenBoundsCheck
     LD A, (JumpspringAnimCtrl)
     OR A
@@ -1236,7 +1236,7 @@ RunRetainerObj:
 RunRetainerObj_NOPOP:
     CALL GetEnemyOffscreenBits
     CALL RelativeEnemyPosition
-    JP EnemyGfxHandler
+    JP RetainerGfxHandler
 
 ;--------------------------------
 
@@ -1830,13 +1830,168 @@ XMRight:
 
 ;--------------------------------
 
-.SECTION "BlooberBitmasks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-BlooberBitmasks:
-    .db %00111111, %00000011
-.ENDS
+; .SECTION "BlooberBitmasks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; BlooberBitmasks:
+;     .db %00111111, %00000011
+; .ENDS
 
 MoveBloober:
     POP HL
+;
+    LD L, <Enemy_State
+    LD A, (HL)
+    AND A, %00100000
+    JP NZ, MoveEnemySlowVert
+;
+    LD A, H
+    SUB A, $C1
+    LD BC, PseudoRandomBitReg+1
+    addAToBC8_M
+    LD A, (BC)
+    LD C, A
+
+    LD A, (SecondaryHardMode)
+    OR A
+    LD A, %00111111
+    JP Z, +
+    LD A, %00000011
++:
+    AND A, C
+    JP NZ, BlooberSwim
+;
+    LD A, (Player_MovingDir)
+    LD C, A
+    LD A, H
+    SUB A, $C1
+    RRCA
+    JP C, SBMDir
+    LD C, $02
+    CALL PlayerEnemyDiff
+    JP P, SBMDir
+    DEC C
+SBMDir:
+    LD L, <Enemy_MovingDir
+    LD (HL), C
+
+BlooberSwim:
+    CALL ProcSwimmingB
+;
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    LD L, <Enemy_Y_MoveForce
+    SUB A, (HL)
+    CP A, $20
+    JP C, SwimX
+    LD L, <Enemy_Y_Position
+    LD (HL), A
+SwimX:
+    LD L, <Enemy_MovingDir
+    LD A, (HL)
+    DEC A
+    JP NZ, LeftSwim
+;
+    LD L, <BlooperMoveSpeed
+    LD A, (HL)
+    LD L, <Enemy_X_Position
+    ADD A, (HL)
+    LD (HL), A
+    LD L, <Enemy_PageLoc
+    ADC A, $00
+    LD (HL), A
+    RET
+
+LeftSwim:
+    LD L, <Enemy_X_Position
+    LD A, (HL)
+    LD L, <BlooperMoveSpeed
+    SUB A, (HL)
+    LD L, <Enemy_X_Position
+    LD (HL), A
+    LD L, <Enemy_PageLoc
+    SBC A, $00
+    LD (HL), A
+    RET
+    
+ProcSwimmingB:
+    LD L, <BlooperMoveCounter
+    LD A, (HL)
+    AND A, %00000010
+    JP NZ, ChkForFloatdown
+;
+    LD A, (FrameCounter)
+    AND A, %00000111
+    PUSH AF
+    LD L, <BlooperMoveCounter
+    LD A, (HL)
+    RRCA
+    JP C, SlowSwim
+    POP AF
+    RET NZ
+;
+    LD L, <Enemy_Y_MoveForce
+    LD A, (HL)
+    INC A
+    LD (HL), A
+    LD L, <BlooperMoveSpeed
+    LD (HL), A
+    CP A, $02
+    RET NZ
+;
+    LD L, <BlooperMoveCounter
+    INC (HL)
+    RET
+
+SlowSwim:
+    POP AF
+    RET NZ
+;
+    LD L, <Enemy_Y_MoveForce
+    LD A, (HL)
+    DEC A
+    LD (HL), A
+    LD L, <BlooperMoveSpeed
+    LD (HL), A
+    RET NZ
+;
+    LD L, <BlooperMoveCounter
+    INC (HL)
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyIntervalTimer
+    addAToBC8_M
+    LD A, $02
+    LD (BC), A
+    RET
+
+ChkForFloatdown:
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyIntervalTimer
+    addAToBC8_M
+    LD A, (BC)
+    OR A
+    JP Z, ChkNearPlayer
+
+Floatdown:
+    LD A, (FrameCounter)
+    RRCA
+    RET C
+;
+    LD L, <Enemy_Y_Position
+    INC (HL)
+    RET
+
+ChkNearPlayer:
+    LD A, (Player_Y_Position)
+    LD C, A
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    ADD A, $10  ; CHECK FOR 6502 CARRY?
+    CP A, C
+    JP C, Floatdown
+;
+    LD L, <BlooperMoveCounter
+    LD (HL), $00
     RET
 
 ;--------------------------------
@@ -1854,17 +2009,97 @@ MoveBulletBill:
     JP MoveEnemyHorizontally
 
 ;--------------------------------
-;$02 - used to hold preset values
-;$03 - used to hold enemy state
+;$02(C) - used to hold preset values
+;$03(B) - used to hold enemy state
 
-.SECTION "SwimCCXMoveData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-SwimCCXMoveData:
-    .db $40, $80
-    ;.db $04, $04 ;residual data, not used
-.ENDS
+; .SECTION "SwimCCXMoveData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; SwimCCXMoveData:
+;     .db $40, $80
+;     .db $04, $04 ;residual data, not used
+; .ENDS
 
 MoveSwimmingCheepCheep:
     POP HL
+;
+    LD L, <Enemy_State
+    LD A, (HL)
+    AND A, %00100000
+    JP NZ, MoveEnemySlowVert
+;
+    LD B, A
+    LD L, <Enemy_ID
+    LD A, (HL)
+    SUB A, $0A
+    LD A, $40
+    JP Z, +
+    ADD A, A    ; $80
++:
+    LD C, A
+;
+    LD L, <Enemy_X_MoveForce
+    LD A, (HL)
+    SUB A, C
+    LD (HL), A
+    LD L, <Enemy_X_Position
+    LD A, (HL)
+    SBC A, $00
+    LD (HL), A
+    LD L, <Enemy_PageLoc
+    LD A, (HL)
+    SBC A, $00
+    LD (HL), A
+;
+    LD A, H
+    CP A, $C1 + $02
+    RET C
+;
+    LD C, $20
+    LD L, <CheepCheepMoveMFlag
+    LD A, (HL)
+    CP A, $10
+    JP C, CCSwimUpwards
+;
+    LD L, <Enemy_YMF_Dummy
+    LD A, (HL)
+    ADD A, C
+    LD (HL), A
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    ADC A, B
+    LD (HL), A
+    LD L, <Enemy_Y_HighPos
+    LD A, (HL)
+    ADC A, $00
+    JP ChkSwimYPos
+
+CCSwimUpwards:
+    LD L, <Enemy_YMF_Dummy
+    LD A, (HL)
+    SUB A, C
+    LD (HL), A
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    SBC A, B
+    LD (HL), A
+    LD L, <Enemy_Y_HighPos
+    LD A, (HL)
+    SBC A, $00
+
+ChkSwimYPos:
+    LD (HL), A
+    LD C, $00
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    LD L, <CheepCheepOrigYPos
+    SUB A, (HL)
+    JP P, YPDiff
+    LD C, $10
+    NEG
+YPDiff:
+    CP A, $0F
+    RET C
+    LD L, <CheepCheepMoveMFlag
+    LD (HL), C
     RET
 
 ;--------------------------------
@@ -2179,18 +2414,50 @@ SetSDir:
 
 ;--------------------------------
 
-.SECTION "PRandomSubtracter" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PRandomSubtracter/FlyCCBPriority" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PRandomSubtracter:
     .db $f8, $a0, $70, $bd, $00
-.ENDS
-
-.SECTION "FlyCCBPriority" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlyCCBPriority:
     .db $20, $20, $20, $00, $00
+
+    .db $B5, $1E, $29, $20, $F0, $08    ; 6502 code spill over when indexing PRandomSubtracter
 .ENDS
 
 MoveFlyingCheepCheep:
     POP HL
+;
+    LD L, <Enemy_State
+    AND A, %00100000
+    JP NZ, MoveJ_EnemyVertically
+;
+    CALL MoveEnemyHorizontally
+    LD C, $0D
+    LD A, $05
+    CALL SetXMoveAmt
+;
+    LD L, <Enemy_Y_MoveForce
+    LD A, (HL)
+    RRCA
+    RRCA
+    RRCA
+    RRCA
+    AND A, $0F
+    LD BC, PRandomSubtracter
+    addAToBC8_M
+    LD A, (BC)
+    LD C, A
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    SUB A, C
+    JP P, AddCCF
+    NEG
+AddCCF:
+    CP A, $08
+    RET NC ; JP NC, BPGet
+    LD L, <Enemy_Y_MoveForce
+    LD A, (HL)
+    ADD A, $10
+    LD (HL), A
     RET
 
 ;--------------------------------
@@ -2333,20 +2600,87 @@ SPixelLak:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$04-$05 - used to store name table address in little endian order
 
 .SECTION "BridgeCollapseData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 BridgeCollapseData:
-    .db $1a ;axe
-    .db $58 ;chain
-    .db $98, $96, $94, $92, $90, $8e, $8c ;bridge
-    .db $8a, $88, $86, $84, $82, $80
+    .dw $6374   ;axe
+    .dw $63F0   ;chain
+    .dw $6370, $646C, $6468, $6464, $6460, $645C, $6458 ; bridge
+    .dw $6454, $6450, $644C, $6448, $6444, $6440
 .ENDS
 
 BridgeCollapse:
     POP HL
 ;
-    RET
+    LD HL, (BowserFront_Offset - 1)
+    LD L, <Enemy_ID
+    LD A, (HL)
+    CP A, OBJECTID_Bowser
+    JP NZ, SetM2
+;
+    LD (ObjectOffset), HL
+    LD L, <Enemy_State
+    LD A, (HL)
+    OR A
+    JP Z, RemoveBridge
+;
+    AND A, %01000000
+    JP Z, SetM2
+;
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    CP A, $E0
+    JP C, MoveD_Bowser
+;
+SetM2:
+    LD A, SNDID_SILENCE
+    LD (MusicTrack0.SoundQueue), A  ; EVENT
+    LD HL, OperMode_Task
+    INC (HL)
+    JP KillAllEnemies
+
+MoveD_Bowser:
+    CALL MoveEnemySlowVert
+    JP BowserGfxHandler
+
+RemoveBridge:
+    LD A, (BowserFeetCounter)
+    DEC A
+    LD (BowserFeetCounter), A
+    JP NZ, BowserGfxHandler
+;
+    LD A, $04
+    LD (BowserFeetCounter), A
+    LD A, (BowserBodyControls)
+    XOR A, $01
+    LD (BowserBodyControls), A
+;
+    LD DE, (VRAM_Buffer1_Ptr)
+    LD A, (BridgeCollapseOffset)
+    ADD A, A
+    LD HL, BridgeCollapseData
+    addAToHL8_M
+    LDI
+    LDI
+    LD HL, BlockGfxData + $18
+    CALL RemBridge
+;
+    LD HL, (ObjectOffset)
+    LD A, SNDID_CANNON
+    LD (SFXTrack1.SoundQueue), A
+    LD A, SNDID_SHATTER
+    LD (SFXTrack2.SoundQueue), A
+    LD A, (BridgeCollapseOffset)
+    INC A
+    LD (BridgeCollapseOffset), A
+    CP A, $0F
+    JP NZ, BowserGfxHandler
+    CALL InitVStf
+    LD L, <Enemy_State
+    LD (HL), %01000000
+    LD A, SNDID_FALL
+    LD (SFXTrack1.SoundQueue), A
+    JP BowserGfxHandler
 
 ;--------------------------------
 
@@ -2358,7 +2692,15 @@ PRandomRange:
 RunBowser:
     POP HL
 ;
-    RET
+    LD L, <Enemy_State
+    LD A, (HL)
+    AND A, %00100000
+    JP Z, BowserControl
+;
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    CP A, $E0
+    JP C, MoveD_Bowser
 
 KillAllEnemies:
     LD H, $C0 + OBJ_SLOT5
@@ -2368,11 +2710,244 @@ KillLoop:
     LD A, H
     CP A, $C0
     JP NZ, KillLoop
+;
     XOR A
     LD (EnemyFrenzyBuffer), A
+;
     LD HL, (ObjectOffset)
     RET
 
+BowserControl:
+    XOR A
+    LD (EnemyFrenzyBuffer), A
+;
+    LD A, (TimerControl)
+    OR A
+    JP NZ, ChkFireB
+;
+    LD A, (BowserBodyControls)
+    OR A
+    JP M, HammerChk
+;
+    LD A, (BowserFeetCounter)
+    DEC A
+    LD (BowserFeetCounter), A
+    JP NZ, ResetMDr
+;
+    LD A, $20
+    LD (BowserFeetCounter), A
+    LD A, (BowserBodyControls)
+    XOR A, %00000001
+    LD (BowserBodyControls), A
+;
+ResetMDr:
+    LD A, (FrameCounter)
+    AND A, %00001111
+    JP NZ, B_FaceP
+    LD L, <Enemy_MovingDir
+    LD (HL), $02
+;
+B_FaceP:
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyFrameTimer
+    addAToBC8_M
+    LD A, (BC)
+    OR A
+    JP Z, GetPRCmp
+    CALL PlayerEnemyDiff
+    JP P, GetPRCmp
+;
+    LD L, <Enemy_MovingDir
+    LD (HL), $01
+    LD L, <BowserMovementSpeed
+    LD (HL), $02
+    LD A, $20
+    LD (BC), A
+    LD (BowserFireBreathTimer), A
+    LD L, <Enemy_X_Position
+    LD A, (HL)
+    CP A, $C8
+    JP NC, HammerChk
+;
+GetPRCmp:
+    LD A, (FrameCounter)
+    AND A, %00000011
+    JP NZ, HammerChk
+    LD A, (BowserOrigXPos)
+    LD L, <Enemy_X_Position
+    CP A, (HL)
+    JP NZ, GetDToO
+    LD A, H
+    SUB A, $C1
+    LD BC, PseudoRandomBitReg
+    addAToBC8_M
+    LD A, (BC)
+    AND A, %00000011
+    LD BC, PRandomRange
+    addAToBC8_M
+    LD A, (BC)
+    LD (MaxRangeFromOrigin), A
+;
+GetDToO:
+    LD A, (BowserOrigXPos)
+    LD B, A
+    LD A, (MaxRangeFromOrigin)
+    LD C, A
+
+    LD A, (BowserMovementSpeed)
+    LD L, <Enemy_X_Position
+    ADD A, (HL)
+    LD (HL), A
+    LD L, <Enemy_MovingDir
+    BIT 0, (HL)
+    JP NZ, HammerChk
+    SUB A, B
+    LD B, $FF
+    JP P, CompDToO
+    LD B, $01
+    NEG
+CompDToO:
+    CP A, C
+    JP C, HammerChk
+    LD A, B
+    LD (BowserMovementSpeed), A
+;
+HammerChk:
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyFrameTimer
+    addAToBC8_M
+    LD A, (BC)
+    OR A
+    JP NZ, MakeBJump
+    PUSH BC
+    CALL MoveEnemySlowVert
+    LD A, (WorldNumber)
+    CP A, WORLD6
+    JP C, SetHmrTmr
+    LD A, (FrameCounter)
+    AND A, %00000011
+    CALL Z, SpawnHammerObj
+SetHmrTmr:
+    POP DE
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    CP A, $80
+    JP C, ChkFireB
+    LD A, H
+    SUB A, $C1
+    LD BC, PseudoRandomBitReg
+    addAToBC8_M
+    LD A, (BC)
+    AND A, %00000011
+    LD BC, PRandomRange
+    addAToBC8_M
+    LD A, (BC)
+    LD (DE), A
+    JP ChkFireB
+;
+MakeBJump:
+    DEC A
+    JP NZ, ChkFireB
+    LD L, <Enemy_Y_Position
+    DEC (HL)
+    CALL InitVStf
+    LD L, <Enemy_Y_Speed
+    LD (HL), $FE
+;
+ChkFireB:
+    LD A, (WorldNumber)
+    CP A, WORLD8
+    JP Z, SpawnFBr
+    CP A, WORLD6
+    JP NC, BowserGfxHandler
+SpawnFBr:
+    LD A, (BowserFireBreathTimer)
+    OR A
+    JP NZ, BowserGfxHandler
+    LD A, $20
+    LD (BowserFireBreathTimer), A
+    LD A, (BowserBodyControls)
+    XOR A, %10000000
+    LD (BowserBodyControls), A
+    JP M, ChkFireB
+    CALL SetFlameTimer
+    LD C, A
+    LD A, (SecondaryHardMode)
+    OR A
+    LD A, C
+    JP Z, SetFBTmr
+    SUB A, $10
+SetFBTmr:
+    LD (BowserFireBreathTimer), A
+    LD A, OBJECTID_BowserFlame
+    LD (EnemyFrenzyBuffer), A
+
+;--------------------------------
+
+BowserGfxHandler:
+    CALL ProcessBowserHalf
+;
+    LD L, <Enemy_MovingDir
+    LD A, (HL)
+    RRCA
+    LD A, $10
+    JP NC, CopyFToR
+    LD A, $F0
+CopyFToR:
+    LD DE, (DuplicateObj_Offset)
+    LD E, <Enemy_X_Position
+    LD L, <Enemy_X_Position
+    ADD A, (HL)
+    LD (DE), A
+    LD L, <Enemy_Y_Position
+    LD E, <Enemy_Y_Position
+    LD A, (HL)
+    ADD A, $08
+    LD (DE), A
+    LD L, <Enemy_State
+    LD E, <Enemy_State
+    LD A, (HL)
+    LD (DE), A
+    LD L, <Enemy_MovingDir
+    LD E, <Enemy_MovingDir
+    LD A, (HL)
+    LD (DE), A
+    PUSH HL
+    LD L, E
+    LD H, D
+    LD (ObjectOffset), HL
+    LD L, <Enemy_ID
+    LD (HL), OBJECTID_Bowser
+    CALL ProcessBowserHalf
+    POP HL
+    LD (ObjectOffset), HL
+    XOR A
+    LD (BowserGfxFlag), A
+    RET
+
+ProcessBowserHalf:
+    LD A, (BowserGfxFlag)
+    INC A
+    LD (BowserGfxFlag), A
+;
+    CALL GetEnemyOffscreenBits
+    CALL RelativeEnemyPosition
+    CALL BowserGfxDraw
+;
+    LD L, <Enemy_State
+    LD A, (HL)
+    OR A
+    RET NZ
+;
+    LD L, <Enemy_BoundBoxCtrl
+    LD (HL), $0A
+    CALL GetEnemyBoundBox
+    JP PlayerEnemyCollision
+
+BowserGfxDraw:
+    RET
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold movement force and tile number
@@ -2645,7 +3220,7 @@ MovePiranhaPlant:
     LD L, <Enemy_State
     LD A, (HL)
     OR A
-    JP NZ, PutinPipe
+    RET NZ ;JP NZ, PutinPipe
 ;
     LD A, H
     SUB A, $C1
@@ -2653,7 +3228,7 @@ MovePiranhaPlant:
     addAToBC8_M
     LD A, (BC)
     OR A
-    JP NZ, PutinPipe
+    RET NZ ;JP NZ, PutinPipe
 ;
     LD L, <PiranhaPlant_MoveFlag
     LD A, (HL)
@@ -2675,7 +3250,7 @@ MovePiranhaPlant:
 ChkPlayerNearPipe:
     LD A, (Temp_Bytes + $00)
     CP A, $21
-    JP C, PutinPipe
+    RET C ;JP C, PutinPipe
 
 ReversePlantSpeed:
     LD L, <PiranhaPlant_Y_Speed
@@ -2699,11 +3274,11 @@ RiseFallPiranhaPlant:
     LD (Temp_Bytes + $00), A
 ;
     LD A, (FrameCounter)
-    SRL A
-    JP NC, PutinPipe
+    RRCA
+    RET NC ;JP NC, PutinPipe
     LD A, (TimerControl)
     OR A
-    JP NZ, PutinPipe
+    RET NZ ;JP NZ, PutinPipe
 ;
     LD L, <PiranhaPlant_Y_Speed
     LD A, (HL)
@@ -2715,7 +3290,7 @@ RiseFallPiranhaPlant:
     LD C, A
     LD A, (HL)
     CP A, C
-    JP NZ, PutinPipe
+    RET NZ ;JP NZ, PutinPipe
 ;
     LD L, <PiranhaPlant_MoveFlag
     LD (HL), $00
@@ -2726,7 +3301,7 @@ RiseFallPiranhaPlant:
     LD A, $40
     LD (BC), A
 
-PutinPipe:
+; PutinPipe:
     ;LD A, %00100000
     ;LD L, <Enemy_SprAttrib
     ;LD (HL), A
@@ -3570,6 +4145,7 @@ UpdateLoop:
     OR A
     JP Z, NextBUpd                      ;branch to move onto next block object
 ;
+    PUSH BC                             ;(SMS)save counter in B
     LD L, <Block_BBuf_Low
     LD E, (HL)                          ;get low byte of block buffer and store
     LD D, >Block_Buffer_1               ;set high byte of block buffer address
@@ -3589,6 +4165,7 @@ UpdateLoop:
 ;
     LD L, <Block_RepFlag
     LD (HL), $00                        ;clear block object flag
+    POP BC                              ;(SMS)get counter back
 NextBUpd:
     DEC H                               ;decrement block object offset
     DJNZ UpdateLoop                     ;do this until both block objects are dealt with                
@@ -3653,22 +4230,13 @@ UseBOffset:
     LD DE, (VRAM_Buffer1_Ptr)       ;get vram buffer offset
     LD A, C                         ;put Y in A
     JP PutBlockMetatile             ;get appropriate block data and write to vram buffer
-; MoveVOffset:
-;     LD (VRAM_Buffer1_Ptr), DE       ;store new vram buffer offset
-;     RET
 
-
-;   X - N/A but needs to be saved since it holds SprDataOffset_Ctrl? (NOT NEEDED???)
-;   Y - VRAM Buffer offset
-;   A - Index into BlockGfxData
-;   ----
 ;   A - Index into BlockGfxData
 ;   HL - Block_Buffer Ptr
 ;   DE - VRAM_Buffer Ptr
 ;   BC - BlockGfxData Ptr
 ;   IXL - Block_Buffer Row
 PutBlockMetatile:
-    PUSH BC
 ;   PREPARE BlockGfxData PTR
     ADD A, A
     ADD A, A
@@ -3712,6 +4280,7 @@ PutBlockMetatile:
     LD A, C
     LD (DE), A  ; LOW BYTE
     INC E
+RemBridge:
 ;   WRITE VRAM BUFFER (COUNT)
     LD A, StripeCount($04)
     LD (DE), A
@@ -3743,7 +4312,6 @@ PutBlockMetatile:
     LD (DE), A
 ;
     LD (VRAM_Buffer1_Ptr), DE
-    POP BC
     RET
 
 PutBlockMetatile_RHalf:
@@ -3804,7 +4372,6 @@ PutBlockMetatile_RHalf:
     LD (DE), A
 ;
     LD (VRAM_Buffer1_Ptr), DE
-    POP BC
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -4212,10 +4779,10 @@ SetHiMax:
 SetXMoveAmt:
     LD IXL, C                       ;set movement amount here
     ;INC B                           ;increment X for enemy offset
-    CALL ImposeGravitySprObj        ;do a sub to move enemy object downwards
+    JP ImposeGravitySprObj        ;do a sub to move enemy object downwards
     ;LD HL, (ObjectOffset)          ;get enemy object buffer offset and leave
     ;LD B, (HL)
-    RET
+    ;RET
 
 ;--------------------------------
 
@@ -4256,9 +4823,10 @@ MovePlatformUp:
     LD C, A                         ;use as Y, then move onto code shared by red koopa
     
 RedPTroopaGrav:
-    CALL ImposeGravity              ;do a sub to move object gradually
+    ;CALL ImposeGravity              ;do a sub to move object gradually
     ;LD HL, (ObjectOffset)          ;get enemy object offset and leave
-    RET
+    ;RET
+    ; FALL THROUGH
 
 ;-------------------------------------------------------------------------------------
 ;$00(IXL) - used for downward force
@@ -6427,7 +6995,7 @@ NoBump:
     JP SetHJ
 
 ;--------------------------------
-;$00 - used to hold horizontal difference between player and enemy
+;$00(IXL) - used to hold horizontal difference between player and enemy
 
 PlayerEnemyDiff:
     LD A, (Player_X_Position)

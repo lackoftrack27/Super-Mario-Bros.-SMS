@@ -607,12 +607,12 @@ EnemyGfxHandler:
     LD L, <Enemy_ID
     LD A, (HL)
     CP A, OBJECTID_PiranhaPlant             ;is enemy object piranha plant?
-    JP NZ, CheckForBulletBillCV             ;if not, branch
+    JP NZ, SetupState                       ;if not, branch
 ;
     LD L, <PiranhaPlant_Y_Speed
     LD A, (HL)
     OR A
-    JP M, CheckForBulletBillCV              ;if piranha plant moving upwards, branch
+    JP M, SetupState                        ;if piranha plant moving upwards, branch
 ;
     LD A, H                                 ;if timer for movement expired, branch
     SUB A, $C1
@@ -622,17 +622,22 @@ EnemyGfxHandler:
     OR A
     RET NZ                                  ;if all conditions fail, leave
 
-CheckForBulletBillCV:
+SetupState:
     LD L, <Enemy_State                      ;store enemy state
     LD A, (HL)
     LD IYL, A
     AND A, %00011111                        ;nullify all but 5 LSB and use as Y
     LD C, A
-;
+
+CheckForRetainerObj:
     LD L, <Enemy_ID
     LD A, (HL)
+    CP A, OBJECTID_RetainerObject
+    JP Z, RetainerGfxHandler
+
+CheckForBulletBillCV:
     CP A, OBJECTID_BulletBill_CannonVar     ;otherwise check for bullet bill object
-    JP NZ, CheckForGoomba                   ;if not found, branch again
+    JP NZ, SaveEnemyObject                  ;if not found, branch again
 ;
     DEC D                                   ;decrement saved vertical position
 ;
@@ -655,9 +660,15 @@ CheckForBulletBillCV:
     LD IYL, A
     LD A, $08                               ;set specific value to unconditionally branch once
 
-CheckForGoomba:
+SaveEnemyObject:
     LD IYH, A                               ;store saved enemy object value here
     LD IXH, C                               ;and Y here (enemy state -2 MSB if not changed)
+
+CheckForPodoboo:
+    CP A, $0C
+    JP Z, PodobooGfxHandler
+
+CheckForGoomba:
     ;LD A, IYH                
     LD C, A
     CP A, OBJECTID_Goomba                   ;check value for goomba object
@@ -953,6 +964,73 @@ MoveESprColOffscreen:
     INC E
     LD (DE), A
     RET
+
+PodobooGfxHandler:
+;   VERTICAL FLIP ADJUST
+    LD L, <Enemy_Y_Speed
+    LD A, (HL)
+    OR A
+    LD HL, PodobooTiles
+    JP M, +
+    LD L, <PodobooTiles + $08
+;   ANIMATE ADJUST
++:
+    LD A, (FrameCounter)
+    AND A, $08
+    JP NZ, +
+    LD A, (TimerControl)
+    LD C, A
+    LD A, IYL
+    AND A, %10100000
+    OR A, C
+    JP NZ, +
+    LD A, $04
+    addAToHL8_M
+;   DRAW SPRITE
++:
+    LD A, D
+    ADD A, $08
+    LD B, A
+    LD A, (Temp_Bytes + $05)
+    LD C, A
+    LD D, >Sprite_Y_Position
+    INC E
+    INC E
+    CALL DrawSpriteObject
+    CALL DrawSpriteObject
+    JP SprObjectOffscrChk
+
+RetainerGfxHandler:
+    LD HL, RetainerPrincessTiles
+;   DRAW SPRITE
+    LD B, D
+    LD A, (Temp_Bytes + $05)
+    LD C, A
+    LD D, >Sprite_Y_Position
+    CALL DrawSpriteObject
+    CALL DrawSpriteObject
+    CALL DrawSpriteObject
+    JP SprObjectOffscrChk
+
+JumpspringGfxHandler:
+;
+    ; DIVIDE X REL BY 4 TO GET COLUMN
+    ; MULTIPLY Y REL BY 8 TO GET ROW
+
+    RET
+
+.SECTION "PodobooTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+PodobooTiles:
+    .db $48, $49, $4A, $4B  ; FRAME 0
+    .db $4C, $4D, $4E, $4F  ; FRAME 1
+    .db $50, $51, $52, $53  ; FRAME 0 VFLIP
+    .db $54, $55, $56, $57  ; FRAME 1 VFLIP
+.ENDS
+
+.SECTION "RetainerPrincessTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+RetainerPrincessTiles:
+    .db $42, $43, $44, $45, $46, $47
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - tile numbers

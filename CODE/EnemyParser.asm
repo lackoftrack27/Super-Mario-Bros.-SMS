@@ -940,7 +940,6 @@ InitBowser:
     CALL DuplicateEnemyObj
 ;
     LD A, H
-    SUB A, $C1
     LD (BowserFront_Offset), A
 ;
     XOR A
@@ -1016,9 +1015,7 @@ FSLoop:
 .SECTION "FlameYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlameYPosData:
     .db $90, $80, $70, $90
-    ;.db $78, $68, $58, $78
 .ENDS
-
 
 InitBowserFlame:
     POP HL
@@ -1033,10 +1030,8 @@ InitBowserFlame:
     LD A, SNDID_FLAME
     LD (SFXTrack2.SoundQueue), A
 ;
-    LD DE, Enemy_ID
-    LD A, (BowserFront_Offset)
-    ADD A, D
-    LD D, A
+    LD DE, (BowserFront_Offset - 1)
+    LD E, <Enemy_ID
     LD A, (DE)
     CP A, OBJECTID_Bowser
     JP Z, SpawnFromMouth

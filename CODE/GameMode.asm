@@ -1439,7 +1439,7 @@ PosJSpr:
     CP A, $01
     JP C, BounceJS
     LD A, (A_B_Buttons)
-    AND A, SMS_BTN_2
+    AND A, bitValue(SMS_BTN_2)
     JP Z, BounceJS
     LD E, A
     LD A, (PreviousA_B_Buttons)
@@ -2282,6 +2282,7 @@ SwimX:
     ADD A, (HL)
     LD (HL), A
     LD L, <Enemy_PageLoc
+    LD A, (HL)
     ADC A, $00
     LD (HL), A
     RET
@@ -2294,11 +2295,17 @@ LeftSwim:
     LD L, <Enemy_X_Position
     LD (HL), A
     LD L, <Enemy_PageLoc
+    LD A, (HL)
     SBC A, $00
     LD (HL), A
     RET
     
 ProcSwimmingB:
+    LD A, H
+    SUB A, $C1
+    LD BC, EnemyIntervalTimer
+    addAToBC8_M
+;
     LD L, <BlooperMoveCounter
     LD A, (HL)
     AND A, %00000010
@@ -2306,13 +2313,13 @@ ProcSwimmingB:
 ;
     LD A, (FrameCounter)
     AND A, %00000111
-    PUSH AF
+    RET NZ ;PUSH AF
     LD L, <BlooperMoveCounter
     LD A, (HL)
     RRCA
     JP C, SlowSwim
-    POP AF
-    RET NZ
+    ;POP AF
+    ;RET NZ
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
@@ -2328,8 +2335,8 @@ ProcSwimmingB:
     RET
 
 SlowSwim:
-    POP AF
-    RET NZ
+    ;POP AF
+    ;RET NZ
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
@@ -2341,19 +2348,12 @@ SlowSwim:
 ;
     LD L, <BlooperMoveCounter
     INC (HL)
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+;
     LD A, $02
     LD (BC), A
     RET
 
 ChkForFloatdown:
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
     LD A, (BC)
     OR A
     JP Z, ChkNearPlayer
@@ -2821,6 +2821,7 @@ MoveFlyingCheepCheep:
 
 .IF PALBUILD == $00
     LD L, <Enemy_State
+    LD A, (HL)
     AND A, %00100000
     JP NZ, MoveJ_EnemyVertically
 ;

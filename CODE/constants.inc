@@ -480,6 +480,12 @@
     SoundQueue:     db
     SoundPlaying:   db
     ChanBits:       db
+;---
+    LoopCounters:   dsb $03
+;---
+    StackPointer:   dsb $01
+    .               dsb $06
+    GoSubStack:     .dsb $01
 .ENDST
 
 ;   ----------------------------------

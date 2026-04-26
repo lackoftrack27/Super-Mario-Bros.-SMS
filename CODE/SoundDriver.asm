@@ -55,18 +55,14 @@ SoundEngine:
     ; UPDATE ONLY SFX TRACK 0 FOR PAUSE SFX
     LD A, BANK_SOUND
     LD (MAPPER_SLOT2), A
-    ;LD H, >SFXTrack0
-    ;CALL SndChannelProcessSFXTone
     LD HL, SFXTrack0.SoundQueue
     LD A, (HL)
     LD (HL), $00
     CP A, SNDID_PAUSE
     CALL Z, SndProcessQueueSFX
-    CALL SndChannelProcessSFXTone
+    CALL SndChannelProcessSFX
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-    ;XOR A
-    ;LD (SFXTrack0.SoundQueue), A
     ; STOP HERE IF GAME IS PAUSED
     LD A, (GamePauseStatus)
     RRA
@@ -86,13 +82,13 @@ RunSoundSubroutines:
 ;   SFX UPDATE
     ; SFX TRACK 0
     LD H, >SFXTrack0
-    CALL SndChannelProcessSFXTone
+    CALL SndChannelProcessSFX
     ; SFX TRACK 1
     LD H, >SFXTrack1
-    CALL SndChannelProcessSFXTone
+    CALL SndChannelProcessSFX
     ; SFX TRACK 2
     LD H, >SFXTrack2
-    CALL SndChannelProcessSFXTone
+    CALL SndChannelProcessSFX
 ;   MUSIC UPDATE
     CALL SndChannelProcessMUS
     XOR A
@@ -200,7 +196,7 @@ SndInitMemory:
 
 .SECTION "Sound Driver Code in Sound Bank" BANK BANK_SOUND SLOT 2 FREE
 
-SndChannelProcessSFXTone:
+SndChannelProcessSFX:
 ;   PROCESS QUEUE IF IT ISN'T EMPTY
     LD L, <SFXTrack0.SoundQueue
     LD A, (HL)
@@ -277,7 +273,7 @@ SndChannelProcessMUS:
 ;   TRACK 0 (NEVER INTERRUPTED BY SFX)
     LD HL, MusicTrack0.Control
     BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessSFXTone@TrackUpdate
+    CALL NZ, SndChannelProcessSFX@TrackUpdate
 ;   TRACK 1
     LD HL, MusicTrack1.Control
     BIT CHANCON_PLAYING, (HL)
@@ -452,6 +448,17 @@ SndProcessQueueMusic:
     INC E
     INC A
     LD (DE), A      ; Duration
+;   
+    XOR A
+    LD E, <MusicTrack0.LoopCounters
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD A, <MusicTrack0.GoSubStack
+    LD (DE), A
 ;   SET SFX OVERRIDE FLAG IF SFX IS PLAYING ON THE SAME CHANNEL
     LD E, <SFXTrack0.Control
     LD A, D
@@ -774,13 +781,13 @@ CoordFlagTable:
     JP @return              ; $E0 (AMS/FMS/PANNING)
     JP @cfDetune            ; $E1 (DETUNE)
     JP @return              ; $E2 (SET COMMUNICATION)
-    JP @return              ; $E3 (CALL RETURN)
+    JP @cfCallReturn        ; $E3 (CALL RETURN)
     JP @return              ; $E4 (FADE IN)
     JP @return              ; $E5 (SET TEMPO DIVIDER SINGLE)
     JP @return              ; $E6 (CHANGE FM VOL)
     JP @cfNoAtk             ; $E7 (NO ATTACK NOTE)
     JP @return              ; $E8 (NOTE TIMEOUT)
-    JP @return              ; $E9 (CHANGE TRANSPOSITION)
+    JP @cfTranspose         ; $E9 (CHANGE TRANSPOSITION)
     JP @return              ; $EA (SET TEMPO)
     JP @return              ; $EB (SET TEMPO DIVIDER ALL)
     JP @cfChangePSGVol      ; $EC (CHANGE PSG VOL)
@@ -794,8 +801,8 @@ CoordFlagTable:
     JP @cfModOff            ; $F4 (MODULATION OFF)
     JP @cfSetEnvelope       ; $F5 (SET PSG ENVELOPE)
     JP @cfJumpTo            ; $F6 (JUMP TO)
-    JP @return              ; $F7 (LOOP SECTION)
-    JP @return              ; $F8 (CALL)
+    JP @cfLoop              ; $F7 (LOOP SECTION)
+    JP @cfCall              ; $F8 (CALL)
 
 
 @return:
@@ -805,8 +812,21 @@ CoordFlagTable:
 ;   ---------------------------------------------
 ;   E1 - CHANGE DETUNE
 @cfDetune:
-    ; SET DETUNE
     LD L, <SFXTrack0.Detune
+    LD (HL), A
+    RET
+;   ---------------------------------------------
+;   E3 - CALL RETURN
+@cfCallReturn:
+    ; POP RETURN ADDRESS OFF THE STACK
+    LD L, <SFXTrack0.StackPointer
+    LD L, (HL)
+    LD B, (HL)
+    INC L
+    LD C, (HL)
+    INC L
+    LD A, L
+    LD L, <SFXTrack0.StackPointer
     LD (HL), A
     RET
 ;   ---------------------------------------------
@@ -817,9 +837,15 @@ CoordFlagTable:
     SET CHANCON_NOATK, (HL)
     RET
 ;   ---------------------------------------------
+;   E9 - TRANSPOSITION CHANGE
+@cfTranspose:
+    LD L, <SFXTrack0.Transpose
+    ADD A, (HL)
+    LD (HL), A
+    RET
+;   ---------------------------------------------
 ;   EC - VOLUME CHANGE
 @cfChangePSGVol:
-    ; SET VOLUME
     LD L, <SFXTrack0.Volume
     ADD A, (HL)
     LD (HL), A
@@ -901,7 +927,7 @@ CoordFlagTable:
     LD (HL), $00
     ; SILENCE CHANNEL
     CALL SndStopChannel@SilenceChan
-    ; REMOVE CALLERS (EXIT OUT OF SndChannelProcessXXXX)
+    ; REMOVE CALLERS (EXIT OUT OF SndChannelProcessXXX)
     POP DE  ; CF RETURN CALLER
     POP DE  ; READ STREAM CALLER
     RET
@@ -927,6 +953,50 @@ CoordFlagTable:
     LD A, (BC)
     LD C, E
     LD B, A
+    DEC BC
+    RET
+;   ---------------------------------------------
+;   F7 - LOOP SECTION
+@cfLoop:
+    INC BC
+    ; GET LOOP COUNTER AND CHECK IF NEEDS TO BE SET
+    ADD A, <SFXTrack0.LoopCounters
+    LD L, A
+    LD A, (HL)
+    OR A
+    JP NZ, +
+    LD A, (BC)
+    LD (HL), A
++:
+    ; JUMP TO ADDRESS IF COUNTER HASN'T EXPIRED
+    INC BC
+    LD A, (BC)
+    DEC (HL)
+    JP NZ, @cfJumpTo
+    ; ELSE, CONTINUE ON
+    INC BC
+    RET
+;   ---------------------------------------------
+;   F8 - CALL SUBROUTINE
+@cfCall:
+    ; SAVE GIVEN ADDRESS IN DE
+    LD E, A
+    INC BC
+    LD A, (BC)
+    LD D, A
+    ; PUSH RETURN ADDRESS TO THE STACK
+    LD L, <SFXTrack0.StackPointer
+    LD L, (HL)
+    DEC L
+    LD (HL), C
+    DEC L
+    LD (HL), B
+    LD A, L
+    LD L, <SFXTrack0.StackPointer
+    LD (HL), A
+    ; SET TRACK POINTER TO GIVEN ADDRESS
+    LD C, E
+    LD B, D
     DEC BC
     RET
 
@@ -1125,14 +1195,11 @@ PSGDrumTable:
     .db $E5, $10    ; NOISE MID,    ENVELOPE $10 (1 TICK)
 .ENDS
 
-/*
-.SECTION "Speed Up Tempo Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
-SpeedUpTempoTable:
-    .db $00, $00, $00, $00, $00, $00, $00
-    .db $00, $00, $00, $00, $00, $00, $00
-.ENDS
-*/
-
+; .SECTION "Speed Up Tempo Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+; SpeedUpTempoTable:
+;     .db $00, $00, $00, $00, $00, $00, $00
+;     .db $00, $00, $00, $00, $00, $00, $00
+; .ENDS
 
 .SECTION "Sound FM Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
 SndFMFreqTable:

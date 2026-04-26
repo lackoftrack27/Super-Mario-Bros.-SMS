@@ -1496,17 +1496,14 @@ DrawBubble:
     AND A, %00001000
     RET NZ                          ;if bit set, branch to leave
 ;
-    ;LD L, <Bubble_SprDataOffset     ;get air bubble's OAM data offset
-    ;LD E, (HL)
-    
-    LD A, H
+    LD A, H                         ;get air bubble's OAM data offset
     ADD A, SPRDATA_BUBBLE1 - OBJ_BUBB1
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)
     LD E, A
-
     LD D, >Sprite_Y_Position
+    
     LD A, (Bubble_Rel_YPos)         ;get relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
     LD (DE), A                      ;store as Y coordinate here
@@ -1517,7 +1514,7 @@ DrawBubble:
     LD (DE), A                      ;store as X coordinate here
 ;
     INC E
-    LD A, $74                       ;put air bubble tile into OAM data
+    LD A, $B1                       ;put air bubble tile into OAM data
     LD (DE), A
     RET
 

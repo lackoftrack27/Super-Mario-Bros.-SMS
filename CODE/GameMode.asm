@@ -640,11 +640,9 @@ FireballObjCore:
     DEC (HL)                        ;decrement state to 1 to skip this part from now on
 RunFB:
     .IF PALBUILD == $00
-    LD IXL, $50                     ;set downward movement force here
-    LD IYL, $03                     ;set maximum speed here
+    LD BC, $5003                     ;set downward movement force & max speed here
     .ELSE
-    LD IXL, $60                     ;PAL diff: Faster acceleration to compensate FPS difference
-    LD IYL, $05                     ;PAL diff: Faster maximum speed to compensate FPS difference
+    LD BC, $6005                     ;PAL diff: Faster acceleration & max speed to compensate FPS difference
     .ENDIF
     
     XOR A
@@ -1005,12 +1003,11 @@ ProcHammerObj:
     JP NC, SetHPos
     
     .IF PALBUILD == $00
-    LD IXL, $10
+    LD BC, $1004
     .ELSE
-    LD IXL, $23                             ;PAL diff: Faster acceleration to compensate FPS difference
+    LD BC, $2304                             ;PAL diff: Faster acceleration to compensate FPS difference
     .ENDIF
     
-    LD IYL, $04
     XOR A
     CALL ImposeGravity
     CALL MoveObjectHorizontally
@@ -2828,9 +2825,9 @@ MoveFlyingCheepCheep:
     JP NZ, MoveJ_EnemyVertically
 ;
     CALL MoveEnemyHorizontally
-    LD C, $0D
-    LD A, $05
-    CALL SetXMoveAmt
+    LD BC, $0D05
+    XOR A
+    CALL ImposeGravity
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
@@ -2857,17 +2854,17 @@ AddCCF:
     LD (HL), A
     RET
 
-.ELSE
-    LD C, $20                               ;PAL diff: reworked movement function for Cheep Cheeps
+.ELSE                                           ;PAL diff: reworked movement function for Cheep Cheeps
+    LD BC, $2005
     LD L, <Enemy_State
     LD A, (HL)
     AND A, %00100000
     JP NZ, FlyCC
     CALL MoveEnemyHorizontally
-    LD C, $17
+    LD BC, $1705
 FlyCC:
-    LD A, $05
-    JP SetXMoveAmt
+    XOR A
+    JP ImposeGravity
 .ENDIF
 
 ;--------------------------------
@@ -2953,13 +2950,14 @@ ChkLakDif:
     JP Z, SetLMovD
     LD L, <LakituMoveSpeed
     DEC (HL)
-    LD A, (HL)
-    OR A
+    ;LD A, (HL)
+    ;OR A
     RET NZ
 SetLMovD:
-    LD A, C
     LD L, <LakituMoveDirection
-    LD (HL), A
+    ;LD A, C
+    ;LD (HL), A
+    LD (HL), C
 ChkPSpeed:
     LD A, (Temp_Bytes + $00)
     AND A, %00111100
@@ -5018,9 +5016,9 @@ MiscLoop:
     JP MiscLoopBack                     ;then check next slot
 
 ;--------------------------------
-;$00(IXL) - used to set downward force
-;$01(IXH) - used to set upward force (residual)
-;$02(IYL) - used to set maximum speed
+;$00(B) - used to set downward force
+;$01 - used to set upward force (residual)
+;$02(C) - used to set maximum speed
 
 ProcJumpCoin:
     DEC A                               ;decrement misc object state to see if it's set to 1
@@ -5045,8 +5043,7 @@ ProcJumpCoin:
     JP MiscLoopBack                     ;and move onto next slot
 ;
 JCoinRun:
-    LD IXL, $50                         ;set downward movement amount
-    LD IYL, $06                         ;set maximum vertical speed
+    LD BC, $5006                        ;set downward movement amount & max speed
     XOR A                               ;set A to impose gravity on jumping coin
     CALL ImposeGravity                  ;do sub to move coin vertically and impose gravity on it
 ;
@@ -5175,21 +5172,19 @@ PutBehind:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$00(IXL) - used to store high nybble of horizontal speed as adder
-;$01(IXH) - used to store low nybble of horizontal speed
-;$02(IYL) - used to store adder to page location
-
-;MoveEnemyHorizontally:
-    ;CALL MoveObjectHorizontally     ;position object horizontally according to
-    ;LD HL, (ObjectOffset)          ;counters, return with saved value in A,
-    ;RET
+;-------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------------
+;$00(C) - used to store high nybble of horizontal speed as adder
+;$01(D) - used to store low nybble of horizontal speed
+;$02(E) - used to store adder to page location
 
 MovePlayerHorizontally:
     LD A, (JumpspringAnimCtrl)      ;if jumpspring currently animating,
     OR A
     RET NZ                          ;branch to leave
-    ;LD B, A                         ;otherwise set zero for offset to use player's stuff
-    LD H, $C0 + OBJ_PLAYER
+    LD H, $C0 + OBJ_PLAYER          ;otherwise set offset to use player's stuff
 
 MoveEnemyHorizontally:
 MoveObjectHorizontally:
@@ -5199,7 +5194,7 @@ MoveObjectHorizontally:
     ADD A, A                        ;and move low nybble to high
     ADD A, A
     ADD A, A
-    LD IXH, A                       ;store result here
+    LD D, A                         ;store result here
 ;
     LD A, (HL)                      ;get saved value again
     RRCA                            ;move high nybble to low
@@ -5210,43 +5205,40 @@ MoveObjectHorizontally:
     CP A, $08                       ;if < 8, branch, do not change
     JP C, SaveXSpd
     OR A, %11110000                 ;otherwise alter high nybble
-SaveXSpd:
-    LD IXL, A                       ;save result here
-    LD C, $00                       ;load default Y value here
-    OR A                            ;if result positive, leave Y alone
+SaveXSpd:              
+    LD C, A                         ;save result here
+    LD E, $00                       ;load default value here
+    OR A                            ;if result positive, leave E alone
     JP P, UseAdder
-    DEC C                           ;otherwise decrement Y
+    DEC E                           ;otherwise decrement E
 UseAdder:
-    LD IYL, C                       ;save Y here
-;
     LD L, <SprObject_X_MoveForce
     LD A, (HL)                      ;get whatever number's here
-    ADD A, IXH                      ;add low nybble moved to high
+    ADD A, D                        ;add low nybble moved to high
     LD (HL), A                      ;store result here
     PUSH AF
 ;
     LD L, <SprObject_X_Position
     LD A, (HL)
-    ADC A, IXL                      ;add carry plus saved value (high nybble moved to low
+    ADC A, C                        ;add carry plus saved value (high nybble moved to low
     LD (HL), A                      ;plus $f0 if necessary) to object's horizontal position
 ;
-    LD L, <SprObject_PageLoc
+    DEC L                           ;<SprObject_PageLoc
     LD A, (HL)
-    ADC A, IYL                      ;add carry plus other saved value to the
+    ADC A, E                        ;add carry plus other saved value to the
     LD (HL), A                      ;object's page location and save
 ;
     POP AF                          ;pull old carry from stack and add
-    LD A, IXL                       ;to high nybble moved to low
+    LD A, C                         ;to high nybble moved to low
     ADC A, $00
     RET
     
 ;-------------------------------------------------------------------------------------
-;$00(IXL) - used for downward force
-;$01(IXH) - used for upward force
-;$02(IYL) - used for maximum vertical speed
+;$00(B) - used for downward force
+;$01(D) - used for upward force
+;$02(C) - used for maximum vertical speed
 
 MovePlayerVertically:
-    ;LD B, $00                       ;set X for player offset
     LD A, (TimerControl)
     OR A
     JP NZ, NoJSChk                  ;if master timer control set, branch ahead
@@ -5255,109 +5247,92 @@ MovePlayerVertically:
     RET NZ                          ;branch to leave if so
 NoJSChk:
     LD A, (VerticalForce)           ;dump vertical force 
-    LD IXL, A
+    LD B, A
 
     .IF PALBUILD == $00
-    LD A, $04                       ;set maximum vertical speed here
+    LD C, $04                       ;set maximum vertical speed here
     .ELSE
-    LD A, $05                       ;PAL diff: Faster maximum vertical speed to compensate FPS difference
+    LD C, $05                       ;PAL diff: Faster maximum vertical speed to compensate FPS difference
     .ENDIF
 
-    JP ImposeGravitySprObj          ;then jump to move player vertically
+    XOR A                           ;set value to move downwards
+    JP ImposeGravity                ;jump to the code that actually moves it
 
 ;--------------------------------
 
 MoveD_EnemyVertically:
-    LD C, $3D                       ;set quick movement amount downwards
+    LD B, $3D                       ;set quick movement amount downwards
     LD L, <Enemy_State
     LD A, (HL)                      ;then check enemy state
     CP A, $05                       ;if not set to unique state for spiny's egg, go ahead
     JP NZ, SetHiMax                 ;and use, otherwise set different movement amount, continue on
 
 MoveFallingPlatform:
-    LD C, $20                       ;set movement amount
-    JP SetHiMax                     ;jump to skip the rest of this
+    LD B, $20                       ;set movement amount
+
+SetHiMax:
+    .IF PALBUILD == $00
+    LD C, $03                       ;set maximum speed in A
+    .ELSE
+    LD C, $04                       ;PAL diff: Faster maximum speed to compensate FPS difference
+    .ENDIF
+    XOR A
+    JP ImposeGravity
+
 
 ;--------------------------------
 
 MoveRedPTroopaDown:
-    LD C, $00                       ;set Y to move downwards
+    XOR A                           ;set value to move downwards
     JP MoveRedPTroopa               ;skip to movement routine
 
 MoveRedPTroopaUp:
-    LD C, $01                       ;set Y to move upwards
+    LD A, $01                       ;set value to move upwards
 
 MoveRedPTroopa:
-    ;INC B                           ;increment X for enemy offset
-    LD IXL, $03                     ;set downward movement amount here
-    LD IXH, $06                     ;set upward movement amount here
-    LD IYL, $02                     ;set maximum speed here
-    LD A, C                         ;set movement direction in A, and
-    JP RedPTroopaGrav               ;jump to move this thing
+    LD BC, $0302                    ;set downward movement amount & max speed here
+    LD D, $06                       ;set upward movement amount here
+    JP ImposeGravity                ;jump to move this thing
 
 ;--------------------------------
 
 MoveDropPlatform:
-    LD C, $7F                       ;set movement amount for drop platform
-    JP SetMdMax                     ;skip ahead of other value set here
+    LD BC, $7F02                    ;set movement amount & max speed for drop platform
+    XOR A
+    JP ImposeGravity
+    
 
 MoveEnemySlowVert:
-
     .IF PALBUILD == $00
-    LD C, $0F                       ;set movement amount for bowser/other objects
+    LD BC, $0F02                    ;set movement amount & max speed for bowser/other objects
     .ELSE
-    LD C, $12                       ;PAL diff: Faster speed to compensate FPS difference
+    LD BC, $1202                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-SetMdMax:
-    LD A, $02                       ;set maximum speed in A
-    JP SetXMoveAmt
+    XOR A
+    JP ImposeGravity
 
 ;--------------------------------
 
 MoveJ_EnemyVertically:
 
     .IF PALBUILD == $00
-    LD C, $1C                       ;set movement amount for podoboo/other objects
-SetHiMax:
-    LD A, $03                       ;set maximum speed in A
+    LD BC, $1C03                    ;set movement amount & max speed for podoboo/other objects
     .ELSE
-    LD C, $1F                       ;PAL diff: Faster speed to compensate FPS difference
-SetHiMax:
-    LD A, $04                       ;PAL diff: Faster maximum speed to compensate FPS difference
+    LD BC, $1F04                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-SetXMoveAmt:
-    LD IXL, C                       ;set movement amount here
-    ;INC B                           ;increment X for enemy offset
-    JP ImposeGravitySprObj        ;do a sub to move enemy object downwards
-    ;LD HL, (ObjectOffset)          ;get enemy object buffer offset and leave
-    ;LD B, (HL)
-    ;RET
+    XOR A                           ;set value to move downwards
+    JP ImposeGravity                ;jump to the code that actually moves it
 
 ;--------------------------------
 
-.SECTION "MaxSpdBlockData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-MaxSpdBlockData:
-    .db $06, $08
-.ENDS
-
 ImposeGravityBlock:
     .IF PALBUILD == $00
-    LD IXL, $50                     ;set movement amount here
+    LD BC, $5008                    ;set movement amount & max speed here
     .ELSE
-    LD IXL, $58                     ;PAL diff: Faster speed to compensate FPS difference
+    LD BC, $5808                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
-    ;LD C, $01                       ;set offset for maximum speed
-    ;LD A, $01
-    ;LD DE, MaxSpdBlockData
-    ;addAToDE8_M
-    ;LD A, (DE)                      ;get maximum speed
-    LD A, (MaxSpdBlockData + $01)
-    
-    
-ImposeGravitySprObj:
-    LD IYL, A                       ;set maximum speed here
     XOR A                           ;set value to move downwards
     JP ImposeGravity                ;jump to the code that actually moves it
 
@@ -5370,100 +5345,95 @@ MovePlatformDown:
 MovePlatformUp:
     LD A, $01
 @SaveVal:
-    ;PUSH AF                         ;save value to stack
-    LD IXL, $05                     ;save downward movement amount here
-    LD IXH, $0A                     ;save upward movement amount here
-    LD IYL, $03                     ;save maximum vertical speed here
-    ;POP AF                          ;get value from stack
-    LD C, A                         ;use as Y, then move onto code shared by red koopa
+    LD BC, $0503                    ;save downward movement amount & max speed here
+    LD D, $0A                       ;save upward movement amount here
     
-RedPTroopaGrav:
-    ;CALL ImposeGravity              ;do a sub to move object gradually
-    ;LD HL, (ObjectOffset)          ;get enemy object offset and leave
-    ;RET
+    ;LD C, A                         ;use as Y, then move onto code shared by red koopa
     ; FALL THROUGH
 
 ;-------------------------------------------------------------------------------------
-;$00(IXL) - used for downward force
-;$01(IXH) - used for upward force (ONLY USED IF A == 1)
-;$02(IYL) - used for maximum vertical speed
-;$07(IYH) - used as adder for vertical position
+;$00(B) - used for downward force
+;$01(D) - used for upward force (ONLY USED IF A == 1)
+;$02(C) - used for maximum vertical speed
+;$07(E) - used as adder for vertical position
 
-;   A - FLAG FOR SOMETHING?
-;   B - OBJECT OFFSET
+;   A - FLAG TO MOVE UPWARD
+;   HL - OBJECT OFFSET
 ImposeGravity:
     PUSH AF                         ;push value to stack
 ;
-    LD D, H
-    LD E, <SprObject_YMF_Dummy
-    LD L, <SprObject_Y_MoveForce
-    LD A, (DE)                      ;add value in movement force to contents of dummy variable
+    LD L, <SprObject_Y_MoveForce    ;add value in movement force to contents of dummy variable
+    LD A, (HL)
+    LD L, <SprObject_YMF_Dummy
     ADD A, (HL)
-    LD (DE), A
+    LD (HL), A
 ;
-    LD C, $00                       ;set Y to zero by default
-    LD E, <SprObject_Y_Speed
-    LD A, (DE)                      ;get current vertical speed
+    LD E, $00                       ;set E to zero by default
+    LD L, <SprObject_Y_Speed        ;get current vertical speed
+    LD A, (HL)
     BIT 7, A
     JP Z, AlterYP                   ;if currently moving downwards, do not decrement Y
-    DEC C                           ;otherwise decrement Y
+    DEC E                           ;otherwise decrement E
 AlterYP:
-    ;LD IYH, C
-;
     LD L, <SprObject_Y_Position
     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
     LD (HL), A                      ;store as new vertical position
 ;
     INC L                           ; <SprObject_Y_HighPos
     LD A, (HL)
-    ADC A, C                        ;add carry plus contents of $07 to vertical high byte
+    ADC A, E                        ;add carry plus contents of $07 to vertical high byte
     LD (HL), A                      ;store as new vertical high byte
 ;
     LD L, <SprObject_Y_MoveForce
     LD A, (HL)
-    ADD A, IXL                      ;add downward movement amount to contents of $0433
+    ADD A, B                        ;add downward movement amount to contents of SprObject_Y_MoveForce
     LD (HL), A
 ;
-    LD A, (DE)
-    ADC A, $00                      ;add carry to vertical speed and store
-    LD (DE), A
+    LD L, <SprObject_Y_Speed        ;add carry to vertical speed and store
+    LD A, (HL)
+    ADC A, $00
+    LD (HL), A
 ;
-    CP A, IYL                       ;compare to maximum speed
+    CP A, C                         ;compare to maximum speed
     JP M, ChkUpM                    ;if less than preset value, skip this part
+    LD L, <SprObject_Y_MoveForce
     LD A, (HL)
     CP A, $80                       ;if less positively than preset maximum, skip this part
     JP C, ChkUpM
-    LD A, IYL                       ;keep vertical speed within maximum value
-    LD (DE), A
     LD (HL), $00                    ;clear fractional
+    LD L, <SprObject_Y_Speed
+    LD (HL), C                      ;keep vertical speed within maximum value
 ;
 ChkUpM:
     POP AF                          ;get value from stack
     OR A
     RET Z                           ;if set to zero, branch to leave
 ;
-    LD A, IYL                       ;otherwise get two's compliment of maximum speed
+    LD A, C                         ;otherwise get two's compliment of maximum speed
     NEG
     LD C, A
 ;
+    LD L, <SprObject_Y_MoveForce
     LD A, (HL)                      ;subtract upward movement amount from contents
-    SUB A, IXH                      ;of movement force, note that $01 is twice as large as $00,
+    SUB A, D                        ;of movement force, note that $01 is twice as large as $00,
     LD (HL), A                      ;thus it effectively undoes add we did earlier
 ;
-    LD A, (DE)
+    LD L, <SprObject_Y_Speed
+    LD A, (HL)
     SBC A, $00                      ;subtract borrow from vertical speed and store
-    LD (DE), A
+    LD (HL), A
 ;
     CP A, C                         ;compare vertical speed to two's compliment
     RET P                           ;if less negatively than preset maximum, skip this part
 ;
+    LD L, <SprObject_Y_MoveForce
     LD A, (HL)                      ;check if fractional part is above certain amount,
     CP A, $80
     RET NC                          ;and if so, branch to leave
 ;   
-    LD A, C                         ;keep vertical speed within maximum value
-    LD (DE), A
     LD (HL), $FF                    ;clear fractional
+    LD L, <SprObject_Y_Speed        ;keep vertical speed within maximum value
+    LD (HL), C
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -5919,7 +5889,7 @@ ChkETmrs:
     JP NZ, EnemyStomped
     LD A, (InjuryTimer)
     OR A
-    JP NZ, ExInjColRoutines
+    RET NZ ;JP NZ, ExInjColRoutines
     LD A, (Enemy_Rel_XPos)
     LD C, A
     LD A, (Player_Rel_XPos)
@@ -5929,12 +5899,12 @@ ChkETmrs:
     LD L, <Enemy_MovingDir
     LD A, (HL)
     CP A, $01
-    JP Z, LInj
+    CALL Z, EnemyTurnAround
 
 InjurePlayer:
     LD A, (InjuryTimer)
     OR A
-    JP NZ, ExInjColRoutines
+    RET NZ ;JP NZ, ExInjColRoutines
 
 ForceInjury:
     LD A, (PlayerStatus)
@@ -5962,8 +5932,8 @@ SetPRout:
     DEC A
     LD (TimerControl), A
 
-ExInjColRoutines:
-    LD HL, (ObjectOffset)
+;ExInjColRoutines:
+;    LD HL, (ObjectOffset)
     RET
 
 KillPlayer:
@@ -6107,9 +6077,7 @@ ChkEnemyFaceRight:
     LD L, <Enemy_MovingDir
     LD A, (HL)
     CP A, $01
-    JP Z, InjurePlayer
-LInj:
-    CALL EnemyTurnAround
+    CALL NZ, EnemyTurnAround
     JP InjurePlayer
 
 EnemyFacePlayer:
@@ -7718,7 +7686,7 @@ FireballBGCollision:
     CP A, $18
     JP C, ClearBounceFlag
 ;
-    ;CALL BlockBufferChk_FBall
+    ; BlockBufferChk_FBall
     LD C, $1A 
     XOR A
     CALL BlockBufferCollision
@@ -7760,9 +7728,9 @@ InitFireballExplode:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$00(IXL) - used to hold one of bitmasks, or offset
-;$01(IXH) - used for relative X coordinate, also used to store middle screen page location
-;$02(IYL) - used for relative Y coordinate, also used to store middle screen coordinate
+;$00(B) - used to hold one of bitmasks, or offset
+;D - used to store middle screen page location
+;C - also used to store middle screen coordinate
 
 ;this data added to relative coordinates of sprite objects
 ;stored in order: left edge, top edge, right edge, bottom edge
@@ -7798,14 +7766,13 @@ GetMiscBoundBox:
     CALL BoundingBoxCore                    ;get bounding box coordinates
     JP CheckRightScreenBBox                 ;jump to handle any offscreen coordinates
 
-GetEnemyBoundBox:
-    LD IXL, $48                             ;store bitmask here for now
-    LD C, $44                               ;store another bitmask here for now and jump
+SmallPlatformBoundBox:
+    LD BC, $0804                            ;store two bitmasks
     JP GetMaskedOffScrBits
 
-SmallPlatformBoundBox:
-    LD IXL, $08                             ;store bitmask here for now
-    LD C, $04                               ;store another bitmask here for now
+GetEnemyBoundBox:
+    LD BC, $4844                            ;store two bitmasks
+    ; FALL THROUGH
 
 GetMaskedOffScrBits:
     LD A, (ScreenLeft_X_Pos)
@@ -7813,7 +7780,7 @@ GetMaskedOffScrBits:
     LD L, <Enemy_X_Position
     LD A, (HL)
     SUB A, E
-    LD IXH, A
+    LD D, A
 ;
     LD A, (ScreenLeft_PageLoc)
     LD E, A
@@ -7822,26 +7789,27 @@ GetMaskedOffScrBits:
     SBC A, E
     JP M, CMBits
 ;
-    OR A, IXH
+    OR A, D
     JP Z, CMBits
-    LD C, IXL
+    LD C, B
 CMBits:
     LD A, (Enemy_OffscrBits)
     AND A, C
     LD L, <EnemyOffscrBitsMasked
     LD (HL), A
     JP NZ, MoveBoundBoxOffscreen
-    JP SetupEOffsetFBBox
-
-LargePlatformBoundBox:
-    CALL GetXOffscreenBits                  ;jump directly to the sub for horizontal offscreen bits
-    CP A, $FE                               ;if completely offscreen, branch to put entire bounding
-    JP NC, MoveBoundBoxOffscreen            ;box offscreen, otherwise start getting coordinates
+    ; FALL THROUGH
 
 SetupEOffsetFBBox:
     LD D, >Enemy_Rel_XPos                   ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;do a sub to get the coordinates of the bounding box
     JP CheckRightScreenBBox                 ;jump to handle offscreen coordinates of bounding box
+
+LargePlatformBoundBox:
+    CALL GetXOffscreenBits                  ;jump directly to the sub for horizontal offscreen bits
+    CP A, $FE                               ;if completely offscreen, branch to put entire bounding
+    JP C, SetupEOffsetFBBox                 ;box offscreen, otherwise start getting coordinates
+    ; FALL THROUGH
 
 MoveBoundBoxOffscreen:
     LD A, $FF                               ;load value into four locations here and leave
@@ -7855,105 +7823,100 @@ MoveBoundBoxOffscreen:
     LD (HL), A
     RET
 
-;   X - OBJECT OFFSET
-;   Y - REL POS OFFSET
+;   HL - OBJECT OFFSET
+;   DE - REL POS OFFSET/BoundBoxCtrlData
+;C - used for relative X coordinate
+;B - used for relative Y coordinate
 BoundingBoxCore:
-    LD E, <SprObject_Rel_YPos
+    LD E, <SprObject_Rel_YPos               ;store object coordinates relative to screen
+    LD A, (DE)                              ;vertically and horizontally in BC, respectively
+    LD B, A
+;
+    DEC E                                   ;<SprObject_Rel_XPos
     LD A, (DE)
-    LD IYL, A
+    LD C, A
 ;
-    DEC E
-    LD A, (DE)
-    LD IXH, A
-;
-    LD D, H
-;
-    LD L, <SprObj_BoundBoxCtrl
-    LD A, (HL)
+    LD L, <SprObj_BoundBoxCtrl              ;load value here to be used as offset for X
+    LD A, (HL)                              ;multiply that by four and use as offset
     ADD A, A
     ADD A, A
-    LD BC, BoundBoxCtrlData
-    addAToBC8_M
-    LD A, (BC)
-    ADD A, IXH
-    LD E, <BoundingBox_UL_Corner
-    LD (DE), A
+    LD DE, BoundBoxCtrlData
+    addAToDE8_M
+    LD A, (DE)
+    ADD A, C
+    INC L                                   ;<BoundingBox_UL_Corner
+    LD (HL), A
 ;
-    INC C
-    INC C
-    LD A, (BC)
-    ADD A, IXH
-    LD E, <BoundingBox_LR_Corner
-    LD (DE), A
+    INC E
+    LD A, (DE)
+    ADD A, B
+    INC L                                   ;<BoundingBox_UL_Corner + $01
+    LD (HL), A
 ;
-    DEC C
-    LD A, (BC)
-    ADD A, IYL
-    LD E, <BoundingBox_UL_Corner + $01
-    LD (DE), A
+    INC E
+    LD A, (DE)
+    ADD A, C
+    INC L                                   ;<BoundingBox_LR_Corner
+    LD (HL), A
 ;
-    INC C
-    INC C
-    LD A, (BC)
-    ADD A, IYL
-    LD E, <BoundingBox_LR_Corner + $01
-    LD (DE), A
+    INC E
+    LD A, (DE)
+    ADD A, B
+    INC L                                   ;<BoundingBox_LR_Corner + $01
+    LD (HL), A
     RET
 
+;   BC - SCREENLEFT_XPOS_ADJ/SCREENLEFT_PAGELOC_ADJ
 CheckRightScreenBBox:
-    LD A, (ScreenLeft_X_Pos)
-    ADD A, $80
-    LD IYL, A
+    LD A, (ScreenLeft_X_Pos)                ;add 128 pixels to left side of screen
+    ADD A, $80                              ;and store as horizontal coordinate of middle
+    LD B, A
 ;
-    LD A, (ScreenLeft_PageLoc)
-    ADC A, $00
-    LD IXH, A
+    LD A, (ScreenLeft_PageLoc)              ;add carry to page location of left side of screen
+    ADC A, $00                              ;and store as page location of middle
+    LD C, A
 ;
     LD L, <SprObject_X_Position
     LD A, (HL)
-    CP A, IYL
-    LD L, <SprObject_PageLoc
+    CP A, B
+    DEC L                                   ;<SprObject_PageLoc
     LD A, (HL)
-    SBC A, IXH
+    SBC A, C
     JP C, CheckLeftScreenBBox
 ;
-    LD E, <BoundingBox_DR_XPos
-    LD A, (DE)
+    LD L, <BoundingBox_DR_XPos
+    LD A, (HL)
     OR A
-    JP M, NoOfs
-    LD E, <BoundingBox_UL_XPos
-    LD A, (DE)
+    RET M
+    LD L, <BoundingBox_UL_XPos
+    LD A, (HL)
     OR A
     LD A, $FF
     JP M, SORte
-    LD (DE), A
+    LD (HL), A
 SORte:
-    LD E, <BoundingBox_DR_XPos
-    LD (DE), A
-NoOfs:
-    ;ldx ObjectOffset
+    LD L, <BoundingBox_DR_XPos
+    LD (HL), A
     RET
 
 CheckLeftScreenBBox:
-    LD E, <BoundingBox_UL_XPos
-    LD A, (DE)
+    LD L, <BoundingBox_UL_XPos
+    LD A, (HL)
     OR A
-    JP P, NoOfs2
+    RET P
 ;
     CP A, $A0
-    JP C, NoOfs2
+    RET C
 ;
-    LD E, <BoundingBox_DR_XPos
-    LD A, (DE)
+    LD L, <BoundingBox_DR_XPos
+    LD A, (HL)
     OR A
     LD A, $00
     JP P, SOLft
-    LD (DE), A
+    LD (HL), A
 SOLft:
-    LD E, <BoundingBox_UL_XPos
-    LD (DE), A
-NoOfs2:
-    ;ldx ObjectOffset
+    LD L, <BoundingBox_UL_XPos
+    LD (HL), A
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -8082,17 +8045,6 @@ BlockBuffer_Y_Adder:
     .db $06, $06, $08, $10
 .ENDS
 
-/*
-    $08, $04
-    $03, $20
-    $0C, $20
-    $02, $08
-    $02, $18
-    $0D, $08
-    $0D, $18
-    $08, $02
-*/
-
 ;BlockBufferChk_Enemy:
 ;    JP BlockBufferCollision
 
@@ -8132,7 +8084,7 @@ BlockBufferCollision:
     ADD A, (HL)
     LD IYL, A                           ;store here
 ;
-    LD L, <SprObject_PageLoc
+    DEC L                               ;<SprObject_PageLoc
     LD A, (HL)
     ADC A, $00                          ;add carry to page location
     RRCA                                ;move LSB to carry
@@ -8175,24 +8127,21 @@ RetC:
     OR A
     RET
 
-/*
-    BLOCK BUFFER DATA LAYOUT:
-    HN: ROW,  LN: COL
-    00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
-    10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
-    20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
-    30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
-    40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
-    50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
-    60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
-    70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
-    80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
-    90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
-    A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
-    B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
-    C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
-*/
-
+    ; BLOCK BUFFER DATA LAYOUT:
+    ; HN: ROW,  LN: COL
+    ; 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+    ; 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+    ; 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+    ; 30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
+    ; 40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
+    ; 50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
+    ; 60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
+    ; 70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
+    ; 80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
+    ; 90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
+    ; A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
+    ; B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
+    ; C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
 
 
 ;-------------------------------------------------------------------------------------
@@ -8231,18 +8180,16 @@ RelativeBlockPosition:
     DEC H
     RET
 
-    /*
 ;   HL - OBJECT OFFSET
 ;   DE - XXX_Rel_XPos/YPos OFFSET
-VariableObjOfsRelPos:
-    ;LD IXL, B
-    ;ADD A, B
-    ;LD B, A
-    CALL GetObjRelativePosition
-    ;LD HL, (ObjectOffset)
-    ;LD B, (HL)
-    RET
-    */
+; VariableObjOfsRelPos:
+;     ;LD IXL, B
+;     ;ADD A, B
+;     ;LD B, A
+;     CALL GetObjRelativePosition
+;     ;LD HL, (ObjectOffset)
+;     ;LD B, (HL)
+;     RET
 
 RelativeEnemyPosition:
     LD D, >Enemy_Rel_XPos
@@ -8339,7 +8286,7 @@ GetXOffscreenBits:
     LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
     SUB A, (HL)                             ;get difference between pixel coordinate of edge
     LD IYH, A                               ;store here
-    LD L, <SprObject_PageLoc
+    DEC L                                   ;<SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
     SBC A, (HL)                             ;subtract from page location of object position
 ;
@@ -8368,7 +8315,7 @@ XLdBData:
     LD A, (ScreenEdge_X_Pos)
     SUB A, (HL)
     LD IYH, A
-    LD L, <SprObject_PageLoc
+    DEC L                                   ;<SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc)
     SBC A, (HL)
 ;

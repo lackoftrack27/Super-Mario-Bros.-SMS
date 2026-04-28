@@ -344,11 +344,17 @@ SndChannelProcessMUS:
 ;--------------------------------
 
 SndProcessQueueSFX:
+    LD B, A
+;   EXIT IF CURRENTLY PLAYING '1UP' SFX (FOR SFXTrack1)
     INC L           ; SoundPlaying
+    LD A, (HL)
+    CP A, SNDID_1UP
+    RET Z
+    LD A, B
     LD (HL), A
+;   USE AS OFFSET INTO SndIndexTable
     SUB A, $81
     ADD A, A
-;
     LD L, <SFXTrack0.Control
     LD (HL), $01 << CHANCON_PLAYING
     INC L

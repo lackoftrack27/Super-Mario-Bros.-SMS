@@ -163,10 +163,10 @@ Vine_AutoClimb:
     CP A, $E4
     JP C, SetEntr
 AutoClimb:
-    LD A, %00001000                     ;set controller bits override to up
-    LD (JoypadOverride), A
     LD A, $03                           ;set player state to climbing
     LD (Player_State), A
+    LD A, %00001000                     ;set controller bits override to up
+    LD (JoypadOverride), A
     JP AutoControlPlayer
 SetEntr:
     LD A, $02                           ;set starting position to override
@@ -929,7 +929,7 @@ ExtraLifeMushBlock:
 
 VineBlock:
     POP HL
-    LD H, OBJ_SLOT6
+    LD H, $C6
     LD A, (SprDataOffset_Ctrl)
     ADD A, $C0 + OBJ_BLOCK1
     LD D, A

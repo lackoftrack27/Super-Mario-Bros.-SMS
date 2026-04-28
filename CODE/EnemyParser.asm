@@ -346,6 +346,7 @@ Setup_Vine_NOPOP:
     LD (HL), A
 ;    
     JP NZ, NextVO
+    SUB A, SMS_PIXELYOFFSET
     LD (VineStart_Y_Position), A
 NextVO: 
     LD DE, VineObjOffset
@@ -353,7 +354,6 @@ NextVO:
     ADD A, D
     LD D, A
     LD A, H
-    SUB A, $D0  ; RAM OFFSET -> OBJECT OFFSET
     LD (DE), A
 ;
     LD A, (VineFlagOffset)

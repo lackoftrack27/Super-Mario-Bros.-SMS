@@ -3,15 +3,98 @@
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
-;$00 - offset to vine Y coordinate adder
-;$02 - offset to sprite data
 
-.SECTION "VineYPosAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-VineYPosAdder:
-    .db $00, $30
-.ENDS
+; .SECTION "VineYPosAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; VineYPosAdder:
+;     .db $00, $30
+; .ENDS
 
 DrawVine:
+    LD C, A
+    LD HL, VineObjOffset
+    ADD A, H
+    LD H, A
+    LD H, (HL)
+    LD L, <Enemy_SprDataOffset
+    LD L, (HL)
+    LD E, L
+    LD H, >Sprite_Y_Position
+;
+    DEC C
+    LD B, $00
+    JP NZ, +
+    LD B, $30
++:
+    LD A, (Enemy_Rel_YPos)
+    ADD A, B
+    SUB A, SMS_PIXELYOFFSET
+    LD (HL), A
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    ADD A, $08
+    LD (HL), A
+    INC L
+    ADD A, $08
+    LD (HL), A
+    LD L, E
+;
+    SLA L
+    SET 7, L
+    LD A, (Enemy_Rel_XPos)
+    LD B, A
+    ADD A, $06
+    LD (HL), B
+    INC L
+    LD E, L
+    LD (HL), $48
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), $49
+    INC L
+    LD (HL), B
+    INC L
+    LD (HL), $48
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), $49
+    INC L
+    LD (HL), B
+    INC L
+    LD (HL), $48
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), $49
+    LD L, E
+;
+    INC C
+    JP NZ, SkpVTop
+    LD (HL), $4A
+;
+SkpVTop:
+    DEC L
+    RES 7, L
+    SRL L
+    LD B, $06
+ChkFTop:
+    LD A, (VineStart_Y_Position)
+    SUB A, (HL)
+    CP A, $64
+    JP C, NextVSp
+    LD (HL), YPOS_OFFSCREEN
+NextVSp:
+    INC L
+    DJNZ ChkFTop
     RET
 
 ;-------------------------------------------------------------------------------------

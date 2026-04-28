@@ -1489,91 +1489,86 @@ DrawJSpr:
 ;$06-$07 - used as address to block buffer data
 ;$02(IXL) - used as vertical high nybble of block buffer offset
 
-.SECTION "VineHeightData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-VineHeightData:
-    .db $30, $60
-.ENDS
+; .SECTION "VineHeightData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; VineHeightData:
+;     .db $30, $60
+; .ENDS
 
 VineObjectHandler:
     POP HL
 ;
     LD A, H
-    CP A, $C6
-    JP NZ, ExitVH
+    CP A, $C6                               ;check enemy offset for special use slot
+    RET NZ                                  ;if not in last slot, branch to leave
 ;
-    LD A, (VineFlagOffset)
+    LD A, (VineFlagOffset)                  ;decrement vine flag, use as offset
     DEC A
-    LD BC, VineHeightData
-    addAToBC8_M
-    LD A, (BC)
-    LD C, A
-    LD A, (VineHeight)
-    CP A, C
+    LD C, $30
+    JP Z, +
+    LD C, $60
++:
+    LD A, (VineHeight)                      ;if vine has reached certain height,
+    CP A, C                                 ;branch ahead to skip this part
     JP Z, RunVSubs
 ;
-    LD A, (FrameCounter)
+    LD A, (FrameCounter)                    ;get frame counter
     RRCA
     RRCA
-    JP NC, RunVSubs
+    JP NC, RunVSubs                         ;if d1 not set (2 frames every 4) skip this part
 ;
-    LD A, (Enemy_Y_Position + $05 * $100)
-    SUB A, $01
-    LD (Enemy_Y_Position + $05 * $100), A
-    LD A, (VineHeight)
+    LD L, <Enemy_Y_Position                 ;subtract vertical position of vine
+    DEC (HL)
+    LD A, (VineHeight)                      ;increment vine height
     INC A
     LD (VineHeight), A
 ;
 RunVSubs:
-    LD A, (VineHeight)
-    CP A, $08
-    JP C, ExitVH
-    CALL RelativeEnemyPosition
-    CALL GetEnemyOffscreenBits
-    LD C, $00
-VDrawLoop:
+    LD A, (VineHeight)                      ;if vine still very small,
+    CP A, $08                               ;branch to leave
+    RET C
+    CALL RelativeEnemyPosition              ;get relative coordinates of vine,
+    CALL GetEnemyOffscreenBits              ;and any offscreen bits
+    EX DE, HL
+    XOR A
     CALL DrawVine
-    INC C
     LD A, (VineFlagOffset)
-    CP A, C
-    JP NZ, VDrawLoop
+    DEC A
+    CALL NZ, DrawVine
 ;
     LD A, (Enemy_OffscrBits)
-    AND A, %00001100
-    JP Z, WrCMTile
-    DEC C
+    AND A, %00001100                        ;mask offscreen bits
+    JP Z, WrCMTile                          ;if none of the saved offscreen bits set, skip ahead
+;
+    LD E, C
+    LD A, E
 KillVine:
-    LD A, C
-    ADD A, $C1
-    LD D, A
-    LD E, <VineObjOffset
-    LD A, (DE)
-    ADD A, $C1
+    LD HL, VineObjOffset
+    ADD A, H
     LD H, A
-    PUSH BC
+    LD H, (HL)
     CALL EraseEnemyObject
-    POP BC
-    DEC C
+    DEC E
     JP P, KillVine
     LD (VineFlagOffset), A
     LD (VineHeight), A
+;
 WrCMTile:
+    EX DE, HL
     LD A, (VineHeight)
     CP A, $20
-    JP C, ExitVH
-    LD H, $C0 + OBJ_SLOT6
-    LD A, $02
+    RET C
+    ;LD H, $C6
+    ;LD A, $01
     LD C, $1B
     CALL BlockBufferCollision
     LD A, IXL
     CP A, $D0
-    JP NC, ExitVH
+    RET NC
     LD A, (DE)
     OR A
-    JP NZ, ExitVH
+    RET NZ
     LD A, MT_VINEBLANK
     LD (DE), A
-ExitVH:
-    LD HL, (ObjectOffset)
     RET
 
 ;--------------------------------
@@ -4136,6 +4131,7 @@ RightPlatform:
     POP HL
 ;
     CALL MoveEnemyHorizontally
+    LD (Temp_Bytes + $00), A
 ;
     LD L, <PlatformCollisionFlag
     LD A, (HL)

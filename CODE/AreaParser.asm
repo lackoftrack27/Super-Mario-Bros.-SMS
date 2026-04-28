@@ -1597,7 +1597,9 @@ Jumpspring:
     .IF PALBUILD != $00
     RET C                               ;PAL bugfix: Stop if there are no free enemy slots
     .ENDIF
-    
+
+    LD A, $FF
+    LD (JumpspringAnimCtrl_Old), A
     LD (HL), $01                        ;set flag for enemy object buffer
     LD L, <Enemy_ID
     LD (HL), OBJECTID_JumpspringObject  ;write jumpspring object to enemy object buffer

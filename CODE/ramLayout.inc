@@ -718,6 +718,7 @@
     PlayerAnimTimerSet:             dsb $01
     PlayerAnimCtrl:                 dsb $01
     JumpspringAnimCtrl:             dsb $01
+    JumpspringAnimCtrl_Old:         dsb $01
     FlagpoleCollisionYPos:          dsb $01
     PlayerEntranceCtrl:             dsb $01
     FireballThrowingTimer:          dsb $01

@@ -1396,55 +1396,46 @@ RunPUSubs:
 
 ;--------------------------------
 
-.SECTION "Jumpspring_Y_PosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-Jumpspring_Y_PosData:
-    .db $08, $10, $08, $00
-.ENDS
+; .SECTION "Jumpspring_Y_PosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; Jumpspring_Y_PosData:
+;     .db $08, $10, $08, $00
+; .ENDS
 
 JumpspringHandler:
     POP HL
 ;
-    CALL GetEnemyOffscreenBits
+    CALL GetEnemyOffscreenBits              ;get offscreen information
 ;
-    LD A, (TimerControl)
+    LD A, (TimerControl)                    ;check master timer control
     OR A
-    JP NZ, DrawJSpr
+    JP NZ, DrawJSpr                         ;branch to last section if set
 ;   
-    LD A, (JumpspringAnimCtrl)
+    LD A, (JumpspringAnimCtrl)              ;check jumpspring frame control
     OR A
-    JP Z, DrawJSpr
+    JP Z, DrawJSpr                          ;branch to last section if not set
 ;
-    DEC A
+    DEC A                                   ;subtract one from frame control,
     LD C, A
-    AND A, %00000010
+    AND A, %00000010                        ;mask out all but d1, original value still in C
     LD A, (Player_Y_Position)
-    JP NZ, DownJSpr
-    ADD A, $02
-    JP PosJSpr
+    JP NZ, DownJSpr                         ;if set, branch to move player up
+    ADD A, $02                              ;move player's vertical position down two pixels
+    JP PosJSpr                              ;skip to next part
 DownJSpr:
-    SUB A, $02
+    SUB A, $02                              ;move player's vertical position up two pixels
 PosJSpr:
     LD (Player_Y_Position), A
 ;
-    LD A, C
-    LD DE, Jumpspring_Y_PosData
-    addAToDE8_M
-    LD A, (DE)
-    LD L, <Jumpspring_FixedYPos
-    ADD A, (HL)
-    LD L, <Enemy_Y_Position
-    LD (HL),A
-;
-    LD A, C
+    LD A, C                                 ;check frame control offset (second frame is $00)
     CP A, $01
-    JP C, BounceJS
+    JP C, BounceJS                          ;if offset not yet at third frame ($01), skip to next part
     LD A, (A_B_Buttons)
-    AND A, bitValue(SMS_BTN_2)
-    JP Z, BounceJS
+    AND A, bitValue(SMS_BTN_2)              ;check saved controller bits for A button press
+    JP Z, BounceJS                          ;skip to next part if A not pressed
     LD E, A
-    LD A, (PreviousA_B_Buttons)
+    LD A, (PreviousA_B_Buttons)             ;check for A button pressed in previous frame
     AND A, E
-    JP NZ, BounceJS
+    JP NZ, BounceJS                         ;skip to next part if so
     
     .IF PALBUILD == $00
     LD A, $F4
@@ -1452,12 +1443,13 @@ PosJSpr:
     LD A, $F2                               ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
     
-    LD (JumpspringForce), A
+    LD (JumpspringForce), A                 ;otherwise write new jumpspring force here
+;
 BounceJS:
-    LD A, C
+    LD A, C                                 ;check frame control offset again
     CP A, $03
-    JP NZ, DrawJSpr
-    LD A, (JumpspringForce)
+    JP NZ, DrawJSpr                         ;skip to last part if not yet at fifth frame ($03)
+    LD A, (JumpspringForce)                 ;store jumpspring force as player's new vertical speed
     LD (Player_Y_Speed), A
     
     .IF PALBUILD != $00
@@ -1465,21 +1457,25 @@ BounceJS:
     LD (VerticalForce), A
     .ENDIF
     
-    XOR A
+    XOR A                                   ;initialize jumpspring frame control
     LD (JumpspringAnimCtrl), A
+;
 DrawJSpr:
-    CALL RelativeEnemyPosition
-    CALL JumpspringGfxHandler
-    CALL OffscreenBoundsCheck
-    LD A, (JumpspringAnimCtrl)
+    CALL RelativeEnemyPosition              ;get jumpspring's relative coordinates
+    LD A, (Enemy_OffscrBits)
+    BIT 2, A
+    CALL Z, JumpspringGfxHandler            ;draw jumpspring if right side is onscreen
+    LD HL, (ObjectOffset)
+    CALL OffscreenBoundsCheck               ;check to see if we need to kill it
+    LD A, (JumpspringAnimCtrl)              ;if frame control at zero, don't bother
     OR A
-    RET Z
-    LD A, (JumpspringTimer)
+    RET Z                                   ;trying to animate it, just leave
+    LD A, (JumpspringTimer)                 ;if jumpspring timer not expired yet, leave
     OR A
     RET NZ
-    LD A, $04
+    LD A, $04                               ;otherwise initialize jumpspring timer
     LD (JumpspringTimer), A
-    LD A, (JumpspringAnimCtrl)
+    LD A, (JumpspringAnimCtrl)              ;increment frame control to animate jumpspring
     INC A
     LD (JumpspringAnimCtrl), A
     RET
@@ -1529,45 +1525,45 @@ RunVSubs:
     CALL RelativeEnemyPosition              ;get relative coordinates of vine,
     CALL GetEnemyOffscreenBits              ;and any offscreen bits
     EX DE, HL
-    XOR A
-    CALL DrawVine
-    LD A, (VineFlagOffset)
+    XOR A                                   ;initialize offset used in draw vine sub
+    CALL DrawVine                           ;draw vine
+    LD A, (VineFlagOffset)                  ;check if offset is 2
     DEC A
-    CALL NZ, DrawVine
+    CALL NZ, DrawVine                       ;if so, draw more vine
 ;
     LD A, (Enemy_OffscrBits)
     AND A, %00001100                        ;mask offscreen bits
     JP Z, WrCMTile                          ;if none of the saved offscreen bits set, skip ahead
 ;
-    LD E, C
+    LD E, C                                 ;get offset used in draw vine sub
     LD A, E
 KillVine:
-    LD HL, VineObjOffset
+    LD HL, VineObjOffset                    ;get enemy object offset for this vine object
     ADD A, H
     LD H, A
     LD H, (HL)
-    CALL EraseEnemyObject
-    DEC E
-    JP P, KillVine
-    LD (VineFlagOffset), A
-    LD (VineHeight), A
+    CALL EraseEnemyObject                   ;kill this vine object
+    DEC E                                   ;decrement offset
+    JP P, KillVine                          ;if any vine objects left, loop back to kill it
+    LD (VineFlagOffset), A                  ;initialize vine flag/offset
+    LD (VineHeight), A                      ;initialize vine height
 ;
 WrCMTile:
     EX DE, HL
-    LD A, (VineHeight)
-    CP A, $20
-    RET C
+    LD A, (VineHeight)                      ;check vine height
+    CP A, $20                               ;if vine small (less than 32 pixels tall)
+    RET C                                   ;then branch ahead to leave
     ;LD H, $C6
     ;LD A, $01
-    LD C, $1B
-    CALL BlockBufferCollision
+    LD C, $1B                               ;set C to offset to get block at ($04, $10) of coordinates
+    CALL BlockBufferCollision               ;do a sub to get block buffer address set, return contents
     LD A, IXL
-    CP A, $D0
-    RET NC
-    LD A, (DE)
-    OR A
+    CP A, $D0                               ;if vertical high nybble offset beyond extent of
+    RET NC                                  ;current block buffer, branch to leave, do not write
+    LD A, (DE)                              ;otherwise check contents of block buffer at
+    OR A                                    ;current offset, if not empty, branch to leave
     RET NZ
-    LD A, MT_VINEBLANK
+    LD A, MT_VINEBLANK                      ;otherwise, write climbing metatile to block buffer
     LD (DE), A
     RET
 
@@ -6761,6 +6757,7 @@ ChkFootMTile:
     CALL ChkInvisibleMTiles             ;do sub to check for hidden coin or 1-up blocks
     JP Z, DoPlayerSideCheck             ;if either found, branch
 ;
+    LD B, A                             ;(SMS) save metatile
     LD A, (JumpspringAnimCtrl)          ;if jumpspring animating right now,
     OR A
     JP NZ, InitSteP                     ;branch ahead
@@ -6779,7 +6776,7 @@ ChkFootMTile:
     LD (Temp_Bytes + $00), A            ;use player's moving direction as temp variable
     JP ImpedePlayerMove                 ;jump to impede player's movement in that direction
 LandPlyr:
-    LD A, (DE)                          ;(SMS) get metatile
+    LD A, B                             ;(SMS) get metatile back
     CALL ChkForLandJumpSpring           ;do sub to check for jumpspring metatiles and deal with it
     LD HL, Player_Y_Position
     LD A, $F0                           

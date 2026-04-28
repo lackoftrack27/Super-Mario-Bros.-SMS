@@ -1096,13 +1096,127 @@ RetainerGfxHandler:
     JP SprObjectOffscrChk
 
 JumpspringGfxHandler:
+    LD A, (JumpspringAnimCtrl_Old)
+    LD B, A
+    LD A, (JumpspringAnimCtrl)
+    CP A, B
+    RET Z
+    LD (JumpspringAnimCtrl_Old), A
 ;
-    ; DIVIDE X REL BY 4 TO GET COLUMN
-    ; MULTIPLY Y REL BY 8 TO GET ROW
+    LD DE, (VRAM_Buffer1_Ptr)
+;
+    LD L, <Enemy_Y_Position                 ;get enemy object vertical position
+    LD A, (HL)
+    SUB A, SMS_PIXELYOFFSET
+    AND A, $F8
+    LD L, A
+    LD H, $0C
+    ADD HL, HL
+    ADD HL, HL
+    ADD HL, HL
+    LD A, (ScreenLeft_X_Pos)
+    LD B, A
+    LD A, (Enemy_Rel_XPos)
+    ADD A, B
+    AND A, $F8
+    RRCA
+    RRCA
+    OR A, L
+    LD L, A
+;
+    INC L
+    INC L
+    LD BC, JumpspringFramesRight + $05
+    CALL JSDrawSide
+;
+    LD A, (Enemy_OffscrBits)
+    BIT 3, A
+    RET NZ
+    DEC L
+    DEC L
+    LD BC, JumpspringFramesLeft + $05
 
+JSDrawSide:
+    PUSH HL
+    LD DE, (VRAM_Buffer1_Ptr)
+    EX DE, HL
+;
+    LD (HL), D
+    INC L
+    LD (HL), E
+    INC L
+    LD (HL), StripeCount($02)
+    INC L
+    INC L
+    INC L
+;
+    LD A, $40
+    addAToDE_M
+    LD (HL), D
+    INC L
+    LD (HL), E
+    INC L
+    LD (HL), StripeCount($02)
+    INC L
+    INC L
+    INC L
+;
+    LD A, $40
+    addAToDE_M
+    LD (HL), D
+    INC L
+    LD (HL), E
+    INC L
+    LD (HL), StripeCount($02)
+    INC L
+    INC L
+    INC L
+    LD (HL), $00
+    LD (VRAM_Buffer1_Ptr), HL
+    DEC L
+    EX DE, HL
+;
+    LD A, (JumpspringAnimCtrl)
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    addAToBC8_M
+    LD L, C
+    LD H, B
+;
+    LDD
+    LDD
+    DEC E
+    DEC E
+    DEC E
+    LDD
+    LDD
+    DEC E
+    DEC E
+    DEC E
+    LDD
+    LDD
+;
+    POP HL
     RET
 
-.SECTION "PodobooTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Jumpspring Frames" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+JumpspringFramesLeft:
+    .dw $095A, $095B, $0D5A, $0000  ; F1
+    .dw $0000, $095C, $0D5C, $0000  ; F2
+    .dw $0000, $0000, $095D, $0000  ; F3
+    .dw $0000, $095C, $0D5C, $0000  ; F2
+    .dw $095A, $095B, $0D5A, $0000  ; F1
+
+JumpspringFramesRight:
+    .dw $0B5A, $0B5B, $0F5A, $0000
+    .dw $0000, $0B5C, $0F5C, $0000
+    .dw $0000, $0000, $0B5D, $0000
+    .dw $0000, $0B5C, $0F5C, $0000
+    .dw $0B5A, $0B5B, $0F5A, $0000
+.ENDS
+
+.SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PodobooTiles:
     .db $48, $49, $4A, $4B  ; FRAME 0
     .db $4C, $4D, $4E, $4F  ; FRAME 1
@@ -1110,7 +1224,7 @@ PodobooTiles:
     .db $54, $55, $56, $57  ; FRAME 1 VFLIP
 .ENDS
 
-.SECTION "RetainerPrincessTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 RetainerPrincessTiles:
     .db $42, $43, $44, $45, $46, $47
 .ENDS

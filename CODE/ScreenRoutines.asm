@@ -487,13 +487,13 @@ LoadEnemySprites:
     LD HL, Tiles_SPR_Enemies
     LD BC, _sizeof_Tiles_SPR_Enemies
     CALL copyToVDP
-;   LOAD LAKITU ON CERTAIN LEVELS (4-2,6-1,8-2)
+;   LOAD LAKITU ON CERTAIN LEVELS (4-1,6-1,8-2)
     LD A, (WorldNumber)
     LD H, A
     LD A, (LevelNumber)
     LD L, A
     OR A
-    LD DE, $0301
+    LD DE, $0300
     SBC HL, DE
     JP Z, LoadLakitu
     ADD HL, DE

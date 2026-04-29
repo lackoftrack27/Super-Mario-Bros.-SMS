@@ -566,7 +566,7 @@ InitLakitu:
 SetupLakitu:
     XOR A                           ;erase counter for lakitu's reappearance
     LD (LakituReappearTimer), A
-    JP InitHorizFlySwimEnemy        ;set $03 as bounding box, set other attributes
+    JP InitHorizFlySwimEnemy_NOPOP  ;set $03 as bounding box, set other attributes
     ;JP TallBBox2                   ;set $03 as bounding box again (not necessary) and leave
 
 ;--------------------------------
@@ -574,9 +574,14 @@ SetupLakitu:
 
 .SECTION "PRDiffAdjustData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PRDiffAdjustData:
-    .db $26, $2c, $32, $38
-    .db $20, $22, $24, $26
-    .db $13, $14, $15, $16
+    ;.db $26, $2c, $32, $38
+    ;.db $20, $22, $24, $26
+    ;.db $13, $14, $15, $16
+
+    .db $26, $20, $13, $00
+    .db $2C, $22, $14, $00
+    .db $32, $24, $15, $00
+    .db $38, $26, $16, $00
 .ENDS 
 
 LakituAndSpinyHandler:
@@ -587,7 +592,7 @@ LakituAndSpinyHandler:
     RET NZ
 ;
     LD A, H
-    CP A, $C0 + OBJ_SLOT6               ;if we are on the special use slot, leave
+    CP A, $C6                           ;if we are on the special use slot, leave
     RET NC
 ;
     LD A, $80                           ;set timer
@@ -667,22 +672,16 @@ CreateSpiny:
     addAToBC8_M
     LD A, (BC)                          ;get 2 LSB of LSFR and save to Y
     AND A, %00000011
-    LD BC, PRDiffAdjustData
-    addAToBC8_M
+    ADD A, A
+    ADD A, A
+    LD HL, PRDiffAdjustData
+    addAToHL8_M
+    LD DE, Temp_Bytes + $03             ;get three values and save them
+    LDD                                 ;to $01-$03
+    LDD
+    LDD
+    LD HL, (ObjectOffset)               ;get enemy object buffer offset
 ;
-DifLoop:
-    LD A, (BC)                          ;get three values and save them
-    LD (Temp_Bytes + $03), A            ;to $01-$03
-    LD A, $04
-    addAToBC8_M
-    LD A, (BC)
-    LD (Temp_Bytes + $02), A
-    LD A, $04
-    addAToBC8_M
-    LD A, (BC)
-    LD (Temp_Bytes + $01), A
-;
-    ;LD HL, (ObjectOffset)              ;get enemy object buffer offset
     CALL PlayerLakituDiff               ;move enemy, change direction, get value - difference
 ;     EX AF, AF'
 ;     LD A, (Player_X_Speed)              ;check player's horizontal speed
@@ -1092,6 +1091,7 @@ SetFrT:
     LD BC, FlameYPosData
     addAToBC8_M
     LD A, (BC)
+    ; FALL THROUGH
 
 PutAtRightExtent:
     LD L, <Enemy_Y_Position
@@ -1149,6 +1149,7 @@ SetMF:
     LD (HL), A
     XOR A
     LD (EnemyFrenzyBuffer), A
+    ; FALL THROUGH
 
 FinishFlame:
     LD L, <Enemy_BoundBoxCtrl

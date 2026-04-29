@@ -2857,140 +2857,140 @@ FlyCC:
 MoveLakitu:
     POP HL
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                          ;check lakitu's enemy state
     LD A, (HL)
-    BIT 5, A
-    JP NZ, MoveD_EnemyVertically
+    BIT 5, A                                    ;for d5 set
+    JP NZ, MoveD_EnemyVertically                ;if set, jump to move defeated lakitu downwards
 ;
-    OR A
-    JP Z, Fr12S
+    OR A                                        ;if lakitu's enemy state not set at all,
+    JP Z, Fr12S                                 ;go ahead and continue with code
 ;
     XOR A
-    LD L, <LakituMoveDirection
+    LD L, <LakituMoveDirection                  ;otherwise initialize moving direction to move to left
     LD (HL), A
-    LD (EnemyFrenzyBuffer), A
+    LD (EnemyFrenzyBuffer), A                   ;initialize frenzy buffer
     LD A, $10
-    JP SetLSpd
+    JP SetLSpd                                  ;load horizontal speed and do unconditional branch
 ;
 Fr12S:
     LD A, OBJECTID_Spiny
-    LD (EnemyFrenzyBuffer), A
+    LD (EnemyFrenzyBuffer), A                   ;set spiny identifier in frenzy buffer
 ;
     LD A, $40
-    LD (Temp_Bytes + $03), A
+    LD (Temp_Bytes + $03), A                    ;load values
     LD A, $30
     LD (Temp_Bytes + $02), A 
     LD A, $15
     LD (Temp_Bytes + $01), A
 ;
-    CALL PlayerLakituDiff
+    CALL PlayerLakituDiff                       ;execute sub to set speed and create spinys
 ;
 SetLSpd:
-    LD L, <LakituMoveSpeed
+    LD L, <LakituMoveSpeed                      ;set movement speed returned from sub
     LD (HL), A
-    LD C, $01
+    LD C, $01                                   ;set moving direction to right by default
     LD L, <LakituMoveDirection
     LD A, (HL)
-    AND A, $01
-    JP NZ, SetLMov
-    LD L, <LakituMoveSpeed
+    AND A, $01                                  ;get LSB of moving direction
+    JP NZ, SetLMov                              ;if set, branch to the end to use moving direction
+    LD L, <LakituMoveSpeed                      ;get two's compliment of moving speed
     LD A, (HL)
     NEG
-    LD (HL), A
-    INC C
+    LD (HL), A                                  ;store as new moving speed
+    INC C                                       ;increment moving direction to left
 SetLMov:
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir                      ;store moving direction
     LD (HL), C
-    JP MoveEnemyHorizontally
+    JP MoveEnemyHorizontally                    ;move lakitu horizontally
 
 PlayerLakituDiff:
-    LD C, $00
-    CALL PlayerEnemyDiff
-    JP P, ChkLakDif
-    INC C
-    LD A, (Temp_Bytes + $00)
+    LD C, $00                                   ;set Y for default value
+    CALL PlayerEnemyDiff                        ;get horizontal difference between enemy and player
+    JP P, ChkLakDif                             ;branch if enemy is to the right of the player
+    INC C                                       ;increment Y for left of player
+    LD A, (Temp_Bytes + $00)                    ;get two's compliment of low byte of horizontal difference
     NEG
     LD (Temp_Bytes + $00), A
+;
 ChkLakDif:
-    LD A, (Temp_Bytes + $00)
-    CP A, $3C
+    LD A, (Temp_Bytes + $00)                    ;get low byte of horizontal difference
+    CP A, $3C                                   ;if within a certain distance of player, branch
     JP C, ChkPSpeed
-    LD A, $3C
-    LD (Temp_Bytes + $00), A
-    LD L, <Enemy_ID
-    LD A, (HL)
-    CP A, OBJECTID_Lakitu
-    JP NZ, ChkPSpeed
-    LD A, C
-    LD L, <LakituMoveDirection
-    CP A, (HL)
-    JP Z, ChkPSpeed
-    LD A, (HL)
-    OR A
-    JP Z, SetLMovD
-    LD L, <LakituMoveSpeed
-    DEC (HL)
-    ;LD A, (HL)
-    ;OR A
-    RET NZ
-SetLMovD:
-    LD L, <LakituMoveDirection
-    ;LD A, C
-    ;LD (HL), A
-    LD (HL), C
-ChkPSpeed:
-    LD A, (Temp_Bytes + $00)
-    AND A, %00111100
-    SRL A
-    SRL A
+    LD A, $3C                                   ;otherwise set maximum distance
     LD (Temp_Bytes + $00), A
 ;
-    LD C, $00
+    LD L, <Enemy_ID                             ;check if lakitu is in our current enemy slot
+    LD A, (HL)
+    CP A, OBJECTID_Lakitu
+    JP NZ, ChkPSpeed                            ;if not, branch elsewhere
+    LD A, C                                     ;compare contents of C, now in A
+    LD L, <LakituMoveDirection                  ;to what is being used as horizontal movement direction
+    CP A, (HL)
+    JP Z, ChkPSpeed                             ;if moving toward the player, branch, do not alter
+    LD A, (HL)                                  ;if moving to the left beyond maximum distance,
+    OR A
+    JP Z, SetLMovD                              ;branch and alter without delay
+    LD L, <LakituMoveSpeed                      ;decrement horizontal speed
+    DEC (HL)
+    RET NZ
+SetLMovD:
+    LD L, <LakituMoveDirection                  ;set horizontal direction depending on horizontal
+    LD (HL), C                                  ;difference between enemy and player if necessary
+;
+ChkPSpeed:
+    LD A, (Temp_Bytes + $00)
+    AND A, %00111100                            ;mask out all but four bits in the middle
+    RRCA                                        ;divide masked difference by four                          
+    RRCA
+    LD (Temp_Bytes + $00), A                    ;store as new value
+    LD E, A                                     ;save in E for later loop
+;
+    LD C, $00                                   ;init offset
     LD A, (Player_X_Speed)
     OR A
-    JP Z, SubDifAdj
+    JP Z, SubDifAdj                             ;if player not moving horizontally, branch
     LD A, (ScrollAmount)
     OR A
-    JP Z, SubDifAdj
-    INC C
+    JP Z, SubDifAdj                             ;if scroll speed not set, branch to same place
+    INC C                                       ;otherwise increment offset
     LD A, (Player_X_Speed)
 
     .IF PALBUILD == $00
-    CP A, $19
+    CP A, $19                                   ;if player not running, branch
     .ELSE
-    CP A, $1D                               ;PAL diff: Faster speed cutoffs to compensate FPS difference
+    CP A, $1D                                   ;PAL diff: Faster speed cutoffs to compensate FPS difference
     .ENDIF
 
     JP C, ChkSpinyO
-    LD A, (ScrollAmount)
+    LD A, (ScrollAmount)                        ;if scroll speed below a certain amount, branch
     CP A, $02
-    JP C, ChkSpinyO
-    INC C
+    JP C, ChkSpinyO                             ;to same place
+    INC C                                       ;otherwise increment once more
+;
 ChkSpinyO:
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                             ;check for spiny object
     LD A, (HL)
     CP A, OBJECTID_Spiny
-    JP NZ, ChkEmySpd
-    LD A, (Player_X_Speed)
+    JP NZ, ChkEmySpd                            ;branch if not found
+    LD A, (Player_X_Speed)                      ;if player not moving, skip this part
     OR A
     JP NZ, SubDifAdj
 ChkEmySpd:
-    LD L, <Enemy_Y_Speed
+    LD L, <Enemy_Y_Speed                        ;check vertical speed
     LD A, (HL)
     OR A
-    JP NZ, SubDifAdj
-    LD C, $00
+    JP NZ, SubDifAdj                            ;branch if nonzero
+    LD C, $00                                   ;otherwise reinit offset
 SubDifAdj:
     LD A, C
-    LD BC, Temp_Bytes + $01
+    LD BC, Temp_Bytes + $01                     ;get one of three saved values from earlier
     addAToBC8_M
-    LD A, (Temp_Bytes + $00)
-    LD B, A
-    INC B
     LD A, (BC)
+    LD B, E                                     ;get saved horizontal difference
+    INC B
 SPixelLak:
-    DEC A
-    DJNZ SPixelLak
+    DEC A                                       ;subtract one for each pixel of horizontal difference
+    DJNZ SPixelLak                              ;from one of three saved values
     RET
 
 ;-------------------------------------------------------------------------------------

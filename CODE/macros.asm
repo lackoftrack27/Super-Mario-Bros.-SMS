@@ -10,7 +10,7 @@
 .FUNCTION StripeCount(v) -(v << $01) & $00FF
 
 
-;   Macros for player BG collision
+;   Macros for BG collision
 .MACRO BlockBufferColli_Head
     XOR A
     CALL BlockBufferColli_Side@SetPlayerOffset
@@ -20,6 +20,12 @@
     INC C
     XOR A
     CALL BlockBufferColli_Side@SetPlayerOffset
+.ENDM
+
+.MACRO ChkUnderEnemy
+    XOR A
+    LD C, $15
+    CALL BlockBufferChk_Enemy
 .ENDM
 
 ;   Macros for sprite drawing

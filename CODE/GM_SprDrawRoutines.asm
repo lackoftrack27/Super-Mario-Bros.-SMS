@@ -100,29 +100,104 @@ NextVSp:
 ;-------------------------------------------------------------------------------------
 
 .SECTION "Sprite Drawing TBLs for Hammer" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-FirstSprXPos:
-    .db $04, $00, $04, $00
 
-FirstSprYPos:
-    .db $00, $04, $00, $04
+; FirstSprYPos:
+;     .db $00, $04, $00, $04
 
-SecondSprXPos:
-    .db $00, $08, $00, $08
+; SecondSprYPos:
+;     .db $08, $00, $08, $00
 
-SecondSprYPos:
-    .db $08, $00, $08, $00
+; FirstSprXPos:
+;     .db $04, $00, $04, $00
 
-FirstSprTilenum:
-    .db $80, $82, $81, $83
+; SecondSprXPos:
+;     .db $00, $08, $00, $08
 
-SecondSprTilenum:
-    .db $81, $83, $80, $82
+; FirstSprTilenum:
+;     .db $80, $82, $81, $83
+
+; SecondSprTilenum:
+;     .db $81, $83, $80, $82
+
+HammerSpriteData:
+    .db $00, $08, $04, $E4, $00, $E5, $00, $00    ; FIRST (DOWN)
+    .db $04, $00, $00, $E6, $08, $E7, $00, $00    ; SECOND (LEFT)
+    .db $00, $08, $04, $E5, $00, $E8, $00, $00    ; THIRD (UP)
+    .db $04, $00, $00, $E7, $08, $E9, $00, $00    ; FOURTH (RIGHT)
 
 ; HammerSprAttrib:
 ;     .db $03, $03, $c3, $c3
 .ENDS
 
 DrawHammer:
+    LD BC, HammerSpriteData
+;
+    LD D, H
+    INC D
+    INC D
+    LD E, <SprDataOffset
+    LD A, (DE)
+    LD IXL, A
+    LD E, A
+    LD D, >Sprite_Y_Position
+;
+    LD A, (TimerControl)
+    OR A
+    JP NZ, RenderH
+;
+    LD L, <Misc_State
+    LD A, (HL)
+    AND A, %01111111
+    CP A, $01
+    JP NZ, RenderH
+;
+    LD A, (FrameCounter)
+    AND A, %00001100
+    ADD A, A
+    ADD A, C
+    LD C, A
+;
+RenderH:
+    LD L, C
+    LD H, B
+    ;
+    LD A, (Misc_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
+    ADD A, (HL)
+    LD (DE), A
+    INC E
+    INC L
+    ADD A, (HL)
+    LD (DE), A
+    DEC E
+    INC L
+    ;
+    SLA E
+    SET 7, E
+    LD A, (Misc_Rel_XPos)
+    ADD A, (HL)
+    LD (DE), A
+    INC E
+    INC L
+    LDI
+    ADD A, (HL)
+    LD (DE), A
+    INC E
+    INC L
+    LDI
+;
+    LD HL, (ObjectOffset)
+    LD A, (Misc_OffscrBits)
+    AND A, %11111100
+    RET Z
+    LD L, <Misc_State
+    LD (HL), $00
+    LD E, IXL
+    LD D, >Sprite_Y_Position
+    LD A, YPOS_OFFSCREEN
+    LD (DE), A
+    INC E
+    LD (DE), A
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -528,10 +603,10 @@ EnemyGraphicsTable:
     .db $00, $00, $9C, $9D, $9E, $9F  ;cheep-cheep frame 1 (red) [$9C]
     .db $00, $00, $A0, $9D, $A1, $9F  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $C8, $C9, $CA, $CB, $CC, $CD  ;hammer bro frame 1
-    .db $C8, $C9, $CE, $CF, $D0, $D1  ;           frame 2
-    .db $D2, $D3, $D4, $D5, $CC, $CD  ;           frame 3
-    .db $D2, $D3, $D4, $D5, $D0, $D1  ;           frame 4
+    .db $C8, $C9, $D2, $D3, $DE, $DF  ;hammer bro frame 1
+    .db $C8, $C9, $D0, $D1, $DC, $DD  ;           frame 2
+    .db $CA, $CB, $D4, $D5, $DE, $DF  ;           frame 3
+    .db $CA, $CB, $D4, $D5, $DC, $DD  ;           frame 4
     ; ---
     .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
     .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
@@ -597,10 +672,10 @@ EnemyGraphicsTable_HFlip:
     .db $00, $00, $A2, $A3, $A4, $A5  ;cheep-cheep frame 1 (red)
     .db $00, $00, $A2, $A6, $A4, $A7  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $D6, $D7, $D8, $D9, $DA, $DB  ;hammer bro frame 1
-    .db $D6, $D7, $DC, $DD, $DE, $DF  ;           frame 2
-    .db $E0, $E1, $E2, $E3, $DA, $DB  ;           frame 3
-    .db $E0, $E1, $E2, $E3, $DE, $DF  ;           frame 4
+    .db $CC, $CD, $D8, $D9, $E2, $E3  ;hammer bro frame 1
+    .db $CC, $CD, $D6, $D7, $E0, $E1  ;           frame 2
+    .db $CE, $CF, $DA, $DB, $E2, $E3  ;           frame 3
+    .db $CE, $CF, $DA, $DB, $E0, $E1  ;           frame 4
     ; ---
     .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
     .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
@@ -885,7 +960,7 @@ CheckForHammerBro:
     JP Z, CheckToAnimateEnemy
 ;
     AND A, %00001000
-    JP NZ, CheckDefeatedState
+    JP Z, CheckDefeatedState
 ;
     LD L, $B4
     JP CheckToAnimateEnemy

@@ -947,40 +947,41 @@ HammerXSpdData:
 .ENDS
 
 SpawnHammerObj:
-    LD A, (PseudoRandomBitReg+1)
-    AND A, %00000111
-    JP NZ, SetMOfs
-    LD A, (PseudoRandomBitReg+1)
+    LD A, (PseudoRandomBitReg+1)            ;get pseudorandom bits from
+    AND A, %00000111                        ;second part of LSFR
+    JP NZ, SetMOfs                          ;if any bits are set, branch and use as offset
+    LD A, (PseudoRandomBitReg+1)            ;get d3 from same part of LSFR
     AND A, %00001000
 SetMOfs:
-    LD L, A
-    ADD A, >Misc_State
+    LD L, A                                 ;use either d3 or d2-d0 for offset here
+    LD DE, Misc_State
+    ADD A, D
     LD D, A
-    LD E, >Misc_State
-    LD A, (DE)
-    OR A
+    LD A, (DE)                              ;if any values loaded in
+    OR A                                    ;$2a-$32 where offset is then leave with carry clear
     RET NZ
 ;    
-    LD A, L
+    LD A, L                                 ;get offset of enemy slot to check using Y as offset
     ADD A, <HammerEnemyOfsData
     LD L, A
     LD H, >HammerEnemyOfsData
     LD H, (HL)
-    LD L, <Enemy_Flag
+    LD L, <Enemy_Flag                       ;check enemy buffer flag at offset
     LD A, (HL)
-    OR A
-    LD HL, (ObjectOffset)
+    OR A                                    ;if buffer flag set, branch to leave with carry clear
+    LD A, H                                 ;put retrieved offset into A
+    LD HL, (ObjectOffset)                   ;get original enemy object offset in case we leave
     RET NZ
 ;
-    LD E, <HammerEnemyOffset
-    LD A, H
+    LD E, <HammerEnemyOffset                ;save retrieved offset here
     LD (DE), A
-    LD E, <Misc_State
+    LD E, <Misc_State                       ;save hammer's state here
     LD A, $90
     LD (DE), A
-    LD E, <Misc_BoundBoxCtrl
+    LD E, <Misc_BoundBoxCtrl                ;set something else entirely, here
+    LD A, $07
     LD (DE), A
-    SCF
+    SCF                                     ;return with carry set
     RET
 
 ;--------------------------------
@@ -989,86 +990,84 @@ SetMOfs:
 ;$02(IYL) - used to set maximum speed
 
 ProcHammerObj:
-    LD A, (TimerControl)
+    LD A, (TimerControl)                    ;if master timer control set
     OR A
-    JP NZ, RunHSubs
+    JP NZ, RunHSubs                         ;skip all of this code and go to last subs at the end
 ;
-    LD L, <Misc_State
+    LD L, <Misc_State                       ;otherwise get hammer's state
     LD A, (HL)
-    AND A, %01111111
-    LD L, <HammerEnemyOffset
+    AND A, %01111111                        ;mask out d7
+    LD L, <HammerEnemyOffset                ;get enemy object offset that spawned this hammer
     LD D, (HL)
-    CP A, $02
-    JP Z, SetHSpd
-    JP NC, SetHPos
+    CP A, $02                               ;check hammer's state
+    JP Z, SetHSpd                           ;if currently at 2, branch
+    JP NC, SetHPos                          ;if greater than 2, branch elsewhere
     
     .IF PALBUILD == $00
-    LD BC, $1004
+    LD BC, $1004                            ;set downward movement force and maximum vertical speed
     .ELSE
-    LD BC, $2304                             ;PAL diff: Faster acceleration to compensate FPS difference
+    LD BC, $2304                            ;PAL diff: Faster acceleration to compensate FPS difference
     .ENDIF
     
-    XOR A
-    CALL ImposeGravity
-    CALL MoveObjectHorizontally
-    ;LD HL, (ObjectOffset)
-    JP RunAllH
+    XOR A                                   ;set A to impose gravity on hammer
+    CALL ImposeGravity                      ;do sub to impose gravity on hammer and move vertically
+    CALL MoveObjectHorizontally             ;do sub to move it horizontally
+    CALL PlayerHammerCollision              ;handle collisions
+    JP RunHSubs                             ;branch to essential subroutines
 ;
 SetHSpd:
     LD L, <Misc_Y_Speed
     
     .IF PALBUILD == $00
-    LD (HL), $FE
+    LD (HL), $FE                            ;set hammer's vertical speed
     .ELSE
     LD (HL), $FD                            ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-    LD E, <Enemy_State
+    LD E, <Enemy_State                      ;get enemy object state
     LD A, (DE)
-    AND A, %11110111
-    LD (DE), A
+    AND A, %11110111                        ;mask out d3
+    LD (DE), A                              ;store new state
 
-    LD E, <Enemy_MovingDir
+    LD E, <Enemy_MovingDir                  ;get enemy's moving direction
     LD A, (DE)
-    DEC A
-    LD BC, HammerXSpdData
+    DEC A                                   ;decrement to use as offset
+    LD BC, HammerXSpdData                   ;get proper speed to use based on moving direction
     addAToBC8_M
     LD A, (BC)
-    LD L, <Misc_X_Speed
+    LD L, <Misc_X_Speed                     ;set hammer's horizontal speed
     LD (HL), A
 ;
 SetHPos:
-    LD L, <Misc_State
+    LD L, <Misc_State                       ;decrement hammer's state
     DEC (HL)
 
-    LD E, <Enemy_X_Position
+    LD E, <Enemy_X_Position                 ;get enemy's horizontal position
     LD L, <Misc_X_Position
     LD A, (DE)
-    ADD A, $02
-    LD (HL), A
+    ADD A, $02                              ;set position 2 pixels to the right
+    LD (HL), A                              ;store as hammer's horizontal position
 
-    LD E, <Enemy_PageLoc
+    LD E, <Enemy_PageLoc                    ;get enemy's page location
     LD L, <Misc_PageLoc
     LD A, (DE)
-    ADC A, $00
-    LD (HL), A
+    ADC A, $00                              ;add carry
+    LD (HL), A                              ;store as hammer's page location
 
-    LD E, <Enemy_Y_Position
+    LD E, <Enemy_Y_Position                 ;get enemy's vertical position
     LD L, <Misc_Y_Position
     LD A, (DE)
-    SUB A, $0A
-    LD (HL), A
+    SUB A, $0A                              ;move position 10 pixels upward
+    LD (HL), A                              ;store as hammer's vertical position
 
-    LD L, <Misc_Y_HighPos
+    LD L, <Misc_Y_HighPos                   ;set hammer's vertical high byte
     LD (HL), $01
-    JP RunHSubs
-RunAllH:
-    CALL PlayerHammerCollision
 RunHSubs:
-    GetMiscOffscreenBits_M
-    RelativeMiscPosition_M
-    CALL GetMiscBoundBox
-    JP DrawHammer
+    GetMiscOffscreenBits_M                  ;get offscreen information
+    RelativeMiscPosition_M                  ;get relative coordinates
+    CALL GetMiscBoundBox                    ;get bounding box coordinates
+    CALL DrawHammer                         ;draw the hammer
+    JP MiscLoopBack
 
 ;-------------------------------------------------------------------------------------
 
@@ -1784,155 +1783,143 @@ RevivedXSpeed:
 ProcHammerBro:
     POP HL
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                      ;check hammer bro's enemy state for d5 set
     BIT 5, (HL)
-    JP NZ, MoveDefeatedEnemy
+    JP NZ, MoveDefeatedEnemy                ;if set, jump to something else
 ;
-    LD L, <HammerBroJumpTimer
+    LD L, <HammerBroJumpTimer               ;check jump timer
     LD A, (HL)
     OR A
-    JP Z, HammerBroJumpCode
+    JP Z, HammerBroJumpCode                 ;if expired, branch to jump
 ;
-    DEC (HL)
-    LD A, (Enemy_OffscrBits)
+    DEC (HL)                                ;otherwise decrement jump timer
+    LD A, (Enemy_OffscrBits)                ;check offscreen bits
     AND A, %00001100
-    JP NZ, MoveHammerBroXDir
+    JP NZ, MoveHammerBroXDir                ;if hammer bro a little offscreen, skip to movement code
 ;
-    LD L, <HammerThrowingTimer
+    LD L, <HammerThrowingTimer              ;check hammer throwing timer
     LD A, (HL)
     OR A
-    JP NZ, DecHT
-;
-    LD A, (SecondaryHardMode)
-    OR A
+    JP NZ, DecHT                            ;if not expired, skip ahead, do not throw hammer
+    LD A, (SecondaryHardMode)               ;otherwise get secondary hard mode flag
+    OR A                                    ;get timer data using flag as offset
     LD A, $30
     JP Z, +
     LD A, $1C
 +:
-    LD (HL), A
+    LD (HL), A                              ;set as new timer
 ;
-    CALL SpawnHammerObj
-    JP NC, DecHT
+    CALL SpawnHammerObj                     ;do a sub here to spawn hammer object
+    JP NC, DecHT                            ;if carry clear, hammer not spawned, skip to decrement timer
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                      ;set d3 in enemy state for hammer throw
     SET 3, (HL)
 ;
-    JP MoveHammerBroXDir
+    JP MoveHammerBroXDir                    ;jump to move hammer bro
 ;
 DecHT:
-    LD L, <HammerThrowingTimer
+    LD L, <HammerThrowingTimer              ;decrement timer
     DEC (HL)
-    JP MoveHammerBroXDir
+    JP MoveHammerBroXDir                    ;jump to move hammer bro
 
-.SECTION "HammerBroJumpLData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-HammerBroJumpLData:
-    .db $20, $37
-.ENDS
+; .SECTION "HammerBroJumpLData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; HammerBroJumpLData:
+;     .db $20, $37
+; .ENDS
 
 HammerBroJumpCode:
-    LD L, <Enemy_State
+    LD L, <Enemy_State                      ;get hammer bro's enemy state
     LD A, (HL)
-    AND A, %00000111
-    CP A, $01
-    JP Z, MoveHammerBroXDir
+    AND A, %00000111                        ;mask out all but 3 LSB
+    CP A, $01                               ;check for d0 set (for jumping)
+    JP Z, MoveHammerBroXDir                 ;if set, branch ahead to moving code
 ;
-    XOR A
-    LD (Temp_Bytes + $00), A
-;
-    LD C, $FA
-    LD L, <Enemy_Y_Position
-    LD A, (HL)
-    CP A, $80
-    JP NC, SetHJ
-    LD C, $FD
-    CP A, $70
-    LD A, (Temp_Bytes + $00)
-    INC A
-    LD (Temp_Bytes + $00), A
-    JP C, SetHJ
-    DEC A
-    LD (Temp_Bytes + $00), A
-    LD A, H
+    LD A, H 
     SUB A, $C1
     LD BC, PseudoRandomBitReg+1
     addAToBC8_M
-    LD A, (BC)
-    AND A, $01
-    JP NZ, SetHJ
-    LD C, $FA
-SetHJ:
-    LD L, <Enemy_Y_Speed
-    LD (HL), C
 ;
-    LD L, <Enemy_State
+    LD DE, $00FA                            ;set default value and vertical speed
+    LD L, <Enemy_Y_Position                 ;check hammer bro's vertical coordinate
+    LD A, (HL)
+    OR A
+    JP M, SetHJ                             ;if on the bottom half of the screen, use current speed
+    LD E, $FD                               ;otherwise set alternate vertical speed
+    CP A, $70                               ;check to see if hammer bro is above the middle of screen
+    INC D                                   ;increment preset value to $01
+    JP C, SetHJ                             ;if above the middle of the screen, use current speed and $01
+    DEC D                                   ;otherwise return value to $00
+    LD A, (BC)                              ;get part of LSFR, mask out all but LSB
+    AND A, $01
+    JP NZ, SetHJ                            ;if d0 of LSFR set, branch and use current speed and $00
+    LD E, $FA                               ;otherwise reset to default vertical speed
+SetHJ:
+    LD L, <Enemy_Y_Speed                    ;set vertical speed for jumping
+    LD (HL), E
+;
+    LD L, <Enemy_State                      ;set d0 in enemy state for jumping
     SET 0, (HL)
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+2
-    addAToBC8_M
-    PUSH BC
-    LD A, (Temp_Bytes + $00)
-    LD C, A
-    LD A, (BC)
-    AND A, C
-    LD C, A
-    LD A, (SecondaryHardMode)
+    INC C                                   ;PseudoRandomBitReg+2
+    LD A, (BC)                              ;load part of LSFR
+    AND A, D                                ;and do bit-wise comparsion with preset value
+    LD E, A                                 ;then use as offset
+    LD A, (SecondaryHardMode)               ;check secondary hard mode flag
     OR A
     JP NZ, HJump
-    LD C, A
+    LD E, A                                 ;if secondary hard mode flag clear, set offset to 0
 HJump:
-    LD A, C
-    LD BC, HammerBroJumpLData
-    addAToBC8_M
+    DEC C                                   ;PseudoRandomBitReg+1
+    LD A, (BC)                              ;get contents of part of LSFR, set d7 and d6, then
+    OR A, %11000000
+    LD L, <HammerBroJumpTimer               ;store in jump timer
+    LD (HL), A
+;
     LD A, H
     SUB A, $C1
-    LD DE, EnemyFrameTimer
-    addAToDE8_M
-    LD A, (BC)
-    LD (DE), A
-;
-    POP BC
-    DEC C
-    LD A, (BC)
-    OR A, %11000000
-    LD L, <HammerBroJumpTimer
-    LD (HL), A
+    LD BC, EnemyFrameTimer
+    addAToBC8_M
+    LD A, $20                               ;get jump length timer data using offset from before
+    DEC E
+    JP NZ, +
+    LD A, $37
++:
+    LD (BC), A                              ;save in enemy timer
 
 MoveHammerBroXDir:
 
     .IF PALBUILD == $00
-    LD C, $FC
+    LD C, $FC                               ;move hammer bro a little to the left
     .ELSE
     LD C, $FB                               ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-    LD A, (FrameCounter)
+    LD A, (FrameCounter)                    ;change hammer bro's direction every 64 frames
     AND A, %01000000
     JP NZ, Shimmy
     
     .IF PALBUILD == $00
-    LD C, $04
+    LD C, $04                               ;if d6 set in counter, move him a little to the right
     .ELSE
     LD C, $05                               ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
 Shimmy:
-    LD L, <Enemy_X_Speed
+    LD L, <Enemy_X_Speed                    ;store horizontal speed
     LD (HL), C
 ;
-    LD C, $01
-    CALL PlayerEnemyDiff
-    JP M, SetShim
-    INC C
+    LD C, $01                               ;set to face right by default
+    CALL PlayerEnemyDiff                    ;get horizontal difference between player and hammer bro
+    JP M, SetShim                           ;if enemy to the left of player, skip this part
+    INC C                                   ;set to face left
     LD A, H
     SUB A, $C1
-    LD DE, EnemyIntervalTimer
+    LD DE, EnemyIntervalTimer               ;check walking timer
     addAToDE8_M
     LD A, (DE)
     OR A
-    JP NZ, SetShim
-    LD L, <Enemy_X_Speed
+    JP NZ, SetShim                          ;if not yet expired, skip to set moving direction
+    LD L, <Enemy_X_Speed                    ;otherwise, make the hammer bro walk left towards player
 
     .IF PALBUILD == $00
     LD (HL), $F8
@@ -1941,8 +1928,9 @@ Shimmy:
     .ENDIF
 
 SetShim:
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir                  ;set moving direction
     LD (HL), C
+    JP MoveNormalEnemy_NOPOP
 
 MoveNormalEnemy:
     POP HL
@@ -5005,8 +4993,8 @@ MiscLoop:
     OR A
     JP Z, MiscLoopBack                  ;branch to check next slot
     JP P, ProcJumpCoin                  ;if d7 not set, jumping coin, thus skip to rest of code here
-    CALL ProcHammerObj                  ;otherwise go to process hammer,
-    JP MiscLoopBack                     ;then check next slot
+    JP ProcHammerObj                    ;otherwise go to process hammer,
+    ;JP MiscLoopBack                     ;then check next slot
 
 ;--------------------------------
 ;$00(B) - used to set downward force
@@ -5637,6 +5625,7 @@ PlayerHammerCollision:
     LD A, (TimerControl)
     LD C, A
     LD A, (Misc_OffscrBits)
+    OR A, C
     RET NZ
 ;
     LD D, H
@@ -5646,6 +5635,7 @@ PlayerHammerCollision:
 ;
     LD L, <Misc_Collision_Flag
     LD A, (HL)
+    OR A
     RET NZ
 ;
     LD (HL), $01
@@ -7288,6 +7278,8 @@ EnemyToBGCollisionDet:
     LD A, (HL)
     CP A, $25
     RET C
+    LD L, <Enemy_ID
+    LD A, (HL)
 
 DoIDCheckBGColl:
     CP A, OBJECTID_GreenParatroopaJump
@@ -7305,7 +7297,7 @@ DoIDCheckBGColl:
     RET NC
 ;
 YesIn:
-    CALL ChkUnderEnemy
+    ChkUnderEnemy ;CALL ChkUnderEnemy
     JP Z, ChkForRedKoopa
 
 ;--------------------------------
@@ -7558,9 +7550,12 @@ NoBump:
     LD A, (HL)
     CP A, $05
     JP NZ, RXSpd
-    XOR A
-    LD (Temp_Bytes + $00), A
-    LD C, $FA
+    
+    LD A, H 
+    SUB A, $C1
+    LD BC, PseudoRandomBitReg+1
+    addAToBC8_M
+    LD DE, $00FA
     JP SetHJ
 
 ;--------------------------------
@@ -7608,7 +7603,7 @@ EnemyJump:
     CP A, $03
     JP C, DoEnemySideCheck
 ;
-    CALL ChkUnderEnemy
+    ChkUnderEnemy ;CALL ChkUnderEnemy
     JP Z, DoEnemySideCheck
 ;
     CALL ChkForNonSolids
@@ -7622,7 +7617,7 @@ EnemyJump:
 ;--------------------------------
 
 HammerBroBGColl:
-    CALL ChkUnderEnemy
+    ChkUnderEnemy ;CALL ChkUnderEnemy
     JP Z, NoUnderHammerBro
     CP A, MT_HITBLANK
     JP NZ, UnderHammerBro
@@ -7655,10 +7650,10 @@ NoUnderHammerBro:
     SET 0, (HL)
     RET
 
-ChkUnderEnemy:
-    XOR A
-    LD C, $15
-    JP BlockBufferChk_Enemy
+; ChkUnderEnemy:
+;     XOR A
+;     LD C, $15
+;     JP BlockBufferChk_Enemy
 
 ChkForNonSolids:
     CP A, MT_VINEBLANK
@@ -7771,27 +7766,27 @@ GetEnemyBoundBox:
 GetMaskedOffScrBits:
     LD A, (ScreenLeft_X_Pos)
     LD E, A
-    LD L, <Enemy_X_Position
-    LD A, (HL)
+    LD L, <Enemy_X_Position                 ;get enemy object position relative
+    LD A, (HL)                              ;to the left side of the screen
     SUB A, E
-    LD D, A
+    LD D, A                                 ;store here
 ;
-    LD A, (ScreenLeft_PageLoc)
+    LD A, (ScreenLeft_PageLoc)              ;subtract borrow from current page location
     LD E, A
-    LD L, <Enemy_PageLoc
+    LD L, <Enemy_PageLoc                    ;of left side
     LD A, (HL)
     SBC A, E
-    JP M, CMBits
+    JP M, CMBits                            ;if enemy object is beyond left edge, branch
 ;
     OR A, D
-    JP Z, CMBits
-    LD C, B
+    JP Z, CMBits                            ;if precisely at the left edge, branch
+    LD C, B                                 ;if to the right of left edge, use value in $00 for A
 CMBits:
-    LD A, (Enemy_OffscrBits)
+    LD A, (Enemy_OffscrBits)                ;otherwise use contents of C
     AND A, C
-    LD L, <EnemyOffscrBitsMasked
-    LD (HL), A
-    JP NZ, MoveBoundBoxOffscreen
+    LD L, <EnemyOffscrBitsMasked            ;preserve bitwise whatever's in here
+    LD (HL), A                              ;save masked offscreen bits here
+    JP NZ, MoveBoundBoxOffscreen            ;if anything set here, branch
     ; FALL THROUGH
 
 SetupEOffsetFBBox:

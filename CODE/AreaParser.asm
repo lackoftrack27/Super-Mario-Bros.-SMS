@@ -1536,7 +1536,7 @@ BulletBillCannon:
     CALL RenderUnderPart
 SetupCannon:
     LD A, (Cannon_Offset)               ;get offset for data used by cannons and whirlpools
-    ADD A, $C0                          ;(SMS) set high byte for RAM address (offset)
+    ADD A, >Cannon_Y_Position           ;(SMS) set high byte for RAM address (offset)
     LD H, A
     CALL GetAreaObjYPosition            ;get proper vertical coordinate for cannon
     LD L, <Cannon_Y_Position
@@ -1549,11 +1549,11 @@ SetupCannon:
     LD (HL), A                          ;and store it here
     INC H
     LD A, H
-    CP A, $C6                           ;increment and check offset
+    CP A, $C7                           ;increment and check offset
     JP C, StrCOffset                    ;if not yet reached sixth cannon, branch to save offset
-    LD A, $C0                           ;otherwise initialize it
+    LD A, $C1                           ;otherwise initialize it
 StrCOffset:
-    SUB A, $C0
+    SUB A, >Cannon_Y_Position
     LD (Cannon_Offset), A               ;save new offset and leave
     RET
 

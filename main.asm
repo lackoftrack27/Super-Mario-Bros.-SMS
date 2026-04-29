@@ -1968,7 +1968,7 @@ Palette1_MTiles:
     ; Bridge
     .dw BG_MACRO($017E), BLANKTILE, BG_MACRO($017E), BLANKTILE
     ; Bullet Bill
-    .dw BG_MACRO($014B), BG_MACRO($014C), BG_MACRO($034B), BG_MACRO($014D)  ; barrel
+    .dw BG_MACRO($114B), BG_MACRO($114C), BG_MACRO($134B), BG_MACRO($114D)  ; barrel
     .dw BG_MACRO($014E), BG_MACRO($014F), BG_MACRO($0150), BG_MACRO($0151)  ; top
     .dw BG_MACRO($0152), BG_MACRO($0152), BG_MACRO($0153), BG_MACRO($0153)  ; bottom
     ; Jumpspring

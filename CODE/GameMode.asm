@@ -210,7 +210,9 @@ ProcELoop:
     CALL BlockObjectsCore
 ;
     CALL MiscObjectsCore
-    CALL ProcessCannons
+    LD A, (AreaType)
+    OR A
+    CALL NZ, ProcessCannons
     ;CALL ProcessWhirlpools
     CALL FlagpoleRoutine
     CALL RunGameTimer
@@ -746,156 +748,153 @@ BubbleTimerData:
 ;-------------------------------------------------------------------------------------
 
 ProcessCannons:
-    LD A, (AreaType)
-    OR A
-    RET Z
-;
     LD H, $C3
 ThreeSChk:
-    LD L, <Enemy_Flag
+    LD (ObjectOffset), HL           ;start at third enemy slot
+    LD L, <Enemy_Flag               ;check enemy buffer flag
     LD A, (HL)
     OR A
-    JP NZ, Chk_BB
+    JP NZ, Chk_BB                   ;if set, branch to check enemy
 ;
     LD A, H
     SUB A, $C1
     LD BC, PseudoRandomBitReg+1
     addAToBC8_M
-    LD A, (BC)
+    LD A, (BC)                      ;otherwise get part of LSFR
     LD C, A
-    LD A, (SecondaryHardMode)
+    LD A, (SecondaryHardMode)       ;get secondary hard mode flag, use as offset
     OR A
     LD A, %00001111
     JP Z, +
     LD A, %00000111
 +:
-    AND A, C
-    CP A, $06
-    JP NC, Chk_BB
-    ADD A, $C1
+    AND A, C                        ;mask out bits of LSFR as decided by flag
+    CP A, $06                       ;check to see if lower nybble is above certain value
+    JP NC, Chk_BB                   ;if so, branch to check enemy
+    ADD A, >Cannon_PageLoc          ;transfer masked contents of LSFR to Y as pseudorandom offset
     LD D, A
-    LD E, <Cannon_PageLoc
+    LD E, <Cannon_PageLoc           ;get page location
     LD A, (DE)
     OR A
-    JP Z, Chk_BB
-    LD E, <Cannon_Timer
+    JP Z, Chk_BB                    ;if not set or on page 0, branch to check enemy
+    LD E, <Cannon_Timer             ;get cannon timer
     LD A, (DE)
     OR A
-    JP Z, FireCannon
-    DEC A
-    LD (DE), A
-    JP Chk_BB
+    JP Z, FireCannon                ;if expired, branch to fire cannon
+    DEC A                           ;otherwise subtract borrow (note carry will always be clear here)
+    LD (DE), A                      ;to count timer down
+    JP Chk_BB                       ;then jump ahead to check enemy
 
 FireCannon:
-    LD A, (TimerControl)
+    LD A, (TimerControl)            ;if master timer control set,
     OR A
-    JP NZ, Chk_BB
+    JP NZ, Chk_BB                   ;branch to check enemy
 ;
-    LD A, $0E
-    LD (DE), A
+    LD A, $0E                       ;otherwise we start creating one
+    LD (DE), A                      ;first, reset cannon timer
 ;
-    LD E, <Cannon_PageLoc
-    LD L, <Enemy_PageLoc
+    LD E, <Cannon_PageLoc           ;get page location of cannon
+    LD L, <Enemy_PageLoc            ;save as page location of bullet bill
     LD A, (DE)
     LD (HL), A
 ;
-    LD E, <Cannon_X_Position
-    LD L, <Enemy_X_Position
+    LD E, <Cannon_X_Position        ;get horizontal coordinate of cannon
+    LD L, <Enemy_X_Position         ;save as horizontal coordinate of bullet bill
     LD A, (DE)
     LD (HL), A
 ;
-    LD E, <Cannon_Y_Position
-    LD L, <Enemy_Y_Position
+    LD E, <Cannon_Y_Position        ;get vertical coordinate of cannon
+    LD L, <Enemy_Y_Position         ;subtract eight pixels (because enemies are 24 pixels tall)
     LD A, (DE)
     SUB A, $08
-    LD (HL), A
+    LD (HL), A                      ;save as vertical coordinate of bullet bill
 ;
     LD A, $01
-    LD L, <Enemy_Y_HighPos
+    LD L, <Enemy_Y_HighPos          ;set vertical high byte of bullet bill
     LD (HL), A
-    LD L, <Enemy_Flag
+    LD L, <Enemy_Flag               ;set buffer flag
     LD (HL), A
-    DEC A
-    LD L, <Enemy_State
+    XOR A
+    LD L, <Enemy_State              ;initialize enemy's state
     LD (HL), A
 ;
-    LD L, <Enemy_BoundBoxCtrl
+    LD L, <Enemy_BoundBoxCtrl       ;set bounding box size control for bullet bill
     LD (HL), $09
 ;
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                 ;load identifier for bullet bill (cannon variant)
     LD (HL), OBJECTID_BulletBill_CannonVar
-    JP Next3Slt
+    JP Next3Slt                     ;move onto next slot
 ;
 Chk_BB:
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                 ;check enemy identifier for bullet bill (cannon variant)
     LD A, (HL)
     CP A, OBJECTID_BulletBill_CannonVar
-    JP NZ, Next3Slt
-    CALL OffscreenBoundsCheck
-    LD L, <Enemy_Flag
+    JP NZ, Next3Slt                 ;if not found, branch to get next slot
+    CALL OffscreenBoundsCheck       ;otherwise, check to see if it went offscreen
+    LD L, <Enemy_Flag               ;check enemy buffer flag
     LD A, (HL)
     OR A
-    CALL NZ, BulletBillHandler
+    CALL NZ, BulletBillHandler      ;if set, do sub to handle bullet bill
 Next3Slt:
-    DEC H
+    DEC H                           ;move onto next slot
     LD A, H
     CP A, $C0
-    JP Z, ThreeSChk
+    JP NZ, ThreeSChk                ;do this until first three slots are checked
     RET
 
 ;--------------------------------
 
 BulletBillHandler:
-    CALL GetEnemyOffscreenBits
+    CALL GetEnemyOffscreenBits      ;get offscreen information
 ;
-    LD A, (TimerControl)
+    LD A, (TimerControl)            ;if master timer control set,
     OR A
     JP NZ, RunBBSubs
 ;
     LD L, <Enemy_State
     LD A, (HL)
     OR A
-    JP NZ, ChkDSte
+    JP NZ, ChkDSte                  ;if bullet bill's state set, branch to check defeated state
 ;
-    LD A, (Enemy_OffscrBits)
-    AND A, %00001100
-    CP A, %00001100
-    JP Z, EraseEnemyObject
+    LD A, (Enemy_OffscrBits)        ;otherwise load offscreen bits
+    AND A, %00001100                ;mask out bits
+    CP A, %00001100                 ;check to see if all bits are set
+    JP Z, EraseEnemyObject          ;if so, branch to kill this object
 ;
-    LD C, $01
-    CALL PlayerEnemyDiff
-    JP M, SetupBB
-    INC C
+    LD C, $01                       ;set to move right by default
+    CALL PlayerEnemyDiff            ;get horizontal difference between player and bullet bill
+    JP M, SetupBB                   ;if enemy to the left of player, branch
+    INC C                           ;otherwise increment to move left
 ;
 SetupBB:
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir          ;set bullet bill's moving direction
     LD (HL), C
-    DEC C
+    DEC C                           ;decrement to use as offset
 
     .IF PALBUILD == $00
-    LD A, $18
+    LD A, $18                       ;get horizontal speed based on moving direction
     JP Z, +
     LD A, $E8
     .ELSE
-    LD A, $1C                               ;PAL diff: Faster speed to compensate FPS difference
+    LD A, $1C                       ;PAL diff: Faster speed to compensate FPS difference
     JP Z, +
     LD A, $E4
     .ENDIF
 
 +:
-    LD L, <Enemy_X_Speed
+    LD L, <Enemy_X_Speed            ;and store it
     LD (HL), A
 ;
-    LD A, IXL
-    CCF
-    ADC A, $28
-    CP A, $50
-    JP C, EraseEnemyObject
+    LD A, (Temp_Bytes + $00)        ;get horizontal difference
+    CCF                             ;6502 SBC carry to Z80 carry
+    ADC A, $28                      ;add 40 pixels
+    CP A, $50                       ;if less than a certain amount, player is too close
+    JP C, EraseEnemyObject          ;to cannon either on left or right side, thus branch
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State              ;otherwise set bullet bill's state
     LD (HL), $01
 ;
-    LD A, H
+    LD A, H                         ;set enemy frame timer
     SUB A, $C1
     LD BC, EnemyFrameTimer
     addAToBC8_M
@@ -903,26 +902,26 @@ SetupBB:
     .IF PALBUILD == $00
     LD A, $0A
     .ELSE
-    LD A, $09                               ;PAL diff: Faster timer to compensate FPS difference
+    LD A, $09                       ;PAL diff: Faster timer to compensate FPS difference
     .ENDIF
     
     LD (BC), A
 ;
-    LD A, SNDID_CANNON
+    LD A, SNDID_CANNON              ;play fireworks/gunfire sound
     LD (SFXTrack1.SoundQueue), A
 ;
 ChkDSte:
-    LD L, <Enemy_State
+    LD L, <Enemy_State              ;check enemy state for d5 set
     LD A, (HL)
     AND A, %00100000
-    CALL NZ, MoveD_EnemyVertically
-    CALL MoveEnemyHorizontally
+    CALL NZ, MoveD_EnemyVertically  ;if set, do sub to move bullet bill vertically
+    CALL MoveEnemyHorizontally      ;do sub to move bullet bill horizontally
 RunBBSubs:
-    CALL GetEnemyOffscreenBits
-    CALL RelativeEnemyPosition
-    CALL GetEnemyBoundBox
-    CALL PlayerEnemyCollision
-    JP EnemyGfxHandler
+    CALL GetEnemyOffscreenBits      ;get offscreen information
+    CALL RelativeEnemyPosition      ;get relative coordinates
+    CALL GetEnemyBoundBox           ;get bounding box coordinates
+    CALL PlayerEnemyCollision       ;handle player to enemy collisions
+    JP EnemyGfxHandler              ;draw the bullet bill and leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -7559,7 +7558,8 @@ NoBump:
     JP SetHJ
 
 ;--------------------------------
-;$00(IXL) - used to hold horizontal difference between player and enemy
+;$00 - used to hold horizontal difference between player and enemy
+;IXL - temp reg
 
 PlayerEnemyDiff:
     LD A, (Player_X_Position)

@@ -1963,7 +1963,7 @@ Palette1_MTiles:
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with Coins
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with 1-UP
     ; Solid blocks
-    .dw BG_MACRO($01A0), BG_MACRO($01A1), BG_MACRO($01A2), BG_MACRO($01A3)  ; 3D block
+    .dw BG_MACRO($11A0), BG_MACRO($11A1), BG_MACRO($11A2), BG_MACRO($11A3)  ; 3D block
     .dw $00, $00, $00, $00                                                  ; white wall (castle levels)
     ; Bridge
     .dw BG_MACRO($017E), BLANKTILE, BG_MACRO($017E), BLANKTILE

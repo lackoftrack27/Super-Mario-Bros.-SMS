@@ -133,7 +133,7 @@ ForeSceneryData:
     .db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
     .db MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_SOLIDBLK_WATER;, MT_SOLIDBLK_WATER
 @Wall:
-    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_BRICK
+    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_BRICK
     .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_BLANK;, MT_BLANK
 @OverWater:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
@@ -146,6 +146,8 @@ ForeSceneryData:
 ;   BLOCK FOR AREATYPE (WATER,OVERWORLD,UNDERGROUND,CASTLE)
 TerrainMetatiles:
     .db MT_SOLIDBLK_WATER, MT_ROCK, MT_BRICK, MT_SOLIDBLK_WHITE
+; TerrainMetatilesPriority:
+;     .db MT_SOLIDBLK_WATER, MT_ROCK_PRI, MT_BRICK, MT_SOLIDBLK_WHITE
 .ENDS
 
 .SECTION "Terrain Render Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -930,14 +932,15 @@ MushroomLedge:
     CALL ChkLrgObjLength                ;get shroom dimensions
     LD IYL, C                           ;store length here for now
     JP NC, EndMushL
-    LD A, (HL)                      ; AreaObjectLength
+    LD A, (HL)                          ;AreaObjectLength
     LD L, <MushroomLedgeHalfLen
     SRL A
     LD (HL), A                          ;divide length by 2 and store elsewhere
     LD A, MT_MUSHROOM_LEFT              ;render start of mushroom
     JP NoUnder
 EndMushL:
-    LD A, (HL)                      ; AreaObjectLength
+    LD A, (HL)                          ;AreaObjectLength
+    LD C, A
     OR A
     LD A, MT_MUSHROOM_RIGHT             ;if at the end, render end of mushroom
     JP Z, NoUnder
@@ -950,6 +953,7 @@ EndMushL:
     addAToHL8_M
     LD A, MT_MUSHROOM_MID
     LD (HL), A                          ;render middle of mushroom
+    LD A, C
     CP A, IYL                           ;are we smack dab in the center?
     RET NZ                              ;if not, branch to leave
     INC L
@@ -992,18 +996,19 @@ RenderPul:
 
 .SECTION "Castle Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 CastleMetatiles:
-    ; .db MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_BLANK
-    ; .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK, MT_CASTLE_WINDOWLEFT, MT_BLANK
-    ; .db MT_CASTLE_TOP, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOP
-    ; .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_BRICK
-    ; .db MT_BRICK, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_BRICK
+    .db MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_TOP_NONPRI, MT_CASTLE_TOP_NONPRI, MT_BLANK
+    .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK, MT_CASTLE_WINDOWLEFT, MT_BLANK
+    .db MT_CASTLE_TOP_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOP_NONPRI
+    .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_BRICK
+    .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_BRICK
 
-    ; .db MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK
-    ; .db MT_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK
-    ; .db MT_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK
-    ; .db MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK, MT_BRICK
-    ; .db MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP, MT_BRICK, MT_CASTLE_ENTRYTOP
-    ; .db MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT, MT_BRICK, MT_CASTLE_ENTRYBOT
+    .db MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI, MT_CASTLE_TOPBRICK_NONPRI
+    .db MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK
+    .db MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK
+    .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK
+    .db MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP, MT_CASTLE_BRICK, MT_CASTLE_ENTRYTOP
+    .db MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT, MT_CASTLE_BRICK, MT_CASTLE_ENTRYBOT
+CastleMetatilesPriority:
     .db MT_BLANK, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_CASTLE_TOP, MT_BLANK
     .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK_PRI, MT_CASTLE_WINDOWLEFT, MT_BLANK
     .db MT_CASTLE_TOP, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOPBRICK, MT_CASTLE_TOP
@@ -1024,10 +1029,17 @@ CastleObject:
     LD C, $04
     CALL ChkLrgObjFixedLength           ;load length of castle if not already loaded
     PUSH HL                             ;save obj buffer offset to stack
-    LD A, (HL)                          ;use current length as offset for castle data
+    ;LD A, (HL)                          ;use current length as offset for castle data
     LD B, IXH                           ;begin at starting row
     LD IYL, $0B                         ;load upper limit of number of rows to print
+    
+    LD A, (CurrentPageLoc)
+    OR A
+    LD A, (HL)
     LD HL, CastleMetatiles
+    JP Z, +
+    LD HL, CastleMetatilesPriority
++:
     addAToHL8_M
     LD A, B
     LD DE, MetatileBuffer
@@ -1208,6 +1220,11 @@ VerticalPipeData:
     .db MT_PIPESHAFT_RIGHT, MT_PIPESHAFT_LEFT
 .ENDS
 
+.SECTION "Vertical Pipe Blocks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+VerticalPipeBlocks:
+    .db MT_ROCK, MT_SOLIDBLK_WHITE, MT_SOLIDBLK_3D
+.ENDS
+
 VerticalPipe:
     LD C, $01                           ;check for length loaded, if not, load
     CALL ChkLrgObjFixedLength           ;pipe length of 2 (horizontal)
@@ -1258,12 +1275,27 @@ WarpPipe:
     LD (HL), A
     CALL InitPiranhaPlant_NOPOP
 DrawPipe:
-    LD A, MT_ROCK_PRI
-    LD (MetatileBuffer + $0B), A
-;
-    POP AF                              ;get value saved earlier and use as Y
+    LD A, IXL
+    CPL
     LD C, A
-    LD A, C
+    LD A, (AltEntranceControl)          ;AltEntranceControl != 0 OR ~IXL != 0
+    OR A, C
+    JP Z, DrawPipe_1
+;   FOR BLOCKS UNDER PIPESHAFT (TERRAIN)
+    LD A, IXH
+    INC A
+    ADD A, IYH
+    LD DE, MetatileBuffer
+    addAToDE8_M
+    LD A, (DE)
+    LD HL, VerticalPipeBlocks
+    LD BC, $0003
+    CPIR
+    JP PO, DrawPipe_1
+    INC A
+    LD (DE), A
+DrawPipe_1:
+    POP AF                              ;get value saved earlier and use as Y
     LD HL, VerticalPipeData
     addAToHL8_M
     LD B, IXH                           ;get buffer offset
@@ -1325,23 +1357,32 @@ QuestionBlockRow_Low:
 ;--------------------------------
 
 Bridge_High:
-    LD A, $06                           ;start on the seventh row from top of screen
+    LD B, $06                           ;start on the seventh row from top of screen
     JP Bridge_Low@SaveRow
 
 Bridge_Middle:
-    LD A, $07                           ;start on the eighth row
+    LD B, $07                           ;start on the eighth row
     JP Bridge_Low@SaveRow
 
 Bridge_Low:
-    LD A, $09                           ;start on the tenth row
+    LD B, $09                           ;start on the tenth row
 @SaveRow:
-    PUSH AF                             ;save whatever row to the stack for now
     CALL ChkLrgObjLength                ;get low nybble and save as length
-    POP AF
-    LD B, A                             ;SAVE A TO X
+    LD A, B
     LD HL, MetatileBuffer
+    JP Z, EndBridge
+    JP P, MidBridge
+    addAToHL8_M
+    LD (HL), MT_RAIL_LEFT               ;render bridge railing
+    JP RenderBridge
+MidBridge:
     addAToHL8_M
     LD (HL), MT_RAIL_MID                ;render bridge railing
+    JP RenderBridge
+EndBridge:
+    addAToHL8_M
+    LD (HL), MT_RAIL_RIGHT              ;render bridge railing
+RenderBridge:
     INC B
     LD C, $00                           ;now render the bridge itself
     LD A, MT_BRIDGE
@@ -1397,7 +1438,7 @@ BalancePlatRope:
     LD B, $01
 DrawRope:
     LD A, MT_ROPE_VERT                  ;render the actual rope
-    CALL RenderUnderPart
+    JP RenderUnderPart
 
 ;--------------------------------
 
@@ -1458,6 +1499,9 @@ ColObj:
 .SECTION "Solid Block Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 SolidBlockMetatiles:
     .db MT_SOLIDBLK_WATER, MT_SOLIDBLK_3D, MT_SOLIDBLK_3D, MT_SOLIDBLK_WHITE
+
+SolidBlockMetatilesPriority:
+    .db MT_SOLIDBLK_WATER, MT_SOLIDBLK_3D_PRI, MT_SOLIDBLK_3D_PRI, MT_SOLIDBLK_WHITE
 .ENDS
 
 .SECTION "Brick Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -1482,8 +1526,21 @@ DrawBricks:
     JP GetRow                           ;and go render it
 
 RowOfSolidBlocks:
-    LD A, (AreaType)                    ;load area type obtained from area offset pointer
+    CALL ChkLrgObjLength
     LD DE, SolidBlockMetatiles
+    LD A, IXH
+    DEC A
+    LD HL, MetatileBuffer
+    addAToHL8_M
+    LD A, (HL)
+    CP A, MT_PIPESHAFT_LEFT
+    JP Z, +
+    CP A, MT_PIPESHAFT_RIGHT
+    JP NZ, RowOfSolidBlocks_0
++:
+    LD E, <SolidBlockMetatilesPriority
+RowOfSolidBlocks_0:
+    LD A, (AreaType)                    ;load area type obtained from area offset pointer
     addAToDE8_M
     LD A, (DE)                          ;get metatile
 GetRow:

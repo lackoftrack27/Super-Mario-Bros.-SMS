@@ -138,12 +138,12 @@ ChkOverR:
     JP Z, ChkSwimE
     LD A, $03                           ;set player state to climbing
     LD (Player_State), A
-    LD H, $C0 + OBJ_BLOCK1              ;set offset for first slot, for block object
+    LD H, >Block_State                  ;set offset for first slot, for block object
     CALL InitBlock_XY_Pos
     LD A, $F0                           ;set vertical coordinate for block object
     LD (Block_Y_Position), A
-    LD H, $C0 + OBJ_SLOT6               ;set offset in X for last enemy object buffer slot, set offset in Y for object coordinates used earlier
-    LD D, $C0 + OBJ_BLOCK1
+    LD H, >Enemy_ID_05                  ;set offset in X for last enemy object buffer slot, set offset in Y for object coordinates used earlier
+    LD D, >Block_State
     CALL Setup_Vine_NOPOP               ;do a sub to grow vine
 ChkSwimE:
     LD A, (AreaType)                    ;if level is water-type,
@@ -729,7 +729,7 @@ PlayerHeadCollision:
     PUSH AF                         ;store metatile number to stack
 ;
     LD A, (SprDataOffset_Ctrl)      ;load offset control bit here
-    ADD A, $C0 + OBJ_BLOCK1
+    ADD A, >Block_State
     LD H, A
 ;
     LD A, (PlayerSize)              ;check player's size
@@ -931,7 +931,7 @@ VineBlock:
     POP HL
     LD H, $C6
     LD A, (SprDataOffset_Ctrl)
-    ADD A, $C0 + OBJ_BLOCK1
+    ADD A, >Block_State
     LD D, A
     JP Setup_Vine_NOPOP
 
@@ -983,7 +983,7 @@ BrickShatter:
     CALL AddToScore
 ;
     LD A, (SprDataOffset_Ctrl)
-    ADD A, $C0 + OBJ_BLOCK1
+    ADD A, >Block_State
     LD H, A
     RET
 
@@ -991,7 +991,7 @@ BrickShatter:
 
 CheckTopOfBlock:
     LD A, (SprDataOffset_Ctrl)
-    ADD A, $C0 + OBJ_BLOCK1
+    ADD A, >Block_State
     LD H, A
 ;
     LD A, IXL
@@ -1011,7 +1011,7 @@ CheckTopOfBlock:
     LD HL, (Temp_Bytes + $06)           ;(SMS)put block buffer addr into HL for PutBlockMetatile
     CALL RemoveCoin_Axe
     LD A, (SprDataOffset_Ctrl)
-    ADD A, $C0 + OBJ_BLOCK1
+    ADD A, >Block_State
     LD H, A
     JP SetupJumpCoin
 

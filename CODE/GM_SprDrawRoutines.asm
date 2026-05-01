@@ -134,7 +134,7 @@ DrawHammer:
 ;
     LD D, H
     INC D
-    INC D
+    INC D                           ; Misc_SprDataOffset
     LD E, <SprDataOffset
     LD A, (DE)
     LD IXL, A
@@ -461,7 +461,7 @@ JumpingCoinTiles:
 JCoinGfxHandler:
     LD D, H
     INC D
-    INC D
+    INC D                           ;Misc_SprDataOffset
 
     LD E, <SprDataOffset            ;get coin/floatey number's OAM data offset
     LD A, (DE)
@@ -589,11 +589,11 @@ EnemyGraphicsTable:
     .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (rightsideup)
     .db $00, $00, $72, $73, $76, $77  ;            frame 2
     ; ---
-    .db $00, $00, $96, $97, $98, $99  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $96, $97, $98, $99  ;                   frame 2
+    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
     ; ---
-    .db $00, $00, $96, $97, $98, $99  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $96, $97, $98, $99  ;                   frame 2
+    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
     ; ---
     .db $00, $00, $00, $00, $60, $61  ;defeated goomba      [X, $8A]
     ; ---
@@ -658,11 +658,11 @@ EnemyGraphicsTable_HFlip:
     .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (rightsideup)
     .db $00, $00, $72, $73, $76, $77  ;            frame 2
     ; ---
-    .db $00, $00, $96, $97, $98, $99  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $96, $97, $98, $99  ;                   frame 2
+    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
     ; ---
-    .db $00, $00, $96, $97, $98, $99  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $96, $97, $98, $99  ;                   frame 2
+    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
     ; ---
     .db $00, $00, $00, $00, $60, $61  ;defeated goomba      [X, $8A]
     ; ---
@@ -1328,7 +1328,7 @@ DrawBlock:
     LD C, A ;LD (Temp_Bytes + $05), A        ;store here
 ;
     LD D, H
-    DEC D                           ;SPRDATA_BLOCK1 - OBJ_BLOCK1
+    DEC D                           ;Block_SprDataOffset
     
     LD E, <SprDataOffset            ;get sprite data offset
     LD A, (DE)
@@ -1385,9 +1385,8 @@ PullOfsB:
 ;$01(IXH)
 DrawBrickChunks:
 ;   CALCULATE SPRDATAOFFSET
-    LD A, H
-    ADD A, SPRDATA_BLOCK1 - OBJ_BLOCK1
-    LD D, A
+    LD D, H
+    DEC D                           ;Block_SprDataOffset
     LD E, <SprDataOffset
     LD A, (DE)
     LD E, A
@@ -1507,7 +1506,7 @@ ChnkOfs:
 
 DrawFireball:
     LD A, H
-    ADD A, SPRDATA_FIRE1 - OBJ_FIRE1
+    ADD A, >FBall_SprDataOffset - >Fireball_State
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)
@@ -1543,7 +1542,7 @@ ExplosionTiles:
 
 DrawExplosion_Fireball:
     LD A, H
-    ADD A, SPRDATA_ALT - OBJ_FIRE1
+    ADD A, >Alt_SprDataOffset - >Fireball_State
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)
@@ -1769,7 +1768,7 @@ DrawBubble:
     RET NZ                          ;if bit set, branch to leave
 ;
     LD A, H                         ;get air bubble's OAM data offset
-    ADD A, SPRDATA_BUBBLE1 - OBJ_BUBB1
+    ADD A, >Bubble_SprDataOffset - >Bubble_Y_Position
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)

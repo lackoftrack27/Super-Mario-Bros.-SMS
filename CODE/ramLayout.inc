@@ -466,6 +466,7 @@
     ; $2A
     .                               dsb $03 ; UNUSED
     ; $2D
+    Alt_SprDataOffset:              .dsb $01
     Block_SprDataOffset:            dsb $01 ; [$17] *
     ; $2E
     .                               dsb $07
@@ -478,7 +479,7 @@
     ; $40
 .ENDS
 
-.DEFINE Alt_SprDataOffset           Block_SprDataOffset
+;.DEFINE Alt_SprDataOffset           Block_SprDataOffset
 
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 09" SLOT 12

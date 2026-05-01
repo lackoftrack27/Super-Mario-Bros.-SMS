@@ -15,7 +15,7 @@ CheckEndofBuffer:
     CP A, $0E
     JP Z, CheckRightBounds          ;if found, branch, otherwise
     LD A, H                         ;check for end of buffer
-    CP A, $C0 + OBJ_SLOT6
+    CP A, >Enemy_ID_05
     JP C, CheckRightBounds          ;if not at end of buffer, branch
 ;
     INC E
@@ -329,20 +329,20 @@ Setup_Vine_NOPOP:
     LD (HL), $01
 ;
     LD E, <Block_PageLoc
+    LD L, E
     LD A, (DE)
-    LD L, <Enemy_PageLoc
     LD (HL), A
 ;
     LD E, <Block_X_Position
+    LD L, E
     LD A, (DE)
-    LD L, <Enemy_X_Position
     LD (HL), A
 ;
     LD A, (VineFlagOffset)
     OR A
     LD E, <Block_Y_Position
+    LD L, E
     LD A, (DE)
-    LD L, <Enemy_Y_Position
     LD (HL), A
 ;    
     JP NZ, NextVO
@@ -598,7 +598,7 @@ LakituAndSpinyHandler:
     LD A, $80                           ;set timer
     LD (FrenzyEnemyTimer), A
 ;
-    LD DE, Enemy_ID + OBJ_SLOT5 * $100  ;start with the last enemy slot
+    LD DE, Enemy_ID_04                  ;start with the last enemy slot
     LD B, $05
 ChkLak:
     LD A, (DE)                          ;check all enemy slots to see
@@ -613,7 +613,7 @@ ChkLak:
     CP A, $07                           ;check to see if we're up to a certain value yet
     RET C                               ;if not, leave
 ;
-    LD HL, Enemy_Flag + OBJ_SLOT5 * $100;start with the last enemy slot again
+    LD HL, Enemy_Flag_04                ;start with the last enemy slot again
     LD B, $05
 ChkNoEn:
     LD A, (HL)                          ;check enemy buffer flag for non-active enemy slot
@@ -648,12 +648,12 @@ CreateSpiny:
     RET NZ
 ;
     LD E, <Enemy_PageLoc                ;store horizontal coordinates (high and low) of lakitu
-    LD L, <Enemy_PageLoc
+    LD L, E
     LD A, (DE)
     LD (HL), A
 ;
     LD E, <Enemy_X_Position             ;into the coordinates of the spiny we're going to create
-    LD L, <Enemy_X_Position
+    LD L, E
     LD A, (DE)
     LD (HL), A
 ;
@@ -661,7 +661,7 @@ CreateSpiny:
     LD (HL), $01
 ;
     LD E, <Enemy_Y_Position             ;put spiny eight pixels above where lakitu is
-    LD L, <Enemy_Y_Position
+    LD L, E
     LD A, (DE)
     SUB A, $08
     LD (HL), A
@@ -1020,12 +1020,12 @@ FSLoop:
     LD (DE), A
 ;
     LD L, <Enemy_PageLoc
-    LD E, <Enemy_PageLoc
+    LD E, L
     LD A, (HL)
     LD (DE), A
 ;
     LD L, <Enemy_X_Position
-    LD E, <Enemy_X_Position
+    LD E, L
     LD A, (HL)
     LD (DE), A
 ;
@@ -1036,7 +1036,7 @@ FSLoop:
     LD (DE), A
 ;
     LD L, <Enemy_Y_Position
-    LD E, <Enemy_Y_Position
+    LD E, L
     LD A, (HL)
     LD (DE), A
     RET
@@ -1111,18 +1111,18 @@ PutAtRightExtent:
 
 SpawnFromMouth:
     LD E, <Enemy_X_Position
-    LD L, <Enemy_X_Position
+    LD L, E
     LD A, (DE)
     SUB A, $0E
     LD (HL), A
 ;
     LD E, <Enemy_PageLoc
-    LD L, <Enemy_PageLoc
+    LD L, E
     LD A, (DE)
     LD (HL), A
 ;
     LD E, <Enemy_Y_Position
-    LD L, <Enemy_Y_Position
+    LD L, E
     LD A, (DE)
     ADD A, $08
     LD (HL), A
@@ -1380,86 +1380,86 @@ FireBulletBill:
 ;$01(IXL) - used to store enemy ID
 ;$02(D) - used to store page location of right side of screen
 ;$03(E) - used to store X position of right side of screen
-    /*
-HandleGroupEnemies:
-    LD C, $00
-    SUB A, $37
-    PUSH AF
-    CP A, $04
-    JP NC, SnglID
-;
-    PUSH AF
-    LD C, OBJECTID_Goomba
-    LD A, (PrimaryHardMode)
-    OR A
-    JP Z, PullID
-    LD C, OBJECTID_BuzzyBeetle
-PullID:
-    POP AF
-SnglID:
-    LD IXL, C
-    AND A, $02
-    LD A, $B0
-    JP Z, SetYGp
-    LD A, $70
-SetYGp:
-    LD B, A ;LD (Temp_Bytes + $00), A
-    LD A, (ScreenRight_PageLoc)
-    LD D, A ;LD (Temp_Bytes + $02), A
-    LD A, (ScreenRight_X_Pos)
-    LD E, A ;LD (Temp_Bytes + $03), A
-    LD C, $02
-    POP AF
-    SRL A
-    JP NC, CntGrp
-    INC C
-CntGrp:
-    LD A, C
-    LD (NumberofGroupEnemies), A
-GrLoop:
-    LD H, $C0
-GSltLp:
-    INC H
-    LD A, H
-    CP A, $C6
-    JP NC, Inc2B
-    LD L, <Enemy_Flag
-    LD A, (HL)
-    OR A
-    JP NZ, GSltLp
-;
-    LD A, IXL
-    LD L, <Enemy_ID
-    LD (HL), A
-    ;LD A, (Temp_Bytes + $02)
-    LD L, <Enemy_PageLoc
-    LD (HL), D ;LD (HL), A
-    LD A, E ;LD A, (Temp_Bytes + $03)
-    LD L, <Enemy_X_Position
-    LD (HL), A
-    ADD A, $18
-    LD E, A ;LD (Temp_Bytes + $03), A
-    LD A, D ;LD A, (Temp_Bytes + $02)
-    ADC A, $00
-    LD D, A ;LD (Temp_Bytes + $02), A
-    ;LD A, (Temp_Bytes + $00)
-    LD L, <Enemy_Y_Position
-    LD (HL), B ;LD (HL), A
-    LD A, $01
-    LD L, <Enemy_Y_HighPos
-    LD (HL), A
-    LD L, <Enemy_Flag
-    LD (HL), A
-;
-    CALL CheckpointEnemyID
-;
-    LD A, (NumberofGroupEnemies)
-    DEC A
-    LD (NumberofGroupEnemies), A
-    JP NZ, GrLoop
-;
-    JP Inc2B
-    */
+
+; HandleGroupEnemies:
+;     LD C, $00
+;     SUB A, $37
+;     PUSH AF
+;     CP A, $04
+;     JP NC, SnglID
+; ;
+;     PUSH AF
+;     LD C, OBJECTID_Goomba
+;     LD A, (PrimaryHardMode)
+;     OR A
+;     JP Z, PullID
+;     LD C, OBJECTID_BuzzyBeetle
+; PullID:
+;     POP AF
+; SnglID:
+;     LD IXL, C
+;     AND A, $02
+;     LD A, $B0
+;     JP Z, SetYGp
+;     LD A, $70
+; SetYGp:
+;     LD B, A ;LD (Temp_Bytes + $00), A
+;     LD A, (ScreenRight_PageLoc)
+;     LD D, A ;LD (Temp_Bytes + $02), A
+;     LD A, (ScreenRight_X_Pos)
+;     LD E, A ;LD (Temp_Bytes + $03), A
+;     LD C, $02
+;     POP AF
+;     SRL A
+;     JP NC, CntGrp
+;     INC C
+; CntGrp:
+;     LD A, C
+;     LD (NumberofGroupEnemies), A
+; GrLoop:
+;     LD H, $C0
+; GSltLp:
+;     INC H
+;     LD A, H
+;     CP A, $C6
+;     JP NC, Inc2B
+;     LD L, <Enemy_Flag
+;     LD A, (HL)
+;     OR A
+;     JP NZ, GSltLp
+; ;
+;     LD A, IXL
+;     LD L, <Enemy_ID
+;     LD (HL), A
+;     ;LD A, (Temp_Bytes + $02)
+;     LD L, <Enemy_PageLoc
+;     LD (HL), D ;LD (HL), A
+;     LD A, E ;LD A, (Temp_Bytes + $03)
+;     LD L, <Enemy_X_Position
+;     LD (HL), A
+;     ADD A, $18
+;     LD E, A ;LD (Temp_Bytes + $03), A
+;     LD A, D ;LD A, (Temp_Bytes + $02)
+;     ADC A, $00
+;     LD D, A ;LD (Temp_Bytes + $02), A
+;     ;LD A, (Temp_Bytes + $00)
+;     LD L, <Enemy_Y_Position
+;     LD (HL), B ;LD (HL), A
+;     LD A, $01
+;     LD L, <Enemy_Y_HighPos
+;     LD (HL), A
+;     LD L, <Enemy_Flag
+;     LD (HL), A
+; ;
+;     CALL CheckpointEnemyID
+; ;
+;     LD A, (NumberofGroupEnemies)
+;     DEC A
+;     LD (NumberofGroupEnemies), A
+;     JP NZ, GrLoop
+; ;
+;     JP Inc2B
+
 HandleGroupEnemies:
     LD IXL, $00
     SUB A, $37
@@ -1656,12 +1656,15 @@ SetBPA:
     LD L, <Enemy_MovingDir
     LD (HL), A
     CALL PosPlatform
+    ; FALL THROUGH
+    JP InitDropPlatform_NOPOP
 
 ;--------------------------------
 
 InitDropPlatform:
     POP HL
 ;
+InitDropPlatform_NOPOP:
     LD L, <PlatformCollisionFlag
     LD (HL), $FF
 ;

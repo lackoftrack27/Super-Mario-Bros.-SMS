@@ -179,7 +179,7 @@ GameCoreRoutine:
 GameEngine:
     CALL ProcFireball_Bubble                ;process fireballs and air bubbles
 ;
-    LD H, $C0 + OBJ_SLOT1   ; 54
+    LD H, >Enemy_ID   ; 54
 ProcELoop:
     LD (ObjectOffset), HL
     CALL EnemiesAndLoopsCore                ;process enemy objects
@@ -188,11 +188,11 @@ ProcELoop:
     OR A
     CALL NZ, FloateyNumbersRoutine          ;process floatey numbers
     INC H
-    LD A, $C0 + OBJ_SLOT6+1
+    LD A, >Enemy_ID_05 + $01
     CP A, H                                 ;do these two subroutines until the whole buffer is done
     JP NZ, ProcELoop
 ;
-    LD H, $C0 + OBJ_PLAYER  ; 92
+    LD H, >Player_Y_Position  ; 92
     ;CALL GetPlayerOffscreenBits             ;get offscreen bits for player object
     GetPlayerOffscreenBits_M
     ;CALL RelativePlayerPosition             ;get relative coordinates for player object
@@ -202,7 +202,7 @@ ProcELoop:
     CALL Z, PlayerGfxHandler                ;draw the player if he isn't hidden by end-of-level castle
     CALL BlockObjMT_Updater                 ;replace block objects with metatiles if necessary
 ;
-    LD H, $C0 + OBJ_BLOCK2                  ;set offset for second block object
+    LD H, >Block_State + $01                ;set offset for second block object
     LD (ObjectOffset), HL
     CALL BlockObjectsCore                   ;process second block object
     DEC H                                   ;set offset for first and process
@@ -456,7 +456,7 @@ InitScrlAmt:
     XOR A
     LD (ScrollAmount), A                    ;initialize value here
 ChkPOffscr:
-    LD H, $C0 + OBJ_PLAYER                  ;set X for player offset
+    LD H, >Player_Y_Position                  ;set X for player offset
     CALL GetXOffscreenBits                  ;get horizontal offscreen bits for player
     OR A
     LD HL, X_SubtracterData
@@ -559,9 +559,9 @@ ProcFireball_Bubble:
     INC (HL)
 
 ProcFireballs:
-    LD H, $C0 + OBJ_FIRE1           ; B = 0
+    LD H, >Fireball_State
     CALL FireballObjCore            ;process first fireball object
-    INC H                           ; B = 1
+    INC H
     CALL FireballObjCore            ;process second fireball object, then do air bubbles
 
 ProcAirBubbles:
@@ -570,7 +570,7 @@ ProcAirBubbles:
     RET NZ
 
     LD B, $03                       ;otherwise load counter and use as offset
-    LD H, $C0 + OBJ_BUBB3
+    LD H, >Bubble_Y_Position + $02
 BublLoop:
     LD (ObjectOffset), HL
     CALL BubbleCheck                ;check timers and coordinates, create air bubble
@@ -961,18 +961,17 @@ SetMOfs:
     RET NZ
 ;    
     LD A, L                                 ;get offset of enemy slot to check using Y as offset
-    ADD A, <HammerEnemyOfsData
-    LD L, A
-    LD H, >HammerEnemyOfsData
+    LD HL, HammerEnemyOfsData
+    addAToHL8_M
     LD H, (HL)
     LD L, <Enemy_Flag                       ;check enemy buffer flag at offset
     LD A, (HL)
     OR A                                    ;if buffer flag set, branch to leave with carry clear
-    LD A, H                                 ;put retrieved offset into A
     LD HL, (ObjectOffset)                   ;get original enemy object offset in case we leave
     RET NZ
 ;
-    LD E, <HammerEnemyOffset                ;save retrieved offset here
+    LD A, H
+    LD E, <HammerEnemyOffset                ;save enemy offset here
     LD (DE), A
     LD E, <Misc_State                       ;save hammer's state here
     LD A, $90
@@ -1042,19 +1041,19 @@ SetHPos:
     DEC (HL)
 
     LD E, <Enemy_X_Position                 ;get enemy's horizontal position
-    LD L, <Misc_X_Position
+    LD L, E
     LD A, (DE)
     ADD A, $02                              ;set position 2 pixels to the right
     LD (HL), A                              ;store as hammer's horizontal position
 
     LD E, <Enemy_PageLoc                    ;get enemy's page location
-    LD L, <Misc_PageLoc
+    LD L, E
     LD A, (DE)
     ADC A, $00                              ;add carry
     LD (HL), A                              ;store as hammer's page location
 
     LD E, <Enemy_Y_Position                 ;get enemy's vertical position
-    LD L, <Misc_Y_Position
+    LD L, E
     LD A, (DE)
     SUB A, $0A                              ;move position 10 pixels upward
     LD (HL), A                              ;store as hammer's vertical position
@@ -1322,10 +1321,10 @@ WarpZoneObject:
 PowerUpObjHandler:
     POP HL
 ;
-    LD H, $C0 + OBJ_SLOT6
+    LD HL, Enemy_State_05
     LD (ObjectOffset), HL
 ;
-    LD A, (Enemy_State + $05 * $100)
+    LD A, (HL)
     OR A
     RET Z
 ;
@@ -3096,12 +3095,12 @@ RunBowser:
     JP C, MoveD_Bowser
 
 KillAllEnemies:
-    LD H, $C0 + OBJ_SLOT5
+    LD H, >Enemy_ID_04
 KillLoop:
     CALL EraseEnemyObject
     DEC H
     LD A, H
-    CP A, $C0
+    CP A, >Enemy_ID - $01
     JP NZ, KillLoop
 ;
     XOR A
@@ -3290,21 +3289,21 @@ BowserGfxHandler:
     LD A, $F0
 CopyFToR:
     LD DE, (DuplicateObj_Offset)
-    LD E, <Enemy_X_Position
     LD L, <Enemy_X_Position
+    LD E, L
     ADD A, (HL)
     LD (DE), A
     LD L, <Enemy_Y_Position
-    LD E, <Enemy_Y_Position
+    LD E, L
     LD A, (HL)
     ADD A, $08
     LD (DE), A
     LD L, <Enemy_State
-    LD E, <Enemy_State
+    LD E, L
     LD A, (HL)
     LD (DE), A
     LD L, <Enemy_MovingDir
-    LD E, <Enemy_MovingDir
+    LD E, L
     LD A, (HL)
     LD (DE), A
     PUSH HL
@@ -3822,193 +3821,319 @@ RiseFallPiranhaPlant:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$00 - used to hold collision flag, Y movement force + 5 or low byte of name table for rope
-;$01 - used to hold high byte of name table for rope
-;$02 - used to hold page location of rope
+;$00(B) - used to hold collision flag, Y movement force + 5
+;(C) - low byte of name table for rope
+;$01(B) - used to hold high byte of name table for rope
+;$02(N/A) - used to hold page location of rope
+;DE - Object_Offset of the 2nd platform
 
 BalancePlatform:
     POP HL
 ;
-    LD L, <Enemy_Y_HighPos
+    LD L, <Enemy_Y_HighPos                      ;check high byte of vertical position
     LD A, (HL)
     CP A, $03
-    JP Z, EraseEnemyObject
+    JP Z, EraseEnemyObject                      ;if far below screen, kill the object
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                          ;get object's state (set to $ff or other platform offset)
     LD A, (HL)
     OR A
-    RET M
+    RET M                                       ;if doing other balance platform, branch to leave
 
 CheckBalPlatform:
-    LD C, A
-    ADD A, $C1
+    LD C, A                                     ;save offset from state as Y
+    ADD A, >Enemy_ID                            ;(SMS)setup 2nd platform offset
     LD D, A
 ;
-    LD L, <PlatformCollisionFlag
-    LD A, (HL)
-    LD (Temp_Bytes + $00), A
-    LD B, A
+    LD L, <PlatformCollisionFlag                ;get collision flag of platform
+    LD B, (HL)                                  ;store here
 ;
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir                      ;get moving direction
     LD A, (HL)
     OR A
-    JP NZ, PlatformFall
+    JP NZ, PlatformFall                         ;if set, jump here
 
 ChkForFall:
-    LD A, $2D
+    LD A, $2D                                   ;check if platform is above a certain point
     LD L, <Enemy_Y_Position
+    LD E, L                                     ;Enemy_Y_Position
     CP A, (HL)
-    JP C, ChkOtherForFall
+    JP C, ChkOtherForFall                       ;if not, branch elsewhere
 ;
     LD A, C
-    CP A, B
-    JP Z, InitPlatformFall
+    CP A, B                                     ;if collision flag is set to same value as
+    JP Z, InitPlatformFall                      ;enemy state, branch to make platforms fall
 ;
-    LD A, $2D
-    ADD A, $02
-    LD L, <Enemy_Y_Position
-    LD (HL), A
-    JP StopPlatforms
+    ;LD L, <Enemy_Y_Position                     ;otherwise add 2 pixels to vertical position
+    LD (HL), $2F                                ;of current platform and branch elsewhere ; $2D + $02
+    JP StopPlatforms                            ;to make platforms stop
 
 ChkOtherForFall:
-    LD E, <Enemy_Y_Position
+    EX DE, HL                                   ;(SMS)exchange to do 'CP A, (DE)'
+    CP A, (HL)                                  ;check if other platform is above a certain point
     EX DE, HL
-    CP A, (HL)
-    EX DE, HL
-    JP C, ChkToMoveBalPlat
+    JP C, ChkToMoveBalPlat                      ;if not, branch elsewhere
 ;
-    EX AF, AF'
-    LD A, (Temp_Bytes + $00)
-    ADD A, $C0
-    CP A, H
-    JP Z, InitPlatformFall
+    LD A, B
+    ADD A, >Enemy_ID
+    CP A, H                                     ;if collision flag is set to same value as
+    JP Z, InitPlatformFall                      ;enemy state, branch to make platforms fall
 ;
-    EX AF, AF'
-    ADD A, $02
-    LD (DE), A
-    JP StopPlatforms
+    LD A, $2F                                   ;otherwise add 2 pixels to vertical position ;$2D + $02
+    LD (DE), A                                  ;of other platform and branch elsewhere
+    JP StopPlatforms                            ;jump to stop movement and do not return
 
 ChkToMoveBalPlat:
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position                     ;save vertical position to stack
     LD A, (HL)
     PUSH AF
 ;
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag                ;get collision flag
     LD A, (HL)
     OR A
-    JP P, ColFlg
+    JP P, ColFlg                                ;branch if collision
 ;
-    LD L, <Enemy_Y_MoveForce
+    LD L, <Enemy_Y_MoveForce                    ;add $05 to contents of moveforce, whatever they be
     LD A, (HL)
     ADD A, $05
-    LD (Temp_Bytes + $00), A
+    LD B, A                                     ;store here
     LD L, <Enemy_Y_Speed
-    ADC A, $00
-    JP M, PlatDn
-    JP NZ, PlatUp
-    LD A, (Temp_Bytes + $00)
-    CP A, $0B
-    JP C, PlatSt
-    JP PlatUp
+    LD A, (HL)
+    ADC A, $00                                  ;add carry to vertical speed
+    JP M, PlatDn                                ;branch if moving downwards
+    JP NZ, PlatUp                               ;branch elsewhere if moving upwards
+    LD A, B
+    CP A, $0B                                   ;check if there's still a little force left
+    JP C, PlatSt                                ;if not enough, branch to stop movement
+    JP PlatUp                                   ;otherwise keep branch to move upwards
 ColFlg:
-    EX AF, AF'
-    LD A, (ObjectOffset + $01)
-    SUB A, $C0
     LD B, A
-    EX AF, AF'
-    CP A, B
-    JP Z, PlatDn
+    LD A, (ObjectOffset + $01)
+    SUB A, >Enemy_ID
+    CP A, B                                     ;if collision flag matches
+    JP Z, PlatDn                                ;current enemy object offset, branch
 PlatUp:
-    CALL MovePlatformUp
-    JP DoOtherPlatform
+    CALL MovePlatformUp                         ;do a sub to move upwards
+    JP DoOtherPlatform                          ;jump ahead to remaining code
 PlatSt:
-    CALL StopPlatforms
-    JP DoOtherPlatform
+    CALL StopPlatforms                          ;do a sub to stop movement
+    JP DoOtherPlatform                          ;jump ahead to remaining code
 PlatDn:
-    CALL MovePlatformDown
+    CALL MovePlatformDown                       ;do a sub to move downwards
+    ; FALL THROUGH
 
 DoOtherPlatform:
-    LD L, <Enemy_State
+    LD L, <Enemy_State                          ;get offset of other platform
     LD A, (HL)
-    ADD A, $C1
+    ADD A, >Enemy_ID
     LD D, A
-    LD E, <Enemy_Y_Position
 ;
-    POP AF
     LD L, <Enemy_Y_Position
-    SUB A, (HL)
+    LD E, L
+    POP AF                                      ;get old vertical coordinate from stack
+    SUB A, (HL)                                 ;get difference of old vs. new coordinate
+    EX DE, HL                                   ;(SMS)exchange to do 'ADD A, (DE)'
+    ADD A, (HL)                                 ;add difference to vertical coordinate of other
     EX DE, HL
-    ADD A, (HL)
-    LD (HL), A
-    EX DE, HL
+    LD (DE), A                                  ;platform to move it in the opposite direction
 ;
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag                ;if no collision, skip this part here
     LD A, (HL)
     OR A
     JP M, DrawEraseRope
 ;
-    ADD A, $C1
-    LD H, A
-    CALL PositionPlayerOnVPlat
+    ADD A, >Enemy_ID
+    LD H, A                                     ;put offset which collision occurred here
+    CALL PositionPlayerOnVPlat                  ;and use it to position player accordingly
+    LD HL, (ObjectOffset)                       ;get enemy object offset
+    ; FALL THROUGH
 
 DrawEraseRope:
+    LD L, <Enemy_Y_MoveForce                    ;check to see if current platform is
+    LD A, (HL)                                  ;moving at all
+    LD L, <Enemy_Y_Speed
+    OR A, (HL)
+    RET Z                                       ;if not, skip all of this and branch to leave
+;
+    LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset
+    ;CPX $20
+    ;BCS ExitRp
+    LD A, (HL)                                  ;save two copies of vertical speed to stack
+    PUSH AF
+    PUSH AF
+    CALL SetupPlatformRope                      ;do a sub to figure out where to put new bg tiles
+;
+    EX DE, HL
+    LD (HL), B                                  ;write name table address to vram buffer
+    INC L
+    LD (HL), C                                  ;first the high byte, then the low
+    INC L
+    LD (HL), StripeCount($04)                   ;set length for 4 bytes
+    INC L
+    LD E, <Enemy_Y_Speed                        ;if platform moving upwards, branch
+    LD A, (DE)                                  ;to do something else
+    OR A
+    JP M, EraseR1
+    LD (HL), $8C                                ;otherwise put tile numbers for left
+    INC L
+    LD (HL), $01                                ;and right sides of rope in vram buffer
+    INC L
+    LD (HL), $8D
+    INC L
+    LD (HL), $01
+    JP OtherRope                                ;jump to skip this part
+EraseR1:
+    XOR A                                       ;put blank tiles in vram buffer
+    LD (HL), A                                  ;to erase rope
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), A
+    ; FALL THROUGH
 
 OtherRope:
+    EX DE, HL
+    INC E
+    LD L, <Enemy_State                          ;get offset of other platform from state
+    LD A, (HL)
+    ADD A, >Enemy_ID
+    LD H, A
+;
+    POP AF                                      ;pull second copy of vertical speed from stack
+    CPL                                         ;invert bits to reverse speed
+    CALL SetupPlatformRope                      ;do sub again to figure out where to put bg tiles
+;
+    EX DE, HL
+    LD (HL), B                                  ;write name table address to vram buffer
+    INC L
+    LD (HL), C                                  ;this time we're doing putting tiles for
+    INC L                                       ;the other platform
+    LD (HL), StripeCount($04)                   ;set length again for 2 bytes
+    INC L
+    POP AF                                      ;pull first copy of vertical speed from stack
+    OR A
+    JP P, EraseR2                               ;if moving upwards (note inversion earlier), skip this
+    LD (HL), $8C                                ;otherwise put tile numbers for left
+    INC L
+    LD (HL), $01                                ;and right sides of rope in vram
+    INC L
+    LD (HL), $8D                                ;transfer buffer
+    INC L
+    LD (HL), $01
+    JP EndRp                                    ;jump to skip this part
+EraseR2:
+    XOR A                                       ;put blank tiles in vram buffer
+    LD (HL), A                                  ;to erase rope
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), A
+EndRp:
+    INC L
+    LD (HL), $00                                ;put null terminator at the end
+    LD (VRAM_Buffer1_Ptr), HL                   ;update vram buffer offset
+    LD HL, (ObjectOffset)                       ;get enemy object buffer offset and leave
+    RET
 
+;   INPUT:  HL - ObjectOffset
+;   INPUT:  A - Enemy_Y_Speed
+;   OUTPUT: BC - NAMETABLE ADDR
 SetupPlatformRope:
+    PUSH HL                                     ;save current object offset
+    OR A
+    LD L, <Enemy_Y_Position                     ;get vertical coordinate
+    LD A, (HL)
+    LD L, <Enemy_X_Position                     ;get horizontal coordinate and save in B
+    LD B, (HL)
+    JP P, StoreRopeY                            ;skip this part if moving downwards or not at all
+    ADD A, $08                                  ;add eight to vertical coordinate and
+StoreRopeY:
+    SUB A, SMS_PIXELYOFFSET                     ;subtract offset to adjust to SMS resolution
+    AND A, $F8                                  ;remove unwanted bits (round down to whole tile)
+    LD L, A                                     ;store in HL
+    LD H, $0C                                   ;set bits to factor in NT base and VDP Write command
+    ADD HL, HL                                  ;shift into the correct place
+    ADD HL, HL                                  ;tile -> row addr ($08 -> $40)
+    ADD HL, HL
+;
+    LD A, (SecondaryHardMode)                   ;if secondary hard mode flag set,
+    OR A
+    LD A, B                                     ;load horizontal coordinate
+    JP NZ, StoreRopeX                           ;use coordinate as-is
+    ADD A, $10                                  ;otherwise add sixteen more pixels
+StoreRopeX:
+    ;ADD A, $08 AND A, $F0
+    AND A, $F8                                  ;remove unwanted bits (round down to whole tile)  
+    RRCA                                        ;shift into the correct place
+    RRCA                                        ;tile -> col addr ($08 -> $02)
+    OR A, L                                     ;add row and col addresses together
+    LD C, A                                     ;store low byte in C
+    LD B, H                                     ;store high byte in B
+    POP HL                                      ;get back current object offset
+;
+    PUSH DE                                     ;preserve VRAM_Buffer1_Ptr
+    CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
+    POP DE                                      ;get back VRAM_Buffer1_Ptr
+    OR A                                        ;exit if fully onscreen
+    RET P
+    CP A, $E0                                   ;check if offscreen enough on the left edge of the screen
+    RET C                                       ;if not, exit
+    LD B, $00                                   ;else, set high byte of NT addr to 0 to not write to the screen
+    ;LD L, <Enemy_Y_Position
+    ;CP A, $D8
+    ;RET C
+    ;LD B, $00
+    RET
 
 InitPlatformFall:
-    ;LD A, C
-    ;ADD A, $C1
-    ;LD H, A
-    LD H, D
-    CALL GetEnemyOffscreenBits
+    LD H, D                                     ;move offset of other platform from Y to X
+    CALL GetEnemyOffscreenBits                  ;get offscreen bits
+    LD HL, (ObjectOffset)
 ;
     LD A, $06
-    CALL SetupFloateyNumber
+    CALL SetupFloateyNumber                     ;award 1000 points to player
 ;
-    LD A, (Player_Rel_XPos)
+    LD A, (Player_Rel_XPos)                     ;put floatey number coordinates where player is
     LD L, <FloateyNum_X_Pos
     LD (HL), A
     LD A, (Player_Y_Position)
     LD L, <FloateyNum_Y_Pos
     LD (HL), A
 ;
-    LD L, <Enemy_MovingDir
-    LD (HL), $01
-    LD D, $C1
+    LD L, <Enemy_MovingDir                      ;set moving direction as flag for
+    LD (HL), $01                                ;falling platforms
+    LD D, >Enemy_ID + $01
+    ; FALL THROUGH
 
 StopPlatforms:
-    CALL InitVStf
+    CALL InitVStf                               ;initialize vertical speed and low byte
 ;
-    XOR A
-    LD E, <Enemy_Y_Speed
+    LD E, <Enemy_Y_Speed                        ;for both platforms and leave
     LD (DE), A
     LD E, <Enemy_Y_MoveForce
     LD (DE), A
     RET
 
 PlatformFall:
-    LD A, C
-    PUSH AF
-;   
-    CALL MoveFallingPlatform
+    PUSH DE                                     ;save offset for other platform to stack
+    CALL MoveFallingPlatform                    ;make current platform fall
 ;
-    POP AF
-    ADD A, $C1
-    LD H, A
-    CALL MoveFallingPlatform
+    POP HL                                      ;pull offset from stack and save to X
+    CALL MoveFallingPlatform                    ;make other platform fall
 ;
     LD HL, (ObjectOffset)
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag                ;if player not standing on either platform,
     LD A, (HL)
     OR A
-    JP M, ExPF
-    ADD A, $C1
-    LD H, A
-    CALL PositionPlayerOnVPlat
-ExPF:
-    LD HL, (ObjectOffset)
+    RET M                                       ;skip this part
+    ADD A, >Enemy_ID
+    LD H, A                                     ;transfer collision flag offset as offset to X
+    CALL PositionPlayerOnVPlat                  ;and position player appropriately
+    LD HL, (ObjectOffset)                       ;get enemy object buffer offset and leave
     RET
 
 ;--------------------------------
@@ -4016,157 +4141,160 @@ ExPF:
 YMovingPlatform:
     POP HL
 ;
-    LD L, <Enemy_Y_Speed
+    LD L, <Enemy_Y_Speed                        ;if platform moving up or down, skip ahead to
     LD A, (HL)
     LD L, <Enemy_Y_MoveForce
     OR A, (HL)
-    JP NZ, ChkYCenterPos
+    JP NZ, ChkYCenterPos                        ;check on other position
 ;
-    LD L, <Enemy_YMF_Dummy
+    LD L, <Enemy_YMF_Dummy                      ;initialize dummy variable
     LD (HL), A
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    LD L, <YPlatformTopYPos
+    LD L, <YPlatformTopYPos                     ;if current vertical position => top position, branch
     CP A, (HL)
-    JP NC, ChkYCenterPos
+    JP NC, ChkYCenterPos                        ;ahead of all this
 ;
     LD A, (FrameCounter)
-    AND A, %00000111
+    AND A, %00000111                            ;check for every eighth frame
     JP NZ, ChkYPCollision
 ;
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position                     ;increase vertical position every eighth frame
     INC (HL)
-    JP ChkYPCollision
+    JP ChkYPCollision                           ;skip ahead to last part
 
 ChkYCenterPos:
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position                     ;if current vertical position < central position, branch
     LD A, (HL)
-    LD L, <YPlatformCenterYPos
+    LD L, <YPlatformCenterYPos                  ;to slow ascent/move downwards
     CP A, (HL)
     JP C, YMDown
-    CALL MovePlatformUp
+    CALL MovePlatformUp                         ;otherwise start slowing descent/moving upwards
     JP ChkYPCollision
 YMDown:
-    CALL MovePlatformDown
+    CALL MovePlatformDown                       ;start slowing ascent/moving downwards
+    ; FALL THROUGH
 
 ChkYPCollision:
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag                ;if collision flag is set, position player appropriately
     LD A, (HL)
     OR A
     CALL P, PositionPlayerOnVPlat
     RET
 
 ;--------------------------------
-;$00 - used as adder to position player hotizontally
+;$00(B) - used as adder to position player hotizontally
 
 XMovingPlatform:
     POP HL
 ;
-    LD A, $0E
-    CALL XMoveCntr_Platform
+    LD A, $0E                                   ;load preset maximum value for secondary counter
+    CALL XMoveCntr_Platform                     ;do a sub to increment counters for movement
 ;
-    CALL MoveWithXMCntrs
+    CALL MoveWithXMCntrs                        ;do a sub to move platform accordingly, and return value
+    LD A, (Temp_Bytes + $00)
+    LD B, A
 ;
-    LD L, <PlatformCollisionFlag
-    LD A, (HL)
+    LD L, <PlatformCollisionFlag                ;if no collision with player,
+    LD A, (HL)                                  ;branch ahead to leave
     OR A
     RET M
+    ; FALL THROUGH
 
 PositionPlayerOnHPlat:
-    LD A, (Player_X_Position)
-    LD C, A
-    LD A, (Temp_Bytes + $00)
-    ADD A, C
-    LD (Player_X_Position), A
+    LD A, (Player_X_Position)                   ;add saved value from second subroutine to
+    ADD A, B                                    ;current player's position to position
+    LD (Player_X_Position), A                   ;player accordingly in horizontal position
 ;
-    LD A, (Temp_Bytes + $00)
-    BIT 7, A
-    LD A, (Player_PageLoc)
-    JP NZ, PPHSubt
-    ADC A, $00
-    JP SetPVar
+    LD A, (Player_PageLoc)                      ;get player's page location
+    BIT 7, B                                    ;check to see if saved value here is positive or negative
+    JP NZ, PPHSubt                              ;if negative, branch to subtract
+    ADC A, $00                                  ;otherwise add carry to page location
+    JP SetPVar                                  ;jump to skip subtraction
 PPHSubt:
-    ADC A, $FF
+    ADC A, $FF                                  ;subtract borrow from page location
 SetPVar:
-    LD (Player_PageLoc), A
+    LD (Player_PageLoc), A                      ;save result to player's page location
 ;
-    LD A, (Temp_Bytes + $00)
+    LD A, B                                     ;put saved value from second sub here to be used later
     LD (Platform_X_Scroll), A
 ;
-    JP PositionPlayerOnVPlat 
+    JP PositionPlayerOnVPlat                    ;position player vertically and appropriately
 
 ;--------------------------------
 
 DropPlatform:
     POP HL
 ;
-    LD L, <PlatformCollisionFlag
-    LD A, (HL)
+    LD L, <PlatformCollisionFlag                ;if no collision between platform and player
+    LD A, (HL)                                  ;occurred, just leave without moving anything
     OR A
     RET M
 ;
-    CALL MoveDropPlatform
-    JP PositionPlayerOnVPlat
+    CALL MoveDropPlatform                       ;otherwise do a sub to move platform down very quickly
+    JP PositionPlayerOnVPlat                    ;do a sub to position player appropriately
 
 ;--------------------------------
 
 RightPlatform:
     POP HL
 ;
-    CALL MoveEnemyHorizontally
-    LD (Temp_Bytes + $00), A
+    CALL MoveEnemyHorizontally                  ;move platform with current horizontal speed, if any
+    LD B, A                                     ;store saved value here
 ;
-    LD L, <PlatformCollisionFlag
-    LD A, (HL)
+    LD L, <PlatformCollisionFlag                ;check collision flag, if no collision between player
+    LD A, (HL)                                  ;and platform, branch ahead, leave speed unaltered
     OR A
     RET M
 ;
-    LD L, <Enemy_X_Speed
+
+    LD L, <Enemy_X_Speed                        ;otherwise set new speed (gets moving if motionless)
 
     .IF PALBUILD == $00
     LD (HL), $10
     .ELSE
-    LD (HL), $13                            ;PAL diff: Faster speed to compensate FPS difference
+    LD (HL), $13                                ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 ;
-    JP PositionPlayerOnHPlat
+    JP PositionPlayerOnHPlat                    ;use saved value from earlier sub to position player
 
 ;--------------------------------
 
 MoveLargeLiftPlat:
     POP HL
 ;
-    CALL MoveLiftPlatforms
-    JP ChkYPCollision
+    CALL MoveLiftPlatforms                      ;execute common to all large and small lift platforms
+    JP ChkYPCollision                           ;branch to position player correctly
 
 MoveSmallPlatform:
-    CALL MoveLiftPlatforms
-    JP ChkSmallPlatCollision
+    ;CALL MoveLiftPlatforms                      ;execute common to all large and small lift platforms
+    ;JP ChkSmallPlatCollision
+    ; FALL THROUGH
 
 MoveLiftPlatforms:
-    LD A, (TimerControl)
+    LD A, (TimerControl)                        ;if master timer control set, skip all of this
     OR A
-    RET NZ
+    RET NZ                                      ;and branch to leave
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
     LD L, <Enemy_YMF_Dummy
-    ADD A, (HL)
+    ADD A, (HL)                                 ;add contents of movement amount to whatever's here
     LD (HL), A
 ;
     LD L, <Enemy_Y_Speed
     LD A, (HL)
-    LD L, <Enemy_Y_Position
-    ADC A, (HL)
+    LD L, <Enemy_Y_Position                     ;add whatever vertical speed is set to current
+    ADC A, (HL)                                 ;vertical position plus carry to move up or down
     LD (HL), A
     RET
 
 ChkSmallPlatCollision:
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag                ;get bounding box counter saved in collision flag
     LD A, (HL)
     OR A
-    RET Z
-    JP PositionPlayerOnS_Plat
+    RET Z                                       ;if none found, leave player position alone
+    JP PositionPlayerOnS_Plat                   ;use to position player correctly
 
 ;-------------------------------------------------------------------------------------
 ;$00(B) - page location of extended left boundary
@@ -4369,7 +4497,7 @@ ChkTallEnemy:
     JP NC, FloateyPart                      ;$02 or greater, branch beyond this part
 GetAltOffset:
     LD A, (SprDataOffset_Ctrl)              ;load some kind of control bit
-    ADD A, $C0 + SPRDATA_ALT
+    ADD A, >Alt_SprDataOffset
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)                              ;get alternate OAM data offset
@@ -4510,10 +4638,9 @@ FlagpoleScoreMods:
 .ENDS
 
 FlagpoleRoutine:
-    LD H, $C0 + OBJ_SLOT6                   ;set enemy object offset
+    LD HL, Enemy_ID_05                      ;set enemy object offset
     LD (ObjectOffset), HL                   ;to special use slot
 ;
-    LD L, <Enemy_ID
     LD A, (HL)
     CP A, OBJECTID_FlagpoleFlagObject       ;if flagpole flag not found,
     RET NZ                                  ;branch to leave
@@ -4570,7 +4697,6 @@ GiveFPScr:
     CALL AddToScore                         ;do sub to award player points depending on height of collision
     LD A, $05
     LD (GameEngineSubroutine), A            ;set to run end-of-level subroutine on next frame
-    LD H, $C0 + OBJ_SLOT6 
 FPGfx:
     CALL GetEnemyOffscreenBits              ;get offscreen information
     CALL RelativeEnemyPosition              ;get relative coordinates
@@ -4656,7 +4782,7 @@ UpdSte:
 ;$06-$07(DE) - used to store block buffer address
 
 BlockObjMT_Updater:    
-    LD H, $C0 + OBJ_BLOCK2              ;set offset to start with second block object
+    LD H, >Block_State + $01            ;set offset to start with second block object
     LD B, $02
 UpdateLoop:
     LD (ObjectOffset), HL               ;set offset here
@@ -4908,18 +5034,18 @@ CoinBlock:
     CALL FindEmptyMiscSlot
 ;
     LD L, <Block_PageLoc
-    LD E, <Misc_PageLoc
+    LD E, L
     LD A, (HL)
     LD (DE), A
 ;
     LD L, <Block_X_Position
-    LD E, <Misc_X_Position
+    LD E, L
     LD A, (HL)
     ADD A, $05
     LD (DE), A
 ;
     LD L, <Block_Y_Position
-    LD E, <Misc_Y_Position
+    LD E, L
     LD A, (HL)
     SUB A, $10
     LD (DE), A
@@ -4984,7 +5110,7 @@ FMiscLoop:
 ;-------------------------------------------------------------------------------------
 
 MiscObjectsCore:
-    LD H, $C0 + OBJ_MISC9               ;set at end of misc object buffer
+    LD H, >Misc_State + $08             ;set at end of misc object buffer
 MiscLoop:
     LD (ObjectOffset), HL               ;store misc object offset here
     LD L, <Misc_State                   ;check misc object state
@@ -5042,7 +5168,7 @@ RunJCSubs:
 
 MiscLoopBack:
     DEC H                               ;decrement misc object offset
-    LD A, $C0 + OBJ_MISC1-1
+    LD A, >Misc_State - $01
     CP A, H
     JP NZ, MiscLoop                     ;loop back until all misc objects handled
     RET
@@ -5164,7 +5290,7 @@ MovePlayerHorizontally:
     LD A, (JumpspringAnimCtrl)      ;if jumpspring currently animating,
     OR A
     RET NZ                          ;branch to leave
-    LD H, $C0 + OBJ_PLAYER          ;otherwise set offset to use player's stuff
+    LD H, >Player_Y_Position          ;otherwise set offset to use player's stuff
 
 MoveEnemyHorizontally:
 MoveObjectHorizontally:
@@ -5431,11 +5557,11 @@ FireballEnemyCollision:
     RET M
 ;
     LD A, (FrameCounter)
-    SRL A
+    RRCA
     RET C
 ;
     LD D, H
-    LD H, $C0 + OBJ_SLOT5
+    LD H, >Enemy_ID_04
 
 FireballEnemyCDLoop:
     LD A, H
@@ -6166,7 +6292,7 @@ ECLoop:
     JP NC, NoEnemyCollision
 ;
     LD E, <Enemy_State
-    LD L, <Enemy_State
+    LD L, E
     LD A, (DE)
     OR A, (HL)
     AND A, %10000000
@@ -6216,13 +6342,13 @@ ExitECRoutine:
 
 ProcEnemyCollisions:
     LD E, <Enemy_State
-    LD L, <Enemy_State
+    LD L, E
     LD A, (DE)
     OR A, (HL)
     AND A, %00100000
     RET NZ
 ;
-    LD L, <Enemy_State
+    ;LD L, <Enemy_State
     LD A, (HL)
     CP A, $06
     JP C, ProcSecondEnemyColl
@@ -6337,7 +6463,7 @@ LargePlatformCollision:
 ;
     LD L, <Enemy_State
     LD A, (HL)
-    ADD A, $C1
+    ADD A, >Enemy_ID
     LD H, A
     CALL ChkForPlayerC_LargeP
 
@@ -7913,7 +8039,7 @@ SOLft:
 ;$07(B) - counter
 
 PlayerCollisionCore:
-    LD H, $C0 + OBJ_PLAYER                      ;initialize X to use player's bounding box for comparison
+    LD H, >Player_Y_Position                      ;initialize X to use player's bounding box for comparison
 
 SprObjectCollisionCore:
     LD B, $02                                   ;save as counter, compare horizontal coordinates first
@@ -7923,7 +8049,7 @@ SprObjectCollisionCore:
     ;BoundingBox_LR_Corner: [$02] 1ST LOOP
     ;BoundingBox_DR_YPos:   [$03] 2ND LOOP
     LD E, <BoundingBox_UL_Corner                ;(SMS)offsets for first loop
-    LD L, <BoundingBox_UL_Corner
+    LD L, E
 
 ;   X - 1ST OBJECT OFFSET
 ;   Y - 2ND OBJECT OFFSET
@@ -8006,7 +8132,7 @@ NoCollisionFound:
 
 CollisionFound:
     LD E, <BoundingBox_UL_Corner + $01          ;increment offsets on both objects to check
-    LD L, <BoundingBox_UL_Corner + $01          ;the vertical coordinates
+    LD L, E                                     ;the vertical coordinates
     DJNZ CollisionCoreLoop                      ;decrement counter to reflect this and if counter not expired, branch to loop
     SCF                                         ;otherwise we already did both sets, therefore collision, so set carry
     RET
@@ -8053,7 +8179,7 @@ BlockBuffer_Y_Adder:
 BlockBufferColli_Side:
     LD A, $01
 @SetPlayerOffset:
-    LD H, $C0 + OBJ_PLAYER
+    LD H, >Player_Y_Position
 
 
 ;   A - FLAG TO RETURN EITHER H OR V COORDINATES

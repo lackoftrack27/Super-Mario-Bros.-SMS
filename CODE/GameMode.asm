@@ -192,7 +192,6 @@ ProcELoop:
     CP A, H                                 ;do these two subroutines until the whole buffer is done
     JP NZ, ProcELoop
 ;
-    LD H, >Player_Y_Position  ; 92
     ;CALL GetPlayerOffscreenBits             ;get offscreen bits for player object
     GetPlayerOffscreenBits_M
     ;CALL RelativePlayerPosition             ;get relative coordinates for player object
@@ -1552,7 +1551,8 @@ WrCMTile:
     RET C                                   ;then branch ahead to leave
     ;LD H, $C6
     ;LD A, $01
-    LD C, $1B                               ;set C to offset to get block at ($04, $10) of coordinates
+    LD BC, $0410
+    ;LD C, $1B                               ;set C to offset to get block at ($04, $10) of coordinates
     CALL BlockBufferCollision               ;do a sub to get block buffer address set, return contents
     LD A, IXL
     CP A, $D0                               ;if vertical high nybble offset beyond extent of
@@ -4066,8 +4066,9 @@ StoreRopeY:
     JP NZ, StoreRopeX                           ;use coordinate as-is
     ADD A, $10                                  ;otherwise add sixteen more pixels
 StoreRopeX:
-    ;ADD A, $08 AND A, $F0
-    AND A, $F8                                  ;remove unwanted bits (round down to whole tile)  
+    ADD A, $08 
+    AND A, $F0
+    ;AND A, $F8                                  ;remove unwanted bits (round down to whole tile)  
     RRCA                                        ;shift into the correct place
     RRCA                                        ;tile -> col addr ($08 -> $02)
     OR A, L                                     ;add row and col addresses together
@@ -6713,6 +6714,12 @@ GetEnemyBoundBoxOfsArg:
 ;     .db $00, $07, $0e   ; big, swim, small or crouch
 ; .ENDS
 
+;   head,  footL, footR, side0, side1, side2, side3
+;   $0804, $0320, $0C20, $0208, $0218, $0D08, $0D18 ; big
+;   $0802, $0320, $0C20, $0208, $0218, $0D08, $0D18 ; swim
+;   $0812, $0320, $0C20, $0218, $0218, $0D18, $0D18 ; small/crouch
+;    XXYY
+
 PlayerBGCollision:
     LD A, (DisableCollisionDet)         ;if collision detection disabled flag set,
     OR A
@@ -6752,28 +6759,20 @@ ChkOnScr:
     RET NC                              ;otherwise leave
 
 ChkCollSize:
-    LD C, $0E                           ;block offset for crouching
-    LD A, (CrouchingFlag)
-    OR A
-    JP NZ, GBBAdr                       ;if player crouching, skip ahead
-;
-    LD A, (PlayerSize)
-    OR A
-    JP NZ, GBBAdr                       ;if player small, skip ahead
-;
-    LD C, $07                           ;block offset for big
-    LD A, (SwimmingFlag)
-    OR A
-    JP NZ, GBBAdr                       ;if swimming flag set, skip ahead
-;
-    LD C, $00                           ;block offset for small
-GBBAdr:
-    LD E, $20
+    LD BC, $0812                        ;load block offsets for crouching/small
+    LD E, $10                           ;load height comparision for crouching/small
     LD A, (PlayerSize)
     LD HL, CrouchingFlag
     OR A, (HL)
-    JP Z, HeadChk
-    LD E, $10
+    JP NZ, HeadChk                      ;if player crouching or small, skip ahead
+    LD E, $20                           ;load height comparision for big
+;
+    LD C, $02                           ;change y offset for swimming
+    LD A, (SwimmingFlag)
+    OR A
+    JP NZ, HeadChk                      ;if swimming flag set, skip ahead
+;
+    LD C, $04                           ;change y offset for big
 HeadChk:
     LD A, (Player_Y_Position)
     CP A, E
@@ -6806,9 +6805,7 @@ HeadChk:
     JP NZ, NYSpd                        ;branch ahead, do not process collision
 ;
     LD A, (DE)
-    PUSH BC                             ;save block buffer offset in C
     CALL PlayerHeadCollision            ;otherwise do a sub to process collision
-    POP BC                              ;restore block buffer offset
     JP DoFootCheck                      ;jump ahead to skip these other parts here
 
 
@@ -6837,14 +6834,14 @@ DoFootCheck:
     CP A, $CF
     JP NC, DoPlayerSideCheck            ;if player is too far down on screen, skip all of this
 ;
+    LD BC, $0320
     BlockBufferColli_Feet               ;do player-to-bg collision detection on bottom left of player
     CALL CheckForCoinMTiles             ;check to see if player touched coin with their left foot
     JP Z, HandleCoinMetatile            ;if so, branch to some other part of code
 ;
     PUSH AF                             ;save bottom left metatile to stack
+    LD B, $0C
     BlockBufferColli_Feet               ;do player-to-bg collision detection on bottom right of player
-    DEC C
-    DEC C
     LD (Temp_Bytes + $00), A            ;save bottom right metatile here
     POP AF
     LD (Temp_Bytes + $01), A            ;pull bottom left metatile and save here
@@ -6905,48 +6902,74 @@ LandPlyr:
 InitSteP:
     XOR A
     LD (Player_State), A                ;set player's state to normal
+    ; FALL THROUGH
 
 DoPlayerSideCheck:
-    INC C
-    INC C                               ;increment offset 2 bytes to use adders for side collisions
-    LD A, $02                           ;set value here to be used as counter
+;   LOOP 1 - LEFT SIDE CHECK
+    LD A, $02                           ;set value here to be used as direction in ImpedePlayerMove
     LD (Temp_Bytes + $00), A
-
+    LD BC, $0208
+    LD A, (PlayerSize)
+    LD HL, CrouchingFlag
+    OR A, (HL)
+    JP Z, SideCheckLoop
+    LD C, $18
 SideCheckLoop:
-    INC C                               ;move onto the next one
-;
     LD A, (Player_Y_Position)
     CP A, $20
     JP C, BHalf
     CP A, $E4
     RET NC                              ;branch to leave if player is too far down
-;
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on one half of player
     JP Z, BHalf                         ;branch ahead if nothing found
     CP A, MT_SIDEPIPE_END_TOP           ;otherwise check for pipe metatiles
     JP Z, BHalf                         ;if collided with sideways pipe (top), branch ahead
     CP A, MT_WATERPIPE_TOP              
     JP Z, BHalf                         ;if collided with water pipe (top), branch ahead
-;
     CALL CheckForClimbMTiles            ;do sub to see if player bumped into anything climbable
     JP C, CheckSideMTiles               ;if not, branch to alternate section of code
-;
 BHalf:
-    INC C                               ;increment it
-; 
     LD A, (Player_Y_Position)
     CP A, $08
     RET C
     CP A, $D0
     RET NC
-;
+    LD C, $18
     CALL BlockBufferColli_Side          ;do player-to-bg collision detection on other half of player
     JP NZ, CheckSideMTiles              ;if something found, branch
-;
-    LD HL, Temp_Bytes + $00
-    DEC (HL)                            ;otherwise decrement counter
-    JP NZ, SideCheckLoop                ;run code until both sides of player are checked
-    RET
+;   LOOP 2 - RIGHT SIDE CHECK
+    LD A, $01
+    LD (Temp_Bytes + $00), A
+    LD BC, $0D08
+    LD A, (PlayerSize)
+    LD HL, CrouchingFlag
+    OR A, (HL)
+    JP Z, RightSideCheck
+    LD C, $18
+RightSideCheck:
+    LD A, (Player_Y_Position)
+    CP A, $20
+    JP C, BHalf2
+    CP A, $E4
+    RET NC                              ;branch to leave if player is too far down
+    CALL BlockBufferColli_Side          ;do player-to-bg collision detection on one half of player
+    JP Z, BHalf2                        ;branch ahead if nothing found
+    CP A, MT_SIDEPIPE_END_TOP           ;otherwise check for pipe metatiles
+    JP Z, BHalf2                        ;if collided with sideways pipe (top), branch ahead
+    CP A, MT_WATERPIPE_TOP              
+    JP Z, BHalf2                        ;if collided with water pipe (top), branch ahead
+    CALL CheckForClimbMTiles            ;do sub to see if player bumped into anything climbable
+    JP C, CheckSideMTiles               ;if not, branch to alternate section of code
+BHalf2:
+    LD A, (Player_Y_Position)
+    CP A, $08
+    RET C
+    CP A, $D0
+    RET NC
+    LD C, $18
+    CALL BlockBufferColli_Side          ;do player-to-bg collision detection on other half of player
+    RET Z
+    ; FALL THROUGH
 
 CheckSideMTiles:
     CALL ChkInvisibleMTiles             ;check for hidden or coin 1-up blocks
@@ -7043,9 +7066,6 @@ HandleAxeMetatile:
     LD A, $18
     LD (Player_X_Speed), A              ;set horizontal speed and continue to erase axe metatile
 ErACM:
-    LD DE, (Temp_Bytes + $06)
-    LD A, IXL                           ;load vertical high nybble offset for block buffer
-    addAToDE_M
     XOR A                               ;load blank metatile
     LD (DE), A                          ;store to remove old contents from block buffer
     LD HL, (Temp_Bytes + $06)           ;(SMS)put block buffer addr into HL for PutBlockMetatile
@@ -7281,43 +7301,45 @@ GetWNum:
     RET
 
 ImpedePlayerMove:
-    LD B, $00
-    LD HL, Temp_Bytes + $00
-    LD C, (HL)
-    DEC C
-    JP NZ, RImpd
-    INC C
+    LD A, (Temp_Bytes + $00)
+    LD B, A
+;
+    LD C, $00
     LD A, (Player_X_Speed)
+    DEC B
+    JP NZ, RImpd
+    INC B
     OR A
     JP M, ExIPM
-    DEC B
+    DEC C
     JP NXSpd
 RImpd:
-    LD C, $02
-    LD A, (Player_X_Speed)
+    LD B, $02
     CP A, $01
     JP P, ExIPM
-    LD B, $01
+    INC C
 NXSpd:
     LD A, $10
     LD (SideCollisionTimer), A
     XOR A
     LD (Player_X_Speed), A
-    BIT 7, B
+    BIT 7, C
     JP Z, PlatF
     DEC A
 PlatF:
+    LD E, A
+    LD A, C
+    LD HL, Player_X_Position
+    ADD A, (HL)
     LD (HL), A
-    LD A, (Player_X_Position)
-    ADD A, B
-    LD (Player_X_Position), A
-    LD A, (Player_PageLoc)
-    ADC A, (HL)
-    LD (Player_PageLoc), A
+    DEC L
+    LD A, (HL)
+    ADC A, E
+    LD (HL), A
 ExIPM:
     LD HL, Player_CollisionBits
-    LD A, C
-    XOR A, $FF
+    LD A, B
+    CPL
     AND A, (HL)
     LD (HL), A
     RET
@@ -7381,17 +7403,21 @@ EnemyBGCStateData:
     .db $01, $01, $02, $02, $02, $05
 .ENDS
 
-.SECTION "EnemyBGCXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-EnemyBGCXSpdData:
-    .db $10, $f0
-.ENDS
+; .SECTION "EnemyBGCXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; EnemyBGCXSpdData:
+;     .db $10, $f0
+; .ENDS
 
 EnemyToBGCollisionDet:
     LD L, <Enemy_State
     BIT 5, (HL)
     RET NZ
 ;
-    CALL SubtEnemyYPos
+    ;CALL SubtEnemyYPos
+    LD L, <Enemy_Y_Position
+    LD A, (HL)
+    ADD A, $3E
+    CP A, $44
     RET C
 ;
     LD L, <Enemy_ID
@@ -7399,12 +7425,14 @@ EnemyToBGCollisionDet:
     CP A, OBJECTID_Spiny
     JP NZ, DoIDCheckBGColl
 ;
+    LD B, A
     LD L, <Enemy_Y_Position
     LD A, (HL)
     CP A, $25
     RET C
-    LD L, <Enemy_ID
-    LD A, (HL)
+    ;LD L, <Enemy_ID
+    ;LD A, (HL)
+    LD A, B
 
 DoIDCheckBGColl:
     CP A, OBJECTID_GreenParatroopaJump
@@ -7435,9 +7463,9 @@ HandleEToBGCollision:
     CP A, MT_HITBLANK
     JP NZ, LandEnemyProperly
 ;
-    LD A, IXL
-    LD DE, (Temp_Bytes + $06)
-    addAToDE_M
+    ;LD A, IXL
+    ;LD DE, (Temp_Bytes + $06)
+    ;addAToDE_M
     XOR A
     LD (DE), A
 ;
@@ -7474,8 +7502,9 @@ SetStun:
     LD (HL), A
 ;
     LD L, <Enemy_Y_Position
-    DEC (HL)
-    DEC (HL)
+    LD A, (HL)
+    SUB A, $02
+    LD (HL), A
 ;
     LD L, <Enemy_ID
     LD A, (HL)
@@ -7493,7 +7522,9 @@ SetNotW:
 ;
     LD C, $01
     CALL PlayerEnemyDiff
+    LD B, $10
     JP P, ChkBBill
+    LD B, $F0
     INC C
 ChkBBill:
     LD L, <Enemy_ID
@@ -7505,13 +7536,13 @@ ChkBBill:
     LD L, <Enemy_MovingDir
     LD (HL), C
 NoCDirF:
-    DEC C
-    LD A, C
-    LD BC, EnemyBGCXSpdData
-    addAToBC8_M
-    LD A, (BC)
+    ;DEC C
+    ;LD A, $10                                   ;EnemyBGCXSpdData
+    ;JP Z, +
+    ;LD A, $F0
+;+:
     LD L, <Enemy_X_Speed
-    LD (HL), A
+    LD (HL), B
     RET
 
 ;--------------------------------
@@ -7531,9 +7562,9 @@ LandEnemyProperly:
     JP M, DoEnemySideCheck
 
 ChkLandedEnemyState:
-    LD L, <Enemy_State
-    LD A, (HL)
-    OR A
+    ;LD L, <Enemy_State
+    ;LD A, (HL)
+    ;OR A
     JP Z, DoEnemySideCheck
     CP A, $05
     JP Z, ProcEnemyDirection
@@ -7585,6 +7616,7 @@ CNwCDir:
     LD L, <Enemy_MovingDir
     CP A, (HL)
     CALL Z, ChkForBump_HammerBroJ
+    ; FALL THROUGH
 
 LandEnemyInitState:
     CALL EnemyLanding
@@ -7593,13 +7625,11 @@ LandEnemyInitState:
     LD A, (HL)
     OR A
     JP M, NMovShellFallBit
-    XOR A
-    LD (HL), A
+    LD (HL), $00
     RET
 
 NMovShellFallBit:
-    RES 6, A
-    LD (HL), A
+    RES 6, (HL)
     RET
 
 ;--------------------------------
@@ -7608,16 +7638,15 @@ ChkForRedKoopa:
     LD L, <Enemy_ID
     LD A, (HL)
     CP A, OBJECTID_RedKoopa
+    LD L, <Enemy_State
+    LD A, (HL)
     JP NZ, Chk2MSBSt
 ;
-    LD L, <Enemy_State
-    LD A, (HL)
     OR A
     JP Z, ChkForBump_HammerBroJ
+    ; FALL THROUGH
 ;
 Chk2MSBSt:
-    LD L, <Enemy_State
-    LD A, (HL)
     OR A
     JP P, GetSteFromD
     SET 6, A
@@ -7628,6 +7657,7 @@ GetSteFromD:
     LD A, (BC)
 SetD6Ste:
     LD (HL), A
+    ; FALL THROUGH
 
 ;--------------------------------
 ;$00 - used to store bitmask (not used but initialized here)
@@ -7639,25 +7669,39 @@ DoEnemySideCheck:
     CP A, $20
     RET C
 ;
-    LD C, $16
-    LD IYH, $02
-SdeCLoop:
-    LD A, IYH
+    LD BC, $0014
+    ;LD C, $16
+;     LD IYH, $02
+; SdeCLoop:
+;     LD A, IYH
+;     LD L, <Enemy_MovingDir
+;     CP A, (HL)
+;     JP NZ, NextSdeC
+;     LD A, $01
+;     CALL BlockBufferChk_Enemy
+;     JP Z, NextSdeC
+;     CALL ChkForNonSolids
+;     JP NZ, ChkForBump_HammerBroJ
+; NextSdeC:
+;     DEC IYH
+;     INC C
+;     LD A, C
+;     CP A, $18
+;     JP C, SdeCLoop
+;     RET
     LD L, <Enemy_MovingDir
-    CP A, (HL)
-    JP NZ, NextSdeC
+    LD A, (HL)
+    DEC A
+    JP NZ, RightChk
+    LD B, $10   ; $1014
+    ;INC C
+RightChk:
     LD A, $01
     CALL BlockBufferChk_Enemy
-    JP Z, NextSdeC
+    RET Z
     CALL ChkForNonSolids
-    JP NZ, ChkForBump_HammerBroJ
-NextSdeC:
-    DEC IYH
-    INC C
-    LD A, C
-    CP A, $18
-    JP C, SdeCLoop
-    RET
+    RET Z
+    ; FALL THROUGH
 
 ChkForBump_HammerBroJ:
     LD A, H
@@ -7688,17 +7732,28 @@ NoBump:
 ;IXL - temp reg
 
 PlayerEnemyDiff:
-    LD A, (Player_X_Position)
-    LD IXL, A
-    LD L, <Enemy_X_Position
-    LD A, (HL)
-    SUB A, IXL
+    ; LD A, (Player_X_Position)
+    ; LD IXL, A
+    ; LD L, <Enemy_X_Position
+    ; LD A, (HL)
+    ; SUB A, IXL
+    ; LD (Temp_Bytes + $00), A
+    ; LD A, (Player_PageLoc)
+    ; LD IXL, A
+    ; DEC L ;LD L, <Enemy_PageLoc
+    ; LD A, (HL)
+    ; SBC A, IXL
+    EX DE, HL   ; DE = ENEMY, HL = PLAYER
+    LD HL, Player_X_Position
+    LD E, L
+    LD A, (DE)
+    SUB A, (HL)
     LD (Temp_Bytes + $00), A
-    LD A, (Player_PageLoc)
-    LD IXL, A
-    LD L, <Enemy_PageLoc
-    LD A, (HL)
-    SBC A, IXL
+    DEC L                               ;Enemy_PageLoc
+    DEC E
+    LD A, (DE)
+    SBC A, (HL)
+    EX DE, HL   ; DE = PLAYER, HL = ENEMY
     RET
 
 ;--------------------------------
@@ -7712,15 +7767,16 @@ EnemyLanding:
     LD (HL), A
     RET
 
-SubtEnemyYPos:
+EnemyJump:
+;SubtEnemyYPos:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     ADD A, $3E
     CP A, $44
-    RET
+    ;RET
 
-EnemyJump:
-    CALL SubtEnemyYPos
+;EnemyJump:
+    ;CALL SubtEnemyYPos
     JP C, DoEnemySideCheck
 ;
     LD L, <Enemy_Y_Speed
@@ -7802,7 +7858,8 @@ FireballBGCollision:
     JP C, ClearBounceFlag
 ;
     ; BlockBufferChk_FBall
-    LD C, $1A 
+    LD BC, $0408
+    ;LD C, $1A
     XOR A
     CALL BlockBufferCollision
     JP Z, ClearBounceFlag
@@ -8144,21 +8201,21 @@ CollisionFound:
 ;$05(IYL) - modified x coordinate
 ;$06-$07(DE) - block buffer address
 
-.SECTION "BlockBuffer_X_Adder" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256
-BlockBuffer_X_Adder:
-    .db $08, $03, $0c, $02, $02, $0d, $0d, $08  ; $07
-    .db $03, $0c, $02, $02, $0d, $0d, $08, $03  ; $0F
-    .db $0c, $02, $02, $0d, $0d, $08, $00, $10  ; $17
-    .db $04, $14, $04, $04                      ; $1B
-.ENDS
+; .SECTION "BlockBuffer_X_Adder" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256
+; BlockBuffer_X_Adder:
+;     .db $08, $03, $0c, $02, $02, $0d, $0d, $08  ; $07
+;     .db $03, $0c, $02, $02, $0d, $0d, $08, $03  ; $0F
+;     .db $0c, $02, $02, $0d, $0d, $08, $00, $10  ; $17
+;     .db $04, $14, $04, $04                      ; $1B
+; .ENDS
 
-.SECTION "BlockBuffer_Y_Adder" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256
-BlockBuffer_Y_Adder:
-    .db $04, $20, $20, $08, $18, $08, $18, $02
-    .db $20, $20, $08, $18, $08, $18, $12, $20
-    .db $20, $18, $18, $18, $18, $18, $14, $14
-    .db $06, $06, $08, $10
-.ENDS
+; .SECTION "BlockBuffer_Y_Adder" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256
+; BlockBuffer_Y_Adder:
+;     .db $04, $20, $20, $08, $18, $08, $18, $02
+;     .db $20, $20, $08, $18, $08, $18, $12, $20
+;     .db $20, $18, $18, $18, $18, $18, $14, $14
+;     .db $06, $06, $08, $10
+; .ENDS
 
 ;BlockBufferChk_Enemy:
 ;    JP BlockBufferCollision
@@ -8186,16 +8243,17 @@ BlockBufferColli_Side:
 ;   X - OBJECT OFFSET
 ;   Y - BLOCKBUFFER_XXX_ADDER OFFSET?
 
-;   C - BlockBuffer_X_Adder/BlockBuffer_Y_Adder (INPUT)
+;   BC - BlockBuffer_X_Adder/BlockBuffer_Y_Adder (INPUT)
 ;   HL - OBJECT OFFSET (INPUT)
 ;   DE - BLOCK BUFFER ADDRESS
 BlockBufferChk_Enemy:
 BlockBufferCollision:
     PUSH AF                             ;save contents of A to stack
 ;
-    LD B, >BlockBuffer_X_Adder          
-    LD A, (BC)                          ;add horizontal coordinate
-    LD L, <SprObject_X_Position         ;of object to value obtained using Y as offset
+    ;LD B, >BlockBuffer_X_Adder          
+    ;LD A, (BC)                          ;add horizontal coordinate
+    LD A, B                             ;add horizontal coordinate
+    LD L, <SprObject_X_Position         ;of object to x adder
     ADD A, (HL)
     LD IYL, A                           ;store here
 ;
@@ -8220,10 +8278,11 @@ BlockBufferCollision:
     LD (Temp_Bytes + $06), DE
     ;;;
 ;
-    LD B, >BlockBuffer_Y_Adder
-    LD A, (BC)
+    ;LD B, >BlockBuffer_Y_Adder
+    ;LD A, (BC)
+    LD A, C
     LD L, <SprObject_Y_Position         ;get vertical coordinate of object
-    ADD A, (HL)                         ;add it to value obtained using Y as offset
+    ADD A, (HL)                         ;add it to y adder
     AND A, %11110000                    ;mask out low nybble
     SUB A, $20                          ;subtract 32 pixels for the status bar
     LD IXL, A                           ;store result here
@@ -8232,7 +8291,7 @@ BlockBufferCollision:
 ;
     POP AF                              ;pull A from stack
     OR A
-    JP Z, RetC                         ;if A = 1, load horizontal coordinate
+    JP Z, RetC                          ;if A = 1, load horizontal coordinate
     LD L, <SprObject_X_Position         ;if A = 0, load vertical coordinate
 RetC:
     LD A, (HL)
@@ -8264,7 +8323,7 @@ RetC:
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
-;$00 (IXL) - used in adding to get proper offset
+;$00 (N/A) - used in adding to get proper offset
 
 ; RelativePlayerPosition:
 ;     LD H, >Player_Rel_XPos
@@ -8284,12 +8343,13 @@ RetC:
 ;     JP GetObjRelativePosition
 
 RelativeBlockPosition:
-    LD D, >Block_Rel_XPos
+    LD DE, Block_Rel_YPos
     CALL GetObjRelativePosition
 ;
     INC H
     INC H
     INC D
+    INC E
     CALL GetObjRelativePosition
     DEC H
     DEC H
@@ -8307,13 +8367,13 @@ RelativeBlockPosition:
 ;     RET
 
 RelativeEnemyPosition:
-    LD D, >Enemy_Rel_XPos
+    LD DE, Enemy_Rel_YPos
 
 ;   HL - OBJECT OFFSET
 ;   DE - XXX_Rel_XPos/YPos OFFSET
 GetObjRelativePosition:
     LD L, <SprObject_Y_Position
-    LD E, <SprObject_Rel_YPos
+    ;LD E, <SprObject_Rel_YPos
     LD A, (HL)                              ;load vertical coordinate low
     LD (DE), A                              ;store here
 ;
@@ -8354,7 +8414,7 @@ GetObjRelativePosition:
 ;     LD D, >Block_OffscrBits
 
 GetEnemyOffscreenBits:
-    LD D, >Enemy_OffscrBits
+    LD DE, Enemy_OffscrBits
 
 ;   HL - OBJECT OFFSET
 ;   DE - OffscreenBits OFFSET
@@ -8374,25 +8434,32 @@ GetOffScreenBitsSet:
     ADD A, A
     OR A, IXL                               ;mask together with previously saved low nybble
     POP DE                                  ;get offscreen bits offset from stack
-    LD E, <SprObject_OffscrBits
+    ;LD E, <SprObject_OffscrBits
     LD (DE), A
     ;LD HL, (ObjectOffset)
     RET
 
 ;--------------------------------
 ;(these apply to these three subsections)
-; NOT USED!!! $04 (IXL) - used to store proper offset
-;$05 (IXH) - used as adder in DividePDiff
-;$06 (IYL) - used to store preset value used to compare to pixel difference in $07
-;$07 (IYH) - used to store difference between coordinates of object and screen edges
+;$04 (N/A) - used to store proper offset
+;$05 (N/A) - used as adder in DividePDiff
+;$06 (N/A) - used to store preset value used to compare to pixel difference in $07
+;$07 (E) - used to store difference between coordinates of object and screen edges
 
-.SECTION "XOffscreenBitsData, DefaultXOnscreenOfs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "XOffscreenBitsData, YOffscreenBitsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 XOffscreenBitsData:
     ; $00
     .db $7f, $3f, $1f, $0f, $07, $03, $01, $00
     ; $08
     .db $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
 
+YOffscreenBitsData:
+    ; $00
+    .db $00, $08, $0c, $0e
+    ; $04
+    .db $0f, $07, $03, $01
+    ; $08
+    .db $00
 .ENDS
 
 GetXOffscreenBits:
@@ -8400,7 +8467,7 @@ GetXOffscreenBits:
     LD L, <SprObject_X_Position
     LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
     SUB A, (HL)                             ;get difference between pixel coordinate of edge
-    LD IYH, A                               ;store here
+    LD E, A                                 ;store here
     DEC L                                   ;<SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
     SBC A, (HL)                             ;subtract from page location of object position
@@ -8410,11 +8477,11 @@ GetXOffscreenBits:
     LD A, $07
     JP NZ, XLdBData                         ;if one page or more to the left of either edge, branch
     ; DividePDiff
-    LD A, IYH
+    LD A, E
     CP A, $38
     LD A, $07
     JP NC, XLdBData
-    LD A, IYH
+    LD A, E
     RRCA
     RRCA
     RRCA
@@ -8426,10 +8493,10 @@ XLdBData:
     OR A                                    ;if bits not zero, branch to leave
     RET NZ
 ;   LOOP 2 (LEFT SIDE CHECK)
-    LD L, <SprObject_X_Position
+    INC L ;LD L, <SprObject_X_Position
     LD A, (ScreenEdge_X_Pos)
     SUB A, (HL)
-    LD IYH, A
+    LD E, A
     DEC L                                   ;<SprObject_PageLoc
     LD A, (ScreenEdge_PageLoc)
     SBC A, (HL)
@@ -8438,40 +8505,30 @@ XLdBData:
     JP M, XLdBData_2
     LD A, $0F
     JP NZ, XLdBData_2
-    LD A, IYH
+    LD A, E
     CP A, $38
     LD A, $0F
     JP NC, XLdBData_2
-    LD A, IYH
+    LD A, E
     RRCA
     RRCA
     RRCA
     AND A, $07
     ADD A, $08
 XLdBData_2:
-    LD DE, XOffscreenBitsData
+    LD E, <XOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
     RET
 
 ;--------------------------------
 
-.SECTION "YOffscreenBitsData, DefaultYOnscreenOfs, HighPosUnitData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-YOffscreenBitsData:
-    ; $00
-    .db $00, $08, $0c, $0e
-    ; $04
-    .db $0f, $07, $03, $01
-    ; $08
-    .db $00
-.ENDS
-
 GetYOffscreenBits:
 ;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
     LD L, <SprObject_Y_Position
     LD A, $00
     SUB A, (HL)
-    LD IYH, A
+    LD E, A
     INC L                               ; <SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
@@ -8481,17 +8538,17 @@ GetYOffscreenBits:
     LD A, $04
     JP NZ, YLdBData
     ; DividePDiff
-    LD A, IYH
+    LD A, E
     CP A, $20
     LD A, $04
     JP NC, YLdBData
-    LD A, IYH
+    LD A, E
     RRCA
     RRCA
     RRCA
     AND A, $07
 YLdBData:
-    LD DE, YOffscreenBitsData
+    LD E, <YOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
     OR A
@@ -8500,7 +8557,7 @@ YLdBData:
     DEC L                               ; <SprObject_Y_Position
     LD A, $FF
     SUB A, (HL)
-    LD IYH, A
+    LD E, A
     INC L                               ; <SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
@@ -8510,18 +8567,18 @@ YLdBData:
     LD A, $00
     JP NZ, YLdBData_2
     ; DividePDiff_2
-    LD A, IYH
+    LD A, E
     CP A, $20
     LD A, $00
     JP NC, YLdBData_2
-    LD A, IYH
+    LD A, E
     RRCA
     RRCA
     RRCA
     AND A, $07
     ADD A, $04
 YLdBData_2:
-    LD DE, YOffscreenBitsData
+    LD E, <YOffscreenBitsData
     addAToDE8_M
     LD A, (DE)
     RET

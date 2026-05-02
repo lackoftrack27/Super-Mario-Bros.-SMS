@@ -17,14 +17,15 @@
 .ENDM
 
 .MACRO BlockBufferColli_Feet
-    INC C
+    ;INC C
     XOR A
     CALL BlockBufferColli_Side@SetPlayerOffset
 .ENDM
 
 .MACRO ChkUnderEnemy
     XOR A
-    LD C, $15
+    LD BC, $0818
+    ;LD C, $15
     CALL BlockBufferChk_Enemy
 .ENDM
 
@@ -52,50 +53,50 @@
 
 ;   Macros for relative position
 .MACRO RelativePlayerPosition_M
-    LD H, >Player_Rel_XPos
-    LD D, H
+    LD DE, Player_Rel_YPos
+    LD H, D
     CALL GetObjRelativePosition
 .ENDM
 
 .MACRO RelativeBubblePosition_M
-    LD D, >Bubble_Rel_XPos
+    LD DE, Bubble_Rel_YPos
     CALL GetObjRelativePosition
 .ENDM
 
 .MACRO RelativeFireballPosition_M
-    LD D, >Fireball_Rel_XPos
+    LD DE, Fireball_Rel_YPos
     CALL GetObjRelativePosition
 .ENDM
 
 .MACRO RelativeMiscPosition_M
-    LD D, >Misc_Rel_XPos
+    LD DE, Misc_Rel_YPos
     CALL GetObjRelativePosition
 .ENDM
 
 ;   Macros for offscreen bits
 .MACRO GetPlayerOffscreenBits_M
-    LD H, >Player_OffscrBits
-    LD D, H
+    LD DE, Player_OffscrBits
+    LD H, D
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetFireballOffscreenBits_M
-    LD D, >Fireball_OffscrBits
+    LD DE, Fireball_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetBubbleOffscreenBits_M
-    LD D, >Bubble_OffscrBits
+    LD DE, Bubble_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetMiscOffscreenBits_M
-    LD D, >Misc_OffscrBits
+    LD DE, Misc_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetBlockOffscreenBits_M
-    LD D, >Block_OffscrBits
+    LD DE, Block_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 

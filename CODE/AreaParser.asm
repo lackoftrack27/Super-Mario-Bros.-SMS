@@ -761,9 +761,8 @@ RunAObj:
 AlterAreaAttributes:
     LD HL, (ObjectOffset)
     LD L, <AreaObjOffsetBuffer          
-    LD A, (HL)                          ;load offset for level object data saved in buffer
-    INC A                               ;load second byte
-    LD E, A
+    LD E, (HL)                          ;load offset for level object data saved in buffer
+    INC E                               ;load second byte
     LD A, (DE)
     BIT 6, A
     JP NZ, Alter2                       ;branch if d6 is set
@@ -771,14 +770,15 @@ AlterAreaAttributes:
     AND A, %00001111                    ;mask out high nybble and store as
     LD (TerrainControl), A              ;new terrain height type bits
     LD A, (BackgroundScenery)
-    LD B, A
+    AND A, %00000100                    ;preserve d2 of background scenery
+    LD B, A                             ;store in B
     POP AF
     AND A, %00110000                    ;pull and mask out all but d5 and d4
     RRCA                                ;move bits to lower nybble and store
     RRCA                                ;as new background scenery bits
     RRCA
     RRCA
-    OR A, B
+    OR A, B                             ;OR with d2 of original background scenery to preserve bank
     LD (BackgroundScenery), A           ;then leave
     RET
 Alter2:

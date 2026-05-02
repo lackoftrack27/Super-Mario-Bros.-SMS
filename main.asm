@@ -1429,7 +1429,7 @@ WaterPaletteData:
 GroundPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $2D
+    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
     .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
@@ -1456,7 +1456,7 @@ CastlePaletteData:
 DaySnowPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
+    .db $39, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $3A, $3E
     .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
@@ -1465,7 +1465,7 @@ DaySnowPaletteData:
 NightSnowPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $00, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $18, $3D
+    .db $00, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $3A, $3E
     .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
@@ -1474,7 +1474,7 @@ NightSnowPaletteData:
 MushroomPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $18, $2D
+    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
     .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
@@ -1686,43 +1686,41 @@ WorldLivesDisplay:
 @end:
 .ENDS
 
-/*
-.SECTION "Two Player Timeup for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
-TwoPlayerTimeUp:
-    ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
-    .db @end-TwoPlayerTimeUp - 1
-    .dw swapBytes(xyToNameTbl_M(13, 11))
-    .db $05 << $01
-    .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
-@end:
-.ENDS
+; .SECTION "Two Player Timeup for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; TwoPlayerTimeUp:
+;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
+;     .db @end-TwoPlayerTimeUp - 1
+;     .dw swapBytes(xyToNameTbl_M(13, 11))
+;     .db $05 << $01
+;     .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
+; @end:
+; .ENDS
 
-.SECTION "Timeup Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
-OnePlayerTimeUp:
-    ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
-    ;.db $ff
-    .db @end-OnePlayerTimeUp - 1
-    .dw swapBytes(xyToNameTbl_M(12, 13))
-    .db $07 << $01
-    .dw BG_MACRO($011A), BG_MACRO($0113), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0116), BG_MACRO($011B)
-@end:
-.ENDS
+; .SECTION "Timeup Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; OnePlayerTimeUp:
+;     ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
+;     ;.db $ff
+;     .db @end-OnePlayerTimeUp - 1
+;     .dw swapBytes(xyToNameTbl_M(12, 13))
+;     .db $07 << $01
+;     .dw BG_MACRO($011A), BG_MACRO($0113), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0116), BG_MACRO($011B)
+; @end:
+; .ENDS
 
-.SECTION "Two Player GameOver for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
-TwoPlayerGameOver:
-    ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
-.ENDS
+; .SECTION "Two Player GameOver for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; TwoPlayerGameOver:
+;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
+; .ENDS
 
-.SECTION "GameOver Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
-OnePlayerGameOver:
-    ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
-    ;.db $18, $1f, $0e, $1b
-    ;.db $ff
-    .dw swapBytes(xyToNameTbl_M(11, 13))
-    .db $09 << $01
-    .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
-.ENDS
-*/
+; .SECTION "GameOver Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; OnePlayerGameOver:
+;     ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
+;     ;.db $18, $1f, $0e, $1b
+;     ;.db $ff
+;     .dw swapBytes(xyToNameTbl_M(11, 13))
+;     .db $09 << $01
+;     .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
+; .ENDS
 
 .SECTION "GameOver Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
 GameOverDisplay:
@@ -1991,18 +1989,18 @@ Palette1_MTiles:
     
 Palette2_MTiles:
     ; Cloud
-    .dw BLANKTILE, BLANKTILE, BLANKTILE, BG_MACRO($0919)                    ; right
-    .dw BG_MACRO($091A), BG_MACRO($091B), BG_MACRO($091C), BG_MACRO($091B)  ; middle
-    .dw BLANKTILE, BG_MACRO($091D), BLANKTILE, BLANKTILE                    ; left
-    .dw BLANKTILE, BLANKTILE, BG_MACRO($091E), BLANKTILE                    ; right bottom
-    .dw BG_MACRO($091F), BLANKTILE, BG_MACRO($0920), BLANKTILE              ; middle bottom
-    .dw BG_MACRO($0921), BLANKTILE, BLANKTILE, BLANKTILE                    ; left bottom
+    .dw BLANKTILE, BLANKTILE, BLANKTILE, BG_MACRO($0119)                    ; right
+    .dw BG_MACRO($011A), BG_MACRO($011B), BG_MACRO($011C), BG_MACRO($011B)  ; middle
+    .dw BLANKTILE, BG_MACRO($011D), BLANKTILE, BLANKTILE                    ; left
+    .dw BLANKTILE, BLANKTILE, BG_MACRO($011E), BLANKTILE                    ; right bottom
+    .dw BG_MACRO($011F), BLANKTILE, BG_MACRO($0120), BLANKTILE              ; middle bottom
+    .dw BG_MACRO($0121), BLANKTILE, BLANKTILE, BLANKTILE                    ; left bottom
     ; Water/Lava
-    .dw $09E5, $09E7, $09E6, $09E7                                          ; waves
-    .dw $09E7, $09E7, $09E7, $09E7                                          ; body
+    .dw $01E5, $01E7, $01E6, $01E7                                          ; waves
+    .dw $01E7, $01E7, $01E7, $01E7                                          ; body
     ; --- METATILES WITH COLLISION START HERE ---
     ; Cloud Terrain
-    .dw BG_MACRO($0929), BG_MACRO($092A), BG_MACRO($0B29), BG_MACRO($0B2A)
+    .dw BG_MACRO($0129), BG_MACRO($012A), BG_MACRO($0329), BG_MACRO($032A)
     ; Bowser's bridge
     .dw $00, $00, $00, $00
     

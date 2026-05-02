@@ -3955,14 +3955,20 @@ DrawEraseRope:
     OR A, (HL)
     RET Z                                       ;if not, skip all of this and branch to leave
 ;
-    LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset
     ;CPX $20
     ;BCS ExitRp
-    LD A, (HL)                                  ;save two copies of vertical speed to stack
-    PUSH AF
-    PUSH AF
-    CALL SetupPlatformRope                      ;do a sub to figure out where to put new bg tiles
+    CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
+    CP A, $E0                                   ;check if rope is offscreen
+    LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset
+    JP NC, SkipRope1                            ;don't draw rope if it's offscreen
+    LD L, <Enemy_Y_Position                     ;check if rope is vertically onscreen
+    LD A, (HL)
+    CP A, $D0
+    JP NC, SkipRope1                            ;if not, don't draw rope
 ;
+    LD L, <Enemy_Y_Speed
+    LD A, (HL)
+    CALL SetupPlatformRope                      ;do a sub to figure out where to put new bg tiles
     EX DE, HL
     LD (HL), B                                  ;write name table address to vram buffer
     INC L
@@ -3996,15 +4002,28 @@ EraseR1:
 OtherRope:
     EX DE, HL
     INC E
+SkipRope1:
+    LD L, <Enemy_Y_Speed
+    LD B, (HL)                                  ;save vertical speed of original object in B
     LD L, <Enemy_State                          ;get offset of other platform from state
     LD A, (HL)
     ADD A, >Enemy_ID
     LD H, A
 ;
-    POP AF                                      ;pull second copy of vertical speed from stack
+    PUSH DE                                     ;preserve VRAM_Buffer1_Ptr
+    CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
+    POP DE                                      ;get back VRAM_Buffer1_Ptr
+    CP A, $E0                                   ;check if rope is offscreen
+    JP NC, SkipRope2                            ;don't draw rope if it's offscreen
+    LD L, <Enemy_Y_Position                     ;check if rope is vertically onscreen
+    LD A, (HL)
+    CP A, $D0
+    JP NC, SkipRope2                            ;if not, don't draw rope
+;
+    LD A, B
+    PUSH AF                                     ;save copy of vertical speed of original object
     CPL                                         ;invert bits to reverse speed
     CALL SetupPlatformRope                      ;do sub again to figure out where to put bg tiles
-;
     EX DE, HL
     LD (HL), B                                  ;write name table address to vram buffer
     INC L
@@ -4034,8 +4053,11 @@ EraseR2:
     LD (HL), A
 EndRp:
     INC L
-    LD (HL), $00                                ;put null terminator at the end
-    LD (VRAM_Buffer1_Ptr), HL                   ;update vram buffer offset
+    EX DE, HL
+SkipRope2:
+    XOR A
+    LD (DE), A                                  ;put null terminator at the end
+    LD (VRAM_Buffer1_Ptr), DE                   ;update vram buffer offset
     LD HL, (ObjectOffset)                       ;get enemy object buffer offset and leave
     RET
 
@@ -4066,28 +4088,14 @@ StoreRopeY:
     JP NZ, StoreRopeX                           ;use coordinate as-is
     ADD A, $10                                  ;otherwise add sixteen more pixels
 StoreRopeX:
-    ADD A, $08 
-    AND A, $F0
-    ;AND A, $F8                                  ;remove unwanted bits (round down to whole tile)  
+    ADD A, $08
+    AND A, $F0                                  ;remove unwanted bits (round down to whole tile)
     RRCA                                        ;shift into the correct place
     RRCA                                        ;tile -> col addr ($08 -> $02)
     OR A, L                                     ;add row and col addresses together
     LD C, A                                     ;store low byte in C
     LD B, H                                     ;store high byte in B
     POP HL                                      ;get back current object offset
-;
-    PUSH DE                                     ;preserve VRAM_Buffer1_Ptr
-    CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
-    POP DE                                      ;get back VRAM_Buffer1_Ptr
-    OR A                                        ;exit if fully onscreen
-    RET P
-    CP A, $E0                                   ;check if offscreen enough on the left edge of the screen
-    RET C                                       ;if not, exit
-    LD B, $00                                   ;else, set high byte of NT addr to 0 to not write to the screen
-    ;LD L, <Enemy_Y_Position
-    ;CP A, $D8
-    ;RET C
-    ;LD B, $00
     RET
 
 InitPlatformFall:

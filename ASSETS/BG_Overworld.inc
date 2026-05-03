@@ -19,11 +19,11 @@
 ; Tile index $009
 .db $00 $07 $07 $07 $07 $0F $0F $0F $07 $0C $0F $0F $0F $3C $3F $3F $3F $7C $7F $7F $7F $E3 $FF $FF $7F $E4 $FF $FF $3F $76 $7F $7F
 ; Tile index $00A
-.db $00 $03 $03 $03 $03 $07 $07 $07 $07 $1C $1F $1F $1F $38 $3F $3F $1F $30 $3F $3F $1F $30 $3F $3F $3F $66 $7F $7F $7F $CE $FF $FF
+.db $00 $03 $03 $03 $03 $07 $07 $07 $07 $1C $1F $1F $1F $38 $3F $3F $1F $30 $3F $3F $1F $30 $3F $3F $39 $66 $7F $7F $77 $CE $FF $FF
 ; Tile index $00B
 .db $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF
 ; Tile index $00C
-.db $00 $C0 $C0 $C0 $C0 $E0 $E0 $E0 $E0 $30 $F0 $F0 $E0 $34 $F4 $F4 $F4 $1E $FE $FE $FE $4B $FF $FF $FE $63 $FF $FF $FE $23 $FF $FF
+.db $00 $C0 $C0 $C0 $C0 $E0 $E0 $E0 $E0 $30 $F0 $F0 $E0 $34 $F4 $F4 $F4 $1E $FE $FE $BE $4B $FF $FF $DE $63 $FF $FF $FE $23 $FF $FF
 ; Tile index $00D
 .db $00 $90 $90 $90 $10 $B8 $B8 $B8 $B0 $F8 $F8 $F8 $F0 $5A $FA $FA $FA $0F $FF $FF $FE $07 $FF $FF $FE $07 $FF $FF $FC $1E $FE $FE
 ; Tile index $00E

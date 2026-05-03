@@ -2093,6 +2093,13 @@ GetAreaDataAddrs:
     XOR A
 @StoreStyle:
     LD (AreaStyle), A
+    ; Correct palette on w6-3
+    LD A, (BackgroundColorCtrl)
+    CP A, $07
+    JP NZ, +
+    LD A, $04
+    LD (BackgroundColorCtrl), A
++:
     ; POTENTIAL 3RD BYTE
     INC HL
     LD A, (HL)
@@ -2118,8 +2125,8 @@ GetAreaDataAddrs:
     POP HL
     LD BC, $0100
     LDIR
-;   Upload AreaType's graphics to VRAM???
-    LD A, BANK_SLOT2                ;restore bank
+;   Restore bank
+    LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
     RET
 

@@ -120,10 +120,10 @@ NextVSp:
 ;     .db $81, $83, $80, $82
 
 HammerSpriteData:
-    .db $00, $08, $04, $E4, $00, $E5, $00, $00    ; FIRST (DOWN)
-    .db $04, $00, $00, $E6, $08, $E7, $00, $00    ; SECOND (LEFT)
-    .db $00, $08, $04, $E5, $00, $E8, $00, $00    ; THIRD (UP)
-    .db $04, $00, $00, $E7, $08, $E9, $00, $00    ; FOURTH (RIGHT)
+    .db $00, $08, $04, $E6, $00, $E7, $00, $00    ; FIRST (DOWN)
+    .db $04, $00, $00, $E8, $08, $E9, $00, $00    ; SECOND (LEFT)
+    .db $00, $08, $04, $E7, $00, $EA, $00, $00    ; THIRD (UP)
+    .db $04, $00, $00, $E9, $08, $EB, $00, $00    ; FOURTH (RIGHT)
 
 ; HammerSprAttrib:
 ;     .db $03, $03, $c3, $c3
@@ -560,139 +560,139 @@ DrawPowerUp:
 .SECTION "EnemyGraphicsTable" BANK BANK_SLOT2 SLOT 2 ALIGN $100
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
-    .db $00, $00, $EA, $EB, $EC, $ED  ;buzzy beetle frame 1
-    .db $00, $00, $EE, $EF, $F0, $F1  ;             frame 2
+    .db $00, $00, $EC, $ED, $EE, $EF  ;buzzy beetle frame 1
+    .db $00, $00, $F0, $F1, $F2, $F3  ;             frame 2
     ; ---
-    .db $00, $64, $65, $66, $67, $68  ;koopa troopa frame 1
-    .db $00, $69, $6A, $6B, $6C, $6D  ;             frame 2
+    .db $00, $5B, $5C, $5D, $5E, $5F  ;koopa troopa frame 1
+    .db $00, $60, $61, $62, $63, $64  ;             frame 2
     ; ---
-    .db $6E, $64, $6F, $66, $67, $68  ;koopa paratroopa frame 1
-    .db $70, $69, $71, $6B, $6C, $6D  ;                 frame 2
+    .db $65, $5B, $66, $5D, $5E, $5F  ;koopa paratroopa frame 1
+    .db $67, $60, $68, $62, $63, $64  ;                 frame 2
     ; ---
-    .db $00, $00, $AC, $AD, $AE, $AF  ;spiny frame 1
-    .db $00, $00, $B0, $B1, $B2, $B3  ;      frame 2
+    .db $00, $00, $A3, $A4, $A5, $A6  ;spiny frame 1
+    .db $00, $00, $A7, $A8, $A9, $AA  ;      frame 2
     ; ---
-    .db $00, $00, $A4, $A5, $A6, $A7  ;spiny's egg frame 1  [X, $30]
-    .db $00, $00, $A8, $A9, $AA, $AB  ;            frame 2  [X]
+    .db $00, $00, $9B, $9C, $9D, $9E  ;spiny's egg frame 1  [X, $30]
+    .db $00, $00, $9F, $A0, $A1, $A2  ;            frame 2  [X]
     ; ---
-    .db $00, $00, $A8, $A9, $AE, $AF  ;bloober frame 1
-    .db $A8, $A9, $AA, $AB, $AC, $AD  ;        frame 2
+    .db $00, $00, $9F, $A0, $A1, $A2  ;bloober frame 1
+    .db $9F, $A0, $A3, $A4, $A5, $A6  ;        frame 2
     ; ---
-    .db $00, $00, $90, $91, $92, $93  ;cheep-cheep frame 1
-    .db $00, $00, $94, $91, $95, $93  ;            frame 2
+    .db $00, $00, $87, $88, $89, $8A  ;cheep-cheep frame 1
+    .db $00, $00, $8B, $88, $8C, $8A  ;            frame 2
     ; ---
-    .db $00, $00, $5C, $5D, $5E, $5F  ;goomba
+    .db $00, $00, $53, $54, $55, $56  ;goomba
     ; ---
-    .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (upside-down)
-    .db $00, $00, $72, $73, $76, $77  ;            frame 2
+    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (upside-down)
+    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
     ; ---
-    .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (rightsideup)
-    .db $00, $00, $72, $73, $76, $77  ;            frame 2
+    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (rightsideup)
+    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
     ; ---
-    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
+    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
     ; ---
-    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
+    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
     ; ---
-    .db $00, $00, $00, $00, $60, $61  ;defeated goomba      [X, $8A]
+    .db $00, $00, $00, $00, $57, $58  ;defeated goomba      [X, $8A]
     ; ---
-    .db $9C, $9D, $9E, $9F, $A0, $A1  ;lakitu frame 1
-    .db $00, $00, $A2, $A3, $A0, $A1  ;       frame 2
+    .db $93, $94, $95, $96, $97, $98  ;lakitu frame 1
+    .db $00, $00, $99, $9A, $97, $98  ;       frame 2
     ; ---
-    .db $00, $00, $9C, $9D, $9E, $9F  ;cheep-cheep frame 1 (red) [$9C]
-    .db $00, $00, $A0, $9D, $A1, $9F  ;cheep-cheep frame 2 (red)
+    .db $00, $00, $93, $94, $95, $96  ;cheep-cheep frame 1 (red) [$9C]
+    .db $00, $00, $97, $94, $98, $96  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $C8, $C9, $D2, $D3, $DE, $DF  ;hammer bro frame 1
-    .db $C8, $C9, $D0, $D1, $DC, $DD  ;           frame 2
-    .db $CA, $CB, $D4, $D5, $DE, $DF  ;           frame 3
-    .db $CA, $CB, $D4, $D5, $DC, $DD  ;           frame 4
+    .db $CA, $CB, $CC, $CD, $CE, $CF  ;hammer bro frame 1
+    .db $CA, $CB, $D0, $D1, $D2, $D3  ;           frame 2
+    .db $D4, $D5, $D6, $D7, $CE, $CF  ;           frame 3
+    .db $D4, $D5, $D6, $D7, $D2, $D3  ;           frame 4
     ; ---
-    .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
-    .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
+    .db $7D, $7E, $7F, $80, $81, $82  ;piranha plant frame 1
+    .db $83, $84, $85, $86, $81, $82  ;              frame 2
     ; ---
-    .db $00, $64, $C8, $C9, $CA, $CB  ;koopa troopa frame 1 (red) ($CC)
-    .db $00, $69, $CC, $CD, $CE, $CF  ;             frame 2 (red)
+    .db $00, $5B, $A8, $A9, $AA, $AB  ;koopa troopa frame 1 (red) ($CC)
+    .db $00, $60, $AC, $AD, $AE, $AF  ;             frame 2 (red)
     ; ---
-    .db $6E, $64, $D0, $C9, $CA, $CB  ;koopa paratroopa frame 1 (red) ($D8)
-    .db $70, $69, $D1, $CD, $CE, $CF  ;                 frame 2 (red)
+    .db $65, $5B, $B0, $A9, $AA, $AB  ;koopa paratroopa frame 1 (red) ($D8)
+    .db $67, $60, $B1, $AD, $AE, $AF  ;                 frame 2 (red)
     ; ---
-    .db $00, $00, $C0, $C1, $C2, $C3  ;bullet bill
+    .db $00, $00, $C2, $C3, $C4, $C5  ;bullet bill
     ; ---
-    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (upside-down) (red) ($EA)
-    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (upside-down) (red) ($EA)
+    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
     ; ---
-    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (rightsideup) ($F6)
-    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (rightsideup) ($F6)
+    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
 .ENDS
 
 .SECTION "EnemyGraphicsTable_HFlip" BANK BANK_SLOT2 SLOT 2 ALIGN $100
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable_HFlip:
-    .db $00, $00, $F6, $F7, $F8, $F9  ;buzzy beetle frame 1
-    .db $00, $00, $FA, $FB, $FC, $FD  ;             frame 2
+    .db $00, $00, $F8, $F9, $FA, $FB  ;buzzy beetle frame 1
+    .db $00, $00, $FC, $FD, $FE, $FF  ;             frame 2
     ; ---
-    .db $78, $00, $79, $7A, $7B, $7C  ;koopa troopa frame 1
-    .db $7D, $00, $7E, $7F, $80, $81  ;             frame 2
+    .db $6F, $00, $70, $71, $72, $73  ;koopa troopa frame 1
+    .db $74, $00, $75, $76, $77, $78  ;             frame 2
     ; ---
-    .db $78, $82, $79, $83, $7B, $7C  ;koopa paratroopa frame 1
-    .db $7D, $84, $7E, $85, $80, $81  ;                 frame 2
+    .db $6F, $79, $70, $7A, $72, $73  ;koopa paratroopa frame 1
+    .db $74, $7B, $75, $7C, $77, $78  ;                 frame 2
     ; ---
-    .db $00, $00, $B8, $B9, $BA, $BB  ;spiny frame 1
-    .db $00, $00, $BC, $BD, $BE, $BF  ;      frame 2
+    .db $00, $00, $AF, $B0, $B1, $B2  ;spiny frame 1
+    .db $00, $00, $B3, $B4, $B5, $B6  ;      frame 2
     ; ---
-    .db $00, $00, $A4, $A5, $A6, $A7  ;spiny's egg frame 1  [X, $30]
-    .db $00, $00, $A8, $A9, $AA, $AB  ;            frame 2  [X]
+    .db $00, $00, $9B, $9C, $9D, $9E  ;spiny's egg frame 1  [X, $30]
+    .db $00, $00, $9F, $A0, $A1, $A2  ;            frame 2  [X]
     ; ---
-    .db $00, $00, $A8, $A9, $AE, $AF  ;bloober frame 1
-    .db $A8, $A9, $AA, $AB, $AC, $AD  ;        frame 2
+    .db $00, $00, $9F, $A0, $A1, $A2  ;bloober frame 1
+    .db $9F, $A0, $A3, $A4, $A5, $A6  ;        frame 2
     ; ---
-    .db $00, $00, $96, $97, $98, $99  ;cheep-cheep frame 1
-    .db $00, $00, $96, $9A, $98, $9B  ;            frame 2
+    .db $00, $00, $8D, $8E, $8F, $90  ;cheep-cheep frame 1
+    .db $00, $00, $8D, $91, $8F, $92  ;            frame 2
     ; ---
-    .db $00, $00, $5C, $5D, $62, $63  ;goomba
+    .db $00, $00, $53, $54, $59, $5A  ;goomba
     ; ---
-    .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (upside-down)
-    .db $00, $00, $72, $73, $76, $77  ;            frame 2
+    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (upside-down)
+    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
     ; ---
-    .db $00, $00, $72, $73, $74, $75  ;koopa shell frame 1 (rightsideup)
-    .db $00, $00, $72, $73, $76, $77  ;            frame 2
+    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (rightsideup)
+    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
     ; ---
-    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
+    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
     ; ---
-    .db $00, $00, $F2, $F3, $F4, $F5  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $F2, $F3, $F4, $F5  ;                   frame 2
+    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
     ; ---
-    .db $00, $00, $00, $00, $60, $61  ;defeated goomba      [X, $8A]
+    .db $00, $00, $00, $00, $57, $58  ;defeated goomba       [X, $8A]
     ; ---
-    .db $B4, $B5, $B6, $B7, $A0, $A1  ;lakitu frame 1
-    .db $00, $00, $A2, $A3, $A0, $A1  ;       frame 2
+    .db $AB, $AC, $AD, $AE, $97, $98  ;lakitu frame 1
+    .db $00, $00, $99, $9A, $97, $98  ;       frame 2
     ; ---
-    .db $00, $00, $A2, $A3, $A4, $A5  ;cheep-cheep frame 1 (red)
-    .db $00, $00, $A2, $A6, $A4, $A7  ;cheep-cheep frame 2 (red)
+    .db $00, $00, $99, $9A, $9B, $9C  ;cheep-cheep frame 1 (red)
+    .db $00, $00, $99, $9D, $9B, $9E  ;cheep-cheep frame 2 (red)
     ; ---
-    .db $CC, $CD, $D8, $D9, $E2, $E3  ;hammer bro frame 1
-    .db $CC, $CD, $D6, $D7, $E0, $E1  ;           frame 2
-    .db $CE, $CF, $DA, $DB, $E2, $E3  ;           frame 3
-    .db $CE, $CF, $DA, $DB, $E0, $E1  ;           frame 4
+    .db $D8, $D9, $DA, $DB, $DC, $DD  ;hammer bro frame 1
+    .db $D8, $D9, $DE, $DF, $E0, $E1  ;           frame 2
+    .db $E2, $E3, $E4, $E5, $DC, $DD  ;           frame 3
+    .db $E2, $E3, $E4, $E5, $E0, $E1  ;           frame 4
     ; ---
-    .db $86, $87, $88, $89, $8A, $8B  ;piranha plant frame 1
-    .db $8C, $8D, $8E, $8F, $8A, $8B  ;              frame 2
+    .db $7D, $7E, $7F, $80, $81, $82  ;piranha plant frame 1
+    .db $83, $84, $85, $86, $81, $82  ;              frame 2
     ; ---
-    .db $78, $00, $D8, $D9, $DA, $DB  ;koopa troopa frame 1 (red)
-    .db $7D, $00, $DC, $DD, $DE, $DF  ;             frame 2 (red)
+    .db $6F, $00, $B8, $B9, $BA, $BB  ;koopa troopa frame 1 (red)
+    .db $74, $00, $BC, $BD, $BE, $BF  ;             frame 2 (red)
     ; ---
-    .db $78, $82, $D8, $E0, $DA, $DB  ;koopa paratroopa frame 1 (red)
-    .db $7D, $84, $DC, $E1, $DE, $DF  ;                 frame 2 (red)
+    .db $6F, $79, $B8, $C0, $BA, $BB  ;koopa paratroopa frame 1 (red)
+    .db $74, $7B, $BC, $C1, $BE, $BF  ;                 frame 2 (red)
     ; ---
-    .db $00, $00, $C4, $C5, $C6, $C7  ;bullet bill
+    .db $00, $00, $C6, $C7, $C8, $C9  ;bullet bill
     ; ---
-    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (upside-down) (red)
-    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (upside-down) (red) ($EA)
+    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
     ; ---
-    .db $00, $00, $D2, $D3, $D4, $D5  ;koopa shell frame 1 (rightsideup)
-    .db $00, $00, $D2, $D3, $D6, $D7  ;            frame 2 (red)
+    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (rightsideup) ($F6)
+    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
 .ENDS
 
 .SECTION "EnemyGfxTableOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
@@ -1785,7 +1785,7 @@ DrawBubble:
     LD (DE), A                      ;store as X coordinate here
 ;
     INC E
-    LD A, $B1                       ;put air bubble tile into OAM data
+    LD A, $A7                       ;put air bubble tile into OAM data
     LD (DE), A
     RET
 

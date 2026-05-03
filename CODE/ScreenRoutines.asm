@@ -251,6 +251,36 @@ GetBackgroundColor:
 NoBGColor:
     LD HL, ScreenRoutineTask        ;increment to next subtask and plod on through
     INC (HL)
+;
+    LD HL, (VRAM_Buffer1_Ptr)
+    LD A, (BackgroundColorCtrl)     ;if this value is four or greater, it will be set
+    OR A
+    JP NZ, SetBGColor               ;therefore use it as offset to background color
+    LD A, (AreaType)                ;otherwise use area type bits from area offset as offset
+SetBGColor:
+    LD DE, BackgroundColors
+    addAToDE8_M
+    LD A, (DE)
+    LD (HL), $C0
+    INC L
+    LD (HL), $00
+    INC L
+    LD (HL), StripeCount($01)
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), $C0
+    INC L
+    LD (HL), $10
+    INC L
+    LD (HL), StripeCount($01)
+    INC L
+    LD (HL), A
+    INC L
+    LD (HL), $00
+    LD (VRAM_Buffer1_Ptr), HL
+    ; FALL THROUGH
+
 
 ;   $00 - MARIO (RIGHT)
     ; 0, 1, 2, 3
@@ -482,7 +512,8 @@ LoadEnemySprites:
 ;   LOAD BASE ENEMY SPRITE SHEET
     LD A, :Tiles_SPR_Enemies
     LD (MAPPER_SLOT2), A
-    LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
+    ;LD HL, VRAM_ADR_SPR_EMY | VRAMWRITE
+    LD HL, $0A60 | VRAMWRITE
     RST setVDPAddress
     LD HL, Tiles_SPR_Enemies
     LD BC, _sizeof_Tiles_SPR_Enemies
@@ -505,49 +536,12 @@ LoadEnemySprites:
     OR A
     LD DE, $0701
     SBC HL, DE
-    JP NZ, CheckHammerLevels
+    RET NZ
 LoadLakitu:
-    PUSH HL
     LD A, :Tiles_SPR_Lakitu
     LD (MAPPER_SLOT2), A
-    LD HL, $1380 | VRAMWRITE
+    LD HL, $1260 | VRAMWRITE
     RST setVDPAddress
     LD HL, Tiles_SPR_Lakitu
     LD BC, _sizeof_Tiles_SPR_Lakitu
-    CALL copyToVDP
-    POP HL
-CheckHammerLevels:
-;   LOAD HAMMER BRO ON CERTAIN LEVELS (3-1,5-2,7-1,8-3,8-4)
-    ADD HL, DE
-    OR A
-    LD DE, $0200
-    SBC HL, DE
-    JP Z, LoadHammerBro
-    ADD HL, DE
-    OR A
-    LD DE, $0401
-    SBC HL, DE
-    JP Z, LoadHammerBro
-    ADD HL, DE
-    OR A
-    LD DE, $0600
-    SBC HL, DE
-    JP Z, LoadHammerBro
-    ADD HL, DE
-    OR A
-    LD DE, $0702
-    SBC HL, DE
-    JP Z, LoadHammerBro
-    ADD HL, DE
-    OR A
-    LD DE, $0703
-    SBC HL, DE
-    RET NZ
-LoadHammerBro:
-    LD A, :Tiles_SPR_Hammerbro
-    LD (MAPPER_SLOT2), A
-    LD HL, $1900 | VRAMWRITE
-    RST setVDPAddress
-    LD HL, Tiles_SPR_Hammerbro
-    LD BC, _sizeof_Tiles_SPR_Hammerbro
     JP copyToVDP

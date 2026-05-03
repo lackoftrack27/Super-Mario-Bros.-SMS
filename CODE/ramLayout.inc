@@ -69,6 +69,7 @@
     ; $2D
     SprDataOffset:                  dsb $01 ; [$17] *
     ; $2E
+    Whirlpool_Flag:                 dsb $01
     ;VRAM_Buffer2:                   dsb $D2 ; (23 * 2) * 4 + 3 == $BB
     VRAM_Buffer1_Ptr:               dsb $02
     VRAM_Buffer1:                   dsb $80
@@ -184,11 +185,10 @@
     Cannon_Y_Position:              .dsb $01
     Whirlpool_Length:               dsb $01 ; [6]
     Cannon_Timer:                   .dsb $01
-    Whirlpool_Flag:                 dsb $01 ; [6]
-    ; $39
+    ; $38
     DigitModifier:                  dsb $01 ; [6]
 
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     MusicTrack0                     INSTANCEOF SndTrack
 .ENDS
@@ -233,11 +233,11 @@
     FloateyNum_Timer_01:            dsb $01 ; [6]
     ShellChainCounter_01:           dsb $01 ; [6]
     ; $35
-    .                               dsb $04
-    ; $39
-    .                               dsb $01
+    .                               dsb $03
+    ; $38
+    DigitModifier_01:               dsb $01 ; [6]
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     MusicTrack1                     INSTANCEOF SndTrack
 .ENDS
@@ -280,11 +280,11 @@
     FloateyNum_Timer_02:            dsb $01 ; [6]
     ShellChainCounter_02:           dsb $01 ; [6]
     ; $35
-    .                               dsb $04
-    ; $39
-    .                               dsb $01
+    .                               dsb $03
+    ; $38
+    DigitModifier_02:               dsb $01 ; [6]
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     MusicTrack2                     INSTANCEOF SndTrack
 .ENDS
@@ -325,11 +325,11 @@
     FloateyNum_Timer_03:            dsb $01 ; [6]
     ShellChainCounter_03:           dsb $01 ; [6]
     ; $35
-    .                               dsb $04
-    ; $39
-    .                               dsb $01
+    .                               dsb $03
+    ; $38
+    DigitModifier_03:               dsb $01 ; [6]
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     MusicTrack3                     INSTANCEOF SndTrack
 .ENDS
@@ -370,11 +370,11 @@
     FloateyNum_Timer_04:            dsb $01 ; [6]
     ShellChainCounter_04:           dsb $01 ; [6]
     ; $35
-    .                               dsb $04
-    ; $39
-    .                               dsb $01
+    .                               dsb $03
+    ; $38
+    DigitModifier_04:               dsb $01 ; [6]
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     SFXTrack0                       INSTANCEOF SndTrack
 .ENDS
@@ -415,11 +415,11 @@
     FloateyNum_Timer_05:            dsb $01 ; [6]
     ShellChainCounter_05:           dsb $01 ; [6]
     ; $35
-    .                               dsb $04
-    ; $39
-    .                               dsb $01
+    .                               dsb $03
+    ; $38
+    DigitModifier_05:               dsb $01 ; [6]
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     SFXTrack1                       INSTANCEOF SndTrack
 .ENDS
@@ -448,11 +448,11 @@
     ; $2E
     .                               dsb $07
     ; $35
-    .                               dsb $04
-    ; $39
+    .                               dsb $03
+    ; $38
     .                               dsb $01
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
     SFXTrack2                       INSTANCEOF SndTrack
 .ENDS
@@ -471,11 +471,11 @@
     ; $2E
     .                               dsb $07
     ; $35
-    .                               dsb $04
-    ; $39
+    .                               dsb $03
+    ; $38
     .                               dsb $01
     
-    .                               dsb $06
+    .                               dsb $07
     ; $40
 .ENDS
 

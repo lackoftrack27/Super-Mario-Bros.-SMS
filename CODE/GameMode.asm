@@ -212,7 +212,9 @@ ProcELoop:
     LD A, (AreaType)
     OR A
     CALL NZ, ProcessCannons
-    ;CALL ProcessWhirlpools
+    LD A, (AreaType)
+    OR A
+    CALL Z, ProcessWhirlpools
     CALL FlagpoleRoutine
     CALL RunGameTimer
     CALL ColorRotation
@@ -921,6 +923,116 @@ RunBBSubs:
     CALL GetEnemyBoundBox           ;get bounding box coordinates
     CALL PlayerEnemyCollision       ;handle player to enemy collisions
     JP EnemyGfxHandler              ;draw the bullet bill and leave
+
+;-------------------------------------------------------------------------------------
+;$00(D) - used in WhirlpoolActivate to store whirlpool length / 2, page location of center of whirlpool
+;and also to store movement force exerted on player
+;$01(E) - used in ProcessWhirlpools to store page location of right extent of whirlpool
+;and in WhirlpoolActivate to store center of whirlpool
+;$02(C) - used in ProcessWhirlpools to store right extent of whirlpool and in
+;WhirlpoolActivate to store maximum vertical speed
+
+ProcessWhirlpools:
+    LD (Whirlpool_Flag), A          ;initialize whirlpool flag
+;
+    LD A, (TimerControl)            ;if master timer control set,
+    OR A
+    RET NZ                          ;branch to leave
+;
+    LD B, $05                       ;otherwise start with last whirlpool data
+    LD H, >Whirlpool_LeftExtent + $04
+WhLoop:
+    LD L, <Whirlpool_LeftExtent     ;get left extent of whirlpool
+    LD A, (HL)
+    INC L                           ;Whirlpool_Length
+    ADD A, (HL)                     ;add length of whirlpool
+    LD C, A                         ;store result as right extent here
+    LD L, <Whirlpool_PageLoc        ;get page location
+    LD A, (HL)
+    ADC A, $00                      ;add carry
+    LD E, A                         ;store result as page location of right extent here
+    LD A, (HL)                      ;get page location again
+    OR A
+    JP Z, NextWh                    ;if none or page 0, branch to get next data
+    ;
+    LD A, (Player_X_Position)       ;get player's horizontal position
+    INC L                           ;Whirlpool_LeftExtent
+    SUB A, (HL)                     ;subtract left extent
+    LD A, (Player_PageLoc)          ;get player's page location
+    DEC L                           ;Whirlpool_PageLoc
+    SBC A, (HL)                     ;subtract borrow
+    JP M, NextWh                    ;if player too far left, branch to get next data
+    ;
+    LD A, (Player_X_Position)
+    LD D, A
+    LD A, C                         ;get right extent
+    SUB A, D                        ;subtract player's horizontal coordinate
+    LD A, (Player_PageLoc)
+    LD D, A
+    LD A, E                         ;get right extent's page location
+    SBC A, D                        ;subtract borrow
+    JP P, WhirlpoolActivate         ;if player within right extent, branch to whirlpool code
+    ;
+NextWh:
+    DEC H                           ;move onto next whirlpool data
+    DJNZ WhLoop                     ;do this until all whirlpools are checked
+    RET
+
+WhirlpoolActivate:
+    LD L, <Whirlpool_Length         ;get length of whirlpool
+    LD A, (HL)
+    SRL A                           ;divide by 2
+    LD D, A                         ;save here
+;
+    DEC L                           ;Whirlpool_LeftExtent
+    LD A, (HL)                      ;get left extent of whirlpool
+    ADD A, D                        ;add length divided by 2
+    LD E, A                         ;save as center of whirlpool
+    DEC L                           ;Whirlpool_PageLoc
+    LD A, (HL)                      ;get page location
+    ADC A, $00                      ;add carry
+    LD D, A                         ;save as page location of whirlpool center
+;
+    LD A, (FrameCounter)            ;get frame counter
+    RRCA                            ;shift d0 into carry (to run on every other frame)
+    JP NC, WhPull                   ;if d0 not set, branch to last part of code
+;
+    LD A, (Player_X_Position)
+    LD C, A
+    LD A, E                         ;get center
+    SUB A, C                        ;subtract player's horizontal coordinate
+    LD A, (Player_PageLoc)
+    LD C, A
+    LD A, D                         ;get page location of center
+    SBC A, C                        ;subtract borrow
+    JP P, LeftWh                    ;if player to the left of center, branch
+;
+    LD A, (Player_X_Position)       ;otherwise slowly pull player left, towards the center
+    SUB A, $01                      ;subtract one pixel
+    LD (Player_X_Position), A       ;set player's new horizontal coordinate
+    LD A, (Player_PageLoc)
+    SBC A, $00                      ;subtract borrow
+    JP SetPWh                       ;jump to set player's new page location
+;
+LeftWh:
+    LD A, (Player_CollisionBits)    ;get player's collision bits
+    RRCA                            ;shift d0 into carry
+    JP NC, WhPull                   ;if d0 not set, branch
+;
+    LD A, (Player_X_Position)       ;otherwise slowly pull player right, towards the center
+    ADD A, $01                      ;add one pixel
+    LD (Player_X_Position), A       ;set player's new horizontal coordinate
+    LD A, (Player_PageLoc)
+    ADC A, $00                      ;add carry
+SetPWh:
+    LD (Player_PageLoc), A          ;set player's new page location
+WhPull:
+    LD A, $01                       ;set whirlpool flag to be used later
+    LD (Whirlpool_Flag), A
+    LD BC, $1001                    ;set vertical movement force and maximum vertical speed
+    XOR A                           ;clear flag to only apply gravity downward
+    LD H, >Player_Y_Position        ;set X for player offset
+    JP ImposeGravity                ;jump to put whirlpool effect on player vertically, do not return
 
 ;-------------------------------------------------------------------------------------
 

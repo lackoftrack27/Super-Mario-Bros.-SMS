@@ -1458,6 +1458,7 @@ RowOfCoins:
 
 .SECTION "Castle Object Row and Metatile TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 C_ObjectRow:
+    .db $00, $00                        ;padding
     .db $06, $07, $08
 
 C_ObjectMetatile:
@@ -1476,7 +1477,7 @@ AxeObj:
 ChainObj:
     LD C, IXL                           ;get value loaded earlier from decoder                 
     LD A, C
-    LD DE, C_ObjectRow-2
+    LD DE, C_ObjectRow
     addAToDE8_M
     LD A, (DE)                          ;get appropriate row and metatile for object
     LD B, A
@@ -1789,17 +1790,19 @@ RenderUnderPart:
     LD A, (HL)                          ;check current spot to see if there's something
     OR A
     JP Z, DrawThisRow                   ;we need to keep, if nothing, go ahead
-    CP A, MT_TREELEDGE_TRUCK
-    JP C, +
-    CP A, MT_TREELEDGE_TRUCK_SB + $01
-    JP C, WaitOneRow
-+:
     CP A, MT_TREELEDGE_MID
     JP Z, WaitOneRow                    ;if middle part (tree ledge), wait until next row
     CP A, MT_MUSHROOM_MID
     JP Z, WaitOneRow                    ;if middle part (mushroom ledge), wait until next row
     CP A, MT_QBLK_COIN
     JP Z, DrawThisRow                   ;if question block w/ coin, overwrite
+;
+    CP A, MT_TREELEDGE_TRUCK            ;don't overwrite the center tiles of the tree trunk
+    JP Z, WaitOneRow
+    CP A, MT_TREELEDGE_TRUCK_CB
+    JP Z, WaitOneRow
+;
+    CP A, MT_QBLK_COIN
     JP NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
     CP A, MT_ROCK
     JP NZ, DrawThisRow                  ;if cracked rock terrain, overwrite

@@ -1412,16 +1412,15 @@ WriteVeriBlock_W:
 .ENDS
 ;-------------------------------------------------------------------------------------
 
-/*
-PALETTE DATA LAYOUT:
-    VDP ADDRESS, BYTE COUNT, DATA, TERMINATOR
-*/
+; PALETTE DATA LAYOUT:
+;     VDP ADDRESS, BYTE COUNT, DATA, TERMINATOR
+
 .SECTION "Water AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 WaterPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $22, $26, $27, $24, $28, $29, $2B, $00, $3E, $2F, $3A, $3F, $21, $2E
-    .db $39, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
+    .db $00, $00, $22, $26, $27, $24, $28, $29, $2B, $00, $3E, $2F, $3A, $3F, $21, $2E
+    .db $00, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
     .db $00
 .ENDS
 
@@ -1429,8 +1428,8 @@ WaterPaletteData:
 GroundPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
-    .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
+    .db $00, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
+    .db $00, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
@@ -1456,8 +1455,8 @@ CastlePaletteData:
 DaySnowPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $39, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $3A, $3E
-    .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
+    .db $00, $00, $01, $16, $2B, $04, $18, $1C, $05, $0A, $3E, $0F, $2A, $3F, $3A, $3E
+    .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
@@ -1472,10 +1471,10 @@ NightSnowPaletteData:
 
 .SECTION "Mushroom AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
 MushroomPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
-    .db $39, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
-    .db $39, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
+    ;.dw swapBytes($C000)
+    ;.db StripeCount($20)
+    ;.db $00, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
+    ;.db $00, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
     .db $00
 .ENDS
 
@@ -2115,8 +2114,6 @@ Tiles_SPR_Comm:
 
 Tiles_SPR_Enemies:
     .INCLUDE "SPR_Enemies.inc"
-Tiles_SPR_Hammerbro:
-    .INCLUDE "SPR_Hammerbro.inc"
 Tiles_SPR_Lakitu:
     .INCLUDE "SPR_Lakitu.inc"
 

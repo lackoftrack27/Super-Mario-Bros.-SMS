@@ -1704,7 +1704,9 @@ RunNormalEnemies:
     CALL EnemyGfxHandler        ; 7, 
     CALL GetEnemyBoundBox       ; 1, 
     CALL EnemyToBGCollisionDet  ; 7,
-    CALL EnemiesCollision       ; 0,
+    LD A, (AreaType)
+    OR A
+    CALL NZ, EnemiesCollision   ; 0,
     CALL PlayerEnemyCollision   ; 1, 
 ;
     LD A, (TimerControl)
@@ -3555,13 +3557,14 @@ FlmeAt:
 
 DrawFlameLoop:
     LD A, (Enemy_Rel_YPos)
+    SUB A, SMS_PIXELYOFFSET
     LD (DE), A
     SLA E
     SET 7, E
-    LDI
     LD A, (Enemy_Rel_XPos)
     LD (DE), A
     INC E
+    LDI
     RES 7, E
     SRL E
     ADD A, $08
@@ -3572,17 +3575,13 @@ DrawFlameLoop:
     CALL GetEnemyOffscreenBits
     LD L, <Enemy_SprDataOffset
     LD E, (HL)
+    LD D, >Sprite_Y_Position
     INC E
     INC E
-    ;INC E
     LD A, (Enemy_OffscrBits)
     LD C, A
-    LD A, $F8
+    LD A, YPOS_OFFSCREEN
     SRL C
-;     JP NC, M3FOfs
-;     LD (DE), A
-; M3FOfs:
-;     DEC E
     SRL C
     JP NC, M2FOfs
     LD (DE), A
@@ -5668,74 +5667,70 @@ ChkUpM:
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------
-;$01 - enemy buffer offset
+;$01(N/A) - enemy buffer offset
 
 FireballEnemyCollision:
-    LD L, <Fireball_State
+    LD L, <Fireball_State           ;check to see if fireball state is set at all
     LD A, (HL)
     OR A
-    RET Z
-    RET M
+    RET Z                           ;branch to leave if not
+    RET M                           ;branch to leave also if d7 in state is set
 ;
     LD A, (FrameCounter)
-    RRCA
-    RET C
+    RRCA                            ;get LSB of frame counter
+    RET C                           ;branch to leave if set (do routine every other frame)
 ;
-    LD D, H
-    LD H, >Enemy_ID_04
+    LD D, H                         ;store fireball offset in D
+    LD H, >Enemy_ID_04              ;start with last enemy
 
 FireballEnemyCDLoop:
-    LD A, H
-    LD (Temp_Bytes + $01), A
-    PUSH DE
-;
-    LD L, <Enemy_State
+    LD L, <Enemy_State              ;check to see if d5 is set in enemy state
     BIT 5, (HL)
-    JP NZ, NoFToECol
+    JP NZ, NoFToECol                ;if so, skip to next enemy slot
 ;
-    LD L, <Enemy_Flag
+    LD L, <Enemy_Flag               ;check to see if buffer flag is set
     LD A, (HL)
     OR A
-    JP Z, NoFToECol
+    JP Z, NoFToECol                 ;if not, skip to next enemy slot
 ;
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                 ;check enemy identifier
     LD A, (HL)
     CP A, $24
-    JP C, GoombaDie
+    JP C, GoombaDie                 ;if < $24, branch to check further
     CP A, $2B
-    JP C, NoFToECol
+    JP C, NoFToECol                 ;if in range $24-$2a, skip to next enemy slot
+    ; FALL THROUGH
 ;
 GoombaDie:
-    CP A, OBJECTID_Goomba
-    JP NZ, NotGoomba
-    LD L, <Enemy_State
+    CP A, OBJECTID_Goomba           ;check for goomba identifier
+    JP NZ, NotGoomba                ;if not found, continue with code
+    LD L, <Enemy_State              ;otherwise check for defeated state
     LD A, (HL)
-    CP A, $02
-    JP NC, NoFToECol
+    CP A, $02                       ;if stomped or otherwise defeated,
+    JP NC, NoFToECol                ;skip to next enemy slot
+    ; FALL THROUGH
 ;
 NotGoomba:
-    LD L, <EnemyOffscrBitsMasked
+    LD L, <EnemyOffscrBitsMasked    ;if any masked offscreen bits set,
     LD A, (HL)
     OR A
-    JP NZ, NoFToECol
-    CALL SprObjectCollisionCore
-    LD HL, (ObjectOffset)
-    JP NC, NoFToECol
-    LD L, <Fireball_State
+    JP NZ, NoFToECol                ;skip to next enemy slot
+    CALL SprObjectCollisionCore     ;do fireball-to-enemy collision detection
+    JP NC, NoFToECol                ;if carry clear, no collision, thus do next enemy slot
+    EX DE, HL                       ;swap HL and DE to put fireball object into HL
+    LD L, <Fireball_State           ;set d7 in enemy state
     SET 7, (HL)
-    LD A, (Temp_Bytes + $01)
-    LD H, A
-    CALL HandleEnemyFBallCol
+    EX DE, HL                       ;revert swap
+    PUSH DE                         ;preserve firebal offset
+    CALL HandleEnemyFBallCol        ;jump to handle fireball to enemy collision
+    POP DE                          ;get fireball offset back
 NoFToECol:
-    POP DE
-    LD A, (Temp_Bytes + $01)
-    DEC A
-    LD H, A
+    DEC H                           ;decrement enemy object offset
+    LD A, H
     CP A, $C0
-    JP NZ, FireballEnemyCDLoop
-    
-ExitFBallEnemy:
-    LD HL, (ObjectOffset)
+    JP NZ, FireballEnemyCDLoop      ;loop back until collision detection done on all enemies
+    ;LD HL, (ObjectOffset)
+    LD H, D
     RET
 
 .SECTION "BowserIdentities" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -5748,22 +5743,20 @@ BowserIdentities:
 HandleEnemyFBallCol:
     CALL RelativeEnemyPosition
 ;
-    LD A, (Temp_Bytes + $01)
-    LD H, A
     LD L, <Enemy_Flag
     LD A, (HL)
     OR A
     JP P, ChkBuzzyBeetle
 ;
+    LD E, H
     AND A, %00001111
     ADD A, $C1
     LD H, A
     LD L, <Enemy_ID
     CP A, OBJECTID_Bowser
     JP Z, HurtBowser
+    LD H, E
 ;
-    LD A, (Temp_Bytes + $01)
-    LD H, A
 
 ChkBuzzyBeetle:
     LD L, <Enemy_ID
@@ -5773,6 +5766,7 @@ ChkBuzzyBeetle:
 ;
     CP A, OBJECTID_Bowser
     JP NZ, ChkOtherEnemies
+    ; FALL THROUGH
 
 HurtBowser:
     LD A, (BowserHitPoints)
@@ -5785,9 +5779,8 @@ HurtBowser:
     LD (HL), A
     LD (EnemyFrenzyBuffer), A
 ;
-    LD A, $FE
     LD L, <Enemy_Y_Speed
-    LD (HL), A
+    LD (HL), $FE
 ;
     LD A, (WorldNumber)
     LD BC, BowserIdentities
@@ -5808,8 +5801,7 @@ SetDBSte:
     LD A, SNDID_FALL
     LD (SFXTrack1.SoundQueue), A
 ;
-    LD A, (Temp_Bytes + $01)
-    LD H, A
+    LD H, E
 ;
     LD A, $09
     JP EnemySmackScore
@@ -5821,6 +5813,7 @@ ChkOtherEnemies:
     RET Z
     CP A, $15
     RET NC
+    ; FALL THROUGH
 
 ShellOrBlockDefeat:
     LD L, <Enemy_ID
@@ -5848,12 +5841,14 @@ StnE:
     CP A, OBJECTID_HammerBro
     JP NZ, GoombaPoints
     LD C, $06
+    ; FALL THROUGH
 
 GoombaPoints:
     CP A, OBJECTID_Goomba
     LD A, C
     JP NZ, EnemySmackScore
     LD A, $01
+    ; FALL THROUGH
 
 EnemySmackScore:
     CALL SetupFloateyNumber
@@ -5864,96 +5859,94 @@ EnemySmackScore:
 ;-------------------------------------------------------------------------------------
 
 PlayerHammerCollision:
-    LD A, (FrameCounter)
-    RRCA
-    RET NC
+    LD A, (FrameCounter)            ;get frame counter
+    RRCA                            ;shift d0 into carry
+    RET NC                          ;branch to leave if d0 not set to execute every other frame
 ;
-    LD A, (TimerControl)
+    LD A, (TimerControl)            ;if either master timer control
     LD C, A
-    LD A, (Misc_OffscrBits)
+    LD A, (Misc_OffscrBits)         ;or any offscreen bits for hammer are set,
     OR A, C
-    RET NZ
+    RET NZ                          ;branch to leave
 ;
-    LD D, H
-    CALL PlayerCollisionCore
-    LD HL, (ObjectOffset)
-    JP NC, ClHCol
+    LD D, H                         ;move misc object to D (H will be changed to player's offset)
+    CALL PlayerCollisionCore        ;do player-to-hammer collision detection
+    LD H, D                         ;move misc object back into H
+    JP NC, ClHCol                   ;if no collision, then branch
 ;
-    LD L, <Misc_Collision_Flag
+    LD L, <Misc_Collision_Flag      ;otherwise read collision flag
     LD A, (HL)
     OR A
-    RET NZ
+    RET NZ                          ;if collision flag already set, branch to leave
+    LD (HL), $01                    ;otherwise set collision flag now
 ;
-    LD (HL), $01
-    LD L, <Misc_X_Speed
-    LD A, (HL)
+    LD L, <Misc_X_Speed             ;get two's compliment of
+    LD A, (HL)                      ;hammer's horizontal speed
     NEG
-    LD (HL), A
+    LD (HL), A                      ;set to send hammer flying the opposite direction
 ;
-    LD A, (StarInvincibleTimer)
+    LD A, (StarInvincibleTimer)     ;if star mario invincibility timer set,
     OR A
-    RET NZ
-;
-    JP InjurePlayer
+    RET NZ                          ;branch to leave
+    JP InjurePlayer                 ;otherwise jump to hurt player, do not return
 ;
 ClHCol:
-    LD L, <Misc_Collision_Flag
+    LD L, <Misc_Collision_Flag      ;clear collision flag
     LD (HL), $00
     RET
 
 ;-------------------------------------------------------------------------------------
 
 HandlePowerUpCollision:
-    CALL EraseEnemyObject
+    CALL EraseEnemyObject           ;erase the power-up object
 ;
-    LD A, $06
+    LD A, $06                       ;award 1000 points to player by default
     CALL SetupFloateyNumber
 ;
-    LD A, SNDID_POWERUP
+    LD A, SNDID_POWERUP             ;play the power-up sound
     LD (SFXTrack1.SoundQueue), A
 ;
-    LD A, (PowerUpType)
+    LD A, (PowerUpType)             ;check power-up type
     CP A, $02
-    JP C, Shroom_Flower_PUp
+    JP C, Shroom_Flower_PUp         ;if mushroom or fire flower, branch
     CP A, $03
-    JP Z, SetFor1Up
+    JP Z, SetFor1Up                 ;if 1-up mushroom, branch
 ;
-    LD A, $23
-    LD (StarInvincibleTimer), A
+    LD A, $23                       ;otherwise set star mario invincibility
+    LD (StarInvincibleTimer), A     ;timer, and load the star mario music
 ;
-    LD A, SNDID_INVINCIBLE
+    LD A, SNDID_INVINCIBLE          ;into the area music queue, then leave
     LD (MusicTrack0.SoundQueue), A 
     RET
 
-
 Shroom_Flower_PUp:
-    LD A, (PlayerStatus)
+    LD A, (PlayerStatus)            ;if player status = small, branch
     OR A
     JP Z, UpToSuper
 ;
-    CP A, $01
+    CP A, $01                       ;if player status not super, leave
     RET NZ
 ;
-    LD A, $02
+    LD A, $02                       ;set player status to fiery
     LD (PlayerStatus), A
-    CALL GetPlayerColors
+    CALL GetPlayerColors            ;run sub to change colors of player
 ;
-    LD A, $0C
-    JP UpToFiery
+    LD A, $0C                       ;set value to be used by subroutine tree (fiery)
+    JP UpToFiery                    ;jump to set values accordingly
 
 SetFor1Up:
-    LD L, <FloateyNum_Control
+    LD L, <FloateyNum_Control       ;change 1000 points into 1-up instead
     LD (HL), $0B
     RET
 
 UpToSuper:
-    LD A, $01
+    LD A, $01                       ;set player status to super
     LD (PlayerStatus), A
-    LD A, $09
+    LD A, $09                       ;set value to be used by subroutine tree (super)
 
 UpToFiery:
-    LD C, $00
-    JP SetPRout
+    LD C, $00                       ;set value to be used as new player state
+    JP SetPRout                     ;set values to stop certain things in motion
 
 ;--------------------------------
 
@@ -5983,9 +5976,11 @@ PlayerEnemyCollision:
     BIT 5, (HL)
     RET NZ
 ;
-    CALL GetEnemyBoundBoxOfs
+    ;CALL GetEnemyBoundBoxOfs
+    LD D, H
     CALL PlayerCollisionCore
-    LD HL, (ObjectOffset)
+    ;LD HL, (ObjectOffset)
+    LD H, D
     JP C, CheckForPUpCollision
 ;
     LD L, <Enemy_CollisionBits
@@ -6118,7 +6113,7 @@ ChkETmrs:
     JP NZ, EnemyStomped
     LD A, (InjuryTimer)
     OR A
-    RET NZ ;JP NZ, ExInjColRoutines
+    RET NZ
     LD A, (Enemy_Rel_XPos)
     LD C, A
     LD A, (Player_Rel_XPos)
@@ -6133,7 +6128,7 @@ ChkETmrs:
 InjurePlayer:
     LD A, (InjuryTimer)
     OR A
-    RET NZ ;JP NZ, ExInjColRoutines
+    RET NZ
 
 ForceInjury:
     LD A, (PlayerStatus)
@@ -6160,9 +6155,6 @@ SetPRout:
     LD (ScrollAmount), A
     DEC A
     LD (TimerControl), A
-
-;ExInjColRoutines:
-;    LD HL, (ObjectOffset)
     RET
 
 KillPlayer:
@@ -6337,308 +6329,290 @@ SetupFloateyNumber:
     RET
 
 ;-------------------------------------------------------------------------------------
-;$01 - used to hold enemy offset for second enemy
+;$01(N/A) - used to hold enemy offset for second enemy
 
 .SECTION "SetBitsMask" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 SetBitsMask:
     .db %10000000, %01000000, %00100000, %00010000, %00001000, %00000100, %00000010
 .ENDS
 
-.SECTION "ClearBitsMask" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-ClearBitsMask:
-    .db %01111111, %10111111, %11011111, %11101111, %11110111, %11111011, %11111101
-.ENDS
+; .SECTION "ClearBitsMask" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+; ClearBitsMask:
+;     .db %01111111, %10111111, %11011111, %11101111, %11110111, %11111011, %11111101
+; .ENDS
 
 EnemiesCollision:
-    LD A, (FrameCounter)
+    LD A, (FrameCounter)                ;check counter for d0 set
     RRCA
+    RET NC                              ;if d0 not set, leave
+;
+    LD L, <Enemy_ID                     ;if enemy object => $15, branch to leave
+    LD A, (HL)
+    CP A, $15
     RET NC
 ;
-    LD A, (AreaType)
-    OR A
+    CP A, OBJECTID_Lakitu               ;if lakitu, branch to leave
     RET Z
 ;
-    LD L, <Enemy_ID
-    LD A, (HL)
-    CP A, $15
-    JP NC, ExitECRoutine
+    CP A, OBJECTID_PiranhaPlant         ;if piranha plant, branch to leave
+    RET Z
 ;
-    CP A, OBJECTID_Lakitu
-    JP Z, ExitECRoutine
-;
-    CP A, OBJECTID_PiranhaPlant
-    JP Z, ExitECRoutine
-;
-    LD L, <EnemyOffscrBitsMasked
+    LD L, <EnemyOffscrBitsMasked        ;if masked offscreen bits nonzero, branch to leave
     LD A, (HL)
     OR A
-    JP NZ, ExitECRoutine
+    RET NZ
 ;
-    CALL GetEnemyBoundBoxOfs
-    DEC H
-    LD A, H
+    LD A, H                             ;check if were on the first enemy
+    DEC A
     CP A, $C0
-    JP Z, ExitECRoutine
+    RET Z                               ;branch to leave if there are no other enemies
+    LD D, A                             ;move second enemy offset into D
 ;
-ECLoop:
-    LD A, H
-    LD (Temp_Bytes + $01), A
-    PUSH DE
-;
-    LD L, <Enemy_Flag
-    LD A, (HL)
-    OR A
-    JP Z, ReadyNextEnemy
-;
-    LD L, <Enemy_ID
-    LD A, (HL)
-    CP A, $15
-    JP NC, ReadyNextEnemy
-;
-    CP A, OBJECTID_Lakitu
-    JP Z, ReadyNextEnemy
-;
-    CP A, OBJECTID_PiranhaPlant
-    JP Z, ReadyNextEnemy
-;
-    LD L, <EnemyOffscrBitsMasked
-    LD A, (HL)
-    OR A
-    JP NZ, ReadyNextEnemy
-;
-    CALL SprObjectCollisionCore
-    LD HL, (ObjectOffset)
-    LD A, (Temp_Bytes + $01)
-    LD D, A
-    JP NC, NoEnemyCollision
-;
-    LD E, <Enemy_State
-    LD L, E
-    LD A, (DE)
-    OR A, (HL)
-    AND A, %10000000
-    JP NZ, YesEC
-;
-    LD A, H
+    LD A, H                             ;use enemy as offset into SetBitsMask
     SUB A, $C1
     LD BC, SetBitsMask
     addAToBC8_M
     LD A, (BC)
-    LD C, A
-    LD E, <Enemy_CollisionBits
+    LD IYL, A                           ;load bitmask into IYL
+    CPL
+    LD IYH, A                           ;load inverted bitmask into IYH
+
+;   DE: 2ND ENEMY, HL: CURRENT ENEMY
+ECLoop:
+    LD E, <Enemy_Flag                   ;check enemy object enable flag
     LD A, (DE)
-    AND A, C
-    JP NZ, ReadyNextEnemy
-    LD A, (DE)
-    OR A, C
-    LD (DE), A
+    OR A
+    JP Z, ReadyNextEnemy                ;branch if flag not set
 ;
-YesEC:
-    CALL ProcEnemyCollisions
-    JP ReadyNextEnemy
-
-NoEnemyCollision:
-    LD A, H
-    SUB A, $C1
-    LD BC, ClearBitsMask
-    addAToBC8_M
-    LD A, (BC)
-    LD C, A
-    LD E, <Enemy_CollisionBits
+    LD E, <Enemy_ID                     ;check for enemy object => $15
     LD A, (DE)
-    AND A, C
-    LD (DE), A
-
-ReadyNextEnemy:
-    POP DE
-    LD A, (Temp_Bytes + $01)
-    DEC A
-    LD H, A
-    CP A, $C0
-    JP NZ, ECLoop
-
-ExitECRoutine:
-    LD HL, (ObjectOffset)
-    RET
-
-ProcEnemyCollisions:
+    CP A, $15
+    JP NC, ReadyNextEnemy               ;branch if true
+;
+    CP A, OBJECTID_Lakitu               ;branch if enemy object is lakitu
+    JP Z, ReadyNextEnemy
+;
+    CP A, OBJECTID_PiranhaPlant         ;branch if enemy object is piranha plant
+    JP Z, ReadyNextEnemy
+;
+    LD E, <EnemyOffscrBitsMasked
+    LD A, (DE)
+    OR A
+    JP NZ, ReadyNextEnemy               ;branch if masked offscreen bits set
+;
+    CALL SprObjectCollisionCore         ;do collision detection using the two enemies here
+    JP NC, NoEnemyCollision             ;if carry clear, no collision, branch ahead of this
+;
     LD E, <Enemy_State
     LD L, E
     LD A, (DE)
+    OR A, (HL)                          ;check both enemy states for d7 set
+    AND A, %10000000
+    JP NZ, YesEC                        ;branch if at least one of them is set
+;
+    LD E, <Enemy_CollisionBits          ;load first enemy's collision-related bits
+    LD A, (DE)
+    AND A, IYL                          ;check to see if bit connected to second enemy is
+    JP NZ, ReadyNextEnemy               ;already set, and move onto next enemy slot if set
+    LD A, (DE)
+    OR A, IYL                           ;if the bit is not set, set it now
+    LD (DE), A
+;
+YesEC:
+    CALL ProcEnemyCollisions            ;react according to the nature of collision
+    JP ReadyNextEnemy                   ;move onto next enemy slot
+
+NoEnemyCollision:
+    LD E, <Enemy_CollisionBits          ;load first enemy's collision-related bits
+    LD A, (DE)
+    AND A, IYH                          ;clear bit connected to second enemy
+    LD (DE), A                          ;then move onto next enemy slot
+    ; FALL THROUGH
+
+ReadyNextEnemy:
+    DEC D                               ;decrement second enemy's object buffer offset
+    LD A, D
+    CP A, $C0
+    JP NZ, ECLoop                       ;loop until all enemy slots have been checked
+    RET
+
+; ---------
+
+;   DE: 2ND ENEMY, HL: CURRENT ENEMY
+ProcEnemyCollisions:
+    LD E, <Enemy_State                  ;check both enemy states for d5 set
+    LD L, E
+    LD A, (DE)
     OR A, (HL)
-    AND A, %00100000
-    RET NZ
+    AND A, %00100000                    ;if d5 is set in either state, or both, branch
+    RET NZ                              ;to leave and do nothing else at this point
 ;
-    ;LD L, <Enemy_State
     LD A, (HL)
-    CP A, $06
-    JP C, ProcSecondEnemyColl
+    CP A, $06                           ;if second* enemy state < $06, branch elsewhere
+    JP C, ProcSecondEnemyColl           ;*I think this is meant to say "first"
 ;
-    LD L, <Enemy_ID
-    LD A, (HL)
-    CP A, OBJECTID_HammerBro
+    LD L, <Enemy_ID                     ;check second* enemy identifier for hammer bro
+    LD A, (HL)                          ;*same correction
+    CP A, OBJECTID_HammerBro            ;if hammer bro found in alt state, branch to leave
     RET Z
 ;
-    LD A, (DE)
-    ADD A, A
-    JP NC, ShellCollisions
+    LD A, (DE)                          ;check first* enemy state for d7 set
+    ADD A, A                            ;*meant to say second I'm pretty sure
+    JP NC, ShellCollisions              ;branch if d7 is clear
 ;
     LD A, $06
-    CALL SetupFloateyNumber
-    CALL ShellOrBlockDefeat
-    LD A, (Temp_Bytes + $01)
-    LD D, A
+    CALL SetupFloateyNumber             ;award 1000 points for killing enemy
+    PUSH DE
+    CALL ShellOrBlockDefeat             ;then kill enemy, then load (KILL CURRENT ENEMY)
+    POP DE
+    ; FALL THROUGH
 
 ShellCollisions:
-    LD H, D
-    CALL ShellOrBlockDefeat
+    EX DE, HL                           ;DE: CURRENT ENEMY, HL: 2ND ENEMY
+    CALL ShellOrBlockDefeat             ;kill second enemy
 ;
-    LD HL, (ObjectOffset)
-    LD L, <ShellChainCounter
+    EX DE, HL                           ;DE: 2ND ENEMY, HL: N/A
+    LD HL, (ObjectOffset)               ;HL: CURRENT ENEMY
+    LD L, <ShellChainCounter            ;get chain counter for shell
     LD A, (HL)
-    ADD A, $04
-    LD HL, (Temp_Bytes + $00)   ; $01
-    CALL SetupFloateyNumber
-    LD HL, (ObjectOffset)
-    LD L, <ShellChainCounter
-    INC (HL)
+    INC (HL)                            ;increment chain counter for additional enemies
+    ADD A, $04                          ;add four to get appropriate point offset
+    EX DE, HL                           ;DE: CURRENT ENEMY, HL: 2ND ENEMY
+    CALL SetupFloateyNumber             ;award appropriate number of points for second enemy
+    EX DE, HL                           ;DE: 2ND ENEMY, HL: CURRENT ENEMY
     RET
 
 ProcSecondEnemyColl:
-    LD E, <Enemy_State
+    LD E, <Enemy_State                  ;if first enemy state < $06, branch elsewhere
     LD A, (DE)
     CP A, $06
     JP C, MoveEOfs
 ;
-    LD E, <Enemy_ID
+    LD E, <Enemy_ID                     ;check first enemy identifier for hammer bro
     LD A, (DE)
-    CP A, OBJECTID_HammerBro
+    CP A, OBJECTID_HammerBro            ;if hammer bro found in alt state, branch to leave
     RET Z
 ;
-    CALL ShellOrBlockDefeat
+    PUSH DE
+    CALL ShellOrBlockDefeat             ;otherwise, kill first enemy (KILL CURRENT ENEMY)
+    POP DE
 ;
-    LD DE, (Temp_Bytes + $00)   ; $01
-    LD E, <ShellChainCounter
-    LD A, (DE)
-    ADD A, $04
-    LD HL, (ObjectOffset)
-    CALL SetupFloateyNumber
-;
-    LD HL, (Temp_Bytes + $00)   ; $01
-    LD L, <ShellChainCounter
-    INC (HL)
-    RET
+    EX DE, HL                           ;DE: CURRENT ENEMY, HL: SECOND ENEMY
+    LD L, <ShellChainCounter            ;get chain counter for shell
+    LD A, (HL)
+    INC (HL)                            ;increment chain counter for additional enemies
+    EX DE, HL                           ;DE: 2ND ENEMY, HL: CURRENT ENEMY
+    ADD A, $04                          ;add four to get appropriate point offset
+    JP SetupFloateyNumber               ;award appropriate number of points for first enemy
 
 MoveEOfs:
-    LD H, D
-    CALL EnemyTurnAround
-    LD HL, (ObjectOffset)
+    EX DE, HL                           ;DE: CURRENT ENEMY, HL: 2ND ENEMY
+    CALL EnemyTurnAround                ;do the sub here using second enemy
+    EX DE, HL                           ;DE: 2ND ENEMY, HL: CURRENT ENEMY
+    ; FALL THROUGH
 
 EnemyTurnAround:
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                     ;check for specific enemies
     LD A, (HL)
     CP A, OBJECTID_PiranhaPlant
-    RET Z
+    RET Z                               ;if piranha plant, leave
     CP A, OBJECTID_Lakitu
-    RET Z
+    RET Z                               ;if lakitu, leave
     CP A, OBJECTID_HammerBro
-    RET Z
+    RET Z                               ;if hammer bro, leave
     CP A, OBJECTID_Spiny
-    JP Z, RXSpd
+    JP Z, RXSpd                         ;if spiny, turn it around
     CP A, OBJECTID_GreenParatroopaJump
-    JP Z, RXSpd
+    JP Z, RXSpd                         ;if green paratroopa, turn it around
     CP A, $07
-    RET NC 
+    RET NC                              ;if any OTHER enemy object => $07, leave
 ;
 RXSpd:
-    LD L, <Enemy_X_Speed
-    LD A, (HL)
+    LD L, <Enemy_X_Speed                ;load horizontal speed
+    LD A, (HL)                          ;get two's compliment for horizontal speed
     NEG
-    LD (HL), A
+    LD (HL), A                          ;store as new horizontal speed
     LD L, <Enemy_MovingDir
     LD A, (HL)
-    XOR A, %00000011
-    LD (HL), A
+    XOR A, %00000011                    ;invert moving direction and store, then leave
+    LD (HL), A                          ;thus effectively turning the enemy around
     RET
 
 ;-------------------------------------------------------------------------------------
-;$00 - vertical position of platform
+;$00(C) - vertical position of platform
 
 LargePlatformCollision:
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag        ;save value here
     LD (HL), $FF
 ;
-    LD A, (TimerControl)
+    LD A, (TimerControl)                ;check master timer control
     OR A
-    JP NZ, ExLPC
+    RET NZ                              ;if set, branch to leave
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                  ;if d7 set in object state,
     LD A, (HL)
     OR A
-    JP M, ExLPC
+    RET M                               ;branch to leave
 ;
-    LD L, <Enemy_ID
-    LD A, (HL)
+    LD L, <Enemy_ID                     ;check enemy object identifier for
+    LD A, (HL)                          ;balance platform, branch if not found
     CP A, $24
     JP NZ, ChkForPlayerC_LargeP
 ;
-    LD L, <Enemy_State
+    LD L, <Enemy_State                  ;set state as enemy offset here
     LD A, (HL)
     ADD A, >Enemy_ID
-    LD H, A
-    CALL ChkForPlayerC_LargeP
+    LD H, A                             ;H IS CHANGED
+    CALL ChkForPlayerC_LargeP           ;perform code with state offset, then original offset, in X
 
 ChkForPlayerC_LargeP:
-    CALL CheckPlayerVertical
-    JP NC, ExLPC
+    CALL CheckPlayerVertical            ;figure out if player is below a certain point
+    JP NC, ExLPC                        ;or offscreen, branch to leave if true
 ;
-    LD A, H
-    CALL GetEnemyBoundBoxOfsArg
-    LD L, <Enemy_Y_Position
-    LD A, (HL)
-    LD (Temp_Bytes + $00), A
-    PUSH HL
-    CALL PlayerCollisionCore
-    POP HL
-    CALL C, ProcLPlatCollisions
+    LD L, <Enemy_Y_Position             ;store vertical coordinate in
+    LD C, (HL)                          ;temp variable for now
+    LD D, H                             ;move object offset to D
+    CALL PlayerCollisionCore            ;do player-to-platform collision detection
+    LD H, D                             ;put enemy offset back into H
+    CALL C, ProcLPlatCollisions         ;if collision, perform sub
 ExLPC:
-    LD HL, (ObjectOffset)
+    LD HL, (ObjectOffset)               ;get enemy object buffer offset and leave
     RET
 
 ;--------------------------------
-;$00 - counter for bounding boxes
+;$00(C) - counter for bounding boxes
 
 SmallPlatformCollision:
-    LD A, (TimerControl)
+    LD A, (TimerControl)                ;if master timer control set,
     OR A
-    JP NZ, ExSPC
+    RET NZ                              ;branch to leave
 ;
-    LD L, <PlatformCollisionFlag
+    LD L, <PlatformCollisionFlag        ;otherwise initialize collision flag
     LD (HL), A
 ;
-    CALL CheckPlayerVertical
-    JP NC, ExSPC
+    CALL CheckPlayerVertical            ;do a sub to see if player is below a certain point
+    RET NC                              ;or entirely offscreen, and branch to leave if true
 ;
-    LD A, $02
-    LD (Temp_Bytes + $00), A
+    LD C, $02                           ;load counter here for 2 bounding boxes
 
 ChkSmallPlatLoop:
-    LD HL, (ObjectOffset)
-    CALL GetEnemyBoundBoxOfs
-    AND A, %00000010
-    JP NZ, ExSPC
+    LD D, H                             ;move enemy offset into D
+    LD A, (Enemy_OffscrBits)
+    AND A, %00000010                    ;if d1 of offscreen lower nybble bits was set
+    RET NZ                              ;then branch to leave
 ;
-    LD E, <BoundingBox_UL_YPos
+    LD E, <BoundingBox_UL_YPos          ;check top of platform's bounding box for being
     LD A, (DE)
-    CP A, $20
-    JP C, MoveBoundBox
+    CP A, $20                           ;above a specific point
+    JP C, MoveBoundBox                  ;if so, branch, don't do collision detection
 ;
-    CALL PlayerCollisionCore
-    JP C, ProcSPlatCollisions
+    CALL PlayerCollisionCore            ;otherwise, perform player-to-platform collision detection
+    LD H, D                             ;move enemy offset back into H
+    JP C, ProcSPlatCollisions           ;skip ahead if collision
 
 MoveBoundBox:
-    LD E, <BoundingBox_UL_YPos
-    LD A, (DE)
+    LD E, <BoundingBox_UL_YPos          ;move bounding box vertical coordinates
+    LD A, (DE)                          ;128 pixels downwards
     ADD A, $80
     LD (DE), A
 ;
@@ -6646,93 +6620,87 @@ MoveBoundBox:
     LD A, (DE)
     ADD A, $80
     LD (DE), A
-;
-    LD HL, Temp_Bytes + $00
-    DEC (HL)
-    JP NZ, ChkSmallPlatLoop
-ExSPC:
-    LD HL, (ObjectOffset)
+;          
+    DEC C                               ;decrement counter we set earlier
+    JP NZ, ChkSmallPlatLoop             ;loop back until both bounding boxes are checked
     RET
 
 ;--------------------------------
 
 ProcSPlatCollisions:
-    LD HL, (ObjectOffset)
-
 ProcLPlatCollisions:
-    LD A, (BoundingBox_UL_YPos)
-    LD C, A
-    LD E, <BoundingBox_DR_YPos
+    LD A, (BoundingBox_UL_YPos)         ;get difference by subtracting the top
+    LD B, A                             ;of the player's bounding box from the bottom
+    LD E, <BoundingBox_DR_YPos          ;of the platform's bounding box
     LD A, (DE)
-    SUB A, C
-    CP A, $04
-    JP NC, ChkForTopCollision
+    SUB A, B
+    CP A, $04                           ;if difference too large or negative,
+    JP NC, ChkForTopCollision           ;branch, do not alter vertical speed of player
 ;
-    LD A, (Player_Y_Speed)
+    LD A, (Player_Y_Speed)              ;check to see if player's vertical speed is moving down
     OR A
-    JP P, ChkForTopCollision
+    JP P, ChkForTopCollision            ;if so, don't mess with it
 ;
-    LD A, $01
-    LD (Player_Y_Speed), A
+    LD A, $01                           ;otherwise, set vertical
+    LD (Player_Y_Speed), A              ;speed of player to kill jump
 
 ChkForTopCollision:
-    LD E, <BoundingBox_UL_YPos
-    LD A, (DE)
-    LD C, A
+    EX DE, HL
     LD A, (BoundingBox_DR_YPos)
-    SUB A, C
-    CP A, $06
-    JP NC, PlatformSideCollisions
+    LD L, <BoundingBox_UL_YPos          ;get difference by subtracting the top
+    SUB A, (HL)                         ;of the platform's bounding box from the bottom
+    EX DE, HL    
+    CP A, $06                           ;of the player's bounding box
+    JP NC, PlatformSideCollisions       ;if difference not close enough, skip all of this
 ;
     LD A, (Player_Y_Speed)
     OR A
-    JP M, PlatformSideCollisions
+    JP M, PlatformSideCollisions        ;if player's vertical speed moving upwards, skip this
 ;
+    ;LD A, (Temp_Bytes + $00)            ;get saved bounding box counter from earlier
+    ;LD C, A
     LD L, <Enemy_ID
     LD A, (HL)
-    CP A, $2B
-    LD A, (Temp_Bytes + $00)
+    CP A, $2B                           ;if either of the two small platform objects are found,
+    JP Z, SetCollisionFlag              ;regardless of which one, branch to use bounding box counter
+    CP A, $2C                           ;as contents of collision flag
     JP Z, SetCollisionFlag
-    LD A, (HL)
-    CP A, $2C
-    LD A, (Temp_Bytes + $00)
-    JP Z, SetCollisionFlag
-    LD A, H
-    SUB A, $C1
+    LD A, H                             ;otherwise use enemy object buffer offset
+    SUB A, >Enemy_ID
+    LD C, A
 
 SetCollisionFlag:
-    LD HL, (ObjectOffset)
-    LD L, <PlatformCollisionFlag
-    LD (HL), A
-    XOR A
+    LD HL, (ObjectOffset)               ;get enemy object buffer offset
+    LD L, <PlatformCollisionFlag        ;save either bounding box counter or enemy offset here
+    LD (HL), C
+    XOR A                               ;set player state to normal then leave
     LD (Player_State), A
     RET
 
 PlatformSideCollisions:
-    LD A, $01
-    LD (Temp_Bytes + $00), A
+    LD C, $01                           ;set value here to indicate possible left side collision
 ;
-    LD E, <BoundingBox_UL_XPos
-    LD A, (DE)
-    LD C, A
-    LD A, (BoundingBox_DR_XPos)
-    SUB A, C
-    CP A, $08
+    EX DE, HL
+    LD L, <BoundingBox_UL_XPos          ;get difference by subtracting platform's left edge
+    LD A, (BoundingBox_DR_XPos)         ;from player's right edge
+    SUB A, (HL)
+    CP A, $08                           ;if difference close enough, skip all of this
+    EX DE, HL
     JP C, SideC
 ;
-    LD A, $02
-    LD (Temp_Bytes + $00), A
-    LD A, (BoundingBox_UL_XPos)
-    LD C, A
-    LD E, <BoundingBox_DR_XPos
+    INC C                               ;otherwise increment value set here for right side collision
+    LD HL, BoundingBox_UL_XPos          ;get difference by subtracting player's left edge
+    LD E, <BoundingBox_DR_XPos          ;from platform's right edge
     LD A, (DE)
-    SUB A, C
-    CP A, $09
-    JP NC, NoSideC
+    SUB A, (HL)
+    CP A, $09                           ;if difference not close enough, skip subroutine
+    JP NC, NoSideC                      ;and instead branch to leave (no collision)
 SideC:
-    CALL ImpedePlayerMove
+    LD A, C
+    LD (Temp_Bytes + $00), A
+    CALL ImpedePlayerMove               ;deal with horizontal collision
 NoSideC:
-    LD HL, (ObjectOffset)
+    LD HL, (ObjectOffset)               ;return with enemy object buffer offset
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -6743,42 +6711,38 @@ NoSideC:
 ;.ENDS
 
 PositionPlayerOnS_Plat:
-    ;LD C, A
-    ;LD BC, PlayerPosSPlatData
-    ;addAToBC8_M
-    ;LD A, (BC)
-    OR A
-    LD A, $80
+    DEC A                               ;use bounding box counter saved in collision flag for offset
+    LD A, $80                           ;PlayerPosSPlatData
     JP Z, +
     XOR A
 +:
-    LD L, <Enemy_Y_Position
-    ADD A, (HL)
-    JP PositionPlayerOnVPlat@SkipY
+    LD L, <Enemy_Y_Position             ;add positioning data using offset to the vertical
+    ADD A, (HL)                         ;coordinate
+    JP PositionPlayerOnVPlat@SkipY      ;skip getting enemy's y coordinate
 
 PositionPlayerOnVPlat:
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position             ;get vertical coordinate
     LD A, (HL)
 @SkipY:
     LD C, A
 ;
-    LD A, (GameEngineSubroutine)
-    CP A, $0B
+    LD A, (GameEngineSubroutine)        ;if certain routine being executed on this frame,
+    CP A, $0B                           ;skip all of this
     RET Z
 ;
-    LD L, <Enemy_Y_HighPos
+    LD L, <Enemy_Y_HighPos              ;if vertical high byte offscreen, skip this
     LD A, (HL)
     CP A, $01
     RET NZ
 ;
-    LD A, C
-    SUB A, $20
-    LD (Player_Y_Position), A
-    LD A, (HL)
-    SBC A, $00
-    LD (Player_Y_HighPos), A
+    LD A, C                             ;subtract 32 pixels from vertical coordinate
+    SUB A, $20                          ;for the player object's height
+    LD (Player_Y_Position), A           ;save as player's new vertical coordinate
+    LD A, (HL)                          ;Enemy_Y_HighPos
+    SBC A, $00                          ;subtract borrow and store as player's
+    LD (Player_Y_HighPos), A            ;new vertical high byte
     XOR A
-    LD (Player_Y_Speed), A
+    LD (Player_Y_Speed), A              ;initialize vertical speed and low byte of force
     LD (Player_Y_MoveForce), A
     RET
 
@@ -6787,29 +6751,30 @@ PositionPlayerOnVPlat:
 ;   NZ, NC = ONSCREEN
 ;   Z, C = OFFSCREEN
 CheckPlayerVertical:
-    LD A, (Player_OffscrBits)
-    CP A, $F0
+    LD A, (Player_OffscrBits)           ;if player object is completely offscreen
+    CP A, $F0                           ;vertically, leave this routine
     RET NC
 ;
-    LD A, (Player_Y_HighPos)
-    DEC A
+    LD A, (Player_Y_HighPos)            ;if player high vertical byte is not
+    DEC A                               ;within the screen, leave this routine
     RET NZ
 ;
-    LD A, (Player_Y_Position)
-    CP A, $D0
+    LD A, (Player_Y_Position)           ;if on the screen, check to see how far down
+    CP A, $D0                           ;the player is vertically
     RET
 
 ;-------------------------------------------------------------------------------------
 
-GetEnemyBoundBoxOfs:
-    LD A, (ObjectOffset + 1)
+; GetEnemyBoundBoxOfs:
+;     LD A, (ObjectOffset + 1)
+;     LD D, A
 
-GetEnemyBoundBoxOfsArg:
-    LD D, A
-    LD A, (Enemy_OffscrBits)
-    AND A, %00001111
-    CP A, %00001111
-    RET
+; GetEnemyBoundBoxOfsArg:
+;     ;LD D, A
+;     LD A, (Enemy_OffscrBits)
+;     AND A, %00001111
+;     CP A, %00001111
+;     RET
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used to hold many values, essentially temp variables
@@ -7533,7 +7498,7 @@ EnemyToBGCollisionDet:
     BIT 5, (HL)
     RET NZ
 ;
-    ;CALL SubtEnemyYPos
+    ; SubtEnemyYPos
     LD L, <Enemy_Y_Position
     LD A, (HL)
     ADD A, $3E
@@ -7550,8 +7515,6 @@ EnemyToBGCollisionDet:
     LD A, (HL)
     CP A, $25
     RET C
-    ;LD L, <Enemy_ID
-    ;LD A, (HL)
     LD A, B
 
 DoIDCheckBGColl:
@@ -7572,6 +7535,7 @@ DoIDCheckBGColl:
 YesIn:
     ChkUnderEnemy ;CALL ChkUnderEnemy
     JP Z, ChkForRedKoopa
+    ; FALL THROUGH
 
 ;--------------------------------
 ;$02(IXL) - vertical coordinate from block buffer routine
@@ -7583,9 +7547,6 @@ HandleEToBGCollision:
     CP A, MT_HITBLANK
     JP NZ, LandEnemyProperly
 ;
-    ;LD A, IXL
-    ;LD DE, (Temp_Bytes + $06)
-    ;addAToDE_M
     XOR A
     LD (DE), A
 ;
@@ -7596,10 +7557,12 @@ HandleEToBGCollision:
 ;
     CP A, OBJECTID_Goomba
     CALL Z, KillEnemyAboveBlock
+    ; FALL THROUGH
 
 GiveOEPoints:
     LD A, $01
     CALL SetupFloateyNumber
+    ; FALL THROUGH
 
 ChkToStunEnemies:
     CP A, $09
@@ -7642,7 +7605,7 @@ SetNotW:
 ;
     LD C, $01
     CALL PlayerEnemyDiff
-    LD B, $10
+    LD B, $10                                   ;EnemyBGCXSpdData
     JP P, ChkBBill
     LD B, $F0
     INC C
@@ -7656,11 +7619,6 @@ ChkBBill:
     LD L, <Enemy_MovingDir
     LD (HL), C
 NoCDirF:
-    ;DEC C
-    ;LD A, $10                                   ;EnemyBGCXSpdData
-    ;JP Z, +
-    ;LD A, $F0
-;+:
     LD L, <Enemy_X_Speed
     LD (HL), B
     RET
@@ -7682,9 +7640,6 @@ LandEnemyProperly:
     JP M, DoEnemySideCheck
 
 ChkLandedEnemyState:
-    ;LD L, <Enemy_State
-    ;LD A, (HL)
-    ;OR A
     JP Z, DoEnemySideCheck
     CP A, $05
     JP Z, ProcEnemyDirection
@@ -7972,50 +7927,49 @@ ChkForNonSolids:
 ;-------------------------------------------------------------------------------------
 
 FireballBGCollision:
-    LD L, <Fireball_Y_Position
+    LD L, <Fireball_Y_Position              ;check fireball's vertical coordinate
     LD A, (HL)
     CP A, $18
-    JP C, ClearBounceFlag
+    JP C, ClearBounceFlag                   ;if within the status bar area of the screen, branch ahead
 ;
     ; BlockBufferChk_FBall
-    LD BC, $0408
-    ;LD C, $1A
+    LD BC, $0408 ;LD C, $1A
     XOR A
-    CALL BlockBufferCollision
-    JP Z, ClearBounceFlag
+    CALL BlockBufferCollision               ;do fireball to background collision detection on bottom of it
+    JP Z, ClearBounceFlag                   ;if nothing underneath fireball, branch
 ;
-    CALL ChkForNonSolids
-    JP Z, ClearBounceFlag
+    CALL ChkForNonSolids                    ;check for non-solid metatiles
+    JP Z, ClearBounceFlag                   ;branch if any found
 ;
-    LD L, <Fireball_Y_Speed
+    LD L, <Fireball_Y_Speed                 ;if fireball's vertical speed set to move upwards,
     LD A, (HL)
     OR A
-    JP M, InitFireballExplode
+    JP M, InitFireballExplode               ;branch to set exploding bit in fireball's state
 ;
-    LD L, <FireballBouncingFlag
+    LD L, <FireballBouncingFlag             ;if bouncing flag already set,
     LD A, (HL)
     OR A
-    JP NZ, InitFireballExplode
+    JP NZ, InitFireballExplode              ;branch to set exploding bit in fireball's state
 ;
-    LD L, <Fireball_Y_Speed
+    LD L, <Fireball_Y_Speed                 ;otherwise set vertical speed to move upwards (give it bounce)
     LD (HL), $FD
-    LD L, <FireballBouncingFlag
+    LD L, <FireballBouncingFlag             ;set bouncing flag
     LD (HL), $01
-    LD L, <Fireball_Y_Position
+    LD L, <Fireball_Y_Position              ;modify vertical coordinate to land it properly
     LD A, (HL)
     AND A, %11111000
-    LD (HL), A
+    LD (HL), A                              ;store as new vertical coordinate
     RET
 
 ClearBounceFlag:
-    LD L, <FireballBouncingFlag
+    LD L, <FireballBouncingFlag             ;clear bouncing flag by default
     LD (HL), $00
     RET
 
 InitFireballExplode:
-    LD L, <Fireball_State
+    LD L, <Fireball_State                   ;set exploding flag in fireball's state
     LD (HL), $80
-    LD A, SNDID_BUMP
+    LD A, SNDID_BUMP                        ;load bump sound
     LD (SFXTrack0.SoundQueue), A
     RET
 
@@ -8049,12 +8003,12 @@ BoundBoxCtrlData:
 .ENDS
 
 GetFireballBoundBox:
-    LD D, >Fireball_Rel_XPos                ;set offset for relative coordinates
+    LD DE, Fireball_Rel_YPos                ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;get bounding box coordinates
     JP CheckRightScreenBBox                 ;jump to handle any offscreen coordinates
 
 GetMiscBoundBox:
-    LD D, >Misc_Rel_XPos                    ;set offset for relative coordinates
+    LD DE, Misc_Rel_YPos                    ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;get bounding box coordinates
     JP CheckRightScreenBBox                 ;jump to handle any offscreen coordinates
 
@@ -8093,7 +8047,7 @@ CMBits:
     ; FALL THROUGH
 
 SetupEOffsetFBBox:
-    LD D, >Enemy_Rel_XPos                   ;set offset for relative coordinates
+    LD DE, Enemy_Rel_YPos                   ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;do a sub to get the coordinates of the bounding box
     JP CheckRightScreenBBox                 ;jump to handle offscreen coordinates of bounding box
 
@@ -8120,9 +8074,8 @@ MoveBoundBoxOffscreen:
 ;C - used for relative X coordinate
 ;B - used for relative Y coordinate
 BoundingBoxCore:
-    LD E, <SprObject_Rel_YPos               ;store object coordinates relative to screen
-    LD A, (DE)                              ;vertically and horizontally in BC, respectively
-    LD B, A
+    LD A, (DE)                              ;store object coordinates relative to screen
+    LD B, A                                 ;vertically and horizontally in BC, respectively
 ;
     DEC E                                   ;<SprObject_Rel_XPos
     LD A, (DE)
@@ -8370,8 +8323,6 @@ BlockBufferChk_Enemy:
 BlockBufferCollision:
     PUSH AF                             ;save contents of A to stack
 ;
-    ;LD B, >BlockBuffer_X_Adder          
-    ;LD A, (BC)                          ;add horizontal coordinate
     LD A, B                             ;add horizontal coordinate
     LD L, <SprObject_X_Position         ;of object to x adder
     ADD A, (HL)
@@ -8398,8 +8349,6 @@ BlockBufferCollision:
     LD (Temp_Bytes + $06), DE
     ;;;
 ;
-    ;LD B, >BlockBuffer_Y_Adder
-    ;LD A, (BC)
     LD A, C
     LD L, <SprObject_Y_Position         ;get vertical coordinate of object
     ADD A, (HL)                         ;add it to y adder
@@ -8475,17 +8424,6 @@ RelativeBlockPosition:
     DEC H
     RET
 
-;   HL - OBJECT OFFSET
-;   DE - XXX_Rel_XPos/YPos OFFSET
-; VariableObjOfsRelPos:
-;     ;LD IXL, B
-;     ;ADD A, B
-;     ;LD B, A
-;     CALL GetObjRelativePosition
-;     ;LD HL, (ObjectOffset)
-;     ;LD B, (HL)
-;     RET
-
 RelativeEnemyPosition:
     LD DE, Enemy_Rel_YPos
 
@@ -8554,7 +8492,6 @@ GetOffScreenBitsSet:
     ADD A, A
     OR A, IXL                               ;mask together with previously saved low nybble
     POP DE                                  ;get offscreen bits offset from stack
-    ;LD E, <SprObject_OffscrBits
     LD (DE), A
     ;LD HL, (ObjectOffset)
     RET
@@ -8613,7 +8550,7 @@ XLdBData:
     OR A                                    ;if bits not zero, branch to leave
     RET NZ
 ;   LOOP 2 (LEFT SIDE CHECK)
-    INC L ;LD L, <SprObject_X_Position
+    INC L                                   ;<SprObject_X_Position
     LD A, (ScreenEdge_X_Pos)
     SUB A, (HL)
     LD E, A
@@ -8649,7 +8586,7 @@ GetYOffscreenBits:
     LD A, $00
     SUB A, (HL)
     LD E, A
-    INC L                               ; <SprObject_Y_HighPos
+    INC L                               ;<SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
 ;
@@ -8674,11 +8611,11 @@ YLdBData:
     OR A
     RET NZ
 ;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
-    DEC L                               ; <SprObject_Y_Position
+    DEC L                               ;<SprObject_Y_Position
     LD A, $FF
     SUB A, (HL)
     LD E, A
-    INC L                               ; <SprObject_Y_HighPos
+    INC L                               ;<SprObject_Y_HighPos
     LD A, $01
     SBC A, (HL)
 ;

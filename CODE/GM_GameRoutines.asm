@@ -528,8 +528,8 @@ PlayerSubs:
     CALL ScrollHandler                  ;move the screen if necessary
     GetPlayerOffscreenBits_M            ;get player's offscreen bits
     RelativePlayerPosition_M            ;get coordinates relative to the screen
-    LD H, >Player_BoundBoxCtrl          ;set offset for player object
-    LD D, H
+    LD DE, Player_Rel_YPos              ;set offset for player object
+    LD H, D
     CALL BoundingBoxCore                ;get player's bounding box coordinates
     CALL PlayerBGCollision              ;do collision detection and process
     LD A, (Player_Y_Position)
@@ -817,15 +817,15 @@ PutMTileB:
     POP AF                          ;pull original metatile from stack
     LD (Temp_Bytes + $05), A        ;and save here
 ;
-    LD DE, BlockYPosAdderData       ;set default offset
+    LD BC, BlockYPosAdderData       ;set default offset
     LD A, (CrouchingFlag)           ;add crouching flag to offset
-    addAToDE8_M
+    addAToBC8_M
     LD A, (PlayerSize)              ;add player size to offset
-    addAToDE8_M
+    addAToBC8_M
+    LD A, (BC)
+    LD C, A
     LD A, (Player_Y_Position)       ;get player's vertical coordinate
-    EX DE, HL
-    ADD A, (HL)                     ;add value determined by size
-    EX DE, HL
+    ADD A, C                        ;add value determined by size
     AND A, $F0                      ;mask out low nybble to get 16-pixel correspondence
     LD L, <Block_Y_Position
     LD (HL), A                      ;save as vertical coordinate for block object
@@ -895,7 +895,7 @@ BumpBlock:
     SUB A, $05                      ;otherwise subtract 5 for second set to get proper number
 BlockCode:
     PUSH HL
-    RST JumpEngine                 ;run appropriate subroutine depending on block number
+    RST JumpEngine                  ;run appropriate subroutine depending on block number
 
     .dw MushFlowerBlock
     .dw CoinBlock
@@ -911,29 +911,26 @@ BlockCode:
 
 MushFlowerBlock:
     POP HL
-    XOR A
+    XOR A                           ;load mushroom/fire flower into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 StarBlock:
     POP HL
-    LD A, $02
+    LD A, $02                       ;load star into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 ExtraLifeMushBlock:
     POP HL
-    LD A, $03
+    LD A, $03                       ;load 1-up mushroom into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 VineBlock:
-    POP HL
-    LD H, $C6
-    LD A, (SprDataOffset_Ctrl)
-    ADD A, >Block_State
-    LD D, A
-    JP Setup_Vine_NOPOP
+    POP DE                          ;put block offset into DE
+    LD H, $C6                       ;load last slot for enemy object buffer
+    JP Setup_Vine_NOPOP             ;set up vine object
 
 ;--------------------------------
 
@@ -965,60 +962,59 @@ MatchBump:
 ;--------------------------------
 
 BrickShatter:
-    CALL CheckTopOfBlock
+    CALL CheckTopOfBlock                ;check to see if there's a coin directly above this block
 ;
-    LD L, <Block_RepFlag
+    LD L, <Block_RepFlag                ;set flag for block object to immediately replace metatile
     LD (HL), $01
 ;
-    LD A, SNDID_SHATTER
+    LD A, SNDID_SHATTER                 ;load brick shatter sound
     LD (SFXTrack2.SoundQueue), A
 ;
-    CALL SpawnBrickChunks
+    CALL SpawnBrickChunks               ;create brick chunk objects
 ;
     LD A, $FE
-    LD (Player_Y_Speed), A
+    LD (Player_Y_Speed), A              ;set vertical speed for player
     LD A, $05
-    LD (DigitModifier + $05 * $100), A
+    LD (DigitModifier + $05 * $100), A  ;set digit modifier to give player 50 points
 ;
-    CALL AddToScore
-;
-    LD A, (SprDataOffset_Ctrl)
-    ADD A, >Block_State
-    LD H, A
+    PUSH HL                             ;save block offset
+    CALL AddToScore                     ;do sub to update the score
+    POP HL                              ;get block offset back
     RET
 
 ;--------------------------------
 
 CheckTopOfBlock:
-    LD A, (SprDataOffset_Ctrl)
-    ADD A, >Block_State
-    LD H, A
-;
-    LD A, IXL
+    LD A, IXL                           ;get vertical high nybble offset used in block buffer
     OR A
-    RET Z
+    RET Z                               ;branch to leave if set to zero, because we're at the top
 ;
-    SUB A, $10
+    SUB A, $10                          ;subtract $10 to move up one row in the block buffer
     LD IXL, A
-    LD DE, (Temp_Bytes + $06)
-    addAToDE_M
-    LD A, (DE)
-    CP A, MT_COIN
-    RET NZ
+    EX DE, HL                           ;subtract $10 from block buffer address in DE
+    LD BC, $FFF0
+    ADD HL, BC
+    EX DE, HL
 ;
-    XOR A
+    LD A, (DE)                          ;get contents of block buffer in same column, one row up
+    CP A, MT_COIN                       ;is it a coin OR underwater coin?
+    JP Z, CoinOnTop
+    CP A, MT_WATERCOIN
+    RET NZ                              ;if not, branch to leave
+;
+CoinOnTop:
+    XOR A                               ;otherwise put blank metatile where coin was
     LD (DE), A
+    PUSH HL                             ;save block offset
     LD HL, (Temp_Bytes + $06)           ;(SMS)put block buffer addr into HL for PutBlockMetatile
-    CALL RemoveCoin_Axe
-    LD A, (SprDataOffset_Ctrl)
-    ADD A, >Block_State
-    LD H, A
-    JP SetupJumpCoin
+    CALL RemoveCoin_Axe                 ;write blank metatile to vram buffer
+    POP HL                              ;get block offset back
+    JP SetupJumpCoin                    ;create jumping coin object and update coin variables
 
 ;--------------------------------
 
 SpawnBrickChunks:
-    LD L, <Block_X_Position
+    LD L, <Block_X_Position             ;copy horizontal coordinate
     LD A, (HL)
     INC H 
     INC H
@@ -1026,26 +1022,26 @@ SpawnBrickChunks:
 ;
     DEC H
     DEC H
-    LD L, <Block_Orig_XPos
-    LD (HL), A
+    LD L, <Block_Orig_XPos              ;set horizontal coordinate of block object
+    LD (HL), A                          ;as original horizontal coordinate here
 ;
-    LD L, <Block_X_Speed
+    LD L, <Block_X_Speed                ;set horizontal speed for brick chunk objects
     LD (HL), $F0
-    LD L, <Block_Y_Speed
+    LD L, <Block_Y_Speed                ;set vertical speed for one
     LD (HL), $FA
-    LD L, <Block_Y_MoveForce
+    LD L, <Block_Y_MoveForce            ;init fractional movement force for both
     LD (HL), $00
     INC H
     INC H
     LD (HL), $00
-    LD L, <Block_Y_Speed
+    LD L, <Block_Y_Speed                ;set lower vertical speed for the other
     LD (HL), $FC
     LD L, <Block_X_Speed
     LD (HL), $F0
 ;
     DEC H
     DEC H
-    LD L, <Block_PageLoc
+    LD L, <Block_PageLoc                ;copy page location
     LD A, (HL)
     INC H
     INC H
@@ -1055,10 +1051,10 @@ SpawnBrickChunks:
     DEC H
     LD L, <Block_Y_Position
     LD A, (HL)
-    ADD A, $08
+    ADD A, $08                          ;add 8 pixels to vertical coordinate
     INC H
     INC H
-    LD (HL), A
+    LD (HL), A                          ;and save as vertical coordinate for one of them
 ;
     DEC H
     DEC H

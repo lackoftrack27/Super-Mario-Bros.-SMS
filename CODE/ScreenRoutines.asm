@@ -470,7 +470,7 @@ CastleSetup:
     LD A, :Tiles_SPR_Podoboo
     LD (MAPPER_SLOT2), A
     LD HL, Tiles_SPR_Podoboo
-    LD DE, $0840 | VRAMWRITE
+    LD DE, $0860 | VRAMWRITE
     CALL zx7_decompressVRAM
     ; BOWSER SPRITES
     LD A, :Tiles_SPR_Bowser

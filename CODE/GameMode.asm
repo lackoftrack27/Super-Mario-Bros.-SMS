@@ -3714,8 +3714,8 @@ FlameTimerData:
 
 .SECTION "FlameTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 FlameTileData:
-    .db $4A, $4B, $4C   ; NORMAL
-    .db $4D, $4E, $4F   ; VFLIP
+    .db $4B, $4C, $4D   ; NORMAL
+    .db $4E, $4F, $50   ; VFLIP
 .ENDS
 
 SetFlameTimer:

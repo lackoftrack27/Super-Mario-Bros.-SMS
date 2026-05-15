@@ -1357,8 +1357,8 @@ JumpspringFramesRight:
 
 .SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
 PodobooTiles:
-    .db $42, $43, $44, $45  ; FRAME 0
-    .db $46, $47, $48, $49  ; FRAME 0 VFLIP
+    .db $43, $44, $45, $46  ; FRAME 0
+    .db $47, $48, $49, $4A  ; FRAME 0 VFLIP
 .ENDS
 
 .SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
@@ -1604,8 +1604,10 @@ DrawFireball:
     SUB A, SMS_PIXELYOFFSET
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $C0
-    RET NC
+    CP A, $D0
+    JP NZ, +
+    INC A
++:
     ; ---
 
     LD (DE), A

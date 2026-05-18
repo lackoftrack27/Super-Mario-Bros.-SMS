@@ -343,7 +343,7 @@ NMIWait:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "VRAM Action Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "VRAM Action Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 VRAM_AddrTable:
     .dw VRAM_Buffer1, WaterPaletteData, GroundPaletteData,
     .dw UndergroundPaletteData, CastlePaletteData, TitleScreenData
@@ -388,8 +388,8 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD A, >VRAM_ADR_SPRTBL | >VRAMWRITE
     OUT (VDPCON_PORT), A
-    LD HL, Sprite_Y_Position
     LD C, VDPDATA_PORT
+    LD HL, Sprite_Y_Position
     CALL OutiBlock128 + $80         ; SKIP THE FIRST 64 OUTIs
     ; WRITE X POSITIONS AND TILE INDEXES
     LD A, <VRAM_ADR_SPRTBL + $80
@@ -466,9 +466,12 @@ NMIDone:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Nibble Bit Order Flip TBL for ReadJoypads" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-NibbleBitFlipTable:
-    .db $00, $08, $04, $0C, $02, $0A, $06, $0E, $01, $09, $05, $0D, $03, $0B, $07, $0F
+.SECTION "JoypadTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+JoypadTable:
+    .db $00, $08, $04, $0c, $02, $0a, $06, $0e, $01, $09, $05, $0d, $03, $0b, $07, $0f
+    .db $40, $48, $44, $4c, $42, $4a, $46, $4e, $41, $49, $45, $4d, $43, $4b, $47, $4f
+    .db $80, $88, $84, $8c, $82, $8a, $86, $8e, $81, $89, $85, $8d, $83, $8b, $87, $8f
+    .db $c0, $c8, $c4, $cc, $c2, $ca, $c6, $ce, $c1, $c9, $c5, $cd, $c3, $cb, $c7, $cf
 .ENDS
 
 ReadJoypads:
@@ -476,22 +479,14 @@ ReadJoypads:
     LD A, ~($01 << P1_TH_DIR)
     OUT (IO_CONTROL), A
 ;   CONTROL 1
-    LD HL, NibbleBitFlipTable
+    LD HL, JoypadTable
     IN A, (CONTROLPORT1)
     CPL                             ; INVERT SO 1 = PRESSED, 0 = NO PRESS
     LD D, A                         ; SAVE FOR LATER
-    AND A, %00111111                ; REMOVE CONTROLLER 2'S BITS
-    LD B, A                         ; AND STORE IN B
-    AND A, %00110000                ; KEEP ONLY BTN 1 & 2
-    ADD A, A                        ; MOVE D5,D4 TO D7,D6
-    ADD A, A
-    LD C, A                         ; STORE IN C
-    LD A, B
-    AND A, $0F                      ; KEEP ONLY LOWER NIBBLE (DIRECTIONALS)
-    addAToHL8_M                     ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
+    AND A, $3F                      ; REMOVE 2P BITS
+    addAToHL8_M                     ; USE AS OFFSET INTO TABLE TO CONVERT TO NES INPUT
     LD A, (HL)
-    OR A, C                         ; COMBINE NEW DIRECTIONS AND BUTTONS
-
+    
     .IF NOINVALIDINPUTS != $00
     ; CANCEL OUT OPPOSING DIRECTIONS
     LD B, A
@@ -507,28 +502,20 @@ ReadJoypads:
 
     LD (SavedJoypad1Bits), A
 ;   CONTROL 2
-    LD L, <NibbleBitFlipTable
-    LD A, D                         ; GET CONTROLLER 2'S DOWN, UP
-    RLCA                            ; AND MOVE THEM FROM D7,D6 TO D1,D0
-    RLCA
-    AND A, %00000011                ; ISOLATE AND STORE IN B
-    LD B, A
-    IN A, (CONTROLPORT2)            ; GET OTHER BITS FOR CONTROLLER 2
-    CPL
+    LD A, D                         ; GET 2P BUTTONS FROM 1ST READ
+    AND A, $C0                      ; ISOLATE THEM
+    LD D, A
+    LD L, <JoypadTable
+    IN A, (CONTROLPORT2)
+    CPL                             ; INVERT SO 1 = PRESSED, 0 = NO PRESS
     BIT 4, A                        ; CHECK IF RESET BUTTON IS PRESSED
     JP NZ, BootVector               ; IF SO, RESET THE GAME
-    ADD A, A                        ; MOVE D1,D0 TO D3,D2
-    ADD A, A
-    LD C, A                         ; STORE IN C
-    AND A, %00001100                ; ISOLATE BITS AND OR WITH DOWN,UP
-    OR A, B   
-    addAToHL8_M                     ; REVERSE BIT ORDER TO MATCH NES DIRECTIONALS
-    LD B, (HL)
-    LD A, C                         ; MOVE D5,D4 TO D7,D6
-    ADD A, A
-    ADD A, A
-    AND A, %11000000                ; ISOLATE AND COMBINE WITH DIRECTIONALS
-    OR A, B
+    AND A, $0F                      ; ISOLATE 2P BUTTONS
+    OR A, D                         ; COMBINE WITH THE BUTTONS FROM THE FIRST READ
+    RLCA                            ; SHIFT INTO PLACE
+    RLCA
+    addAToHL8_M                     ; USE AS OFFSET INTO TABLE TO CONVERT TO NES INPUT
+    LD A, (HL)
 
     .IF NOINVALIDINPUTS != $00
     ; CANCEL OUT OPPOSING DIRECTIONS
@@ -692,7 +679,7 @@ SpriteShuffler:
     .ENDR
     RET
 
-.SECTION "Sprite Slot Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Sprite Slot Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SpriteSlotTable:
     .db 1, 34, 40, 46, 52, 58, 10, 16, 22, 26, 9, 30, 31, 32, 33, 58, 60, 62, 10, 12, 14, 16, 18, 20
     .db 1, 52, 58, 10, 16, 22, 28, 34, 40, 44, 9, 48, 49, 50, 51, 22, 24, 26, 28, 30, 32, 34, 36, 38
@@ -847,7 +834,7 @@ OperModeExecutionTree:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Game Text Stripe Data TBL" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Game Text Stripe Data TBL" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 GameTextOffsets:
     .dw TopStatusBarLine, TopStatusBarLine
     .dw WorldLivesDisplay, WorldLivesDisplay
@@ -948,7 +935,7 @@ WriteGameText:
 ;$02 - used as temp vram offset
 ;$03 - used to store length of status bar number
 
-.SECTION "Status Bar VDP Address and Length Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Status Bar VDP Address and Length Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 StatusBarData:
     .dw swapBytes(xyToNameTbl_M(16, 20))    ; top score display on title screen
     .db StripeCount($0C), $06
@@ -964,7 +951,7 @@ StatusBarData:
     .db StripeCount($06), $03
 .ENDS
 
-.SECTION "Status Bar RAM Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Status Bar RAM Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   RAM ADDRESSES FOR DIGITS
 StatusBarOffset:
     .dw TopScoreDisplay                         ; top score display on title screen
@@ -1330,7 +1317,7 @@ StreamAnimatedBGTiles:
 
 ;   ASSET BANK, DATA ADDRESS, VRAM ADDRESS
 
-.SECTION "Asset Table for All-Star GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8
+.SECTION "Asset Table for All-Star GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8 RETURNORG
 
 AssetLoaderTable:
     .db :Tiles_BG_Comm
@@ -1386,7 +1373,7 @@ AssetLoaderTable:
 
 .ENDS
 
-.SECTION "Asset Table for NES GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8
+.SECTION "Asset Table for NES GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8 RETURNORG
 
 AssetLoaderTableNES:
     .db :Tiles_BG_Comm_NES

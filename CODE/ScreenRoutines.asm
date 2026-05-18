@@ -223,7 +223,7 @@ TaskLoop:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Area Palette VRAM Command Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Area Palette VRAM Command Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaPalette:
     .db $01, $02, $03, $04
 .ENDS
@@ -243,13 +243,13 @@ GetAreaPalette:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Backdrop Palette VRAM Command Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Backdrop Palette VRAM Command Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BGColorCtrl_Addr:
     .db $00, $00, $00, $00  ; PADDING
     .db $00, $09, $0a, $04  ; NIGHT, DAYSNOW, NIGHTSNOW, CASTLE
 .ENDS
 
-.SECTION "Background Colors for AreaTypes" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Background Colors for AreaTypes" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BackgroundColors:
     .db $39, $39, $00, $00  ; Backdrop colors for Area Type (Water, Overworld, Underground, Castle)
     .db $00, $39, $00, $00  ; Backdrop colors for color control override
@@ -257,7 +257,7 @@ BackgroundColors:
     ;.db $0f, $22, $0f, $0f ;used by background color control if set
 .ENDS
 
-.SECTION "PlayerColors (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PlayerColors (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlayerColors:
     .db $03, $0B, $06, $00       ;mario's colors
     .db $3F, $0B, $08, $00       ;luigi's colors
@@ -388,7 +388,7 @@ GetAlternatePalette1:
     CP A, $01
     JP NZ, IncSubtask
 ;
-    LD HL, (OptionBitflags)
+    LD A, (OptionBitflags)
     AND A, $01
     LD A, VRAMTBL_MUSHROOMPAL           ;if found, load appropriate palette
     JP Z, +

@@ -40,7 +40,7 @@ IncrementColumnPos:
 ;$07 - used to store terrain metatile
 ;$06-$07 - used to store block buffer address
 
-.SECTION "BG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   BACKGROUND SCENERY (0 - NO SCENERY, 1 - CLOUDS, 2 - CLOUDS/MOUNTAINS/GRASS, 3 - CLOUDS/TREES/FENCES)
 ;   ONLY 1,2,3 HAVE INDEXES
 ;   VALUES ARE OFFSETS INTO BackSceneryData
@@ -48,7 +48,7 @@ BSceneDataOffsets:
     .db $00, $30, $60, $90
 .ENDS
 
-.SECTION "BG Scenery Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BG Scenery Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   HIGH NIBBLE: HEIGHT, LOW NIBBLE: OFFSET-1 INTO BackSceneryMetatiles
 ;   0 = NO DATA (SKIP)
 BackSceneryData:
@@ -90,7 +90,7 @@ BackSceneryData:
     .db $1E, $00, $00, $00, $00, $00, $00, $00
 .ENDS
 
-.SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BackSceneryMetatiles:
 ;   Clouds
     .db MT_CLOUD_LEFT, MT_CLOUD_LEFTBOT, MT_BLANK               ; left
@@ -116,7 +116,7 @@ BackSceneryMetatiles:
 .ENDS
 ; ---
 
-.SECTION "FG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   FOREGROUND SCENERY (0 - NO SCENERY, 1 - WATER, 2 - BRICK WALL, 3 - OVER WATER)
 ;   ONLY 1,2,3 HAVE INDEXES
 ;   VALUES ARE OFFSETS INTO ForeSceneryData
@@ -125,7 +125,7 @@ FSceneDataOffsets:
     .dw ForeSceneryData@Water, ForeSceneryData@Wall, ForeSceneryData@OverWater
 .ENDS
 
-.SECTION "FG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   METATILE DATA
 ;   0 = NO DATA (SKIP)
 ForeSceneryData:
@@ -146,13 +146,13 @@ ForeSceneryData:
 .ENDS
 
 
-.SECTION "Terrain Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Terrain Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   BLOCK FOR AREATYPE (WATER,OVERWORLD,UNDERGROUND,CASTLE)
 TerrainMetatiles:
     .db MT_SOLIDBLK_WATER, MT_ROCK, MT_BRICK, MT_CASTLECEILING_L;MT_SOLIDBLK_WHITE
 .ENDS
 
-.SECTION "Terrain Render Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Terrain Render Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 TerrainRenderBits:
     .db %00000000, %00000000 ;no ceiling or floor
     .db %00000000, %00011000 ;no ceiling, floor 2
@@ -469,7 +469,7 @@ StrBlock:
     ; B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
     ; C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
 
-.SECTION "Metatile Index Collision Floor TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Metatile Index Collision Floor TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;numbers lower than these with the same attribute bits
 ;will not be stored in the block buffer
 BlockBuffLowBounds:
@@ -1153,7 +1153,7 @@ NoKillE:
 
 ;--------------------------------
 
-.SECTION "Frenzy ID Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Frenzy ID Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FrenzyIDData:
     .db OBJECTID_FlyCheepCheepFrenzy, OBJECTID_BBill_CCheep_Frenzy, OBJECTID_Stop_Frenzy
 .ENDS
@@ -1286,7 +1286,7 @@ NoUnder:
 
 ;--------------------------------
 
-.SECTION "Pulley & Rope Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Pulley & Rope Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;tiles used by pulleys and rope object
 PulleyRopeMetatiles:
     .db MT_PULLEY_LEFT, MT_ROPE_HORI, MT_PULLEY_RIGHT
@@ -1309,7 +1309,7 @@ RenderPul:
 ;--------------------------------
 ;$06(IYL) - used to store upper limit of rows for CastleObject
 
-.SECTION "Castle Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Castle Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 CastleMetatiles:
     .db MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_TOP_NONPRI, MT_CASTLE_TOP_NONPRI, MT_BLANK
     .db MT_BLANK, MT_CASTLE_WINDOWRIGHT, MT_CASTLE_BRICK, MT_CASTLE_WINDOWLEFT, MT_BLANK
@@ -1459,7 +1459,7 @@ IntroPipe:
     LD (MetatileBuffer+7), A
     RET
 
-.SECTION "Side Pipe Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Side Pipe Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SidePipeShaftData:
     ;used to control whether or not vertical pipe shaft
     ;is drawn, and if so, controls the metatile number
@@ -1533,7 +1533,7 @@ DrawSidePart:
     POP AF                              ;return flags for IntroPipe
     RET
 
-.SECTION "Vertical Pipe Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Vertical Pipe Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 VerticalPipeData:
     ;used by pipes that lead somewhere
     .db MT_WARPPIPE_TOP_RIGHT, MT_WARPPIPE_TOP_LEFT
@@ -1543,7 +1543,7 @@ VerticalPipeData:
     .db MT_PIPESHAFT_RIGHT, MT_PIPESHAFT_LEFT
 .ENDS
 
-.SECTION "Vertical Pipe Blocks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Vertical Pipe Blocks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 VerticalPipeBlocks:
     .db MT_ROCK, MT_SOLIDBLK_WHITE, MT_SOLIDBLK_3D
 .ENDS
@@ -1770,7 +1770,7 @@ DrawRope:
 
 ;--------------------------------
 
-.SECTION "Coin Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Coin Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 CoinMetatileData:
     .db MT_WATERCOIN, MT_COIN, MT_COIN, MT_COIN
 .ENDS
@@ -1789,7 +1789,7 @@ RowOfCoins:
 
 ;--------------------------------
 
-.SECTION "Castle Object Row and Metatile TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Castle Object Row and Metatile TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 C_ObjectRow:
     .db $00, $00                        ;padding
     .db $06, $07, $08
@@ -1830,7 +1830,7 @@ ColObj:
 
 ;--------------------------------
 
-.SECTION "Solid Block Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Solid Block Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SolidBlockMetatiles:
     .db MT_SOLIDBLK_WATER, MT_SOLIDBLK_3D, MT_SOLIDBLK_3D, MT_SOLIDBLK_WHITE
 
@@ -1838,7 +1838,7 @@ SolidBlockMetatilesPriority:
     .db MT_SOLIDBLK_WATER, MT_SOLIDBLK_3D_PRI, MT_SOLIDBLK_3D_PRI, MT_SOLIDBLK_WHITE
 .ENDS
 
-.SECTION "Brick Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Brick Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BrickMetatiles:
     .db MT_SEAPLANT, MT_SBRICK, MT_BRICK, MT_BRICK
     .db MT_CLOUDGND ;used only by row of bricks object
@@ -1949,12 +1949,12 @@ StrCOffset:
 
 ;--------------------------------
 
-.SECTION "Staircase Height TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Staircase Height TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 StaircaseHeightData:
     .db $07, $07, $06, $05, $04, $03, $02, $01, $00
 .ENDS
 
-.SECTION "Staircase Row TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Staircase Row TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 StaircaseRowData:
     .db $03, $03, $04, $05, $06, $07, $08, $09, $0a
 .ENDS
@@ -2059,7 +2059,7 @@ DrawQBlk:
 
 ;--------------------------------
 
-.SECTION "Hole Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Hole Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 HoleMetatiles:
     .db MT_WATER, MT_BLANK, MT_BLANK, MT_BLANK
 .ENDS
@@ -2233,7 +2233,7 @@ GetAreaObjYPosition:
 ;DE,IX,IY = 00/01,02/03,04/05
 ;HL = 06/07
 
-.SECTION "Metatile Graphics TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Metatile Graphics TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 MetatileGraphics:
     .dw Palette0_MTiles, Palette1_MTiles, Palette2_MTiles, Palette3_MTiles
 .ENDS
@@ -2469,7 +2469,7 @@ GetAreaDataAddrs:
     RET
 
 
-.SECTION "World Offsets into AreaAddrOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "World Offsets into AreaAddrOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   ----- GAME LEVEL POINTERS -----
 WorldAddrOffsets:
     .dw World1Areas, World2Areas
@@ -2478,7 +2478,7 @@ WorldAddrOffsets:
     .dw World7Areas, World8Areas
 .ENDS
 
-.SECTION "Level Offsets into Area/Enemy DataAddr and HOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Level Offsets into Area/Enemy DataAddr and HOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaAddrOffsets:
 ;   D6,D5 ARE AREA TYPE
 ;   D4,D3,D2,D1,D0 ARE INDEX OF AREATYPE LIST
@@ -2500,13 +2500,13 @@ World8Areas: .db $30, $32, $21, $65
 ;water area (8-4)        - 02
 ;warp zone area (4-2)    - 2f
 
-.SECTION "AreaType Offsets into EnemyDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "AreaType Offsets into EnemyDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   STARTING INDEXES OF AREATYPES (WATER, OVERWORLD, UNDERGROUND, CASTLE)
 EnemyAddrHOffsets:
     .db $1f, $06, $1c, $00
 .ENDS
 
-.SECTION "Enemy Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Enemy Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 EnemyDataAddr:
     .dw E_CastleArea1, E_CastleArea2, E_CastleArea3, E_CastleArea4, E_CastleArea5, E_CastleArea6
     .dw E_GroundArea1, E_GroundArea2, E_GroundArea3, E_GroundArea4, E_GroundArea5, E_GroundArea6
@@ -2516,13 +2516,13 @@ EnemyDataAddr:
     .dw E_UndergroundArea2, E_UndergroundArea3, E_WaterArea1, E_WaterArea2, E_WaterArea3
 .ENDS
 
-.SECTION "AreaType Offsets into AreaDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "AreaType Offsets into AreaDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   STARTING INDEXES OF AREATYPES (WATER, OVERWORLD, UNDERGROUND, CASTLE)
 AreaDataHOffsets:
     .db $00, $03, $19, $1c
 .ENDS
 
-.SECTION "Area Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Area Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaDataAddr:
     .dw L_WaterArea1, L_WaterArea2, L_WaterArea3, L_GroundArea1, L_GroundArea2, L_GroundArea3
     .dw L_GroundArea4, L_GroundArea5, L_GroundArea6, L_GroundArea7, L_GroundArea8, L_GroundArea9

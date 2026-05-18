@@ -12,21 +12,25 @@
 
 ;   Macros for BG collision
 .MACRO BlockBufferColli_Head
-    XOR A
-    CALL BlockBufferColli_Side@SetPlayerOffset
+    ;XOR A
+    ;CALL BlockBufferColli_Side@SetPlayerOffset
+    LD H, >Player_Y_Position
+    CALL BlockBufferCollision_A0
 .ENDM
 
 .MACRO BlockBufferColli_Feet
     ;INC C
-    XOR A
-    CALL BlockBufferColli_Side@SetPlayerOffset
+    ;XOR A
+    ;CALL BlockBufferColli_Side@SetPlayerOffset
+    LD H, >Player_Y_Position
+    CALL BlockBufferCollision_A0
 .ENDM
 
 .MACRO ChkUnderEnemy
-    XOR A
-    LD BC, $0818
-    ;LD C, $15
-    CALL BlockBufferChk_Enemy
+    ;XOR A
+    LD BC, $0818 ;LD C, $15
+    ;CALL BlockBufferChk_Enemy
+    CALL BlockBufferCollision_A0
 .ENDM
 
 ;   Macros for sprite drawing

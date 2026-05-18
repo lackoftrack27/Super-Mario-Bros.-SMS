@@ -139,7 +139,7 @@ SecondaryGameSetup:
     INC (HL)
     RET
 
-.SECTION "Default Sprite Offsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Default Sprite Offsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 DefaultSprOffsets:
     ;.db $04, $30, $48, $60, $78, $90, $a8, $c0
     ;.db $d8, $e8, $24, $f8, $fc, $28, $2c
@@ -280,7 +280,7 @@ UpdScrollVar:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Animated Background Tile Initializations" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Animated Background Tile Initializations" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 AnimatedBGTileInits:
 @Coin:
     .dw $3D00 | VRAMWRITE       ; VRAM ADR
@@ -319,7 +319,7 @@ AnimatedBGTileInits:
     .db $08, $10, $10
 .ENDS
 
-.SECTION "Animated Background Tile Tables" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
+.SECTION "Animated Background Tile Tables" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
 AnimiatedBGTiles:
 @Coin:
     .dw CoinFrame0, CoinFrame1, CoinFrame2, CoinFrame1
@@ -509,12 +509,12 @@ ColorRotation:
     LD (HL), $00
     RET
 
-.SECTION "BG Color Rotation Palette" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
+.SECTION "BG Color Rotation Palette" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
 BGColorRotatePalette:
     .db $0B, $0B, $0B, $06, $01, $06
 .ENDS
 
-.SECTION "SPR Color Rotation Palettes" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
+.SECTION "SPR Color Rotation Palettes" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
 SPRColorRotatePalettes:
     .db $03, $0B, $06, $00, $2A, $3F, $0B, $00, $03, $3F, $0B, $00, $00, $3F, $2A, $00
     .db $03, $0B, $06, $00, $08, $3F, $0B, $00, $03, $3F, $0B, $00, $00, $2B, $06, $00
@@ -615,7 +615,7 @@ InitPlatScrl:
     LD (Platform_X_Scroll), A
     RET
 
-.SECTION "X_SubtracterData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "X_SubtracterData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 X_SubtracterData:
     .db $00, $10
 
@@ -706,7 +706,7 @@ BublLoop:
     DJNZ BublLoop                   ;do this until all three are handled
     RET
 
-.SECTION "FireballXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FireballXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 
 FireballXSpdData:
 .IF PALBUILD == $00
@@ -773,8 +773,9 @@ RunFB:
     LD BC, $6005                     ;PAL diff: Faster acceleration & max speed to compensate FPS difference
     .ENDIF
     
-    XOR A
-    CALL ImposeGravity              ;do sub here to impose gravity on fireball and move vertically
+    ;XOR A
+    ;CALL ImposeGravity              ;do sub here to impose gravity on fireball and move vertically
+    CALL ImposeGravity_A0
     CALL MoveObjectHorizontally     ;do another sub to move it horizontally
 ;
     ;LD HL, (ObjectOffset)
@@ -863,7 +864,7 @@ Y_Bubl:
     LD (HL), A                      ;store as new vertical coordinate for air bubble
     RET
 
-.SECTION "Bubble_MForceData & BubbleTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Bubble_MForceData & BubbleTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 Bubble_MForceData:
     .db $ff, $50
 
@@ -1155,13 +1156,14 @@ WhPull:
     LD A, $01                       ;set whirlpool flag to be used later
     LD (Whirlpool_Flag), A
     LD BC, $1001                    ;set vertical movement force and maximum vertical speed
-    XOR A                           ;clear flag to only apply gravity downward
     LD H, >Player_Y_Position        ;set X for player offset
-    JP ImposeGravity                ;jump to put whirlpool effect on player vertically, do not return
+    ;XOR A                           ;clear flag to only apply gravity downward
+    ;JP ImposeGravity                ;jump to put whirlpool effect on player vertically, do not return
+    JP ImposeGravity_A0
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "HammerEnemyOfsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "HammerEnemyOfsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 HammerEnemyOfsData:
     ; .db $04, $04, $04, $05, $05, $05
     ; .db $06, $06, $06
@@ -1170,7 +1172,7 @@ HammerEnemyOfsData:
     .db $C7, $C7, $C7
 .ENDS
 
-.SECTION "HammerXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "HammerXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 
 HammerXSpdData:
 .IF PALBUILD == $00
@@ -1243,8 +1245,9 @@ ProcHammerObj:
     LD BC, $2304                            ;PAL diff: Faster acceleration to compensate FPS difference
     .ENDIF
     
-    XOR A                                   ;set A to impose gravity on hammer
-    CALL ImposeGravity                      ;do sub to impose gravity on hammer and move vertically
+    ;XOR A                                   ;set A to impose gravity on hammer
+    ;CALL ImposeGravity                      ;do sub to impose gravity on hammer and move vertically
+    CALL ImposeGravity_A0
     CALL MoveObjectHorizontally             ;do sub to move it horizontally
     CALL PlayerHammerCollision              ;handle collisions
     JP RunHSubs                             ;branch to essential subroutines
@@ -1337,7 +1340,7 @@ ChkBowserF:
 
 ;--------------------------------
 
-.SECTION "Loop Command Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Loop Command Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ; LoopCmdWorldNumber:
 ;     .db $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
 
@@ -1798,7 +1801,8 @@ WrCMTile:
     ;LD A, $01
     LD BC, $0410
     ;LD C, $1B                               ;set C to offset to get block at ($04, $10) of coordinates
-    CALL BlockBufferCollision               ;do a sub to get block buffer address set, return contents
+    ;CALL BlockBufferCollision               ;do a sub to get block buffer address set, return contents
+    CALL BlockBufferCollision_A1
     LD A, IXL
     CP A, $D0                               ;if vertical high nybble offset beyond extent of
     RET NC                                  ;current block buffer, branch to leave, do not write
@@ -2019,12 +2023,12 @@ MovePodoboo:
 ;HammerThrowTmrData:
 ;    .db $30, $1c
 
-.SECTION "XSpeedAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "XSpeedAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 XSpeedAdderData:
     .db $00, $e8, $00, $18
 .ENDS
 
-.SECTION "RevivedXSpeed" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "RevivedXSpeed" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 RevivedXSpeed:
     .db $08, $f8, $0c, $f4
 .ENDS
@@ -2738,7 +2742,7 @@ YPDiff:
 ;vertical adder is same + 8 bytes, two's compliment
 ;if greater than $08 for proper oscillation
 
-.SECTION "FirebarPosLookupTbl" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FirebarPosLookupTbl" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FirebarPosLookupTbl:
     .db $00, $01, $03, $04, $05, $06, $07, $07, $08
     .db $00, $03, $06, $09, $0b, $0d, $0e, $0f, $10
@@ -3034,7 +3038,7 @@ SetSDir:
 
 ;--------------------------------
 
-.SECTION "PRandomSubtracter/FlyCCBPriority" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PRandomSubtracter/FlyCCBPriority" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PRandomSubtracter:
     .db $f8, $a0, $70, $bd, $00
 FlyCCBPriority:
@@ -3055,8 +3059,9 @@ MoveFlyingCheepCheep:
 ;
     CALL MoveEnemyHorizontally
     LD BC, $0D05
-    XOR A
-    CALL ImposeGravity
+    ;XOR A
+    ;CALL ImposeGravity
+    CALL ImposeGravity_A0
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
@@ -3092,8 +3097,9 @@ AddCCF:
     CALL MoveEnemyHorizontally
     LD BC, $1705
 FlyCC:
-    XOR A
-    JP ImposeGravity
+    ;XOR A
+    ;JP ImposeGravity
+    JP ImposeGravity_A0
 .ENDIF
 
 ;--------------------------------
@@ -3244,7 +3250,7 @@ SPixelLak:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "BridgeCollapseData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BridgeCollapseData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BridgeCollapseData:
     .dw $6374   ;axe
     .dw $63F0   ;chain
@@ -3326,7 +3332,7 @@ RemoveBridge:
 
 ;--------------------------------
 
-.SECTION "PRandomRange" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PRandomRange" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PRandomRange:
     .db $21, $41, $11, $31
 .ENDS
@@ -3748,7 +3754,7 @@ BowserGfxRet:
     LD HL, (ObjectOffset)
     RET
 
-.SECTION "Bowser Sprite Map Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Bowser Sprite Map Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserSpriteFrames:
     .db $96, $97, $9A, $9B, $9E, $9F ; FRONT FOOT, MOUTH OPEN
     .db $98, $99, $9C, $9D, $A0, $A1
@@ -3823,7 +3829,7 @@ BowserGfxDraw_NES:
     JP SprObjectOffscrChk
 
 
-.SECTION "Bowser Sprite Map Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Bowser Sprite Map Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserSpriteFrames_NES:
     .db $93, $94, $95, $96, $00, $99
     .db $97, $98, $9A, $9B, $9C, $9D
@@ -3861,7 +3867,7 @@ BowserSpriteFramesHFlip_NES:
 ;$00(B) - used to hold movement force and tile number
 ;$01 - used to hold sprite attribute data
 
-.SECTION "FlameTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlameTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlameTimerData:
 
     .IF PALBUILD == $00
@@ -3871,7 +3877,7 @@ FlameTimerData:
     .ENDIF
 .ENDS
 
-.SECTION "FlameTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlameTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlameTileData:
     .db $4B, $4C, $4D   ; NORMAL
     .db $4E, $4F, $50   ; VFLIP
@@ -4924,7 +4930,7 @@ ExtendLB:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "FloateyNumTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FloateyNumTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;data is used as tiles for numbers
 ;that appear when you defeat enemies
 FloateyNumTileData:
@@ -4942,7 +4948,7 @@ FloateyNumTileData:
     .db $35, $36    ; "1-UP"
 .ENDS
 
-.SECTION "ScoreUpdateData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ScoreUpdateData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;high nybble is digit number, low nybble is number to
 ;add to the digit of the player's score
 ScoreUpdateData:
@@ -5150,7 +5156,7 @@ TimeUpOn:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "FlagpoleScoreMods, FlagpoleScoreDigits" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlagpoleScoreMods, FlagpoleScoreDigits" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlagpoleScoreDigits:
     .db $03, $03, $04, $04, $04
 
@@ -5351,7 +5357,7 @@ NextBUpd:
 ;$04, $05 - name table address low/high
 ;$06, $07(DE) - block buffer address low/high
 
-.SECTION "BlockGfxData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BlockGfxData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BlockGfxData:
     ;    TL   TR   BL   BR
     ;.db $45, $45, $47, $47          ; TILES FOR SHINY BRICK METATILE
@@ -5671,8 +5677,9 @@ ProcJumpCoin:
 ;
 JCoinRun:
     LD BC, $5006                        ;set downward movement amount & max speed
-    XOR A                               ;set A to impose gravity on jumping coin
-    CALL ImposeGravity                  ;do sub to move coin vertically and impose gravity on it
+    ;XOR A                               ;set A to impose gravity on jumping coin
+    ;CALL ImposeGravity                  ;do sub to move coin vertically and impose gravity on it
+    CALL ImposeGravity_A0
 ;
     ;LD HL, (ObjectOffset)               ;get original misc object offset
     LD L, <Misc_Y_Speed
@@ -5843,7 +5850,10 @@ UseAdder:
     LD A, (HL)                      ;get whatever number's here
     ADD A, D                        ;add low nybble moved to high
     LD (HL), A                      ;store result here
-    PUSH AF
+    LD A, $00                       ;init A
+    RLA                             ;rotate carry into d0
+    LD D, A                         ;store in D
+    RRA                             ;rotate d0 back onto carry
 ;
     LD L, <SprObject_X_Position
     LD A, (HL)
@@ -5855,9 +5865,8 @@ UseAdder:
     ADC A, E                        ;add carry plus other saved value to the
     LD (HL), A                      ;object's page location and save
 ;
-    POP AF                          ;pull old carry from stack and add
-    LD A, C                         ;to high nybble moved to low
-    ADC A, $00
+    LD A, D                         ;pull old carry from D and add
+    ADD A, C                        ;to high nybble moved to low
     RET
     
 ;-------------------------------------------------------------------------------------
@@ -5882,8 +5891,9 @@ NoJSChk:
     LD C, $05                       ;PAL diff: Faster maximum vertical speed to compensate FPS difference
     .ENDIF
 
-    XOR A                           ;set value to move downwards
-    JP ImposeGravity                ;jump to the code that actually moves it
+    ;XOR A                           ;set value to move downwards
+    ;JP ImposeGravity                ;jump to the code that actually moves it
+    JP ImposeGravity_A0
 
 ;--------------------------------
 
@@ -5903,30 +5913,36 @@ SetHiMax:
     .ELSE
     LD C, $04                       ;PAL diff: Faster maximum speed to compensate FPS difference
     .ENDIF
-    XOR A
-    JP ImposeGravity
+    ;XOR A
+    ;JP ImposeGravity
+    JP ImposeGravity_A0
 
 
 ;--------------------------------
 
 MoveRedPTroopaDown:
-    XOR A                           ;set value to move downwards
-    JP MoveRedPTroopa               ;skip to movement routine
-
-MoveRedPTroopaUp:
-    LD A, $01                       ;set value to move upwards
-
-MoveRedPTroopa:
+    ;XOR A                           ;set value to move downwards
+    ;JP MoveRedPTroopa               ;skip to movement routine
     LD BC, $0302                    ;set downward movement amount & max speed here
     LD D, $06                       ;set upward movement amount here
-    JP ImposeGravity                ;jump to move this thing
+    JP ImposeGravity_A0
+
+MoveRedPTroopaUp:
+    ;LD A, $01                       ;set value to move upwards
+
+;MoveRedPTroopa:
+    LD BC, $0302                    ;set downward movement amount & max speed here
+    LD D, $06                       ;set upward movement amount here
+    ;JP ImposeGravity                ;jump to move this thing
+    JP ImposeGravity_A1
 
 ;--------------------------------
 
 MoveDropPlatform:
     LD BC, $7F02                    ;set movement amount & max speed for drop platform
-    XOR A
-    JP ImposeGravity
+    ;XOR A
+    ;JP ImposeGravity
+    JP ImposeGravity_A0
     
 
 MoveEnemySlowVert:
@@ -5936,8 +5952,9 @@ MoveEnemySlowVert:
     LD BC, $1202                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-    XOR A
-    JP ImposeGravity
+    ;XOR A
+    ;JP ImposeGravity
+    JP ImposeGravity_A0
 
 ;--------------------------------
 
@@ -5949,8 +5966,9 @@ MoveJ_EnemyVertically:
     LD BC, $1F04                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
 
-    XOR A                           ;set value to move downwards
-    JP ImposeGravity                ;jump to the code that actually moves it
+    ;XOR A                           ;set value to move downwards
+    ;JP ImposeGravity                ;jump to the code that actually moves it
+    JP ImposeGravity_A0
 
 ;--------------------------------
 
@@ -5960,18 +5978,22 @@ ImposeGravityBlock:
     .ELSE
     LD BC, $5808                    ;PAL diff: Faster speed to compensate FPS difference
     .ENDIF
-    XOR A                           ;set value to move downwards
-    JP ImposeGravity                ;jump to the code that actually moves it
+    ;XOR A                           ;set value to move downwards
+    ;JP ImposeGravity                ;jump to the code that actually moves it
+    JP ImposeGravity_A0
 
 ;--------------------------------
 
 MovePlatformDown:
-    XOR A
-    JP MovePlatformUp@SaveVal
+    ;XOR A
+    ;JP MovePlatformUp@SaveVal
+    LD BC, $0503                    ;save downward movement amount & max speed here
+    LD D, $0A                       ;save upward movement amount here
+    JP ImposeGravity_A0
 
 MovePlatformUp:
-    LD A, $01
-@SaveVal:
+    ;LD A, $01
+;@SaveVal:
     LD BC, $0503                    ;save downward movement amount & max speed here
     LD D, $0A                       ;save upward movement amount here
     
@@ -5986,12 +6008,87 @@ MovePlatformUp:
 
 ;   A - FLAG TO MOVE UPWARD
 ;   HL - OBJECT OFFSET
-ImposeGravity:
-    PUSH AF                         ;push value to stack
-;
+; ImposeGravity:
+;     PUSH AF                         ;push value to stack
+; ;
+;     LD L, <SprObject_Y_MoveForce    ;add value in movement force to contents of dummy variable
+;     LD A, (HL)
+;     LD L, <SprObject_YMF_Dummy
+;     ADD A, (HL)
+;     LD (HL), A
+; ;
+;     LD E, $00                       ;set E to zero by default
+;     LD L, <SprObject_Y_Speed        ;get current vertical speed
+;     LD A, (HL)
+;     BIT 7, A
+;     JP Z, AlterYP                   ;if currently moving downwards, do not decrement Y
+;     DEC E                           ;otherwise decrement E
+; AlterYP:
+;     LD L, <SprObject_Y_Position
+;     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
+;     LD (HL), A                      ;store as new vertical position
+; ;
+;     INC L                           ; <SprObject_Y_HighPos
+;     LD A, (HL)
+;     ADC A, E                        ;add carry plus contents of $07 to vertical high byte
+;     LD (HL), A                      ;store as new vertical high byte
+; ;
+;     LD L, <SprObject_Y_MoveForce
+;     LD A, (HL)
+;     ADD A, B                        ;add downward movement amount to contents of SprObject_Y_MoveForce
+;     LD (HL), A
+; ;
+;     LD L, <SprObject_Y_Speed        ;add carry to vertical speed and store
+;     LD A, (HL)
+;     ADC A, $00
+;     LD (HL), A
+; ;
+;     CP A, C                         ;compare to maximum speed
+;     JP M, ChkUpM                    ;if less than preset value, skip this part
+;     LD L, <SprObject_Y_MoveForce
+;     LD A, (HL)
+;     CP A, $80                       ;if less positively than preset maximum, skip this part
+;     JP C, ChkUpM
+;     LD (HL), $00                    ;clear fractional
+;     LD L, <SprObject_Y_Speed
+;     LD (HL), C                      ;keep vertical speed within maximum value
+; ;
+; ChkUpM:
+;     POP AF                          ;get value from stack
+;     OR A
+;     RET Z                           ;if set to zero, branch to leave
+; ;
+;     LD A, C                         ;otherwise get two's compliment of maximum speed
+;     NEG
+;     LD C, A
+; ;
+;     LD L, <SprObject_Y_MoveForce
+;     LD A, (HL)                      ;subtract upward movement amount from contents
+;     SUB A, D                        ;of movement force, note that $01 is twice as large as $00,
+;     LD (HL), A                      ;thus it effectively undoes add we did earlier
+; ;
+;     LD L, <SprObject_Y_Speed
+;     LD A, (HL)
+;     SBC A, $00                      ;subtract borrow from vertical speed and store
+;     LD (HL), A
+; ;
+;     CP A, C                         ;compare vertical speed to two's compliment
+;     RET P                           ;if less negatively than preset maximum, skip this part
+; ;
+;     LD L, <SprObject_Y_MoveForce
+;     LD A, (HL)                      ;check if fractional part is above certain amount,
+;     CP A, $80
+;     RET NC                          ;and if so, branch to leave
+; ;   
+;     LD (HL), $FF                    ;clear fractional
+;     LD L, <SprObject_Y_Speed        ;keep vertical speed within maximum value
+;     LD (HL), C
+;     RET
+
+ImposeGravity_A1:
     LD L, <SprObject_Y_MoveForce    ;add value in movement force to contents of dummy variable
     LD A, (HL)
-    LD L, <SprObject_YMF_Dummy
+    DEC L                           ;<SprObject_YMF_Dummy
     ADD A, (HL)
     LD (HL), A
 ;
@@ -5999,9 +6096,9 @@ ImposeGravity:
     LD L, <SprObject_Y_Speed        ;get current vertical speed
     LD A, (HL)
     BIT 7, A
-    JP Z, AlterYP                   ;if currently moving downwards, do not decrement Y
+    JP Z, +                         ;if currently moving downwards, do not decrement Y
     DEC E                           ;otherwise decrement E
-AlterYP:
++:
     LD L, <SprObject_Y_Position
     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
     LD (HL), A                      ;store as new vertical position
@@ -6022,21 +6119,17 @@ AlterYP:
     LD (HL), A
 ;
     CP A, C                         ;compare to maximum speed
-    JP M, ChkUpM                    ;if less than preset value, skip this part
+    JP M, +                         ;if less than preset value, skip this part
     LD L, <SprObject_Y_MoveForce
     LD A, (HL)
     CP A, $80                       ;if less positively than preset maximum, skip this part
-    JP C, ChkUpM
+    JP C, +
     LD (HL), $00                    ;clear fractional
     LD L, <SprObject_Y_Speed
     LD (HL), C                      ;keep vertical speed within maximum value
 ;
-ChkUpM:
-    POP AF                          ;get value from stack
-    OR A
-    RET Z                           ;if set to zero, branch to leave
-;
-    LD A, C                         ;otherwise get two's compliment of maximum speed
++:
+    LD A, C                         ;get two's compliment of maximum speed
     NEG
     LD C, A
 ;
@@ -6061,6 +6154,50 @@ ChkUpM:
     LD (HL), $FF                    ;clear fractional
     LD L, <SprObject_Y_Speed        ;keep vertical speed within maximum value
     LD (HL), C
+    RET
+
+ImposeGravity_A0:
+    LD L, <SprObject_Y_MoveForce    ;add value in movement force to contents of dummy variable
+    LD A, (HL)
+    DEC L                           ;<SprObject_YMF_Dummy
+    ADD A, (HL)
+    LD (HL), A
+;
+    LD E, $00                       ;set E to zero by default
+    LD L, <SprObject_Y_Speed        ;get current vertical speed
+    LD A, (HL)
+    BIT 7, A
+    JP Z, +                         ;if currently moving downwards, do not decrement Y
+    DEC E                           ;otherwise decrement E
++:
+    LD L, <SprObject_Y_Position
+    ADC A, (HL)                     ;add vertical position to vertical speed plus carry
+    LD (HL), A                      ;store as new vertical position
+;
+    INC L                           ; <SprObject_Y_HighPos
+    LD A, (HL)
+    ADC A, E                        ;add carry plus contents of $07 to vertical high byte
+    LD (HL), A                      ;store as new vertical high byte
+;
+    LD L, <SprObject_Y_MoveForce
+    LD A, (HL)
+    ADD A, B                        ;add downward movement amount to contents of SprObject_Y_MoveForce
+    LD (HL), A
+;
+    LD L, <SprObject_Y_Speed        ;add carry to vertical speed and store
+    LD A, (HL)
+    ADC A, $00
+    LD (HL), A
+;
+    CP A, C                         ;compare to maximum speed
+    RET M                           ;if less than preset value, skip this part
+    LD L, <SprObject_Y_MoveForce
+    LD A, (HL)
+    CP A, $80                       ;if less positively than preset maximum, skip this part
+    RET C
+    LD (HL), $00                    ;clear fractional
+    LD L, <SprObject_Y_Speed
+    LD (HL), C                      ;keep vertical speed within maximum value
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -6134,7 +6271,7 @@ NoFToECol:
     LD H, D
     RET
 
-.SECTION "BowserIdentities" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BowserIdentities" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserIdentities:
     .db OBJECTID_Goomba, OBJECTID_GreenKoopa, OBJECTID_BuzzyBeetle
     .db OBJECTID_Spiny, OBJECTID_Lakitu, OBJECTID_Bloober
@@ -6479,7 +6616,7 @@ HandlePECollisions:
     LD A, (BC)
     JP SetupFloateyNumber
 
-.SECTION "KickedShellPtsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "KickedShellPtsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 KickedShellPtsData:
     .db $0a, $06, $04
 .ENDS
@@ -6574,7 +6711,7 @@ KillPlayer:
     LD A, $0B
     JP SetKRout
 
-.SECTION "StompedEnemyPtsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "StompedEnemyPtsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 StompedEnemyPtsData:
     .db $02, $06, $05, $06
 .ENDS
@@ -6737,7 +6874,7 @@ SetupFloateyNumber:
 ;-------------------------------------------------------------------------------------
 ;$01(N/A) - used to hold enemy offset for second enemy
 
-.SECTION "SetBitsMask" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "SetBitsMask" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SetBitsMask:
     .db %10000000, %01000000, %00100000, %00010000, %00001000, %00000100, %00000010
 .ENDS
@@ -7239,8 +7376,8 @@ SetPSte:
     LD (Player_State), A                ;set whatever player state is appropriate
 ChkOnScr:
     LD A, (Player_Y_HighPos)
-    DEC A
-    RET NZ
+    DEC A                               ;check player's vertical high byte for still on the screen
+    RET NZ                              ;branch to leave if not
 ;
     LD A, $FF                           ;initialize player's collision flag
     LD (Player_CollisionBits), A
@@ -7528,7 +7665,7 @@ ChkGERtn:
     LD (GameEngineSubroutine), A        ;otherwise set sideways pipe entry routine to run
     RET
 
-.SECTION "AreaChangeTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "AreaChangeTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaChangeTimerData:
 
     .IF PALBUILD == $00
@@ -7568,7 +7705,7 @@ ErACM:
 ;$04(IXH) - low nybble of horizontal coordinate from block buffer
 ;$06-$07 - block buffer address
 
-.SECTION "ClimbXPosAdder/ClimbPLocAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ClimbXPosAdder/ClimbPLocAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ClimbXPosAdder:
     .db $00 ; PADDING
     .db $f9, $07
@@ -7577,7 +7714,7 @@ ClimbPLocAdder:
     .db $ff, $00
 .ENDS
 
-.SECTION "FlagpoleYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlagpoleYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlagpoleYPosData:
     .db $18, $22, $50, $68, $90
 .ENDS
@@ -7837,7 +7974,7 @@ ExIPM:
 
 ;--------------------------------
 
-.SECTION "SolidMTileUpperExt" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "SolidMTileUpperExt" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SolidMTileUpperExt:
     .db MT_WARPPIPE_TOP_LEFT, MT_SOLIDBLK_3D, MT_CLOUDGND, MT_EMPTYBLK
 .ENDS
@@ -7855,7 +7992,7 @@ CheckForSolidMTiles:
     CP A, (HL)                      ;compare current metatile with solid metatiles
     RET
 
-.SECTION "ClimbMTileUpperExt" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ClimbMTileUpperExt" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ClimbMTileUpperExt:
     .db MT_FLAGPOLE_BALL, MT_UNUSEDFLAG, MT2_CLIMBSTART, MT3_CLIMBSTART
 .ENDS
@@ -7889,7 +8026,7 @@ CoinSd:
 ;-------------------------------------------------------------------------------------
 ;$06-$07 - address from block buffer routine
 
-.SECTION "EnemyBGCStateData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "EnemyBGCStateData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 EnemyBGCStateData:
     .db $01, $01, $02, $02, $02, $05
 .ENDS
@@ -8177,8 +8314,9 @@ DoEnemySideCheck:
     LD B, $10   ; $1014
     ;INC C
 RightChk:
-    LD A, $01
-    CALL BlockBufferChk_Enemy
+    ;LD A, $01
+    ;CALL BlockBufferChk_Enemy
+    CALL BlockBufferCollision_A1
     RET Z
     CALL ChkForNonSolids
     RET Z
@@ -8340,8 +8478,9 @@ FireballBGCollision:
 ;
     ; BlockBufferChk_FBall
     LD BC, $0408 ;LD C, $1A
-    XOR A
-    CALL BlockBufferCollision               ;do fireball to background collision detection on bottom of it
+    ;XOR A
+    ;CALL BlockBufferCollision               ;do fireball to background collision detection on bottom of it
+    CALL BlockBufferCollision_A0
     JP Z, ClearBounceFlag                   ;if nothing underneath fireball, branch
 ;
     CALL ChkForNonSolids                    ;check for non-solid metatiles
@@ -8386,7 +8525,7 @@ InitFireballExplode:
 
 ;this data added to relative coordinates of sprite objects
 ;stored in order: left edge, top edge, right edge, bottom edge
-.SECTION "BoundBoxCtrlData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BoundBoxCtrlData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BoundBoxCtrlData:
     .db $02, $08, $0e, $20 
     .db $03, $14, $0d, $20
@@ -8712,10 +8851,10 @@ CollisionFound:
 ;     XOR A
 ;     JP BlockBufferColli_Side@SetPlayerOffset
 
-BlockBufferColli_Side:
-    LD A, $01
-@SetPlayerOffset:
-    LD H, >Player_Y_Position
+; BlockBufferColli_Side:
+;     LD A, $01
+; @SetPlayerOffset:
+;     LD H, >Player_Y_Position
 
 
 ;   A - FLAG TO RETURN EITHER H OR V COORDINATES
@@ -8725,35 +8864,82 @@ BlockBufferColli_Side:
 ;   BC - BlockBuffer_X_Adder/BlockBuffer_Y_Adder (INPUT)
 ;   HL - OBJECT OFFSET (INPUT)
 ;   DE - BLOCK BUFFER ADDRESS
-BlockBufferChk_Enemy:
-BlockBufferCollision:
-    PUSH AF                             ;save contents of A to stack
-;
+;BlockBufferChk_Enemy:
+; BlockBufferCollision:
+;     EX AF, AF'                          ;save contents of A to stack
+; ;
+;     LD A, B                             ;add horizontal coordinate
+;     LD L, <SprObject_X_Position         ;of object to x adder
+;     ADD A, (HL)
+;     LD E, A                             ;store here
+; ;
+;     DEC L                               ;<SprObject_PageLoc
+;     LD A, (HL)
+;     ADC A, $00                          ;add carry to page location
+; ;     RRCA                                ;move LSB to carry
+; ;     LD A, E                             ;get stored value
+; ;     RRA                                 ;rotate carry to MSB of A
+; ;     RRCA                                ;and effectively move high nybble to
+; ;     RRCA                                ;lower, LSB which became MSB will be
+; ;     RRCA                                ;d4 at this point
+; ;     ;;;
+; ;     ;CALL GetBlockBufferAddr             ;get address of block buffer into $06, $07
+; ;     LD DE, Block_Buffer_1               ;get address of block buffer into $06, $07
+; ;     BIT 4, A
+; ;     JP Z, +
+; ;     LD E, <Block_Buffer_2
+; ; +:
+; ;     AND A, $0F                          ;mask out high nybble
+; ;     addAToDE8_M                         ;add to low byte  
+
+;     AND A, $01
+;     ADD A, >BlockBufferLUT
+;     LD D, A
+;     LD A, (DE)
+;     LD E, A
+;     LD D, >Block_Buffer_1
+
+;     LD (Temp_Bytes + $06), DE
+;     ;;;
+; ;
+;     LD A, C
+;     LD L, <SprObject_Y_Position         ;get vertical coordinate of object
+;     ADD A, (HL)                         ;add it to y adder
+;     AND A, %11110000                    ;mask out low nybble
+;     SUB A, $20                          ;subtract 32 pixels for the status bar
+;     LD IXL, A                           ;store result here
+; ;
+;     addAToDE_M
+; ;
+;     EX AF, AF' ;POP AF                              ;pull A from stack
+;     OR A
+;     JP Z, RetC                          ;if A = 1, load horizontal coordinate
+;     LD L, <SprObject_X_Position         ;if A = 0, load vertical coordinate
+; RetC:
+;     LD A, (HL)
+;     AND A, %00001111                    ;and mask out high nybble
+;     LD IXH, A                           ;store masked out result here
+;     LD A, (DE)                          ;get content of block buffer
+;     OR A
+;     RET
+
+
+BlockBufferCollision_A0:
     LD A, B                             ;add horizontal coordinate
     LD L, <SprObject_X_Position         ;of object to x adder
     ADD A, (HL)
-    LD IYL, A                           ;store here
+    LD E, A                             ;store here
 ;
     DEC L                               ;<SprObject_PageLoc
     LD A, (HL)
     ADC A, $00                          ;add carry to page location
-    RRCA                                ;move LSB to carry
-    LD A, IYL                           ;get stored value
-    RRA                                 ;rotate carry to MSB of A
-    RRCA                                ;and effectively move high nybble to
-    RRCA                                ;lower, LSB which became MSB will be
-    RRCA                                ;d4 at this point
-    ;;;
-    ;CALL GetBlockBufferAddr             ;get address of block buffer into $06, $07
-    LD DE, Block_Buffer_1               ;get address of block buffer into $06, $07
-    BIT 4, A
-    JP Z, +
-    LD E, <Block_Buffer_2
-+:
-    AND A, $0F                          ;mask out high nybble
-    addAToDE8_M                         ;add to low byte    
+    AND A, $01
+    ADD A, >BlockBufferLUT
+    LD D, A
+    LD A, (DE)
+    LD E, A
+    LD D, >Block_Buffer_1
     LD (Temp_Bytes + $06), DE
-    ;;;
 ;
     LD A, C
     LD L, <SprObject_Y_Position         ;get vertical coordinate of object
@@ -8764,17 +8950,87 @@ BlockBufferCollision:
 ;
     addAToDE_M
 ;
-    POP AF                              ;pull A from stack
-    OR A
-    JP Z, RetC                          ;if A = 1, load horizontal coordinate
-    LD L, <SprObject_X_Position         ;if A = 0, load vertical coordinate
-RetC:
-    LD A, (HL)
+    LD A, (HL)                          ;load vertical coordinate
     AND A, %00001111                    ;and mask out high nybble
     LD IXH, A                           ;store masked out result here
     LD A, (DE)                          ;get content of block buffer
     OR A
     RET
+
+BlockBufferColli_Side:
+    LD H, >Player_Y_Position
+BlockBufferCollision_A1:
+    LD L, <SprObject_X_Position
+    LD A, (HL)                          ;load horizontal coordinate
+    AND A, %00001111                    ;and mask out high nybble
+    LD IXH, A                           ;store masked out result here
+;
+    LD A, B                             ;add horizontal coordinate
+    ADD A, (HL)                         ;of object to x adder
+    LD E, A                             ;store here
+;
+    DEC L                               ;<SprObject_PageLoc
+    LD A, (HL)
+    ADC A, $00                          ;add carry to page location
+    AND A, $01
+    ADD A, >BlockBufferLUT
+    LD D, A
+    LD A, (DE)
+    LD E, A
+    LD D, >Block_Buffer_1
+    LD (Temp_Bytes + $06), DE
+;
+    LD A, C
+    LD L, <SprObject_Y_Position         ;get vertical coordinate of object
+    ADD A, (HL)                         ;add it to y adder
+    AND A, %11110000                    ;mask out low nybble
+    SUB A, $20                          ;subtract 32 pixels for the status bar
+    LD IXL, A                           ;store result here
+;
+    addAToDE_M
+;
+    LD A, (DE)                          ;get content of block buffer
+    OR A
+    RET
+
+
+.SECTION "Block Buffer LUT" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256 RETURNORG
+BlockBufferLUT:
+    .db $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00
+    .db $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 $01 
+    .db $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 $02 
+    .db $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 $03 
+    .db $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 $04 
+    .db $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 $05 
+    .db $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 $06 
+    .db $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 $07 
+    .db $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 $08 
+    .db $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 $09 
+    .db $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a $0a 
+    .db $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b $0b 
+    .db $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c $0c 
+    .db $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d $0d 
+    .db $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e $0e 
+    .db $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f $0f
+
+    .db $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 $d0 
+    .db $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 $d1 
+    .db $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 $d2 
+    .db $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 $d3 
+    .db $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 $d4 
+    .db $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 $d5 
+    .db $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 $d6 
+    .db $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 $d7 
+    .db $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 $d8 
+    .db $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 $d9 
+    .db $da $da $da $da $da $da $da $da $da $da $da $da $da $da $da $da 
+    .db $db $db $db $db $db $db $db $db $db $db $db $db $db $db $db $db 
+    .db $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc $dc 
+    .db $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd $dd 
+    .db $de $de $de $de $de $de $de $de $de $de $de $de $de $de $de $de 
+    .db $df $df $df $df $df $df $df $df $df $df $df $df $df $df $df $df
+.ENDS
+
 
     ; BLOCK BUFFER DATA LAYOUT:
     ; HN: ROW,  LN: COL
@@ -8909,7 +9165,7 @@ GetOffScreenBitsSet:
 ;$06 (N/A) - used to store preset value used to compare to pixel difference in $07
 ;$07 (E) - used to store difference between coordinates of object and screen edges
 
-.SECTION "XOffscreenBitsData, YOffscreenBitsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "XOffscreenBitsData, YOffscreenBitsData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 XOffscreenBitsData:
     ; $00
     .db $7f, $3f, $1f, $0f, $07, $03, $01, $00

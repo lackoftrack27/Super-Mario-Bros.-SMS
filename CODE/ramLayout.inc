@@ -895,7 +895,6 @@
     OptionBitflags:                 dsb $01
     AnimateRoutine:                 dsb $02
     BowserDrawRoutine:              dsb $02
-    PlayerTileBuffer:               dsb $08
 ;
     FrameDoneFlag:                  dsb $01
 ;
@@ -906,4 +905,5 @@
     SndCurrentTempo:                dsb $01
     SndPauseFlag:                   dsb $01
     SndHurryUpFlag:                 dsb $01
+    .                               dsb $04 ; SPARE SOUND MEM
 .ENDS

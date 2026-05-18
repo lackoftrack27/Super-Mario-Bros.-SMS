@@ -194,7 +194,7 @@ SndInitMemory:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Sound Driver Code in Sound Bank" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "Sound Driver Code in Sound Bank" BANK BANK_SOUND SLOT 2 FREE RETURNORG
 
 SndChannelProcessSFX:
 ;   PROCESS QUEUE IF IT ISN'T EMPTY
@@ -1025,7 +1025,7 @@ SndStopChannel:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Sound Index Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound Index Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 SndIndexTable:
     .dw SFX_JumpBig
     .dw SFX_Bump
@@ -1066,7 +1066,7 @@ SndIndexTable:
     .dw Mus_Silence     ; SILENCE
 .ENDS
 
-.SECTION "Sound PSG Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 SndFreqTable:
 ;         C     C#    D     Eb    E     F     F#    G     G#    A     Bb    B
     .dw $03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03F9,$03C0,$038A; Octave 2 - (81 - 8C)   0
@@ -1080,7 +1080,7 @@ SndFreqTable:
     .dw $0000								                                   ; Note (E1)
 .ENDS
 
-.SECTION "Sound PSG Envelope Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGIndexTable:
     .dw PSGEnv01    ; SFX PAUSE
     .dw PSGEnv02    ; SFX COIN
@@ -1101,13 +1101,13 @@ PSGIndexTable:
     .dw PSGEnv10    ; DRUM 1
 .ENDS
 
-.SECTION "Sound PSG Envelope 01 - SFX PAUSE" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 01 - SFX PAUSE" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv01:
     .db $00, $01, $01, $01, $01, $02, $02, $03, $03, $03, $04, $05, $06, $07, $07, $09
     .db $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 02 - SFX COIN" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 02 - SFX COIN" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv02:
     .db $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02
     .db $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03, $04, $04, $04, $05
@@ -1115,17 +1115,17 @@ PSGEnv02:
     .db $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 03 - SFX 1UP" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 03 - SFX 1UP" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv03:
     .db $00, $01, $01, $02, $03, $03, $04, $06, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 04 - SFX SWIM" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 04 - SFX SWIM" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv04:
     .db $09, $06, $05, $04, $03, $01, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 05 - SFX FLAME" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 05 - SFX FLAME" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv05:
     .db $06, $04, $04, $03, $03, $02, $02, $01, $01, $01, $01, $00, $00, $00, $00, $00
     .db $00, $00, $00, $01, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $00
@@ -1134,80 +1134,80 @@ PSGEnv05:
     .db $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 06 - SFX JUMP" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 06 - SFX JUMP" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv06:
     .db $00, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $03, $03, $03, $03, $04
     .db $04, $04, $05, $05, $06, $06, $07, $07, $09, $09, $09, $0C, $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 07 - MUSIC 00" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 07 - MUSIC 00" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv07:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 08 - MUSIC 01" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 08 - MUSIC 01" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv08:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
     .db $04, $04, $04, $04, $04, $04, $05, $05, $05, $05, $05, $05, $06, $06, $06, $06
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 09 - MUSIC 02" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 09 - MUSIC 02" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv09:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0A - MUSIC 03" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0A - MUSIC 03" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0A:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
     .db $04, $04, $04, $04, $04, $04, $05, $05, $05, $05, $05, $05, $06, $06, $06, $06
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0B - MUSIC 04" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0B - MUSIC 04" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0B:
     .db $00, $01, $01, $03, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0C - MUSIC 05" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0C - MUSIC 05" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0C:
     .db $00, $01, $01, $02, $03, $03, $04, $06, $07, $09, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0D - MUSIC 06" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0D - MUSIC 06" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0D:
     .db $00, $01, $02, $02, $03, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0E - MUSIC 07" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0E - MUSIC 07" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0E:
     .db $00, $00, $00, $00, $00, $00, $00, $00, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0F - DRUM 00" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 0F - DRUM 00" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv0F:
     .db $00, $00, $00, $00, $00, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 10 - DRUM 01" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Envelope 10 - DRUM 01" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGEnv10:
     .db $00, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Drum Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound PSG Drum Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 PSGDrumTable:
     .db $E4, $0F    ; NOISE HIGH,   ENVELOPE $0F (5 TICKS)
     .db $E4, $10    ; NOISE HIGH,   ENVELOPE $10 (1 TICK)
     .db $E5, $10    ; NOISE MID,    ENVELOPE $10 (1 TICK)
 .ENDS
 
-; .SECTION "Speed Up Tempo Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+; .SECTION "Speed Up Tempo Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 ; SpeedUpTempoTable:
 ;     .db $00, $00, $00, $00, $00, $00, $00
 ;     .db $00, $00, $00, $00, $00, $00, $00
 ; .ENDS
 
-.SECTION "Sound FM Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8
+.SECTION "Sound FM Frequency Table" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
 SndFMFreqTable:
 ;         C     C#    D     Eb    E     F     F#    G     G#    A     Bb    B
     .dw $00AC,$00B7,$00C2,$00CD,$00D9,$00E6,$00F4,$0102,$0112,$0122,$0133,$0146; Octave 0 - (81 - 8C)   0

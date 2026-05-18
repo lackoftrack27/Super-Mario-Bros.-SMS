@@ -99,7 +99,7 @@ NextVSp:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Sprite Drawing TBLs for Hammer" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Sprite Drawing TBLs for Hammer" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 
 ; FirstSprYPos:
 ;     .db $00, $04, $00, $04
@@ -213,7 +213,7 @@ RenderH:
 ;$04 - attribute byte for floatey number
 ;$05 - used as X coordinate for floatey number
 
-.SECTION "FlagpoleScoreNumTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlagpoleScoreNumTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlagpoleScoreNumTiles:
     .db $31, $34    ; "5000"
     .db $2F, $34    ; "2000"
@@ -465,7 +465,7 @@ NotRsNum:
     EX DE, HL
     RET
 
-.SECTION "JumpingCoinTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "JumpingCoinTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 JumpingCoinTiles:
     .db $19, $1B, $1D, $1F
 .ENDS
@@ -529,7 +529,7 @@ JCoinGfxHandler:
 
 ;tiles arranged in top left, right, bottom left, right order
 
-.SECTION "PowerUpGfxTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PowerUpGfxTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PowerUpGfxTable:
     .db $09, $0A, $0B, $0C  ; mushroom
     .db $11, $12, $13, $14  ; fire flower
@@ -577,7 +577,7 @@ DrawPowerUp:
 ;$ed($0A, IYL) - used to hold enemy state from buffer 
 ;$ef($0B, IYH) - used to hold enemy code used in gfx handler (may or may not resemble Enemy_ID values)
 
-.SECTION "EnemyGraphicsTable" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.SECTION "EnemyGraphicsTable" BANK BANK_SLOT2 SLOT 2 ALIGN $100 RETURNORG
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
     .db $00, $00, $EC, $ED, $EE, $EF  ;buzzy beetle frame 1
@@ -646,7 +646,7 @@ EnemyGraphicsTable:
     .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
 .ENDS
 
-.SECTION "EnemyGraphicsTable_HFlip" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.SECTION "EnemyGraphicsTable_HFlip" BANK BANK_SLOT2 SLOT 2 ALIGN $100 RETURNORG
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable_HFlip:
     .db $00, $00, $F8, $F9, $FA, $FB  ;buzzy beetle frame 1
@@ -715,7 +715,7 @@ EnemyGraphicsTable_HFlip:
     .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
 .ENDS
 
-.SECTION "EnemyGfxTableOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8
+.SECTION "EnemyGfxTableOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
 EnemyGfxTableOffsets:
     .db $0c, $CC, $00, $CC, $0C, $a8, $54, $3c  ; $00 - $07
     .db $E4, $18, $48, $9C, $FF, $c0, $18, $D8  ; $08 - $0F
@@ -1329,7 +1329,7 @@ StripeBufferSetup:
     EX DE, HL
     RET
 
-.SECTION "Jumpspring Frames" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Jumpspring Frames" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 JumpspringFramesLeft:
     .dw $095A, $095B, $0D5A, $0000  ; F1
     .dw $0000, $095C, $0D5C, $0000  ; F2
@@ -1345,13 +1345,13 @@ JumpspringFramesRight:
     .dw $0B5A, $0B5B, $0F5A, $0000
 .ENDS
 
-.SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PodobooTiles:
     .db $43, $44, $45, $46  ; FRAME 0
     .db $47, $48, $49, $4A  ; FRAME 0 VFLIP
 .ENDS
 
-.SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 RetainerTilesLeft:
     .dw $0983, $0984, $0985
 
@@ -1373,7 +1373,7 @@ PrincessTilesRight:
 ;$05 - relative X position
 ;IYL - OAM Offset
 
-.SECTION "DefaultBlockObjTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "DefaultBlockObjTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 DefaultBlockObjTiles:
     .db $3B, $3B, $3B, $3B              ;breakable block
     .db $40, $40, $3B, $3B              ;brick w/ line (these are sprite tiles, not BG!)
@@ -1620,7 +1620,7 @@ DrawFirebar:
 ;-------------------------------------------------------------------------------------
 ; IXL
 
-.SECTION "ExplosionTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ExplosionTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ExplosionTiles:
     .db $25, $26, $2A
 .ENDS
@@ -1881,7 +1881,7 @@ DrawBubble:
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
 
-.SECTION "PlayerGraphicsTable" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $0F20
+.SECTION "PlayerGraphicsTable" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $0F20 RETURNORG
 PlayerGraphicsTable:
 @bigWalk:
     .db $00, $01, $02, $03, $04, $05, $06, $07
@@ -1927,7 +1927,7 @@ PlayerGraphicsTable:
     .db $3F, $3F, $6E, $6F, $70, $71, $72, $73  ; $C8
 .ENDS
 
-.SECTION "PlayerGraphicsTable_HFLIP" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $0F20
+.SECTION "PlayerGraphicsTable_HFLIP" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $0F20 RETURNORG
     ; BIG
     .db $00, $01, $02, $03, $04, $05, $06, $07
     .db $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
@@ -1973,13 +1973,13 @@ PlayerGraphicsTable:
 .ENDS
 
 
-.SECTION "PlayerGraphicsTable (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0E68
+.SECTION "PlayerGraphicsTable (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0E68 RETURNORG
     .db $00, $01, $28, $29, $2A, $2B, $31, $2D
     .db $00, $01, $28, $29, $2A, $2B, $31, $2D
     .db $00, $01, $28, $29, $2A, $2B, $31, $2D
 .ENDS
 
-.SECTION "PlayerGraphicsTable (NES) EXTRA" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0EB0
+.SECTION "PlayerGraphicsTable (NES) EXTRA" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0EB0 RETURNORG
     ; SWIM
     .db $00, $01, $28, $29, $2A, $2B, $31, $2D  ; BIG ALT 1
     .db $00, $01, $02, $03, $04, $2E, $31, $2D  ; BIG ALT 2
@@ -2002,7 +2002,7 @@ PlayerGraphicsTable:
     .db $00, $01, $28, $29, $2A, $2B, $2C, $2D
 .ENDS
 
-.SECTION "PlayerGraphicsTable (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0F20
+.SECTION "PlayerGraphicsTable (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0F20 RETURNORG
 ;   $0F20
     ; BIG
     .db $00, $01, $02, $03, $04, $05, $06, $07
@@ -2048,13 +2048,13 @@ PlayerGraphicsTable:
     .db $36, $36, $10, $11, $5A, $5B, $5C, $5D
 .ENDS
 
-.SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0E68
+.SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0E68 RETURNORG
     .db $00, $01, $28, $29, $2A, $2B, $2C, $31
     .db $00, $01, $28, $29, $2A, $2B, $2C, $31
     .db $00, $01, $28, $29, $2A, $2B, $2C, $31
 .ENDS
 
-.SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0EB0
+.SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0EB0 RETURNORG
     ; SWIM
     .db $00, $01, $28, $29, $2A, $2B, $2C, $31  ; BIG ALT 1
     .db $00, $01, $02, $03, $2E, $05, $2C, $31  ; BIG ALT 2
@@ -2077,7 +2077,7 @@ PlayerGraphicsTable:
     .db $00, $01, $28, $29, $2A, $2B, $2C, $2D
 .ENDS
 
-.SECTION "PlayerGraphicsTable_HFLIP (NES)" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0F20
+.SECTION "PlayerGraphicsTable_HFLIP (NES)" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0F20 RETURNORG
 ;   $0F20
     ; BIG
     .db $00, $01, $02, $03, $04, $05, $06, $07
@@ -2124,7 +2124,7 @@ PlayerGraphicsTable:
 .ENDS
 
 
-.SECTION "PlayerFixedTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PlayerFixedTiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlayerFixedTiles:
     .db VRAM_IDX_SPR_PLR + $00, VRAM_IDX_SPR_PLR + $01
     .db VRAM_IDX_SPR_PLR + $02, VRAM_IDX_SPR_PLR + $03
@@ -2496,7 +2496,7 @@ GetGfxOffsetAdder:
     addAToHL8_M                         ;otherwise add offset for small player
     RET
 
-.SECTION "ChangeSizeOffsetAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ChangeSizeOffsetAdder" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ChangeSizeOffsetAdder:
     ;   SMALL -> BIG
     ;   SML, GRW, SML, GRW, SML, GRW, BIG, SML, GRW, BIG

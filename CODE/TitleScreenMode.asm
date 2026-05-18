@@ -38,7 +38,7 @@ PrimaryGameSetup:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "World Select Stripe Command for GameMenuRoutine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "World Select Stripe Command for GameMenuRoutine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 WSelectBufferTemplate:
     .dw swapBytes(xyToNameTbl_M(20, 0))     ; ADDRESS
     .db StripeCount($02)                    ; COUNT
@@ -175,7 +175,7 @@ GameMenuRoutine:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Mushroom Icon Stripe Command for DrawMushroomIcon" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Mushroom Icon Stripe Command for DrawMushroomIcon" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 MushroomIconData:
     .dw swapBytes(xyToNameTbl_M(9, 15))     ; ADDRESS
     .db StripeCount($02)
@@ -227,7 +227,7 @@ DrawMushroomIcon:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Action Data TBL for DemoEngine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Action Data TBL for DemoEngine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 DemoActionData:
     .db $00 ; PADDING
     .db $01, $80, $02, $81, $41, $80, $01
@@ -235,7 +235,7 @@ DemoActionData:
     .db $01, $c1, $01, $02, $80, $00
 .ENDS
 
-.SECTION "Timing Data TBL for DemoEngine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Timing Data TBL for DemoEngine" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 DemoTimingData:
     .db $00 ; PADDING
     .db $9b, $10, $18, $05, $2c, $20, $24

@@ -575,7 +575,7 @@ SetupLakitu:
 ;--------------------------------
 ;$01-$03 - used to hold pseudorandom difference adjusters
 
-.SECTION "PRDiffAdjustData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PRDiffAdjustData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PRDiffAdjustData:
     ;.db $26, $2c, $32, $38
     ;.db $20, $22, $24, $26
@@ -729,7 +729,7 @@ CreateSpiny:
 
 ;--------------------------------
 
-.SECTION "FirebarSpinSpdData/FirebarSpinDirData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FirebarSpinSpdData/FirebarSpinDirData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FirebarSpinSpdData:
     
     .IF PALBUILD == $00
@@ -789,7 +789,7 @@ InitShortFirebar_NOPOP:
 ;--------------------------------
 ;$00-$01 - used to hold pseudorandom bits
 
-.SECTION "FlyCCXPositionData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlyCCXPositionData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlyCCXPositionData:
     .db $80, $30, $40, $80
     .db $30, $50, $50, $70
@@ -797,7 +797,7 @@ FlyCCXPositionData:
     .db $70, $40, $90, $68
 .ENDS
 
-.SECTION "FlyCCXSpeedData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlyCCXSpeedData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlyCCXSpeedData:
 
     .IF PALBUILD == $00
@@ -811,7 +811,7 @@ FlyCCXSpeedData:
     .ENDIF
 .ENDS
 
-.SECTION "FlyCCTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlyCCTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlyCCTimerData:
     .db $10, $60, $20, $48
 .ENDS
@@ -1019,7 +1019,7 @@ InitBowser:
     LD HL, (ObjectOffset)
     RET
 
-.SECTION "Bowser Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Bowser Palette Data" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 BowserPaletteData:
     .dw swapBytes($C010)
     .db StripeCount($10)
@@ -1027,7 +1027,7 @@ BowserPaletteData:
     .db $00
 .ENDS
 
-.SECTION "Bowser Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Bowser Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 BowserPaletteData_NES:
     .dw swapBytes($C014)
     .db StripeCount($03)
@@ -1076,7 +1076,7 @@ FSLoop:
     
 ;--------------------------------
 
-.SECTION "FlameYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FlameYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlameYPosData:
     .db $90, $80, $70, $90
 .ENDS
@@ -1203,7 +1203,7 @@ FinishFlame:
 
 ;--------------------------------
 
-.SECTION "FireworksXPosData/FireworksYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "FireworksXPosData/FireworksYPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FireworksXPosData:
     .db $00, $30, $60, $60, $00, $20
 
@@ -1284,18 +1284,18 @@ StarFChk:
 
 ;--------------------------------
 
-.SECTION "Bitmasks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Bitmasks" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 Bitmasks:
     .db %00000001, %00000010, %00000100, %00001000, %00010000, %00100000, %01000000, %10000000
 .ENDS
 
-.SECTION "Enemy17YPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Enemy17YPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 Enemy17YPosData:
     .db $40, $30, $90, $50, $20, $60, $a0, $70
     ;.db $28, $18, $78, $38, $08, $48, $88, $58
 .ENDS
 
-.SECTION "SwimCC_IDData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "SwimCC_IDData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SwimCC_IDData:
     .db $0a, $0b
 .ENDS
@@ -1799,7 +1799,7 @@ CommonSmallLift:
     RET
 
 ;--------------------------------
-.SECTION "PlatPosDataLow/PlatPosDataHigh" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PlatPosDataLow/PlatPosDataHigh" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlatPosDataLow:
     .db $08,$0c,$f8
 

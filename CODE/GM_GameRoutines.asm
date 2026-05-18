@@ -20,7 +20,7 @@ GameRoutines:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Player Initial X Pos TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Player Initial X Pos TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlayerStarting_X_Pos:
     .db $28, $18
     .db $38, $28
@@ -29,7 +29,7 @@ AltYPosOffset:
     .db $08, $00
 .ENDS
 
-.SECTION "Player Initial Y Pos TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Player Initial Y Pos TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlayerStarting_Y_Pos:
     .db $00, $20, $b0, $50, $00, $00, $b0, $b0
     .db $f0
@@ -37,7 +37,7 @@ PlayerStarting_Y_Pos:
     ;.db $D8
 .ENDS
 
-.SECTION "Player Priority TBL & Game Timer TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Player Priority TBL & Game Timer TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PlayerBGPriorityData:
     .db $00, $20, $00, $00, $00, $00, $00, $00
 
@@ -252,7 +252,7 @@ NoFPObj:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Hidden1UpCoinAmts" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Hidden1UpCoinAmts" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 Hidden1UpCoinAmts:
     .db $15, $23, $16, $1b, $17, $18, $23, $63
 .ENDS
@@ -323,7 +323,7 @@ NextArea:
 ;-------------------------------------------------------------------------------------
 
 ;page numbers are in order from -1 to -4
-.SECTION "HalfwayPageNybbles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "HalfwayPageNybbles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 HalfwayPageNybbles:
     .db $56, $40
     .db $65, $70
@@ -744,7 +744,7 @@ ResetPalStar:
 ;$05 - used to store metatile stored in A at beginning of PlayerHeadCollision
 ;$06-$07 - used as block buffer address indirect
 
-.SECTION "BlockYPosAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BlockYPosAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BlockYPosAdderData:
     .db $04, $12                    ; BIG, SMALL/CROUCH
     ;.db $12, $12, $12, $12
@@ -959,7 +959,7 @@ VineBlock:
 
 ;--------------------------------
 
-.SECTION "BrickQBlockMetatiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "BrickQBlockMetatiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BrickQBlockMetatiles:
     ;used by question blocks
     .db MT_QBLK_PUP, MT_QBLK_COIN, MT_HIDDENBLK_COIN, MT_HIDDENBLK_1UP
@@ -1189,9 +1189,10 @@ LRWater:
 LRAir:
     LD A, (Left_Right_Buttons)          ;check left/right controller bits (check for jumping/falling)
     OR A
-    JP Z, JSMove                        ;if not pressing any, skip
-    CALL ImposeFriction                 ;otherwise process horizontal movement
-JSMove:
+;    JP Z, JSMove                        ;if not pressing any, skip
+;    CALL ImposeFriction                 ;otherwise process horizontal movement
+;JSMove:
+    CALL NZ, ImposeFriction
     CALL MovePlayerHorizontally         ;do a sub to move player horizontally
     LD (Player_X_Scroll), A             ;set player's speed here, to be used for scroll later
 ;
@@ -1205,7 +1206,7 @@ JSMove:
 
 ;--------------------------------
 
-.SECTION "ClimbAdderLow/High" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "ClimbAdderLow/High" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ClimbAdderLow:
     .db $0e, $04, $fc, $f2
 ClimbAdderHigh:
@@ -1282,7 +1283,7 @@ InitCSTimer:
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store offset to friction data
 
-.SECTION "Player Physics TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "Player Physics TBLs" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 
 .IF PALBUILD == $00
 JumpMForceData:
@@ -1598,7 +1599,7 @@ GetXPhy2:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "PlayerAnimTmrData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+.SECTION "PlayerAnimTmrData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 
 .IF PALBUILD == $00
 PlayerAnimTmrData:

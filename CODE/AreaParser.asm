@@ -627,7 +627,7 @@ ChkRow14:
     CP A, $0E                               ;row 14?
     JP NZ, ChkRow13 
     LD IXH, $00                             ;if so, load offset with $00
-    LD A, $45 ;LD A, $2E                               ;and load A with another value
+    LD A, $4A ;LD A, $2E                               ;and load A with another value
     JP NormObj                              ;unconditional branch
 ChkRow13:
     CP A, $0D                               ;row 13?
@@ -823,6 +823,11 @@ RunAObj:
     .dw CastleFloorLeftY0A
     .dw CastleFloorRightWallY0A
     .dw CastleFloorRightY0A
+    .dw CastleFloorRightWallY0B ; $23
+    .dw CastleFloorLeftWallY0B  ; $24
+    .dw CastleFloorBodyY07      ; $25
+    .dw CastleCeilingTileY0B      ; $26
+    .dw CastleCeilingTileY05      ; $27
 
 ;object for special row $0e or 14           [$45]
     .dw AlterAreaAttributes     
@@ -862,6 +867,16 @@ CastleCeilingTileMain:
 ReplaceWithSingle:
     LD (HL), MT_CASTLECEILING_S
     DJNZ -
+    RET
+
+CastleCeilingTileY05:
+    LD HL, MetatileBuffer + $05
+    LD (HL), MT_CASTLECEILING_S
+    RET
+
+CastleCeilingTileY0B:
+    LD HL, MetatileBuffer + $0B
+    LD (HL), MT_CASTLECEILING_S
     RET
 
 ;--------------------------------
@@ -945,6 +960,11 @@ CastleFloorLeftWallY09:
 CastleFloorLeftWallY0A:
     LD HL, MetatileBuffer + $0A
     LD B, $01
+    JP CastleFloorLeftWallMain
+
+CastleFloorLeftWallY0B:
+    LD HL, MetatileBuffer + $0B
+    LD B, $01
     ; FALL THROUGH
 
 CastleFloorLeftWallMain:
@@ -979,6 +999,10 @@ CastleFloorLeftY09:
 
 CastleFloorLeftY0A:
     LD HL, MetatileBuffer + $0A
+    JP CastleFloorLeftMain
+
+CastleFloorLeftY0B:
+    LD HL, MetatileBuffer + $0B
     ; FALL THROUGH
 
 CastleFloorLeftMain:
@@ -1018,6 +1042,11 @@ CastleFloorRightWallY09:
 CastleFloorRightWallY0A:
     LD HL, MetatileBuffer + $0A
     LD B, $01
+    JP CastleFloorRightWallMain
+
+CastleFloorRightWallY0B:
+    LD HL, MetatileBuffer + $0B
+    LD B, $01
     ; FALL THROUGH
 
 CastleFloorRightWallMain:
@@ -1052,6 +1081,10 @@ CastleFloorRightY09:
 
 CastleFloorRightY0A:
     LD HL, MetatileBuffer + $0A
+    JP CastleFloorRightMain
+
+CastleFloorRightY0B:
+    LD HL, MetatileBuffer + $0B
     ; FALL THROUGH
 
 CastleFloorRightMain:
@@ -1069,6 +1102,31 @@ CastleFloorRightMain:
     ;
     INC L
     LD (HL), MT_CASTLEFLOOR_RCORNER
+    RET
+
+;--------------------------------
+
+CastleFloorBodyY07:
+    LD HL, MetatileBuffer + $07
+    LD B, $04
+    JP CastleFloorBodyMain
+
+CastleFloorBodyY0B:
+    LD HL, MetatileBuffer + $0B
+    LD B, $01
+    ; FALL THROUGH
+
+CastleFloorBodyMain:
+    LD A, (OptionBitflags)
+    AND A, $01
+    RET NZ
+;
+    LD (HL), MT_CASTLEFLOOR_TOP
+    INC L
+-:
+    LD (HL), MT_CASTLEFLOOR_BOT
+    INC L
+    DJNZ -
     RET
 
 ;--------------------------------

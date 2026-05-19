@@ -91,18 +91,127 @@ L_CastleArea2:
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
     
-    .db $5e, $0a, $68, $64
-    .db $98, $64, $a8, $64, $ce, $06, $fe, $02, $0d, $01
-    .db $1e, $0e, $7e, $02, $94, $63, $b4, $63, $d4, $63
-    .db $f4, $63, $14, $e3, $2e, $0e, $5e, $02, $64, $35
-    .db $88, $72, $be, $0e, $0d, $04, $ae, $02, $ce, $08
-    .db $cd, $4b, $fe, $02, $0d, $05, $68, $31, $7e, $0a
+    .db $5e, $0a
+    ;.db $68, $64
+
+    .db $5D, $4E ; ceiling tile @ Y02
+    .db $6D, $59 ; right floor wall @ Y08
+    .db $9D, $57 ; left floor wall @ Y08
+    .db $AD, $59 ; right floor wall @ Y08
+
+    ;.db $98, $64, $a8, $64, 
+    
+    .db $ce, $06
+
+    .db $DD, $57 ; left floor wall @ Y08
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    
+    .db $fe, $02
+
+    .db $0d, $01    ; LOOPBACK 1: $12, $1A
+    .db $1e, $02 ;.db $1e, $0e
+
+    .db $24, $35 ; horizontal blocks to hide improper floor
+    .db $25, $35
+    .db $26, $35
+    .db $27, $35
+    
+    ;.db $7e, $02
+    
+    .db $94, $63, $b4, $63, $d4, $63
+    .db $f4, $63, $14, $e3
+    
+    ;.db $2e, $02 ;.db $2e, $0e
+
+    .db $34, $63 ; vertical blocks to hide improper floor
+    .db $44, $63
+    .db $54, $63
+    
+    .db $5e, $02, $64, $35
+    .db $88, $72
+    
+    ;.db $be, $02 ;.db $be, $0e
+
+    .db $C4, $63 ; vertical blocks to hide improper floor
+    .db $D4, $63
+    .db $E4, $63
+    .db $F4, $63
+
+    .db $04, $BF ; horizontal blocks to hide improper floor
+    .db $05, $3F
+    .db $06, $3F
+    .db $07, $3F
+    
+    .db $0d, $04
+
+    .db $04, $63 ; vertical block to hide improper floor
+
+    .db $14, $39 ; horizontal blocks to hide improper floor
+    .db $15, $39
+    .db $16, $39
+    .db $17, $39
+    
+    ;.db $ae, $02
+    .db $ce, $08
+    .db $cd, $4b
+    
+    .db $DD, $60 ; left floor @ Y0A
+    .db $DD, $57 ; left floor wall @ Y08
+    .db $DD, $4D ; ceiling tile @ Y01
+
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4E ; ceiling tile @ Y02
+    
+    .db $fe, $02
+    
+    .db $0d, $05    ; LOOPBACK 2: $36, $6A
+    
+    .db $68, $31, $7e, $0a
+
+    .db $7D, $63 ; right floor wall @ Y0B
+
+
     .db $96, $31, $a9, $63, $a8, $33, $d5, $30, $ee, $02
-    .db $e6, $62, $f4, $61, $04, $b1, $08, $3f, $44, $33
+    .db $e6, $62, $f4, $61
+    
+    .db $FD, $64 ; left floor wall @ Y0B
+    
+    .db $04, $b1, $08, $3f, $44, $33
     .db $94, $63, $a4, $31, $e4, $31, $04, $bf, $08, $3f
     .db $04, $bf, $08, $3f, $cd, $4b, $03, $e4, $0e, $03
-    .db $2e, $01, $7e, $06, $be, $02, $de, $06, $fe, $0a
+
+    .db $1D, $4D ; ceiling tile @ Y01
+    .db $2D, $4D ; ceiling tile @ Y01
+
+    .db $2e, $01, $7e, $06
+
+    .db $8D, $4C ; ceiling tile @ Y00
+    .db $8D, $60 ; left floor @ Y0A
+    .db $8D, $57 ; left floor wall @ Y08
+
+    .db $BD, $62 ; right floor @ Y0A
+    .db $BD, $59 ; right floor wall @ Y08
+    
+    .db $be, $02, $de, $06
+    
+    .db $ED, $60 ; left floor @ Y0A
+    .db $ED, $57 ; left floor wall @ Y08
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $fe, $0a
     .db $0d, $c4, $cd, $43, $ce, $09, $de, $0b, $dd, $42
+
+
+    .db $DD, $53 ; left floor wall @ Y07
+    .db $ED, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02 !!!
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $55 ; right floor wall @ Y07
+
+
     .db $fe, $02, $5d, $c7
     .db $D0
 
@@ -114,17 +223,100 @@ L_CastleArea3:
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
     
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4C ; ceiling tile @ Y00
+
     .db $fe, $00, $27, $b1
-    .db $65, $32, $75, $0a, $71, $00, $b7, $31, $08, $e4
-    .db $18, $64, $1e, $04, $57, $3b, $bb, $0a, $17, $8a
-    .db $27, $3a, $73, $0a, $7b, $0a, $d7, $0a, $e7, $3a
-    .db $3b, $8a, $97, $0a, $fe, $08, $24, $8a, $2e, $00
-    .db $3e, $40, $38, $64, $6f, $00, $9f, $00, $be, $43
-    .db $c8, $0a, $c9, $63, $ce, $07, $fe, $07, $2e, $81
-    .db $66, $42, $6a, $42, $79, $0a, $be, $00, $c8, $64
-    .db $f8, $64, $08, $e4, $2e, $07, $7e, $03, $9e, $07
-    .db $be, $03, $de, $07, $fe, $0a, $03, $a5, $0d, $44
-    .db $cd, $43, $ce, $09, $dd, $42, $de, $0b, $fe, $02
+    .db $65, $32, $75, $0a, $71, $00, $b7, $31, ;$08, $e4
+
+    .db $0D, $D7 ; left floor wall @ Y08
+    .db $1D, $62 ; right floor @ Y0A
+    .db $1D, $59 ; right floor wall @ Y08
+
+    ;.db $18, $64, 
+    .db $1e, $04
+
+    .db $2D, $4C ; ceiling tile @ Y00
+
+    .db $57, $3b, $bb, $0a, $17, $8a
+    .db $27, $3a
+
+    .db $6D, $4F ; ceiling tile @ Y03
+    
+    .db $73, $0a, $7b, $0a, $d7, $0a, $e7, $3a
+    .db $3b, $8a, $97, $0a, $fe, $08
+
+    .db $0D, $E0 ; left floor @ Y0A
+    .db $0D, $57 ; left floor wall @ Y08
+    .db $2D, $4D ; ceiling tile @ Y01
+
+    .db $24, $0a, $2e, $00
+
+    .db $3D, $59 ; right floor wall @ Y08
+
+    .db $3e, $40
+    ;.db $38, $64
+    .db $6f, $00, $9f, $00, $be, $43
+
+    .db $CD, $57 ; left floor wall @ Y08
+
+    .db $c8, $0a
+    ;.db $c9, $63
+    .db $ce, $07
+
+    .db $DD, $4D ; ceiling tile @ Y01
+    
+    .db $fe, $07, $2e, $81
+
+    .db $2D, $4D ; ceiling tile @ Y01
+    .db $2D, $62 ; right floor @ Y0A
+    .db $2D, $59 ; right floor wall @ Y08
+
+
+    .db $66, $42, $6a, $42, $79, $0a, $be, $00
+    
+    .db $BD, $63 ; right floor wall @ Y0B
+    
+    .db $c8, $64
+
+    ;.db $f8, $64, $08, $e4,
+    .db $FD, $57 ; left floor wall @ Y08
+    .db $0D, $D9 ; right floor wall @ Y08
+    
+    .db $2e, $07
+    
+    .db $3D, $57 ; left floor wall @ Y08
+    .db $3D, $4D ; ceiling tile @ Y01
+    .db $7D, $62 ; right floor @ Y0A
+    .db $7D, $59 ; right floor wall @ Y08
+    
+    .db $7e, $03, $9e, $07
+
+    .db $AD, $60 ; left floor @ Y0A
+    .db $AD, $57 ; left floor wall @ Y08
+    .db $BD, $62 ; right floor @ Y0A
+    .db $BD, $59 ; right floor wall @ Y08
+
+
+    .db $be, $03, $de, $07
+
+    .db $ED, $60 ; left floor @ Y0A
+    .db $ED, $57 ; left floor wall @ Y08
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4E ; ceiling tile @ Y02
+
+    
+    .db $fe, $0a, $03, $a5, $0d, $44
+    .db $cd, $43, $ce, $09, $dd, $42, $de, $0b
+
+    .db $DD, $53 ; left floor wall @ Y07
+    .db $ED, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02 !!!
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $55 ; right floor wall @ Y07
+    
+    
+    .db $fe, $02
     .db $5d, $c7
     .db $D0
 
@@ -136,18 +328,138 @@ L_CastleArea4:
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
+
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4C ; ceiling tile @ Y00
     
     .db $fe, $06, $0c, $81
-    .db $39, $0a, $5c, $01, $89, $0a, $ac, $01, $d9, $0a
-    .db $fc, $01, $2e, $83, $a7, $01, $b7, $00, $c7, $01
-    .db $de, $0a, $fe, $02, $4e, $83, $5a, $32, $63, $0a
-    .db $69, $0a, $7e, $02, $ee, $03, $fa, $32, $03, $8a
-    .db $09, $0a, $1e, $02, $ee, $03, $fa, $32, $03, $8a
-    .db $09, $0a, $14, $42, $1e, $02, $7e, $0a, $9e, $07
-    .db $fe, $0a, $2e, $86, $5e, $0a, $8e, $06, $be, $0a
-    .db $ee, $07, $3e, $83, $5e, $07, $fe, $0a, $0d, $c4
+
+    .db $2D, $57 ; left floor wall @ Y08
+
+    .db $39, $0a
+
+    .db $4D, $59 ; right floor wall @ Y08
+
+    .db $5c, $01
+
+    .db $7D, $57 ; left floor wall @ Y08
+    
+    .db $89, $0a
+
+    .db $9D, $59 ; right floor wall @ Y08
+    
+    .db $ac, $01
+
+    .db $CD, $57 ; left floor wall @ Y08
+    
+    .db $d9, $0a
+
+    .db $ED, $59 ; right floor wall @ Y08
+
+    .db $fc, $01
+
+    .db $1D, $D7 ; left floor wall @ Y08
+    
+    .db $2e, $03
+
+    .db $3D, $4D ; ceiling tile @ Y01
+    .db $3D, $62 ; right floor @ Y0A
+    .db $3D, $59 ; right floor wall @ Y08
+    
+    .db $a7, $01, $b7, $00, $c7, $01
+    .db $de, $0a
+    
+    .db $DD, $4E ; ceiling tile @ Y02
+    .db $DD, $63 ; right floor wall @ Y0B
+    
+    .db $fe, $02
+
+    .db $0D, $E4 ; left floor wall @ Y0B
+    
+    .db $4e, $03, $5a, $32
+
+    .db $5D, $4D ; ceiling tile @ Y01
+    
+    .db $63, $0a
+    .db $69, $0a, $7e, $02
+
+    .db $7D, $4E ; ceiling tile @ Y02
+    
+    .db $ee, $03, $fa, $32
+    
+    .db $FD, $4D ; ceiling tile @ Y01
+    
+    .db $03, $8a
+    .db $09, $0a, $1e, $02
+
+    .db $1D, $4E ; ceiling tile @ Y02
+    
+    .db $ee, $03, $fa, $32
+
+    .db $FD, $4D ; ceiling tile @ Y01
+
+    .db $03, $8a
+    .db $09, $0a
+    
+    .db $1D, $4E ; ceiling tile @ Y02
+
+    .db $14, $42, $1e, $02
+    
+    .db $7D, $63 ; right floor wall @ Y0B
+    
+    .db $7e, $0a, $9e, $07
+
+    .db $AD, $4E ; ceiling tile @ Y02
+    .db $AD, $57 ; left floor wall @ Y08
+
+    .db $fe, $0a
+
+    .db $FD, $4E ; ceiling tile @ Y02
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $2e, $86
+    
+    .db $3D, $57 ; left floor wall @ Y08
+    .db $5D, $59 ; right floor wall @ Y08
+    
+    .db $5e, $0a, $8e, $06
+    
+
+    .db $9D, $57 ; left floor wall @ Y08
+    .db $BD, $59 ; right floor wall @ Y08
+    
+    .db $be, $0a
+    .db $ee, $07
+    
+    .db $FD, $57 ; left floor wall @ Y08
+    .db $FD, $4D ; ceiling tile @ Y01
+    
+    .db $3e, $83
+    
+    .db $3D, $62 ; right floor @ Y0A
+    .db $3D, $59 ; right floor wall @ Y08
+    
+    .db $5e, $07
+    
+    .db $6D, $60 ; left floor @ Y0A
+    .db $6D, $57 ; left floor wall @ Y08
+    
+    .db $fe, $0a
+    
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4E ; ceiling tile @ Y02
+    
+    .db $0d, $c4
     .db $41, $52, $51, $52, $cd, $43, $ce, $09, $de, $0b
-    .db $dd, $42, $fe, $02, $5d, $c7
+    .db $dd, $42
+    
+    .db $DD, $53 ; left floor wall @ Y07
+    .db $ED, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02 !!!
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $55 ; right floor wall @ Y07
+    
+    .db $fe, $02, $5d, $c7
     .db $D0
 
 ;level 7-4
@@ -157,21 +469,150 @@ L_CastleArea5:
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
+
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $FD, $4E ; ceiling tile @ Y02
     
     .db $fe, $0a, $ae, $86
-    .db $be, $07, $fe, $02, $0d, $02, $27, $32, $46, $61
-    .db $55, $62, $5e, $0e, $1e, $82, $68, $3c, $74, $3a
-    .db $7d, $4b, $5e, $8e, $7d, $4b, $7e, $82, $84, $62
-    .db $94, $61, $a4, $31, $bd, $4b, $ce, $06, $fe, $02
-    .db $0d, $06, $34, $31, $3e, $0a, $64, $32, $75, $0a
-    .db $7b, $61, $a4, $33, $ae, $02, $de, $0e, $3e, $82
-    .db $64, $32, $78, $32, $b4, $36, $c8, $36, $dd, $4b
+    .db $be, $07
+
+    .db $BD, $57 ; left floor wall @ Y08
+    .db $CD, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $fe, $02
+    
+    .db $0d, $02    ; LOOPBACK 0,1,2: $0E, $1C
+    
+    .db $27, $32, $46, $61
+    .db $55, $62
+    
+    ;.db $5e, $0e
+
+    .db $64, $39 ; horizontal blocks to replace floor
+    .db $65, $39
+    .db $66, $39
+    .db $67, $39
+
+    .db $04, $E3 ; vertical blocks to replace floor
+    .db $14, $63
+
+    ;.db $1e, $82
+    
+    .db $68, $3c, $74, $3a
+    .db $7d, $4b
+    
+    ;.db $5e, $8e
+
+    .db $64, $E3 ; vertical blocks to replace floor
+    .db $74, $63
+    
+    .db $7d, $4b
+
+    .db $84, $37 ; horizontal blocks to replace floor
+    .db $85, $37
+    .db $86, $37
+    .db $87, $37
+
+    .db $04, $B7 ; horizontal blocks to replace floor
+    .db $05, $37
+    .db $06, $37
+    .db $07, $37
+
+    ;.db $7e, $82
+    
+    .db $84, $62
+    .db $94, $61, $a4, $31, $bd, $4b, $ce, $06
+    
+    .db $DD, $60 ; left floor @ Y0A
+    .db $DD, $57 ; left floor wall @ Y08
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+
+    .db $fe, $02
+
+    .db $0d, $06    ; LOOPBACK 3,4,5: $32, $60
+    
+    .db $34, $31, $3e, $0a, $64, $32, $75, $0a
+    .db $7b, $61, $a4, $33, $ae, $02
+    
+    ;.db $de, $0e
+
+    .db $E4, $35
+    .db $E5, $35
+    .db $E6, $35
+    .db $E7, $35
+    
+    ;.db $3e, $82
+    .db $64, $B2, $78, $32, $b4, $36, $c8, $36, $dd, $4b
     .db $44, $b2, $58, $32, $94, $63, $a4, $3e, $ba, $30
-    .db $c9, $61, $ce, $06, $dd, $4b, $ce, $86, $dd, $4b
-    .db $fe, $02, $2e, $86, $5e, $02, $7e, $06, $fe, $02
-    .db $1e, $86, $3e, $02, $5e, $06, $7e, $02, $9e, $06
+
+    .db $c9, $61, $ce, $06, $dd, $4b
+    
+    .db $DD, $60 ; left floor @ Y0A
+    .db $DD, $57 ; left floor wall @ Y08
+
+    .db $ce, $86, $dd, $4b
+    .db $fe, $02
+
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $2e, $86
+
+    .db $3D, $60 ; left floor @ Y0A
+    .db $3D, $57 ; left floor wall @ Y08
+    
+    .db $5e, $02
+
+    .db $5D, $62 ; right floor @ Y0A
+    .db $5D, $59 ; right floor wall @ Y08
+    
+    .db $7e, $06
+
+    .db $8D, $60 ; left floor @ Y0A
+    .db $8D, $57 ; left floor wall @ Y08
+    
+    .db $fe, $02
+
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+
+    .db $1e, $86
+
+    .db $2D, $60 ; left floor @ Y0A
+    .db $2D, $57 ; left floor wall @ Y08
+    .db $3D, $62 ; right floor @ Y0A
+    .db $3D, $59 ; right floor wall @ Y08
+    
+    .db $3e, $02, $5e, $06
+
+    .db $6D, $60 ; left floor @ Y0A
+    .db $6D, $57 ; left floor wall @ Y08
+    
+    .db $7e, $02
+
+    .db $7D, $62 ; right floor @ Y0A
+    .db $7D, $59 ; right floor wall @ Y08
+    
+    .db $9e, $06
+
+    .db $AD, $60 ; left floor @ Y0A
+    .db $AD, $57 ; left floor wall @ Y08
+    .db $FD, $59 ; right floor wall @ Y08
+
     .db $fe, $0a, $0d, $c4, $cd, $43, $ce, $09, $de, $0b
-    .db $dd, $42, $fe, $02, $5d, $c7
+    .db $dd, $42
+
+    .db $DD, $53 ; left floor wall @ Y07
+    .db $ED, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02 !!!
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $55 ; right floor wall @ Y07
+    
+    .db $fe, $02, $5d, $c7
     .db $D0
 
 
@@ -182,18 +623,157 @@ L_CastleArea6:
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
+
+    .db $5D, $59 ; right floor wall @ Y08
     
     .db $5e, $0a, $ae, $02
-    .db $0d, $01, $39, $73, $0d, $03, $39, $7b, $4d, $4b
-    .db $de, $06, $1e, $8a, $ae, $06, $c4, $33, $16, $fe
-    .db $a5, $77, $fe, $02, $fe, $82, $0d, $07, $39, $73
-    .db $a8, $74, $ed, $4b, $49, $fb, $e8, $74, $fe, $0a
-    .db $2e, $82, $67, $02, $84, $7a, $87, $31, $0d, $0b
-    .db $fe, $02, $0d, $0c, $39, $73, $5e, $06, $c6, $76
-    .db $45, $ff, $be, $0a, $dd, $48, $fe, $06, $3d, $cb
-    .db $46, $7e, $ad, $4a, $fe, $82, $39, $f3, $a9, $7b
-    .db $4e, $8a, $9e, $07, $fe, $0a, $0d, $c4, $cd, $43
-    .db $ce, $09, $de, $0b, $dd, $42, $fe, $02, $5d, $c7
+
+    .db $BD, $64 ; left floor wall @ Y0B
+
+    .db $0d, $01    ; LOOPBACK 0: $0A, $0E
+
+    .db $2D, $63 ; right floor wall @ Y0B
+
+    .db $39, $73
+
+    .db $5D, $64 ; left floor wall @ Y0B
+    
+    .db $0d, $03
+
+    .db $2D, $63 ; right floor wall @ Y0B
+    
+    .db $39, $7b, $4d, $4b
+
+    .db $5D, $64 ; left floor wall @ Y0B
+
+    .db $de, $06
+
+    .db $ED, $60 ; left floor @ Y0A
+    .db $ED, $57 ; left floor wall @ Y08
+    
+    .db $1e, $8a
+
+    .db $1D, $59 ; right floor wall @ Y08
+    
+    .db $ae, $06
+    
+    .db $BD, $57 ; left floor wall @ Y08
+    
+    .db $c4, $33
+
+    .db $0D, $D9 ; right floor wall @ Y08
+    
+    .db $16, $7e
+
+    .db $3D, $57 ; left floor wall @ Y08
+    .db $9D, $59 ; right floor wall @ Y08
+
+    .db $a5, $77
+
+    .db $CD, $57 ; left floor wall @ Y08
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $fe, $02, $fe, $82, $0d, $07
+
+    .db $2D, $63 ; right floor wall @ Y0B
+    
+    .db $39, $73    ; LOOPBACK 1: $26, $48
+
+    .db $5D, $64 ; left floor wall @ Y0B
+    .db $9D, $63 ; right floor wall @ Y0B
+
+    .db $a8, $74
+
+    .db $CD, $64 ; left floor wall @ Y0B
+    
+    .db $ed, $4b
+
+    .db $3D, $63 ; right floor wall @ Y0B
+    
+    .db $49, $fb
+
+    .db $6D, $64 ; left floor wall @ Y0B
+    .db $DD, $63 ; right floor wall @ Y0B
+    
+    .db $e8, $74, $fe, $0a
+    .db $2e, $82
+
+    .db $3D, $64 ; left floor wall @ Y0B
+    
+    .db $67, $02, $84, $7a, $87, $31, $0d, $0b
+    .db $fe, $02, $0d, $0c
+
+    .db $2D, $63 ; right floor wall @ Y0B, $70
+    
+    .db $39, $73    ; LOOPBACK 2: $40, $72
+
+    .db $5D, $64 ; left floor wall @ Y0B
+    
+    .db $5e, $06
+
+    .db $6D, $60 ; left floor @ Y0A
+    .db $6D, $57 ; left floor wall @ Y08 
+    .db $BD, $59 ; right floor wall @ Y08   
+    
+    .db $c6, $76
+
+    .db $ED, $57 ; left floor wall @ Y08 
+    .db $3D, $D9 ; right floor wall @ Y08
+
+    .db $45, $7f
+
+    .db $6D, $57 ; left floor wall @ Y08 
+    .db $BD, $59 ; right floor wall @ Y08
+    
+    .db $be, $0a, $dd, $48, $fe, $06
+
+    .db $0D, $D7 ; left floor wall @ Y08
+    .db $3D, $59 ; right floor wall @ Y08
+    
+    .db $3d, $4b
+    .db $46, $7e
+    
+    .db $6D, $57 ; left floor wall @ Y08
+
+    .db $ad, $4a
+
+    .db $fe, $82
+
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $59 ; right floor wall @ Y08
+    .db $2D, $E3 ; right floor wall @ Y0B
+    
+    .db $39, $73
+
+    .db $5D, $64 ; left floor wall @ Y0B
+    .db $9D, $63 ; right floor wall @ Y0B
+    
+    .db $a9, $7b
+
+    .db $CD, $64 ; left floor wall @ Y0B
+
+    .db $4e, $8a
+
+    .db $4D, $63 ; right floor wall @ Y0B
+    
+    .db $9e, $07
+
+    .db $AD, $4E ; ceiling tile @ Y02
+    .db $AD, $57 ; left floor wall @ Y08
+    .db $FD, $4E ; ceiling tile @ Y02
+    .db $FD, $59 ; right floor wall @ Y08
+    
+    .db $fe, $0a, $0d, $c4, $cd, $43
+    .db $ce, $09, $de, $0b, $dd, $42
+
+    .db $DD, $53 ; left floor wall @ Y07
+    .db $ED, $4E ; ceiling tile @ Y02
+    .db $FD, $4E ; ceiling tile @ Y02 !!!
+    .db $FD, $62 ; right floor @ Y0A
+    .db $FD, $55 ; right floor wall @ Y07
+    
+    .db $fe, $02, $5d, $c7
     .db $D0
 
 ; ---
@@ -642,14 +1222,61 @@ L_WaterArea2:
 ;water area used in level 8-4
 L_WaterArea3:
     .db $49, $0f
-    .db $1e, $01, $39, $73, $5e, $07, $ae, $0b, $1e, $82
+
+    .db $1e, $01
+
+    .db $1D, $4C ; ceiling tile @ Y00
+    .db $2D, $66 ; ceiling tile @ Y0B
+    
+    .db $39, $73
+
+    .db $5D, $64 ; left floor wall @ Y0B
+    
+    .db $5e, $07
+
+    .db $6D, $4C ; ceiling tile @ Y00
+    .db $6D, $60 ; left floor @ Y0A
+    .db $6D, $57 ; left floor wall @ Y08
+    
+    .db $ae, $0b
+    
+    .db $BD, $4F ; ceiling tile @ Y03
+    .db $BD, $54 ; left floor @ Y07
+    
+    .db $1e, $82
+
+    .db $1D, $4E ; ceiling tile @ Y02
+    .db $1D, $62 ; right floor @ Y0A
+    .db $1D, $55 ; right floor wall @ Y07
+
+    .db $6e, $88
+
+    .db $7D, $4D ; ceiling tile @ Y01
+    .db $7D, $60 ; left floor @ Y0A
+    .db $7D, $57 ; left floor wall @ Y08
+    .db $9D, $4E ; ceiling tile @ Y02
+    .db $9D, $62 ; right floor @ Y0A
+    .db $9D, $59 ; right floor wall @ Y08
+    
+    .db $9e, $02, $0d, $04, $2e, $0b
+
+    .db $3D, $4D ; ceiling tile @ Y01
+    .db $3D, $60 ; left floor @ Y0A
+    .db $3D, $53 ; left floor wall @ Y07
     
     .IF PALBUILD == $00
-    .db $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $45, $09
-    .db $4e, $0f, $ed, $47
+    .db $45, $09
+    .db $4e, $0f
     .ELSE
-    .db $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $3e, $0f    ; PAL bugfix: Close 1-tile gap above exit pipe
-    .db $45, $09, $ed, $47
+    .db $3e, $0f    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .db $45, $09
     .ENDIF
+
+    .db $4D, $65 ; floor @ Y07
+    .db $5D, $65 ; floor @ Y07
+    .db $5D, $67 ; ceiling tile @ Y05
+    .db $6D, $65 ; floor @ Y07
+
+    .db $ed, $47
     
     .db $D0

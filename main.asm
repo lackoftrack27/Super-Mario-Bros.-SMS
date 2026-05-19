@@ -1669,7 +1669,7 @@ WriteVeriBlock_W:
 WaterPaletteData:
     .dw swapBytes($C000)
     .db StripeCount($20)
-    .db $00, $00, $22, $26, $27, $24, $28, $29, $2B, $25, $3E, $2F, $2A, $3F, $21, $2E
+    .db $00, $00, $22, $26, $27, $24, $28, $29, $2B, $25, $3E, $2F, $3A, $3F, $21, $2E
     .db $00, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
     .db $00
 .ENDS
@@ -2575,7 +2575,7 @@ Tiles_BG_Underground:
     .INCBIN "BG_Underground.zx7"
 .ENDS
 
-.SECTION "BG Snow Tiles" BANK BANK_AREAENEMY SLOT 2 FREE
+.SECTION "BG Snow Tiles" BANK BANK_PLAYERGFX05 SLOT 2 FREE
 
 Tiles_BG_Snow:
     .INCBIN "BG_Snow.zx7"

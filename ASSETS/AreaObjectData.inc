@@ -533,12 +533,18 @@ L_CastleArea5:
 
     .db $0d, $06    ; LOOPBACK 3,4,5: $32, $60
     
-    .db $34, $31, $3e, $0a, $64, $32, $75, $0a
+    .db $34, $31, $3e, $0a
+
+    .db $3D, $63 ; right floor wall @ Y0B
+    
+    .db $64, $32, $75, $0a
     .db $7b, $61, $a4, $33, $ae, $02
+
+    .db $BD, $64 ; left floor wall @ Y0B
     
     ;.db $de, $0e
 
-    .db $E4, $35
+    .db $E4, $35 ; horizontal blocks to replace floor
     .db $E5, $35
     .db $E6, $35
     .db $E7, $35

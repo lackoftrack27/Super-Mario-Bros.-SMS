@@ -316,51 +316,50 @@ InitEnemyRoutines:
 
 ;-------------------------------------------------------------------------------------
 
-;   X - ENEMY OFFSET
-;   Y - BLOCK OFFSET
+;   HL - ENEMY OFFSET
+;   DE - BLOCK OFFSET
 Setup_Vine:
     POP HL
 Setup_Vine_NOPOP:
-    LD A, OBJECTID_VineObject
-    LD L, <Enemy_ID
-    LD (HL), A
+    LD L, <Enemy_ID                 ;load identifier for vine object 
+    LD (HL), OBJECTID_VineObject    ;store in buffer
 ;
-    LD L, <Enemy_Flag
+    LD L, <Enemy_Flag               ;set flag for enemy object buffer
     LD (HL), $01
 ;
-    LD E, <Block_PageLoc
+    LD E, <Block_PageLoc            ;copy page location from previous object
     LD L, E
     LD A, (DE)
     LD (HL), A
 ;
-    LD E, <Block_X_Position
+    LD E, <Block_X_Position         ;copy horizontal coordinate from previous object
     LD L, E
     LD A, (DE)
     LD (HL), A
 ;
-    LD A, (VineFlagOffset)
+    LD A, (VineFlagOffset)          ;load vine flag/offset to next available vine slot
     OR A
-    LD E, <Block_Y_Position
+    LD E, <Block_Y_Position         ;copy vertical coordinate from previous object
     LD L, E
     LD A, (DE)
     LD (HL), A
 ;    
-    JP NZ, NextVO
+    JP NZ, NextVO                   ;if set at all, don't bother to store vertical
     SUB A, SMS_PIXELYOFFSET
-    LD (VineStart_Y_Position), A
+    LD (VineStart_Y_Position), A    ;otherwise store vertical coordinate here
 NextVO: 
-    LD DE, VineObjOffset
+    LD DE, VineObjOffset            ;store object offset to next available vine slot
     LD A, (VineFlagOffset)
     ADD A, D
     LD D, A
     LD A, H
-    LD (DE), A
+    LD (DE), A                      ;using vine flag as offset
 ;
-    LD A, (VineFlagOffset)
+    LD A, (VineFlagOffset)          ;increment vine flag offset
     INC A
     LD (VineFlagOffset), A
 ;
-    LD A, SNDID_VINE
+    LD A, SNDID_VINE                ;load vine grow sound
     LD (SFXTrack1.SoundQueue), A
     RET
 
@@ -881,88 +880,88 @@ MaxCC:
     JP C, GSeed                         ;do not change A
     ADD A, A                            ;otherwise, multiply A by 2
 GSeed:
-    PUSH AF
+    PUSH AF                             ;save to stack
     LD C, A
-    LD A, (Temp_Bytes + $00)
+    LD A, (Temp_Bytes + $00)            ;add to last two bits of LSFR we saved earlier
     ADD A, C
-    LD (Temp_Bytes + $00), A
+    LD (Temp_Bytes + $00), A            ;save it there
 ;
     LD A, H
     SUB A, $C1
     LD BC, PseudoRandomBitReg+1
     addAToBC8_M
     LD A, (BC)
-    AND A, %00000011
-    JP Z, RSeed
+    AND A, %00000011                    ;if neither of the last two bits of second LSFR set,
+    JP Z, RSeed                         ;skip this part and save contents of $00
     INC C
     LD A, (BC)
-    AND A, %00001111
-    LD (Temp_Bytes + $00), A
+    AND A, %00001111                    ;otherwise overwrite with lower nybble of
+    LD (Temp_Bytes + $00), A            ;third LSFR part
 RSeed:
-    POP AF
+    POP AF                              ;get value from stack we saved earlier
     LD C, A
-    LD A, (Temp_Bytes + $01)
+    LD A, (Temp_Bytes + $01)            ;add to last two bits of LSFR we saved in other place
     ADD A, C
-    LD C, A
-    LD DE, FlyCCXSpeedData
+    LD C, A                             ;use as pseudorandom offset here
+    LD DE, FlyCCXSpeedData              ;get horizontal speed using pseudorandom offset
     addAToDE8_M
     LD A, (DE)
     LD L, <Enemy_X_Speed
     LD (HL), A
 ;
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir              ;set to move towards the right
     LD (HL), $01
 ;
-    LD A, (Player_X_Speed)
+    LD A, (Player_X_Speed)              ;if player moving left or right, branch ahead of this part
     OR A
     JP NZ, D2XPos1
-    LD A, (Temp_Bytes + $00)
+    LD A, (Temp_Bytes + $00)            ;get first LSFR or third LSFR lower nybble
     LD C, A
-    AND A, %00000010
-    JP Z, D2XPos1
+    AND A, %00000010                    ;and check for d1 set
+    JP Z, D2XPos1                       ;if d1 not set, branch
     LD L, <Enemy_X_Speed
-    LD A, (HL)
-    NEG
-    LD (HL), A
-    LD L, <Enemy_MovingDir
+    LD A, (HL)                          ;if d1 set, change horizontal speed
+    NEG                                 ;into two's compliment, thus moving in the opposite
+    LD (HL), A                          ;direction
+    LD L, <Enemy_MovingDir              ;increment to move towards the left
     INC (HL)
 ;
 D2XPos1:
-    LD A, C
+    LD A, C                             ;get first LSFR or third LSFR lower nybble again
     LD DE, FlyCCXPositionData
     addAToDE8_M
     LD A, C
     AND A, %00000010
-    JP Z, D2XPos2
-    LD A, (Player_X_Position)
+    JP Z, D2XPos2                       ;check for d1 set again, branch again if not set
+    LD A, (Player_X_Position)           ;get player's horizontal position
     EX DE, HL
-    ADD A, (HL)
+    ADD A, (HL)                         ;if d1 set, add value obtained from pseudorandom offset              
     EX DE, HL
-    LD L, <Enemy_X_Position
+    LD L, <Enemy_X_Position             ;and save as enemy's horizontal position
     LD (HL), A
-    LD A, (Player_PageLoc)
-    ADC A, $00
+    LD A, (Player_PageLoc)              ;get player's page location
+    ADC A, $00                          ;add carry and jump past this part
     JP FinCCSt
 ;
 D2XPos2:
-    LD A, (Player_X_Position)
+    LD A, (Player_X_Position)           ;get player's horizontal position
+    EX DE, HL      
+    SUB A, (HL)                         ;if d1 not set, subtract value obtained from pseudorandom
     EX DE, HL
-    SUB A, (HL)
-    EX DE, HL
-    LD L, <Enemy_X_Position
+    LD L, <Enemy_X_Position             ;offset and save as enemy's horizontal position
     LD (HL), A
-    LD A, (Player_PageLoc)
-    SBC A, $00
+    LD A, (Player_PageLoc)              ;get player's page location
+    SBC A, $00                          ;subtract borrow
 ;
 FinCCSt:
-    LD L, <Enemy_PageLoc
+    LD L, <Enemy_PageLoc                ;save as enemy's page location
     LD (HL), A
 ;
-    LD L, <Enemy_Flag
+    LD L, <Enemy_Flag                   ;set enemy's buffer flag
     LD (HL), $01
-    LD L, <Enemy_Y_HighPos
+    LD L, <Enemy_Y_HighPos              ;set enemy's high vertical byte
     LD (HL), $01
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position             ;put enemy below the screen, and we are done
     LD (HL), $F8
     RET
 
@@ -971,26 +970,26 @@ FinCCSt:
 InitBowser:
     POP HL
 ;
-    CALL DuplicateEnemyObj
+    CALL DuplicateEnemyObj              ;jump to create another bowser object
 ;
-    LD A, H
+    LD A, H                             ;save offset of first here
     LD (BowserFront_Offset), A
 ;
-    XOR A
-    LD (BowserBodyControls), A
+    XOR A                               ;initialize bowser's body controls
+    LD (BowserBodyControls), A          ;and bridge collapse offset
     LD (BridgeCollapseOffset), A
 ;
-    LD L, <Enemy_X_Position
+    LD L, <Enemy_X_Position             ;store original horizontal position here
     LD A, (HL)
     LD (BowserOrigXPos), A
 ;
-    LD A, $DF
+    LD A, $DF                           ;store something here
     LD (BowserFireBreathTimer), A
-    LD L, <Enemy_MovingDir
+    LD L, <Enemy_MovingDir              ;and in moving direction
     LD (HL), A
 ;
     LD A, $20
-    LD (BowserFeetCounter), A
+    LD (BowserFeetCounter), A           ;set bowser's feet timer and in enemy timer
     LD A, H
     SUB A, $C1
     LD BC, EnemyFrameTimer
@@ -998,13 +997,13 @@ InitBowser:
     LD A, $20
     LD (BC), A
 ;
-    LD A, $05
+    LD A, $05                           ;give bowser 5 hit points
     LD (BowserHitPoints), A
 ;
-    SRL A
+    SRL A                               ;set default movement speed here
     LD (BowserMovementSpeed), A
 ;
-    LD HL, BowserPaletteData
+    LD HL, BowserPaletteData            ;load palette for bowser depending on gfx mode
     LD BC, _sizeof_BowserPaletteData
     LD A, (OptionBitflags)
     AND A, $01
@@ -1038,22 +1037,22 @@ BowserPaletteData_NES:
 ;--------------------------------
 
 DuplicateEnemyObj:
-    LD DE, $C000 + <Enemy_Flag
+    LD DE, $C000 + <Enemy_Flag          ;start at beginning of enemy slots
 FSLoop:
-    INC D
-    LD A, (DE)
+    INC D                               ;increment one slot
+    LD A, (DE)                          ;check enemy buffer flag for empty slot
     OR A
-    JP NZ, FSLoop
+    JP NZ, FSLoop                       ;if set, branch and keep checking
 ;
-    LD (DuplicateObj_Offset), DE
+    LD (DuplicateObj_Offset), DE        ;otherwise set offset here
 ;
-    LD A, H
-    SUB A, $C1
-    OR A, %10000000
-    LD (DE), A
+    LD A, H                             ;transfer original enemy buffer offset
+    SUB A, $C1                          ;(SMS) remove RAM offset
+    OR A, %10000000                     ;store with d7 set as flag in new enemy
+    LD (DE), A                          ;slot as well as enemy offset
 ;
-    LD L, <Enemy_PageLoc
-    LD E, L
+    LD L, <Enemy_PageLoc                ;copy page location and horizontal coordinates
+    LD E, L                             ;from original enemy to new enemy
     LD A, (HL)
     LD (DE), A
 ;
@@ -1062,13 +1061,13 @@ FSLoop:
     LD A, (HL)
     LD (DE), A
 ;
-    LD L, <Enemy_Flag
-    LD E, <Enemy_Y_HighPos
+    LD L, <Enemy_Flag                   ;set flag as normal for original enemy
+    LD E, <Enemy_Y_HighPos              ;set high vertical byte for new enemy
     LD A, $01
     LD (HL), A
     LD (DE), A
 ;
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position             ;copy vertical coordinate from original to new
     LD E, L
     LD A, (HL)
     LD (DE), A
@@ -1209,7 +1208,6 @@ FireworksXPosData:
 
 FireworksYPosData:
     .db $60, $40, $70, $40, $60, $30
-    ;.db $48, $28, $58, $28, $48, $18
 .ENDS
 
 InitFireworks:
@@ -1292,7 +1290,6 @@ Bitmasks:
 .SECTION "Enemy17YPosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 Enemy17YPosData:
     .db $40, $30, $90, $50, $20, $60, $a0, $70
-    ;.db $28, $18, $78, $38, $08, $48, $88, $58
 .ENDS
 
 .SECTION "SwimCC_IDData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -1340,9 +1337,8 @@ Set17ID:
     LD (HL), A
 ;
     LD A, (BitMFilter)
-    CP A, $FF
+    INC A
     JP NZ, GetRBit
-    XOR A
     LD (BitMFilter), A
 ;
 GetRBit:
@@ -1362,8 +1358,8 @@ ChkRBit:
     AND A, C
     JP Z, AddFBit
     RLC C
+    INC E
     LD A, E
-    INC A
     AND A, %00000111
     LD E, A
     JP ChkRBit
@@ -1525,8 +1521,8 @@ SetYGp:
     JP NC, CntGrp
     INC B
 CntGrp:
-    LD H, $C0
 GrLoop:
+    LD H, $C0
 GSltLp:
     INC H
     LD A, H

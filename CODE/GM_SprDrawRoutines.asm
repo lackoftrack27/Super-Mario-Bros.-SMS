@@ -1991,11 +1991,12 @@ PlayerGraphicsTable:
     .db $44, $44, $73, $74, $75, $76, $77, $78
 .ENDS
 
+;--------------------------------
 
 .SECTION "PlayerGraphicsTable (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0E68 RETURNORG
-    .db $00, $01, $28, $29, $2A, $2B, $31, $2D
-    .db $00, $01, $28, $29, $2A, $2B, $31, $2D
-    .db $00, $01, $28, $29, $2A, $2B, $31, $2D
+    .db $00, $01, $28, $29, $2A, $2B, $31, $2D  ; SWIM ALT 1 (ACTION)
+    .db $00, $01, $28, $29, $2A, $2B, $31, $2D  ; SWIM ALT 2 (ACTION)
+    .db $00, $01, $28, $29, $2A, $2B, $31, $2D  ; SWIM ALT 3 (ACTION)
 .ENDS
 
 .SECTION "PlayerGraphicsTable (NES) EXTRA" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0EB0 RETURNORG
@@ -2006,9 +2007,9 @@ PlayerGraphicsTable:
     .db $36, $36, $36, $36, $42, $43, $64, $4E  ; SMALL ALT 1
     .db $36, $36, $36, $36, $42, $43, $64, $4F  ; SMALL ALT 2
     ; ACTION
+    .db $00, $01, $28, $29, $2A, $2B, $16, $17
     .db $00, $01, $28, $29, $2A, $2B, $06, $07
     .db $00, $01, $28, $29, $2A, $2B, $0E, $0F
-    .db $00, $01, $28, $29, $2A, $2B, $16, $17
 
     .db $00, $01, $28, $29, $2A, $2B, $60, $61
 
@@ -2024,9 +2025,9 @@ PlayerGraphicsTable:
 .SECTION "PlayerGraphicsTable (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0F20 RETURNORG
 ;   $0F20
     ; BIG
+    .db $10, $11, $12, $13, $14, $15, $16, $17
     .db $00, $01, $02, $03, $04, $05, $06, $07
     .db $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
-    .db $10, $11, $12, $13, $14, $15, $16, $17
 
     .db $10, $11, $5A, $5B, $5E, $5F, $60, $61
 
@@ -2045,9 +2046,9 @@ PlayerGraphicsTable:
     
     .db $00, $01, $28, $29, $2A, $2B, $06, $07
     ; SMALL
+    .db $36, $36, $36, $36, $42, $43, $44, $45
     .db $36, $36, $36, $36, $3B, $3C, $3D, $3E
     .db $36, $36, $36, $36, $3F, $3C, $40, $41
-    .db $36, $36, $36, $36, $42, $43, $44, $45
 
     .db $36, $36, $36, $36, $3F, $3C, $62, $63
 
@@ -2068,9 +2069,9 @@ PlayerGraphicsTable:
 .ENDS
 
 .SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA [SWIM, BIG]" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0E68 RETURNORG
-    .db $00, $01, $28, $29, $2A, $2B, $2C, $31
-    .db $00, $01, $28, $29, $2A, $2B, $2C, $31
-    .db $00, $01, $28, $29, $2A, $2B, $2C, $31
+    .db $00, $01, $28, $29, $2A, $2B, $2C, $31  ; SWIM ALT 1 (ACTION)
+    .db $00, $01, $28, $29, $2A, $2B, $2C, $31  ; SWIM ALT 2 (ACTION)
+    .db $00, $01, $28, $29, $2A, $2B, $2C, $31  ; SWIM ALT 3 (ACTION)
 .ENDS
 
 .SECTION "PlayerGraphicsTable_HFLIP (NES) EXTRA" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0EB0 RETURNORG
@@ -2081,9 +2082,9 @@ PlayerGraphicsTable:
     .db $36, $36, $36, $36, $42, $43, $4D, $64  ; SMALL ALT 1
     .db $36, $36, $36, $36, $42, $43, $4F, $64  ; SMALL ALT 2
     ; ACTION
+    .db $00, $01, $28, $29, $2A, $2B, $16, $17
     .db $00, $01, $28, $29, $2A, $2B, $06, $07
     .db $00, $01, $28, $29, $2A, $2B, $0E, $0F
-    .db $00, $01, $28, $29, $2A, $2B, $16, $17
 
     .db $00, $01, $28, $29, $2A, $2B, $60, $61
 
@@ -2099,9 +2100,9 @@ PlayerGraphicsTable:
 .SECTION "PlayerGraphicsTable_HFLIP (NES)" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0F20 RETURNORG
 ;   $0F20
     ; BIG
+    .db $10, $11, $12, $13, $14, $15, $16, $17
     .db $00, $01, $02, $03, $04, $05, $06, $07
     .db $08, $09, $0A, $0B, $0C, $0D, $0E, $0F
-    .db $10, $11, $12, $13, $14, $15, $16, $17
 
     .db $10, $11, $5A, $5B, $5E, $5F, $60, $61
 
@@ -2120,9 +2121,9 @@ PlayerGraphicsTable:
 
     .db $00, $01, $28, $29, $2A, $2B, $06, $07
     ; SMALL
+    .db $36, $36, $36, $36, $42, $43, $44, $45
     .db $36, $36, $36, $36, $3B, $3C, $3D, $3E
     .db $36, $36, $36, $36, $3B, $3F, $40, $41
-    .db $36, $36, $36, $36, $42, $43, $44, $45
 
     .db $36, $36, $36, $36, $3B, $3F, $62, $63
 

@@ -741,8 +741,8 @@
 
     ColumnSets:                     dsb $01
     ColumnSide:                     dsb $01
-    ;AreaParserTaskNum:              dsb $01
-    ;UseDelayedMTBuffFlag:           dsb $01
+    AreaParserTaskNum:              dsb $01
+    Scroll32Counter:                dsb $01
 
     CurrentNTAddr:                  dsb $02 ; ptr
     Sprite0HitDetectFlag:           dsb $01
@@ -906,4 +906,6 @@
     SndPauseFlag:                   dsb $01
     SndHurryUpFlag:                 dsb $01
     .                               dsb $04 ; SPARE SOUND MEM
+;
+    SpritePaletteCopy:              dsb $10
 .ENDS

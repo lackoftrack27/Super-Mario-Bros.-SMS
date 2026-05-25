@@ -233,7 +233,26 @@ AreaPalette:
     .db $01, $02, $03, $04
 .ENDS
 
+.SECTION "SPR Color Rotation Palettes" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
+SPRColorRotatePalettes:
+    .db $00, $00, $00, $00, $2A, $3F, $0B, $00, $03, $3F, $0B, $00, $00, $3F, $2A, $00
+    .db $00, $00, $00, $00, $08, $3F, $0B, $00, $03, $3F, $0B, $00, $00, $2B, $06, $00
+    .db $00, $00, $00, $00, $28, $2B, $06, $00, $03, $3F, $0B, $00, $14, $3D, $28, $00
+    .db $00, $00, $00, $00, $28, $2B, $06, $00, $03, $3F, $0B, $00, $15, $3F, $2A, $00
+.ENDS
+
 GetAreaPalette:
+    LD A, (AreaType)
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    LD HL, SPRColorRotatePalettes + $03
+    addAToHL8_M
+    LD DE, SpritePaletteCopy + $03
+    LD BC, $0D
+    LDIR
+;
     LD A, (AreaType)                ;select appropriate palette to load
     LD HL, AreaPalette              ;based on area type
     addAToHL8_M
@@ -360,15 +379,26 @@ StartClrGet:
     RET
 ;
 GetPlayerColors_NES:
-    LD DE, PlayerColors + $08
+    LD DE, PlayerColors + $08 + $02 ;set default color to firey
     BIT 1, B
-    JP NZ, WritePlayerClrStripeCmd
-    LD E, <PlayerColors
-    LD A, C
+    JP NZ, SavePlayerColors         ;jump if player is firey
+    LD E, <PlayerColors + $02       ;else use C as index into PlayerColors 
+    LD A, C                         ;to get colors for either Mario or Luigi
     SUB A, BANK_PLAYERGFX00
     ADD A, A
     addAToDE8_M
-    ;
+    ; FALL THROUGH
+    
+SavePlayerColors:
+    LD HL, SpritePaletteCopy + $02  ;save player colors to sprite palette RAM copy
+    EX DE, HL                       ;do backwards so next routine can iterate through
+    LDD                             ;PlayerColors normally
+    LDD
+    LD A, (HL)
+    LD (DE), A
+    EX DE, HL
+    ; FALL THROUGH
+
 WritePlayerClrStripeCmd:
     LD HL, (VRAM_Buffer1_Ptr)
     LD (HL), $C0
@@ -447,23 +477,21 @@ ClearBuffersDrawIcon:
     LD A, (OperMode)                    ;check game mode
     OR A
     JP NZ, IncModeTask_B                ;if not title screen mode, leave
-    /*
 ;   !!! THIS IS TO CLEAR TITLE SCREEN DATA FROM LAST SCREEN ROUTINE !!!
 ;   !!! THIS IS PROBABLY NOT NEEDED !!!
-    XOR A                               ;otherwise, clear buffer space
-    LD B, A
-    LD HL, VRAM_Buffer1-1
-    LD DE, VRAM_Buffer1-1+$100
-TScrClear:
-    LD (HL), A
-    LD (DE), A
-    INC L
-    INC E
-    DJNZ TScrClear
-    LD HL, VRAM_Buffer1
-    LD (VRAM_Buffer1_Ptr), HL
+;     XOR A                               ;otherwise, clear buffer space
+;     LD B, A
+;     LD HL, VRAM_Buffer1-1
+;     LD DE, VRAM_Buffer1-1+$100
+; TScrClear:
+;     LD (HL), A
+;     LD (DE), A
+;     INC L
+;     INC E
+;     DJNZ TScrClear
+;     LD HL, VRAM_Buffer1
+;     LD (VRAM_Buffer1_Ptr), HL
 ;   !!!
-    */
     CALL DrawMushroomIcon               ;draw player select icon
 IncSubtask:
     LD HL, ScreenRoutineTask            ;move onto next task

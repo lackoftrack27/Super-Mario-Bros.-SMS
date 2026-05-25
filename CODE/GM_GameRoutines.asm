@@ -657,7 +657,7 @@ PlayerFireFlower:
     
 CyclePlayerPalette:
     AND A, $03                          ;mask out all but d1-d0 (previously d3-d2)
-    LD HL, OptionBitflags
+    LD HL, OptionBitflags               ;jump if doing NES gfx
     BIT 0, (HL)
     JP NZ, CyclePlayerPalette_NES
     LD IXL, A                           ;store result here to use as palette bits
@@ -668,70 +668,43 @@ CyclePlayerPalette:
     RET
 
 CyclePlayerPalette_NES:
+    ADD A, A                            ;index into copy of sprite palette in RAM
     ADD A, A
-    ADD A, A
-    ADD A, <SPRColorRotatePalettes
+    ADD A, <SpritePaletteCopy
     LD E, A
-    LD D, >SPRColorRotatePalettes
-    LD A, (AreaType)
-    ADD A, A
-    ADD A, A
-    ADD A, A
-    ADD A, A
-    addAToDE8_M
-    JP WritePlayerClrStripeCmd
+    LD D, >SpritePaletteCopy
+    JP WritePlayerClrStripeCmd          ;create stripe command (don't save player colors)
 
 ResetPalFireFlower:
-    LD A, (OptionBitflags)
+    LD A, (OptionBitflags)              ;skip if doing NES gfx
     AND A, $01
     JP NZ, +
-    LD A, (Player_SprAttrib)
+    LD A, (Player_SprAttrib)            ;clear sprite palette selector for player
     AND A, %11111100
     OR A, $02
     LD (Player_SprAttrib), A
-    JP DonePlayerTask                 ;do sub to init timer control and run player control routine
+    JP DonePlayerTask                   ;do sub to init timer control and run player control routine
 +:
-    LD DE, PlayerColors + $08
-    CALL WritePlayerClrStripeCmd
-    JP DonePlayerTask
-    ;CALL DonePlayerTask
+    LD DE, PlayerColors + $08 + $02     ;set player's colors to firey
+    CALL SavePlayerColors
+    JP DonePlayerTask                   ;do sub to init timer control and run player control routine
 
 ResetPalStar:
-    /*
-    LD A, (Player_SprAttrib)
-    AND A, %00000011
-    RET Z
-    LD A, (PlayerStatus)
-    CP A, $02
-    RET Z
-;
-    LD A, (Player_SprAttrib)            ;get player attributes
-    AND A, %11111100                    ;mask out palette bits to force palette 0
-    LD (Player_SprAttrib), A            ;store as new player attributes
-    RET
-    */
+;     LD A, (Player_SprAttrib)
+;     AND A, %00000011
+;     RET Z
+;     LD A, (PlayerStatus)
+;     CP A, $02
+;     RET Z
+; ;
+;     LD A, (Player_SprAttrib)            ;get player attributes
+;     AND A, %11111100                    ;mask out palette bits to force palette 0
+;     LD (Player_SprAttrib), A            ;store as new player attributes
+    ; RET
     ;LD A, (Player_SprAttrib)
     ;AND A, %00000011
     ;RET Z
     ;JP GetPlayerColors
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ;-------------------------------------------------------------------------------------
 ;These apply to all routines in this section unless otherwise noted:
@@ -1210,70 +1183,68 @@ ClimbAdderHigh:
 .ENDS
 
 ClimbingSub:
-    LD C, $00
-    LD A, (Player_Y_Speed)
+    LD C, $00                           ;set default adder here
+    LD A, (Player_Y_Speed)              ;get player's vertical speed
     OR A
-    JP P, +
-    DEC C
+    JP P, +                             ;if not moving upwards, branch
+    DEC C                               ;otherwise set adder to $ff
 +:
-    LD HL, Player_YMF_Dummy
-    LD A, (Player_Y_MoveForce)
+    LD HL, Player_YMF_Dummy             ;add movement force to dummy variable
+    LD A, (Player_Y_MoveForce)          ;save with carry
     ADD A, (HL)
     LD (HL), A
-;MoveOnVine:
-    LD A, (Player_Y_Speed)
-    LD HL, Player_Y_Position
+;
+    LD A, (Player_Y_Speed)              ;add carry to player's vertical position
+    LD L, <Player_Y_Position            ;and store to move player up or down
     ADC A, (HL)
     LD (HL), A
 ;
-    LD A, (Player_Y_HighPos)
+    LD A, (Player_Y_HighPos)            ;add carry to player's page location
     ADC A, C
-    LD (Player_Y_HighPos), A
+    LD (Player_Y_HighPos), A            ;and store
 ;
-    LD A, (Left_Right_Buttons)
-    LD HL, Player_CollisionBits
+    LD A, (Left_Right_Buttons)          ;compare left/right controller bits
+    LD L, <Player_CollisionBits         ;to collision flag
     AND A, (HL)
-    JP Z, InitCSTimer
+    JP Z, InitCSTimer                   ;if not set, skip to end
 ;
-    LD E, A                     ;save to E
-    LD A, (ClimbSideTimer)
+    LD E, A                             ;save to E
+    LD A, (ClimbSideTimer)              ;otherwise check timer
     OR A
-    RET NZ
+    RET NZ                              ;if timer not expired, branch to leave
 ;
-    LD A, $18
+    LD A, $18                           ;otherwise set timer now
     LD (ClimbSideTimer), A
-    LD B, $00
-    LD A, (PlayerFacingDir)
-    SRL E
-    JP C, ClimbFD
-    INC B
-    INC B
+    LD HL, ClimbAdderLow                ;set default offset here
+    LD A, (PlayerFacingDir)             ;get facing direction
+    SRL E                               ;move right button controller bit to carry
+    JP C, ClimbFD                       ;if controller right pressed, branch ahead
+    INC L                               ;otherwise increment offset by 2 bytes
+    INC L
 ClimbFD:
-    DEC A
-    JP Z, CSetFDir
-    INC B
+    DEC A                               ;check to see if facing right
+    JP Z, CSetFDir                      ;if so, branch, do not increment
+    INC L                               ;otherwise increment by 1 byte
 CSetFDir:
-    LD A, B
-    LD HL, ClimbAdderLow
-    addAToHL8_M
-    LD A, (Player_X_Position)
-    ADD A, (HL)
+    LD A, (Player_X_Position)           ;add or subtract from player's horizontal position
+    ADD A, (HL)                         ;using value here as adder and X as offset
     LD (Player_X_Position), A
 ;
+    INC L                               ;ClimbAdderHigh
     INC L
     INC L
     INC L
-    INC L
-    LD A, (Player_PageLoc)
-    ADC A, (HL)
+    LD A, (Player_PageLoc)              ;add or subtract carry or borrow using value here
+    ADC A, (HL)                         ;from the player's page location
     LD (Player_PageLoc), A
 ;
-    LD A, (Left_Right_Buttons)
-    XOR A, %00000011
-    LD (PlayerFacingDir), A
+    LD A, (Left_Right_Buttons)          ;get left/right controller bits again
+    XOR A, %00000011                    ;invert them and store them while player
+    LD (PlayerFacingDir), A             ;is on vine to face player in opposite direction
     RET
+
 InitCSTimer:
-    LD (ClimbSideTimer), A
+    LD (ClimbSideTimer), A              ;initialize timer here
     RET
 
 ;-------------------------------------------------------------------------------------

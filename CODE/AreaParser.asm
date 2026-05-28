@@ -1182,8 +1182,9 @@ WarpNum:
     LD A, B
     LD (WarpZoneControl), A             ;store number here to be used by warp zone routine
     CALL WriteGameText                  ;print text and warp zone numbers
-    LD A, OBJECTID_PiranhaPlant
+    LD C, OBJECTID_PiranhaPlant
     CALL KillEnemies                    ;load identifier for piranha plants and do sub
+    ; FALL THROUGH
 
 ScrollLockObject:
     LD A, (ScrollLock)                  ;invert scroll lock to turn it on
@@ -1192,16 +1193,15 @@ ScrollLockObject:
     RET
 
 ;--------------------------------
-;$00(IXL) - used to store enemy identifier in KillEnemies
+;$00(C) - used to store enemy identifier
 
 KillEnemies:
-    LD IXL, A                           ;store identifier here
     LD B, $05
-    LD DE, Enemy_ID + ($04 * $100)
-    LD HL, Enemy_Flag + ($04 * $100)
+    LD DE, Enemy_ID_04
+    LD HL, Enemy_Flag_04
 KillELoop:
     LD A, (DE)                          ;check for identifier in enemy object buffer
-    CP A, IXL                           ;if not found, branch
+    CP A, C                             ;if not found, branch
     JP NZ, NoKillE
     LD (HL), $00                        ;if found, deactivate enemy object flag
 NoKillE:
@@ -1223,7 +1223,7 @@ AreaFrenzy:
     LD HL, FrenzyIDData                 ;note that it starts at 8, thus weird address here
     addAToHL8_M
     LD A, (HL)
-    LD HL, Enemy_ID + ($05 * $100)
+    LD HL, Enemy_ID_05
     LD B, $06
 FreCompLoop:
     DEC H                               ;check regular slots of enemy object buffer

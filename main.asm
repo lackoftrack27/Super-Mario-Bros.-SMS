@@ -1110,7 +1110,7 @@ DigitsMathRoutine:
     CP A, MODE_TITLESCREEN
     JP Z, EraseDMods
 ;
-    LD HL, DigitModifier + ($05 * $100)
+    LD HL, DigitModifier_05
     LD BC, $0600    ; LOOP/CARRY
 AddModLoop:
     LD A, (DE)
@@ -1125,10 +1125,11 @@ StoreNewD:
     DEC E
     DEC H
     DJNZ AddModLoop
-;
+    ; FALL THROUGH
+
 EraseDMods:
     XOR A
-    LD HL, DigitModifier + ($05 * $100)
+    LD HL, DigitModifier_05
     LD B, $06   ;$07
 EraseMLoop:
     LD (HL), A

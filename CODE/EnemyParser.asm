@@ -1227,7 +1227,7 @@ InitFireworks:
     DEC A
     LD (FireworksCounter), A
 ;
-    LD DE, Enemy_ID + $06 * $100        ;start at last slot
+    LD DE, Enemy_ID_05 + $100           ;start at last slot
 StarFChk:
     DEC D
     LD A, (DE)                          ;check for presence of star flag object

@@ -551,13 +551,13 @@ PowerUpGfxTable:
 .ENDS
 
 DrawPowerUp:
-    LD HL, (Enemy_Y_Position + $0500)           ;don't display powerup if it is below visible screen
+    LD HL, (Enemy_Y_Position_05)                ;don't display powerup if it is below visible screen
     LD DE, $01D8                                ;to avoid sprite terminator
     OR A
     SBC HL, DE
     JP NC, SprObjectOffscrChk
 ;
-    LD A, (Enemy_SprDataOffset + $05 * $100)
+    LD A, (Enemy_SprDataOffset_05)
     LD E, A
     LD D, >Sprite_Y_Position
 ;

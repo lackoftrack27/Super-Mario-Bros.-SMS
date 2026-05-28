@@ -117,7 +117,7 @@ SecondaryGameSetup:
     LD (BalPlatformAlignment), A        ;initialize balance platform assignment flag
     CALL GetAreaMusic                   ;load proper music into queue
 ;
-    LD HL, SprShuffleAmt + $02 * $100   ;load sprite shuffle amounts to be used later
+    LD HL, SprShuffleAmt_02             ;load sprite shuffle amounts to be used later
     LD (HL), $0E ;$38
     DEC H
     LD (HL), $12 ;$48
@@ -1614,9 +1614,10 @@ GrowThePowerUp:
 ;
     LD A, %10000000                         ;otherwise set d7 in power-up object's state
     LD (HL), A
-    ADD A, A                                ;shift once to init A
-    ;LD (Enemy_SprAttrib + $05 * $100), A
-    RLA                                     ;rotate A to set right moving direction
+    ;ADD A, A                                ;shift once to init A
+    ;LD (Enemy_SprAttrib_05), A
+    ;RLA                                     ;rotate A to set right moving direction
+    RLCA
     LD L, <Enemy_MovingDir                  ;set moving direction
     LD (HL), A
 ;
@@ -1624,7 +1625,7 @@ GrowThePowerUp:
     LD (HL), $10
 ;
 ChkPUSte:
-    LD A, (Enemy_State + $05 * $100)        ;check power-up object's state
+    LD A, (Enemy_State_05)                  ;check power-up object's state
     CP A, $06                               ;for if power-up has risen enough
     RET C                                   ;if not, don't even bother running these routines
 ;
@@ -4064,7 +4065,7 @@ FireworksSoundScore:
     LD A, SNDID_CANNON                      ;play fireworks/gunfire sound
     LD (SFXTrack1.SoundQueue), A
     LD A, $05                               ;set part of score modifier for 500 points
-    LD (DigitModifier + $04 * $100), A
+    LD (DigitModifier_04), A
     JP EndAreaPoints                        ;jump to award points accordingly then leave
 
 ;--------------------------------
@@ -4147,11 +4148,11 @@ AwardGameTimerPoints:
     LD (SFXTrack1.SoundQueue), A
 NoTTick:
     LD A, $FF                               ;set adder here to $ff, or -1, to subtract one
-    LD (DigitModifier + $05 * $100), A
+    LD (DigitModifier_05), A
     LD DE, GameTimerDisplay + $02           ;set offset here to subtract from game timer's last digit
     CALL DigitsMathRoutine                  ;subtract digit
     LD A, $05                               ;set now to add 50 points
-    LD (DigitModifier + $05 * $100), A      ;per game timer interval subtracted
+    LD (DigitModifier_05), A                ;per game timer interval subtracted
     ; FALL THROUGH
 
 EndAreaPoints:
@@ -5129,7 +5130,7 @@ ResGTCtrl:
     LD (GameTimerCtrlTimer), A
     LD DE, GameTimerDisplay + $02           ;set offset for last digit
     LD A, $FF                               ;set value to decrement game timer digit
-    LD (DigitModifier + $05 * $100), A
+    LD (DigitModifier_05), A
     CALL DigitsMathRoutine                  ;do sub to decrement game timer slowly
     LD A, $A4                               ;set status nybbles to update game timer display
     JP PrintStatusBarNumbers                ;do sub to update the display
@@ -5693,7 +5694,7 @@ MiscLoopBack:
 
 GiveOneCoin:
     LD A, $01                           ;set digit modifier to add 1 coin
-    LD (DigitModifier + $05 * $100), A  ;to the current player's coin tally
+    LD (DigitModifier_05), A            ;to the current player's coin tally
 ;
     LD DE, PlayerCoinDisplay + $01      ;get correct offset for player's coin tally
     LD A, (CurrentPlayer)
@@ -5715,7 +5716,7 @@ GiveOneCoin:
     LD (SFXTrack1.SoundQueue), A
 CoinPoints:
     LD A, $02                           ;set digit modifier to award
-    LD (DigitModifier + $04 * $100), A  ;200 points to the player
+    LD (DigitModifier_04), A            ;200 points to the player
     ; FALL THROUGH
 
 AddToScore:
@@ -5755,30 +5756,30 @@ NoZSup:
 
 SetupPowerUp:
     LD A, OBJECTID_PowerUpObject            ;load power-up identifier into
-    LD (Enemy_ID + $05 * $100), A           ;special use slot of enemy object buffer
+    LD (Enemy_ID_05), A                     ;special use slot of enemy object buffer
 ;
     LD L, <Block_PageLoc                    ;store page location of block object
     LD A, (HL)                              ;as page location of power-up object
-    LD (Enemy_PageLoc + $05 * $100), A
+    LD (Enemy_PageLoc_05), A
 ;
     LD L, <Block_X_Position                 ;store horizontal coordinate of block object
     LD A, (HL)
-    LD (Enemy_X_Position + $05 * $100), A   ;as horizontal coordinate of power-up object
+    LD (Enemy_X_Position_05), A             ;as horizontal coordinate of power-up object
 ;
     LD A, $01                               ;set vertical high byte of power-up object
-    LD (Enemy_Y_HighPos + $05 * $100), A
+    LD (Enemy_Y_HighPos_05), A
 ;
     LD L, <Block_Y_Position                 ;get vertical coordinate of block object
     LD A, (HL)
     SUB A, $08                              ;subtract 8 pixels
-    LD (Enemy_Y_Position + $05 * $100), A   ;and use as vertical coordinate of power-up object
+    LD (Enemy_Y_Position_05), A             ;and use as vertical coordinate of power-up object
 ;
     LD A, $01
-    LD (Enemy_State + $05 * $100), A        ;set power-up object's state
-    LD (Enemy_Flag + $05 * $100), A         ;set buffer flag
+    LD (Enemy_State_05), A                  ;set power-up object's state
+    LD (Enemy_Flag_05), A                   ;set buffer flag
 ;
     LD A, $03                               ;set bounding box size control for power-up object
-    LD (Enemy_BoundBoxCtrl + $05 * $100), A
+    LD (Enemy_BoundBoxCtrl_05), A
 ;
     LD A, (PowerUpType)                     ;check currently loaded power-up type
     CP A, $02
@@ -5791,7 +5792,7 @@ StrType:
     LD (PowerUpType), A                     ;store type here
 PutBehind:
     ;LD A, %00100000
-    ;LD (Enemy_SprAttrib + $05 * $100), A
+    ;LD (Enemy_SprAttrib_05), A
     LD A, SNDID_ITEM                        ;load power-up reveal sound and leave
     LD (SFXTrack1.SoundQueue), A
     RET
@@ -7636,7 +7637,7 @@ FlagpoleCollision:
     CP A, $04                           ;check for flagpole slide routine running
     JP Z, RunFR                         ;if running, branch to end of flagpole code here
 ;
-    LD A, OBJECTID_BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
+    LD C, OBJECTID_BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
     CALL KillEnemies                    ;get rid of them
 ;
     LD A, SNDID_SILENCE

@@ -216,7 +216,18 @@
     Enemy_CollisionBits_01:         dsb $01 ; [6]
     Enemy_State_01:                 dsb $01 ; [6]
     ; $1C
-    .                               dsb $0E ; SprObject_XXX for enemy slot 2
+    ;.                               dsb $0E ; SprObject_XXX for enemy slot 2
+    Enemy_X_Speed_01:               dsb $01
+    Enemy_PageLoc_01:               dsb $01
+    Enemy_X_Position_01:            dsb $01
+    Enemy_Y_Speed_01:               dsb $01
+    Enemy_Y_Position_01:            dsb $01
+    Enemy_Y_HighPos_01:             dsb $01
+    Enemy_X_MoveForce_01:           dsb $01
+    Enemy_YMF_Dummy_01:             dsb $01
+    Enemy_Y_MoveForce_01:           dsb $01
+    Enemy_BoundBoxCtrl_01:          dsb $01
+    EnemyBoundingBoxCoord_01:       dsb $04
     ; $2A
     Fireball_Rel_XPos:              dsb $01 ; [$07] *
     Fireball_Rel_YPos:              dsb $01 ; [$07] *
@@ -235,7 +246,7 @@
     ; $35
     .                               dsb $04
     ; $39
-    .                               dsb $01
+    DigitModifier_01:               dsb $01
     
     .                               dsb $06
     ; $40
@@ -264,7 +275,18 @@
     Enemy_CollisionBits_02:         dsb $01 ; [6]
     Enemy_State_02:                 dsb $01 ; [6]
     ; $1C
-    .                               dsb $0E ; SprObject_XXX for enemy slot 3
+    ;.                               dsb $0E ; SprObject_XXX for enemy slot 3
+    Enemy_X_Speed_02:               dsb $01
+    Enemy_PageLoc_02:               dsb $01
+    Enemy_X_Position_02:            dsb $01
+    Enemy_Y_Speed_02:               dsb $01
+    Enemy_Y_Position_02:            dsb $01
+    Enemy_Y_HighPos_02:             dsb $01
+    Enemy_X_MoveForce_02:           dsb $01
+    Enemy_YMF_Dummy_02:             dsb $01
+    Enemy_Y_MoveForce_02:           dsb $01
+    Enemy_BoundBoxCtrl_02:          dsb $01
+    EnemyBoundingBoxCoord_02:       dsb $04
     ; $2A
     Bubble_Rel_XPos:                dsb $01 ; [$07] *
     Bubble_Rel_YPos:                dsb $01 ; [$07] *
@@ -283,7 +305,7 @@
     ; $35
     .                               dsb $04
     ; $39
-    .                               dsb $01
+    DigitModifier_02:               dsb $01
     
     .                               dsb $06
     ; $40
@@ -309,7 +331,18 @@
     Enemy_CollisionBits_03:         dsb $01 ; [6]
     Enemy_State_03:                 dsb $01 ; [6]
     ; $1C
-    .                               dsb $0E ; SprObject_XXX for enemy slot 4
+    ;.                               dsb $0E ; SprObject_XXX for enemy slot 4
+    Enemy_X_Speed_03:               dsb $01
+    Enemy_PageLoc_03:               dsb $01
+    Enemy_X_Position_03:            dsb $01
+    Enemy_Y_Speed_03:               dsb $01
+    Enemy_Y_Position_03:            dsb $01
+    Enemy_Y_HighPos_03:             dsb $01
+    Enemy_X_MoveForce_03:           dsb $01
+    Enemy_YMF_Dummy_03:             dsb $01
+    Enemy_Y_MoveForce_03:           dsb $01
+    Enemy_BoundBoxCtrl_03:          dsb $01
+    EnemyBoundingBoxCoord_03:       dsb $04
     ; $2A
     Block_Rel_XPos:                 dsb $01 ; [$07] *
     Block_Rel_YPos:                 dsb $01 ; [$07] *
@@ -328,7 +361,7 @@
     ; $35
     .                               dsb $04
     ; $39
-    .                               dsb $01
+    DigitModifier_03:               dsb $01
     
     .                               dsb $06
     ; $40
@@ -354,7 +387,18 @@
     Enemy_CollisionBits_04:         dsb $01 ; [6]
     Enemy_State_04:                 dsb $01 ; [6]
     ; $1C
-    .                               dsb $0E ; SprObject_XXX for enemy slot 5
+    ;.                               dsb $0E ; SprObject_XXX for enemy slot 5
+    Enemy_X_Speed_04:               dsb $01
+    Enemy_PageLoc_04:               dsb $01
+    Enemy_X_Position_04:            dsb $01
+    Enemy_Y_Speed_04:               dsb $01
+    Enemy_Y_Position_04:            dsb $01
+    Enemy_Y_HighPos_04:             dsb $01
+    Enemy_X_MoveForce_04:           dsb $01
+    Enemy_YMF_Dummy_04:             dsb $01
+    Enemy_Y_MoveForce_04:           dsb $01
+    Enemy_BoundBoxCtrl_04:          dsb $01
+    EnemyBoundingBoxCoord_04:       dsb $04
     ; $2A
     Block_Rel_XPos_01:              dsb $01 ; [$07] *
     Block_Rel_YPos_01:              dsb $01 ; [$07] *
@@ -373,7 +417,7 @@
     ; $35
     .                               dsb $04
     ; $39
-    .                               dsb $01
+    DigitModifier_04:               dsb $01
     
     .                               dsb $06
     ; $40
@@ -399,7 +443,18 @@
     Enemy_CollisionBits_05:         dsb $01 ; [6]
     Enemy_State_05:                 dsb $01 ; [6]
     ; $1C
-    .                               dsb $0E ; SprObject_XXX for enemy slot 6
+    ;.                               dsb $0E ; SprObject_XXX for enemy slot 6
+    Enemy_X_Speed_05:               dsb $01
+    Enemy_PageLoc_05:               dsb $01
+    Enemy_X_Position_05:            dsb $01
+    Enemy_Y_Speed_05:               dsb $01
+    Enemy_Y_Position_05:            dsb $01
+    Enemy_Y_HighPos_05:             dsb $01
+    Enemy_X_MoveForce_05:           dsb $01
+    Enemy_YMF_Dummy_05:             dsb $01
+    Enemy_Y_MoveForce_05:           dsb $01
+    Enemy_BoundBoxCtrl_05:          dsb $01
+    EnemyBoundingBoxCoord_05:       dsb $04
     ; $2A
     Misc_Rel_XPos:                  dsb $01 ; [$07] * END
     Misc_Rel_YPos:                  dsb $01 ; [$07] * END
@@ -418,7 +473,7 @@
     ; $35
     .                               dsb $04
     ; $39
-    .                               dsb $01
+    DigitModifier_05:               dsb $01
     
     .                               dsb $06
     ; $40
@@ -583,7 +638,9 @@
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 0E" SLOT 17
     .                               dsb $19 ; UNUSED
-    .                               dsb $03 ; MISC 1...
+    HammerEnemyOffset_01:           dsb $01 ; [9]
+    Misc_Collision_Flag_01:         dsb $01 ; [9]
+    Misc_State_01:                  dsb $01 ; [9]
     ; $1C
     .                               dsb $0E ; MISC 1...
     ; $2A
@@ -595,7 +652,9 @@
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 0F" SLOT 18
     .                               dsb $19 ; UNUSED
-    .                               dsb $03 ; MISC 2...
+    HammerEnemyOffset_02:           dsb $01 ; [9]
+    Misc_Collision_Flag_02:         dsb $01 ; [9]
+    Misc_State_02:                  dsb $01 ; [9]
     ; $1C
     .                               dsb $0E ; MISC 2...
     ; $2A

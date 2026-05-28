@@ -231,7 +231,7 @@ MovePlayerYAxis:
 ;-------------------------------------------------------------------------------------
 
 FlagpoleSlide:
-    LD A, (Enemy_ID + $05 * $100)       ;check special use enemy slot
+    LD A, (Enemy_ID_05)                 ;check special use enemy slot
     CP A, OBJECTID_FlagpoleFlagObject   ;for flagpole flag object
     JP NZ, NoFPObj                      ;if not found, branch to something residual
     LD A, (FlagpoleSoundQueue)          ;load flagpole sound
@@ -964,7 +964,7 @@ BrickShatter:
     LD A, $FE
     LD (Player_Y_Speed), A              ;set vertical speed for player
     LD A, $05
-    LD (DigitModifier + $05 * $100), A  ;set digit modifier to give player 50 points
+    LD (DigitModifier_05), A            ;set digit modifier to give player 50 points
 ;
     PUSH HL                             ;save block offset
     CALL AddToScore                     ;do sub to update the score

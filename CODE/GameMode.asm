@@ -7601,6 +7601,7 @@ HandleCoinMetatile:
 HandleAxeMetatile:
     XOR A
     LD (OperMode_Task), A               ;reset secondary mode
+    LD (SndHurryUpFlag), A              ;clear hurry up flag for music
     LD A, $02
     LD (OperMode), A                    ;set primary mode to autoctrl mode
     LD A, $18

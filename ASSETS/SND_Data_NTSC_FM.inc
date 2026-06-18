@@ -3478,16 +3478,18 @@ Mus_Title_FM:
     smpsChangeVol $FF
     .db nG3, $08
     smpsChangeVol $FF
-
     ;
     smpsTempo $6A
-@ch0Jump1:
+    smpsCall Mus_Title_FM@ch0Call1
+    smpsJump Mus_Title_FM@ch0LoopPoint
+
+
+@ch0Call1:
     smpsModSetup    $10, $01, $01, $02
     .db nE6, $20, nRst, $04, nEb6, $20, nRst, $04
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
@@ -3501,7 +3503,6 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
@@ -3515,7 +3516,6 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nD6, $29, nRst, $01
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
@@ -3529,7 +3529,6 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
@@ -3543,7 +3542,6 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nG6, $20, nRst, $04
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nG6, $01, nRst, $05, nG5, $01, nRst, $05, nG6, $01, nRst, $05, nA6, $01, nRst, $05
@@ -3557,7 +3555,6 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nF6, $20, nRst, $04
     ;
-    ;smpsChangeVol $01
     smpsPatchEnv $05
     smpsVolEnv  $00
     .db nF6, $01, nRst, $05, nF5, $01, nRst, $05, nF6, $01, nRst, $05, nG6, $01, nRst, $05
@@ -3569,7 +3566,8 @@ Mus_Title_FM:
     smpsFMVoice $01
     .db nE6, $20, nRst, $04, nA5, $0A, nRst, $02, nB5, $0A, nRst, $02, nF6, $0A, nRst, $02
     .db nE6, $0A, nRst, $02, nE6, $10, nRst, $02, nB5, $05, nRst, $01, nC6, $20, nRst, $04
-    smpsJump    Mus_Title_FM@ch0LoopPoint
+    smpsModOff
+    smpsRet
 
 ;   --- CHANNEL 1 DATA ---
 @ch1:
@@ -3851,12 +3849,12 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 5 DATA ---
 @ch5:
-    .db nRst, $7F, $11
     smpsFMVoice $01
     smpsVolEnv  $06
     smpsPatchEnv $00
     smpsModSetup    $10, $01, $01, $02
 @ch5LoopPoint:
+    .db nRst, $7F, $11
     .db nG5, $20, nRst, $04, nFs5, $20, nRst, $04
     smpsChangeVol $01
     .db nG5, $29, nRst, $01
@@ -3864,7 +3862,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
@@ -3881,7 +3878,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
@@ -3898,7 +3894,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
@@ -3915,7 +3910,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
@@ -3932,7 +3926,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nG6, $01, nRst, $05, nG5, $01, nRst, $05, nG6, $01, nRst, $05, nA6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nG6, $01, nRst, $05
@@ -3949,7 +3942,6 @@ Mus_Title_FM:
     smpsVolEnv  $00
     smpsDetune $02
     smpsPatchEnv $05
-    ;smpsChangeVol $02
     smpsChangeVol $01
     .db nF6, $01, nRst, $05, nF5, $01, nRst, $05, nF6, $01, nRst, $05, nG6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nF6, $01, nRst, $05
@@ -4001,12 +3993,10 @@ Mus_Title_FM:
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $0C
 
-    ;smpsChangeVol $01
     smpsVolEnv  $00
     smpsPatchEnv    $0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2, nD2
-    ;smpsChangeVol $FF
     smpsRet
 
 @ch6Call2:  ; 2
@@ -4015,12 +4005,10 @@ Mus_Title_FM:
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $0C
 
-    ;smpsChangeVol $01
     smpsVolEnv  $00
     smpsPatchEnv    $0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2, $06, nD2, nD2, $0C
-    ;smpsChangeVol $FF
     smpsRet
 
 @ch6Call3:
@@ -4049,11 +4037,12 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 8 DATA ---
 @ch8:
-    .db nRst, $04
     smpsDetune $01
     smpsFMVoice $01
     smpsVolEnv  $06
+    .db nRst, $04
 
+@ch8LoopPoint:
     .db nC3, $23, nRst, $01, nC3, $23, nRst, $01, nC3, $23, nRst, $01
 
     .db nG3, $07
@@ -4069,6 +4058,6 @@ Mus_Title_FM:
     .db nG3, $08
     smpsChangeVol $FF
 
-    smpsJump    Mus_Title_FM@ch0Jump1
-
+    smpsCall Mus_Title_FM@ch0Call1
+    smpsJump Mus_Title_FM@ch8LoopPoint
 .ENDS

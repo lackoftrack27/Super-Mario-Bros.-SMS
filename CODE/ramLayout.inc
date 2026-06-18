@@ -1155,4 +1155,5 @@
     MemoryControlValue:             dsb $01
     FMDetectedFlag:                 dsb $01
     SndFreqTablePtr:                dsb $02
+    TitleLoadedFlag:                dsb $01
 .ENDS

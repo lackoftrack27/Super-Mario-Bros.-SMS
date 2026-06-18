@@ -1,17 +1,17 @@
 ;-------------------------------------------------------------------------------------
  
 AreaParserTaskHandler:
-    LD A, (AreaParserTaskNum)
+    LD A, (AreaParserTaskNum)   ;check number of tasks here
     OR A
-    JP NZ, DoAPTasks
+    JP NZ, DoAPTasks            ;if already set, go ahead
     LD A, $08
-    LD (AreaParserTaskNum), A
+    LD (AreaParserTaskNum), A   ;otherwise, set eight by default
 DoAPTasks:
     DEC A
     CALL AreaParserTasks
     LD HL, AreaParserTaskNum
-    DEC (HL)
-    RET NZ
+    DEC (HL)                    ;if all tasks not complete do not
+    RET NZ                      ;set VRAM address control to Buffer2
     LD A, VRAMTBL_BUFFER2
     LD (VRAM_Buffer_AddrCtrl), A
     RET
@@ -2531,6 +2531,11 @@ GetAreaDataAddrs:
 ;   Upload AreaData to aligned area in RAM
     INC HL
 +:
+;
+    LD A, (TitleLoadedFlag)         ;skip copying level data to RAM
+    OR A                            ;if past initial load on title screen
+    JP NZ, +
+;
     LD DE, AreaDataBank
     LD BC, $0100
     LDIR
@@ -2550,6 +2555,13 @@ GetAreaDataAddrs:
     CP A, $42
     RET NZ
     LD (BonusAreaFlag), A
+    RET
+
++:
+    POP HL
+;   Restore bank
+    LD A, BANK_SLOT2
+    LD (MAPPER_SLOT2), A
     RET
 
 

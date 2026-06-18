@@ -12,10 +12,18 @@ TitleScreenMode:
 ;-------------------------------------------------------------------------------------
 
 InitializeGame:
-    LD HL, InitGameOffset           ;clear all memory as in initialization procedure,
-    CALL InitializeMemory           ;but this time, clear only as far as $076f
+    LD HL, InitGameOffset           ;clear all memory as in initialization procedure...
+    LD A, (TitleLoadedFlag)         ;only do this on initial load
+    OR A
+    CALL Z, InitializeMemory        ;...but this time, clear only as far as $076f
 ;
-    CALL SndInitMemory              ;clear out memory used by the sound engine
+    LD A, (TitleLoadedFlag)         ;only do this on initial load
+    OR A
+    CALL Z, SndInitMemory           ;clear out memory used by the sound engine
+;
+    LD A, (TitleLoadedFlag)         ;do different initialization routine if after initial load
+    OR A
+    CALL NZ, InitializeMemoryExceptSND
 ;
     LD A, $18                       ;set demo timer
     LD (DemoTimer), A
@@ -51,6 +59,9 @@ GameMenuRoutine:
     LD A, WORLDSELECT
     LD (WorldNumber), A
     .ENDIF
+;
+    LD A, $01                       ;set initial load flag
+    LD (TitleLoadedFlag), A
 
     LD E, $00
     LD A, (SavedJoypad1Bits)        ;check to see if either player pressed
@@ -150,6 +161,7 @@ GameMenuRoutine:
     XOR A
     LD (OperMode_Task), A           ;set game mode here, and clear demo timer
     LD (DemoTimer), A
+    LD (TitleLoadedFlag), A         ;clear initial load flag
 ;
     INC A
     LD (Hidden1UpFlag), A           ;set 1-up box flag for both players

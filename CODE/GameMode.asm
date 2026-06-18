@@ -15,6 +15,10 @@ GameMode:
 
 InitializeArea:
     DI                              ;prevent interrupts from corrupting mem initialization
+
+    LD A, (TitleLoadedFlag)         ;skip mem initialization if past initial load on title screen
+    OR A
+    JP NZ, +
     LD HL, InitAreaOffset           ;clear all memory again, only as far as $074b
     CALL InitializeMemory           ;this is only necessary if branching from
 ;
@@ -24,6 +28,7 @@ InitializeArea:
     LD (HL), $00
     LDIR
 ;
++:
     LD HL, ColumnBuffer
     LD (ColumnUpdate_Ptr), HL
     DEC H
@@ -78,8 +83,13 @@ InitializeArea:
     LD A, $02                       ;if halfway page set, overwrite start position from header
     LD (PlayerEntranceCtrl), A
 @DoneInitArea:
+    LD A, (TitleLoadedFlag)         ;don't silence music if past initial load on title screen
+    OR A
+    JP NZ, +
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A
++:
+    
     XOR A                           ;disable screen output
     LD (DisableScreenFlag), A
     LD HL, OperMode_Task            ;increment one of the modes

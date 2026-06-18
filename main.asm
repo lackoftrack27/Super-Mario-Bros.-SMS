@@ -474,6 +474,7 @@ ColdBoot:
     CALL InitializeMemory           ;clear memory using pointer in HL
     XOR A
     LD (OperMode), A                ;reset primary mode of operation
+    LD (TitleLoadedFlag), A
     INC A
     LD (FrameDoneFlag), A
     LD A, $A5
@@ -657,7 +658,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD L, <Sprite_X_Position
     CALL OutiBlock128
-;   EXTRA NAMETABLE UPDATE FOR COLUMN DRAWING
+;   EXTRA NAMETABLE UPDATE FOR COLUMN DRAWING   [CPU TIME: 08 LINES]
     LD A, (RenderColumnFlag)
     OR A
     CALL NZ, ColumnWriteUpdate
@@ -685,8 +686,6 @@ NonMaskableInterrupt:
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
 ;   TILE STREAMING
-    ;LD HL, TileStreamRet
-    ;PUSH HL
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
     SBC HL, DE
@@ -876,13 +875,14 @@ WriteVertColumnBuff2:
 
 
 ColumnWriteUpdate:
+;   CLEAR RENDER FLAG
     XOR A
     LD (RenderColumnFlag), A
-;
+;   ADVANCE POINTER TO TILE DATA
     LD HL, (ColumnWrite_Ptr)
     INC L
     INC L
-;
+;   PREPARE SHADOW REGS
     EXX
     LD HL, (ColumnWrite_Ptr)
     LD A, (HL)
@@ -892,9 +892,8 @@ ColumnWriteUpdate:
     LD C, VDPCON_PORT
     LD DE, $0040
     EXX
-;
+;   WRITE 23 WORDS VERTICALLY
     JP WriteVeriBlock_W
-
 
 IndirectCallHL:
     JP (HL)
@@ -992,38 +991,43 @@ MoveSpritesOffscreen:
 ;-------------------------------------------------------------------------------------
 
 GetAreaMusic:
-    LD A, (OperMode)
+    LD A, (OperMode)                    ;if in title screen mode, skip
     OR A
     JP NZ, NotOnTitleScreen
-    LD A, (OptionBitflags)
+;
+    LD A, (TitleLoadedFlag)             ;if after initial load at title screen, exit
+    OR A
+    RET NZ
+    LD A, (OptionBitflags)              ;depending on sound mode, play title or silence
     AND A, %00000010
     LD A, SNDID_TITLE_FM
     JP NZ, StoreMusicDirect
     LD A, SNDID_SILENCE
     JP StoreMusicDirect
-NotOnTitleScreen:
-    LD A, (AltEntranceControl)
-    CP A, $02
-    JP Z, ChkAreaType
 ;
-    LD C, $05
-    LD A, (PlayerEntranceCtrl)
+NotOnTitleScreen:
+    LD A, (AltEntranceControl)          ;check for specific alternate mode of entry
+    CP A, $02                           ;if found, branch without checking starting position
+    JP Z, ChkAreaType                   ;from area object data header
+;
+    LD C, $05                           ;select music for pipe intro scene by default
+    LD A, (PlayerEntranceCtrl)          ;check value from level header for certain values
     CP A, $06
-    JP Z, StoreMusic
-    CP A, $07
+    JP Z, StoreMusic                    ;load music for pipe intro scene if header
+    CP A, $07                           ;start position either value $06 or $07
     JP Z, StoreMusic
 ChkAreaType:
-    LD C, $04
-    LD A, (BonusAreaFlag)
+    LD C, $04                           ;select music for cloud type level
+    LD A, (BonusAreaFlag)               ;use it for in bonus area (cloud or underground coin room)
     OR A
     JP NZ, StoreMusic
-    LD A, (AreaType)
+    LD A, (AreaType)                    ;else, load area type as offset for music bit
     LD C, A
 StoreMusic:
     LD A, C
     ADD A, SNDID_WATER
 StoreMusicDirect:
-    LD (MusicTrack0.SoundQueue), A
+    LD (MusicTrack0.SoundQueue), A      ;store in queue and leave
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -1063,7 +1067,49 @@ InitializeMemory:
     LD B, A
     LD (HL), $00
     LDDR
-;
+;   NON-ZERO INITIALIZATION
+    LD HL, VRAM_Buffer1
+    LD (VRAM_Buffer1_Ptr), HL
+    LD HL, VRAM_Buffer2
+    LD (VRAM_Buffer2_Ptr), HL
+    LD HL, PlayerGraphicsTable@smlStand
+    LD (PlayerGfxOffset), HL
+    LD A, (OptionBitflags)
+    AND A, $01
+    LD A, BANK_PLAYERGFX00
+    JP Z, +
+    LD A, BANK_PLAYERGFX04
++:
+    LD (PlayerGfxBank), A
+;   SOUND TRACK INITIALIZATION
+    JP SndInitMemory@InitChanBits
+
+
+InitializeMemoryExceptSND:
+    DI
+;   RAM BANK $1E
+    LD HL, $DE00
+    LD DE, $DE01
+    LD BC, InitGameOffset - $DE01
+    LD (HL), $00
+    LDIR
+;   RAM BANK $00-$15
+    LD H, $C0
+    EXX
+    LD B, $16
+-:
+    EXX
+    LD D, H
+    LD L, $00
+    LD E, $01
+    LD BC, $003F
+    LD (HL), $00
+    LDIR
+    INC H
+    EXX
+    DJNZ -
+    EXX
+;   NON-ZERO INITIALIZATION
     LD HL, VRAM_Buffer1
     LD (VRAM_Buffer1_Ptr), HL
     LD HL, VRAM_Buffer2
@@ -1078,7 +1124,11 @@ InitializeMemory:
 +:
     LD (PlayerGfxBank), A
 ;
-    JP SndInitMemory@InitChanBits
+    IN A, (VDPCON_PORT)
+    EI
+    RET
+
+
 ;-------------------------------------------------------------------------------------
 
 OperModeExecutionTree:

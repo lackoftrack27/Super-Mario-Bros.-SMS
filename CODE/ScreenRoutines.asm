@@ -441,6 +441,10 @@ DrawTitleScreen:
     LD A, (OperMode)                    ;are we in title screen mode?
     OR A
     JP NZ, IncModeTask_B                ;if not, exit
+;
+    LD A, (TitleLoadedFlag)             ;don't bother with loading tile data 
+    OR A                                ;if after initial load on title screen
+    JP NZ, @SkipTileLoad
 ;   Load graphics for TitleScreen
     DI
     LD A, ASSET_TITLESCREEN
@@ -465,6 +469,7 @@ DrawTitleScreen:
     LD (MAPPER_SLOT2), A
     IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
     EI
+@SkipTileLoad:
 ;   Set Buffer control
     LD A, (OptionBitflags)
     AND A, $01
@@ -516,6 +521,10 @@ IncModeTask_B:
 
 
 LoadLevelTileData:
+;
+    LD A, (TitleLoadedFlag)             ;don't bother loading tile data
+    OR A                                ;if after initial load on title screen
+    RET NZ
 ;   TURN OFF INTERRUPTS
     DI
 ;   LOAD ENEMY SPRITES

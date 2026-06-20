@@ -837,7 +837,7 @@ CheckForRetainerObj:
 
 CheckForBulletBillCV:
     CP A, OBJECTID_BulletBill_CannonVar     ;otherwise check for bullet bill object
-    JP NZ, SaveEnemyObject                  ;if not found, branch again
+    JR NZ, SaveEnemyObject                  ;if not found, branch again
 ;
     DEC D                                   ;decrement saved vertical position
 ;
@@ -865,8 +865,8 @@ SaveEnemyObject:
     LD IXH, C                               ;and Y here (enemy state -2 MSB if not changed)
 
 CheckForPodoboo:
-    CP A, $0C
-    JP Z, PodobooGfxHandler
+    CP A, $0C                               ;check for podoboo object
+    JP Z, PodobooGfxHandler                 ;branch if found
 
 CheckForGoomba:
     ;LD A, IYH                

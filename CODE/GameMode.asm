@@ -18,7 +18,7 @@ InitializeArea:
 
     LD A, (TitleLoadedFlag)         ;skip mem initialization if past initial load on title screen
     OR A
-    JP NZ, +
+    JR NZ, +
     LD HL, InitAreaOffset           ;clear all memory again, only as far as $074b
     CALL InitializeMemory           ;this is only necessary if branching from
 ;
@@ -37,7 +37,7 @@ InitializeArea:
     LD A, (AltEntranceControl)
     OR A
     LD A, (HalfwayPage)             ;if AltEntranceControl not set, use halfway page, if any found
-    JP Z, @StartPage
+    JR Z, @StartPage
     LD A, (EntrancePage)            ;otherwise use saved entry page number here
 @StartPage:
     LD (ScreenLeft_PageLoc), A      ;set as value here
@@ -65,31 +65,30 @@ InitializeArea:
     CALL GetAreaDataAddrs           ;get enemy and level addresses and load header
     LD A, (PrimaryHardMode)         ;check to see if primary hard mode has been activated
     OR A
-    JP NZ, @SetSecHard              ;if so, activate the secondary no matter where we're at
+    JR NZ, @SetSecHard              ;if so, activate the secondary no matter where we're at
     LD A, (WorldNumber)             ;otherwise check world number
     CP A, WORLD5                    ;if less than 5, do not activate secondary
-    JP C, @CheckHalfway
-    JP NZ, @SetSecHard              ;if not equal to, then world > 5, thus activate
+    JR C, @CheckHalfway
+    JR NZ, @SetSecHard              ;if not equal to, then world > 5, thus activate
     LD A, (LevelNumber)             ;otherwise, world 5, so check level number
     CP A, LEVEL3                    ;if 1 or 2, do not set secondary hard mode flag
-    JP C, @CheckHalfway 
+    JR C, @CheckHalfway 
 @SetSecHard:
     LD HL, SecondaryHardMode        ;set secondary hard mode flag for areas 5-3 and beyond
     INC (HL)
 @CheckHalfway:
     LD A, (HalfwayPage)
     OR A
-    JP Z, @DoneInitArea
+    JR Z, @DoneInitArea
     LD A, $02                       ;if halfway page set, overwrite start position from header
     LD (PlayerEntranceCtrl), A
 @DoneInitArea:
     LD A, (TitleLoadedFlag)         ;don't silence music if past initial load on title screen
     OR A
-    JP NZ, +
+    JR NZ, +
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A
 +:
-    
     XOR A                           ;disable screen output
     LD (DisableScreenFlag), A
     LD HL, OperMode_Task            ;increment one of the modes
@@ -188,7 +187,7 @@ GameCoreRoutine:
     CP A, $03                           ;if we are supposed to be here,
     RET C                               ;exit if we are not suppose to be in the mode
     ; FALL THROUGH
-    
+
 ;-------------------------------------------------------------------------------------
 
 GameEngine:
@@ -276,31 +275,31 @@ UpdScrollVar:
     CP A, VRAMTBL_BUFFER2                   ;if vram address controller set to VRAM_Buffer2
     RET Z                                   ;then branch to leave
 ;
-    LD A, (AreaParserTaskNum)
+    LD A, (AreaParserTaskNum)               ;otherwise check number of tasks
     OR A
     JP NZ, RunParser
-    LD A, (ScrollThirtyTwo)
-    SUB A, $20
-    JP M, CheckScrollEight
-    LD (ScrollThirtyTwo), A
-    LD HL, VRAM_Buffer2
+    LD A, (ScrollThirtyTwo)                 ;get horizontal scroll in 0-31 or $00-$20 range
+    SUB A, $20                              ;check to see if exceeded $21
+    JP M, CheckScrollEight                  ;if not, branch to check if scroll exceeded $09
+    LD (ScrollThirtyTwo), A                 ;store new scroll value
+    LD HL, VRAM_Buffer2                     ;reset buffer2's ptr (not necessary)
     LD (VRAM_Buffer2_Ptr), HL
 RunParser:
-    CALL AreaParserTaskHandler
+    CALL AreaParserTaskHandler              ;update the name table with more level graphics (kind of...)
     ; FALL THROUGH
 
 CheckScrollEight:
-    LD A, (ScrollEight)
-    SUB A, $08
-    RET M
-    LD (ScrollEight), A
-    LD A, $01
+    LD A, (ScrollEight)                     ;get horizontal scroll in 0-7 or $00-$08 range
+    SUB A, $08                              ;check to see if exceeded $09
+    RET M                                   ;if not, exit
+    LD (ScrollEight), A                     ;store new scroll value
+    LD A, $01                               ;set flag to update nametable with a 1 tile-wide column
     LD (RenderColumnFlag), A
     ;
-    LD HL, ColumnWrite_Ptr + $01
+    LD HL, ColumnWrite_Ptr + $01            ;update pointer on where to read the column data from
     INC (HL)
     LD A, (HL)
-    CP A, >ColumnBuffer_0F + $01
+    CP A, >ColumnBuffer_0F + $01            ;ensure pointer doesn't exceed boundaries
     RET NZ
     LD (HL), >ColumnBuffer
     RET
@@ -709,15 +708,18 @@ ProcAirBubbles:
     OR A
     RET NZ
 
-    LD B, $03                       ;otherwise load counter and use as offset
+    ;LD B, $03                       ;otherwise load counter and use as offset
     LD H, >Bubble_Y_Position + $02
 BublLoop:
+.REPEAT $03
     LD (ObjectOffset), HL
     CALL BubbleCheck                ;check timers and coordinates, create air bubble
     RelativeBubblePosition_M        ;get relative coordinates
     GetBubbleOffscreenBits_M        ;get offscreen information
     CALL DrawBubble                 ;draw the air bubble                
-    DJNZ BublLoop                   ;do this until all three are handled
+    DEC H
+.ENDR
+    ;DJNZ BublLoop                   ;do this until all three are handled
     RET
 
 .SECTION "FireballXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -812,16 +814,17 @@ FireballExplosion:
     JP DrawExplosion_Fireball
 
 BubbleCheck:
-    LD A, B
+    LD A, H
+    SUB A, >Bubble_Y_Position
     LD DE, PseudoRandomBitReg
     addAToDE8_M
     LD A, (DE)                      ;get part of LSFR
     AND A, $01
-    LD IYL, A                       ;store pseudorandom bit here
+    LD B, A                         ;store pseudorandom bit here
 ;
     LD L, <Bubble_Y_Position
     LD A, (HL)                      ;get vertical coordinate for air bubble
-    CP A, YPOS_OFFSCREEN            ;if offscreen coordinate not set,
+    CP A, YPOS_OFFSCREEN_LOGICAL    ;if offscreen coordinate not set,
     JP NZ, MoveBubl                 ;branch to move air bubble
 ;
     LD A, (AirBubbleTimer)          ;if air bubble timer not expired,
@@ -832,7 +835,7 @@ SetupBubble:
     LD A, (PlayerFacingDir)         ;get player's facing direction
     RRA                             ;move d0 to carry
     JP NC, PosBubl                  ;branch to use default value if facing left
-    LD C, $09 ;$08                       ;otherwise load alternate value here (+1 due to carry being set and 6502 code using 'adc' with 'clc' beforehand)
+    LD C, $09                       ;otherwise load alternate value here (+1 due to carry being set and 6502 code using 'adc' with 'clc' beforehand)
 PosBubl:
     LD A, (Player_X_Position)
     ADD A, C                        ;add to player's horizontal position
@@ -852,20 +855,22 @@ PosBubl:
     LD L, <Bubble_Y_HighPos
     LD (HL), $01                    ;set vertical high byte for air bubble
 ;
-    LD A, IYL                       ;get pseudorandom bit, use as offset
-    LD DE, BubbleTimerData
-    addAToDE8_M
-    LD A, (DE)                      ;get data for air bubble timer
+    LD A, $40                       ;BubbleTimerData[0]
+    INC B                           ;get pseudorandom bit, use as offset
+    DEC B
+    JR Z, +
+    LD A, $20                       ;BubbleTimerData[1]
++:
     LD (AirBubbleTimer), A          ;set air bubble timer
 MoveBubl:
-    LD A, IYL                       ;get pseudorandom bit again, use as offset
-    LD DE, Bubble_MForceData
-    addAToDE8_M
+    DEC B                           ;get pseudorandom bit again, use as offset
+    ;LD B, $FF                       ;Bubble_MForceData[0]
+    JR NZ, +
+    LD B, $50                       ;Bubble_MForceData[1]
++:
     LD L, <Bubble_YMF_Dummy
     LD A, (HL)
-    EX DE, HL
-    SUB A, (HL)                     ;subtract pseudorandom amount from dummy variable
-    EX DE, HL
+    SUB A, B                        ;subtract pseudorandom amount from dummy variable
     LD (HL), A                      ;save dummy variable
 ;
     LD L, <Bubble_Y_Position
@@ -873,18 +878,18 @@ MoveBubl:
     SBC A, $00                      ;subtract borrow from airbubble's vertical coordinate
     CP A, $20                       ;if below the status bar,
     JP NC, Y_Bubl                   ;branch to go ahead and use to move air bubble upwards
-    LD A, YPOS_OFFSCREEN            ;otherwise set offscreen coordinate
+    LD A, YPOS_OFFSCREEN_LOGICAL    ;otherwise set offscreen coordinate
 Y_Bubl:
     LD (HL), A                      ;store as new vertical coordinate for air bubble
     RET
 
-.SECTION "Bubble_MForceData & BubbleTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-Bubble_MForceData:
-    .db $ff, $50
+; .SECTION "Bubble_MForceData & BubbleTimerData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; Bubble_MForceData:
+;     .db $ff, $50
 
-BubbleTimerData:
-    .db $40, $20
-.ENDS
+; BubbleTimerData:
+;     .db $40, $20
+; .ENDS
 
 ;-------------------------------------------------------------------------------------
 
@@ -2961,11 +2966,11 @@ SubtR1:
 ChkFOfs:
     CP A, $59                                   ;if difference of coordinates within a certain range,
     JP C, VAHandl                               ;continue by handling vertical adder
-    LD A, YPOS_OFFSCREEN                        ;otherwise, load offscreen Y coordinate
+    LD A, YPOS_OFFSCREEN_LOGICAL                ;otherwise, load offscreen Y coordinate
     JP SetVFbr                                  ;and unconditionally branch to move sprite offscreen
 VAHandl:
     LD A, (Enemy_Rel_YPos)                      ;if vertical relative coordinate offscreen,
-    CP A, YPOS_OFFSCREEN                        ;skip ahead of this part and write into sprite Y coordinate
+    CP A, YPOS_OFFSCREEN_LOGICAL                ;skip ahead of this part and write into sprite Y coordinate
     JP Z, SetVFbr
     LD C, A                                     ;(SMS)store Enemy_Rel_YPos in C to avoid HL use
     LD A, IXL                                   ;load vertical adder we got from position loader
@@ -4963,6 +4968,11 @@ ScoreUpdateData:
     .db $31, $32, $34, $35, $38, $00
 .ENDS
 
+;   FloateyNum_Control
+;   FloateyNum_X_Pos
+;   FloateyNum_Y_Pos
+;   FloateyNum_Timer
+
 FloateyNumbersRoutine:
     CP A, $0B                               ;if less than $0b, branch
     JP C, ChkNumTimer
@@ -5013,17 +5023,17 @@ ChkTallEnemy:
     LD L, <Enemy_ID
     LD A, (HL)                              ;get enemy object identifier
     CP A, OBJECTID_Spiny
-    JP Z, FloateyPart                       ;branch if spiny
+    JR Z, FloateyPart                       ;branch if spiny
     CP A, OBJECTID_PiranhaPlant
-    JP Z, FloateyPart                       ;branch if piranha plant
+    JR Z, FloateyPart                       ;branch if piranha plant
     CP A, OBJECTID_HammerBro
-    JP Z, GetAltOffset                      ;branch elsewhere if hammer bro
+    JR Z, GetAltOffset                      ;branch elsewhere if hammer bro
     CP A, OBJECTID_GreyCheepCheep
-    JP Z, FloateyPart                       ;branch if cheep-cheep of either color
+    JR Z, FloateyPart                       ;branch if cheep-cheep of either color
     CP A, OBJECTID_RedCheepCheep
-    JP Z, FloateyPart
+    JR Z, FloateyPart
     CP A, OBJECTID_TallEnemy
-    JP NC, GetAltOffset                     ;branch elsewhere if enemy object => $09
+    JR NC, GetAltOffset                     ;branch elsewhere if enemy object => $09
     LD L, <Enemy_State
     LD A, (HL)
     CP A, $02                               ;if enemy state defeated or otherwise
@@ -8695,6 +8705,7 @@ FirstBoxGreater:
     LD A, (DE)                                  ;otherwise compare bottom of first to top of second
     CP A, (HL)                                  ;if bottom of first is greater than top of second, vertical wrap
     JP NC, CollisionFound                       ;collision, and branch, otherwise, proceed onwards here
+    ; FALL THROUGH
 
 NoCollisionFound:
     OR A                                        ;clear carry, then load value set earlier, then leave
@@ -8942,27 +8953,146 @@ GetObjRelativePosition:
 ;     LD D, >Block_OffscrBits
 
 GetEnemyOffscreenBits:
-    LD DE, Enemy_OffscrBits
+    LD BC, Enemy_OffscrBits
+    ; FALL THROUGH
 
 ;   HL - OBJECT OFFSET
-;   DE - OffscreenBits OFFSET
+;   BC - OffscreenBits OFFSET
+;   DE - XOffscreenBitsData/YOffscreenBitsData
 GetOffScreenBitsSet:
-    PUSH DE                                 ;save offscreen bits offset to stack for now
-    CALL GetXOffscreenBits                  ;do subroutine here
+    ;CALL GetXOffscreenBits                  ;do subroutine here
+;   --- GetXOffscreenBits INLINE ---
+    ; LOOP 1 (RIGHT SIDE CHECK)
+    LD L, <SprObject_X_Position
+    LD A, (ScreenEdge_X_Pos + $01)          ;get pixel coordinate of edge
+    SUB A, (HL)                             ;get difference between pixel coordinate of edge
+    LD E, A                                 ;store here
+    DEC L                                   ;<SprObject_PageLoc
+    LD A, (ScreenEdge_PageLoc + $01)        ;get page location of edge
+    SBC A, (HL)                             ;subtract from page location of object position
+    ;
+    LD A, $0F                               ;load offset value here
+    JP M, XLdBData_INLINE                   ;if beyond right edge or in front of left edge, branch
+    LD A, $07
+    JP NZ, XLdBData_INLINE                  ;if one page or more to the left of either edge, branch
+    ; DividePDiff
+    LD A, E
+    CP A, $38
+    LD A, $07
+    JP NC, XLdBData_INLINE
+    LD A, E
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+XLdBData_INLINE:
+    LD DE, XOffscreenBitsData
+    addAToDE8_M
+    LD A, (DE)                              ;get bits here
+    OR A                                    ;if bits not zero, branch to leave
+    JP NZ, XOffscrnRet
+    ; LOOP 2 (LEFT SIDE CHECK)
+    INC L                                   ;<SprObject_X_Position
+    LD A, (ScreenEdge_X_Pos)
+    SUB A, (HL)
+    LD E, A
+    DEC L                                   ;<SprObject_PageLoc
+    LD A, (ScreenEdge_PageLoc)
+    SBC A, (HL)
+    ;
+    LD A, $07
+    JP M, XLdBData_2_INLINE
+    LD A, $0F
+    JP NZ, XLdBData_2_INLINE
+    LD A, E
+    CP A, $38
+    LD A, $0F
+    JP NC, XLdBData_2_INLINE
+    LD A, E
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+    ADD A, $08
+XLdBData_2_INLINE:
+    LD E, <XOffscreenBitsData
+    addAToDE8_M
+    LD A, (DE)
+;
+XOffscrnRet:
     RRCA                                    ;move high nybble to low
     RRCA
     RRCA
     RRCA
     AND A, $0F
     LD IXL, A                               ;store here
-    CALL GetYOffscreenBits
+    ;CALL GetYOffscreenBits
+;   --- GetYOffscreenBits INLINE ---
+    ; LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
+    LD L, <SprObject_Y_Position
+    LD A, $00
+    SUB A, (HL)
+    LD E, A
+    INC L                               ;<SprObject_Y_HighPos
+    LD A, $01
+    SBC A, (HL)
+    ;
+    LD A, $00
+    JP M, YLdBData
+    LD A, $04
+    JP NZ, YLdBData
+    ; DividePDiff
+    LD A, E
+    CP A, $20
+    LD A, $04
+    JP NC, YLdBData
+    LD A, E
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+YLdBData:
+    LD E, <YOffscreenBitsData
+    addAToDE8_M
+    LD A, (DE)
+    OR A
+    JP NZ, YOffscrnRet
+    ; LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
+    DEC L                               ;<SprObject_Y_Position
+    LD A, $FF
+    SUB A, (HL)
+    LD E, A
+    INC L                               ;<SprObject_Y_HighPos
+    LD A, $01
+    SBC A, (HL)
+    ;
+    LD A, $04
+    JP M, YLdBData_2
+    LD A, $00
+    JP NZ, YLdBData_2
+    ; DividePDiff_2
+    LD A, E
+    CP A, $20
+    LD A, $00
+    JP NC, YLdBData_2
+    LD A, E
+    RRCA
+    RRCA
+    RRCA
+    AND A, $07
+    ADD A, $04
+YLdBData_2:
+    LD E, <YOffscreenBitsData
+    addAToDE8_M
+    LD A, (DE)
+;
+YOffscrnRet:
     ADD A, A                                ;move low nybble to high nybble
     ADD A, A
     ADD A, A
     ADD A, A
     OR A, IXL                               ;mask together with previously saved low nybble
-    POP DE                                  ;get offscreen bits offset from stack
-    LD (DE), A
+    LD (BC), A
     ;LD HL, (ObjectOffset)
     RET
 
@@ -9050,64 +9180,64 @@ XLdBData_2:
 
 ;--------------------------------
 
-GetYOffscreenBits:
-;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
-    LD L, <SprObject_Y_Position
-    LD A, $00
-    SUB A, (HL)
-    LD E, A
-    INC L                               ;<SprObject_Y_HighPos
-    LD A, $01
-    SBC A, (HL)
-;
-    LD A, $00
-    JP M, YLdBData
-    LD A, $04
-    JP NZ, YLdBData
-    ; DividePDiff
-    LD A, E
-    CP A, $20
-    LD A, $04
-    JP NC, YLdBData
-    LD A, E
-    RRCA
-    RRCA
-    RRCA
-    AND A, $07
-YLdBData:
-    LD E, <YOffscreenBitsData
-    addAToDE8_M
-    LD A, (DE)
-    OR A
-    RET NZ
-;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
-    DEC L                               ;<SprObject_Y_Position
-    LD A, $FF
-    SUB A, (HL)
-    LD E, A
-    INC L                               ;<SprObject_Y_HighPos
-    LD A, $01
-    SBC A, (HL)
-;
-    LD A, $04
-    JP M, YLdBData_2
-    LD A, $00
-    JP NZ, YLdBData_2
-    ; DividePDiff_2
-    LD A, E
-    CP A, $20
-    LD A, $00
-    JP NC, YLdBData_2
-    LD A, E
-    RRCA
-    RRCA
-    RRCA
-    AND A, $07
-    ADD A, $04
-YLdBData_2:
-    LD E, <YOffscreenBitsData
-    addAToDE8_M
-    LD A, (DE)
-    RET
+;GetYOffscreenBits:
+; ;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
+;     LD L, <SprObject_Y_Position
+;     LD A, $00
+;     SUB A, (HL)
+;     LD E, A
+;     INC L                               ;<SprObject_Y_HighPos
+;     LD A, $01
+;     SBC A, (HL)
+; ;
+;     LD A, $00
+;     JP M, YLdBData
+;     LD A, $04
+;     JP NZ, YLdBData
+;     ; DividePDiff
+;     LD A, E
+;     CP A, $20
+;     LD A, $04
+;     JP NC, YLdBData
+;     LD A, E
+;     RRCA
+;     RRCA
+;     RRCA
+;     AND A, $07
+; YLdBData:
+;     LD E, <YOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)
+;     OR A
+;     RET NZ
+; ;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
+;     DEC L                               ;<SprObject_Y_Position
+;     LD A, $FF
+;     SUB A, (HL)
+;     LD E, A
+;     INC L                               ;<SprObject_Y_HighPos
+;     LD A, $01
+;     SBC A, (HL)
+; ;
+;     LD A, $04
+;     JP M, YLdBData_2
+;     LD A, $00
+;     JP NZ, YLdBData_2
+;     ; DividePDiff_2
+;     LD A, E
+;     CP A, $20
+;     LD A, $00
+;     JP NC, YLdBData_2
+;     LD A, E
+;     RRCA
+;     RRCA
+;     RRCA
+;     AND A, $07
+;     ADD A, $04
+; YLdBData_2:
+;     LD E, <YOffscreenBitsData
+;     addAToDE8_M
+;     LD A, (DE)
+;     RET
 
 ;--------------------------------

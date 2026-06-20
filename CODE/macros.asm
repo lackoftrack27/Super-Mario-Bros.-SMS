@@ -79,28 +79,28 @@
 
 ;   Macros for offscreen bits
 .MACRO GetPlayerOffscreenBits_M
-    LD DE, Player_OffscrBits
-    LD H, D
+    LD BC, Player_OffscrBits
+    LD H, B
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetFireballOffscreenBits_M
-    LD DE, Fireball_OffscrBits
+    LD BC, Fireball_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetBubbleOffscreenBits_M
-    LD DE, Bubble_OffscrBits
+    LD BC, Bubble_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetMiscOffscreenBits_M
-    LD DE, Misc_OffscrBits
+    LD BC, Misc_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 
 .MACRO GetBlockOffscreenBits_M
-    LD DE, Block_OffscrBits
+    LD BC, Block_OffscrBits
     CALL GetOffScreenBitsSet
 .ENDM
 

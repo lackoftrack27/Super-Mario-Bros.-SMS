@@ -552,8 +552,9 @@
     VRAMAdr:        dw
     TileCount:      db
     TileAdr:        dw
-    FrameCount:     db
+    Frame:          db
     Timer:          db
+    FrameReset:     db
     TimerReset:     db
 .ENDST
 

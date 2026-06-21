@@ -873,11 +873,6 @@
     ; $2E
     ;MetaTileBuffer_EXOffset:        dsb $01
     ;MetaTileBuffer_EX:              dsb $60 ; $0C * $08
-    ;
-    ; 9 bytes per entry (VDP ADDRESS, COUNT, TILE ADDRESS, CURRENT COUNT)
-    BGTileQueue0                    INSTANCEOF _AnimatedBGTileQueue
-    BGTileQueue1                    INSTANCEOF _AnimatedBGTileQueue
-    BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
 .ENDS
 
 ;   --- END OF 2D ARRAY MEM LAYOUT ---
@@ -1157,4 +1152,8 @@
     SndFreqTablePtr:                dsb $02
     TitleLoadedFlag:                dsb $01
     BGTileQueue2GrassFlag:          dsb $01
+;
+    BGTileQueue0                    INSTANCEOF _AnimatedBGTileQueue
+    BGTileQueue1                    INSTANCEOF _AnimatedBGTileQueue
+    BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
 .ENDS

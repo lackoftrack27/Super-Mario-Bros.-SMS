@@ -538,7 +538,7 @@ LoadLevelTileData:
     LD (MAPPER_SLOT2), A
     LD HL, AnimatedBGTileInits@Coin
     LD DE, BGTileQueue0 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     ; LOAD OVERWORLD GFX AS BASE
     LD A, ASSET_BGOVERWORLD
@@ -573,12 +573,12 @@ CastleSetup:
         ; LAVA FOR SLOT 1
     LD HL, AnimatedBGTileInits@Lava
     LD DE, BGTileQueue1 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; SLOT 2 'QUESTION BLOCK' (4 TILE)
     LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue2 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     ; UNIQUE TILES FOR CASTLE AREA
     LD A, ASSET_BGCASTLE
@@ -604,12 +604,12 @@ WaterAreaSetup:
         ; WATER COIN FOR SLOT 0
     LD HL, AnimatedBGTileInits@WaterCoin
     LD DE, BGTileQueue0 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; WATER FOR SLOT 1
     LD HL, AnimatedBGTileInits@WaterA0
     LD DE, BGTileQueue1 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; NOTHING FOR SLOT 2
     LD HL, BGTileQueue2.Timer
@@ -651,7 +651,7 @@ OverWorldSetup:
         ; SLOT 1 'QUESTION BLOCK'
     LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue1 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; SLOT 2 'GRASS' (6 TILE)
     LD HL, BGTileQueue2.Timer           ; ASSUME NO GRASS
@@ -663,7 +663,7 @@ OverWorldSetup:
     JP NZ, TileLoadDone
     LD HL, AnimatedBGTileInits@Grass
     LD DE, BGTileQueue2 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
@@ -675,12 +675,12 @@ SnowOverworldSetup:
         ; WATER FOR SLOT 1
     LD HL, AnimatedBGTileInits@WaterA1
     LD DE, BGTileQueue1 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; SLOT 2 'QUESTION BLOCK' (4 TILE)
     LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue2 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     ; UPLOAD TILES FOR SNOW (ONLY FOR DEFAULT GFX)
     LD A, ASSET_BGSNOW
@@ -703,12 +703,12 @@ UndergroundSetup:
         ; SLOT 1 'LATERN'
     LD HL, AnimatedBGTileInits@Latern
     LD DE, BGTileQueue1 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
         ; SLOT 2 'QUESTION BLOCK' (4 TILE)
     LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue2 + $01
-    LD BC, $0008
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     JP TileLoadDone
     ; FOR NES GFX, CLEAR OUT LATERN GFX AREA

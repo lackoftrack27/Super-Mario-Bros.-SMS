@@ -270,6 +270,9 @@ ResetStart:
     LD (MusicRoutine), HL
     XOR A
     LD (SndPauseFlag), A
+    LD (BGTileQueue0.UpdateFlag), A
+    LD (BGTileQueue1.UpdateFlag), A
+    LD (BGTileQueue2.UpdateFlag), A
     INC A
     LD (FrameDoneFlag), A
     LD (PlayerStatus), A
@@ -1588,11 +1591,6 @@ StreamAnimatedBGTiles:
     INC L
     LD H, (HL)
     LD L, A
-    ; DEREFERENCE POINTER
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
     ; WRITE TO VRAM
     CALL IndirectCallIX
     INC C
@@ -1617,11 +1615,6 @@ StreamAnimatedBGTiles:
     INC L
     LD H, (HL)
     LD L, A
-    ; DEREFERENCE POINTER
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
     ; WRITE TO VRAM
     CALL IndirectCallIX
     INC C
@@ -1640,11 +1633,6 @@ StreamAnimatedBGTiles:
     DEC C
     ; GET POINTER   
     INC L
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    ; DEREFERENCE POINTER
     LD A, (HL)
     INC L
     LD H, (HL)
@@ -3048,20 +3036,379 @@ Map_BG_SoundSelect:
 .ENDS
 
 .INCDIR "ASSETS"
-;-------------------------------------------------------------------------------------
-.SECTION "Animated Background Tiles" BANK BANK_SLOT2 SLOT 2 ALIGN $100
-
-    .INCLUDE "ANI_Coin.inc"         ; $0C: $0000, $0080, $0100
-    .INCLUDE "ANI_WaterCoin.inc"    ; $0C: $0180, $0280, $0300
-    .INCLUDE "ANI_WaterA1.inc"      ; $10: $0380, $03C0, 
-    .INCLUDE "ANI_WaterA0.inc"      ; $10: 
-    .INCLUDE "ANI_Grass.inc"        ; $12:
-    .INCLUDE "ANI_Latern.inc"       ; $0C:
-    .INCLUDE "ANI_Lava.inc"         ; $20:
-    .INCLUDE "ANI_QBlock.inc"       ; $0C:
-
-    ; $0000 - $103F
-.ENDS
 
 ;-------------------------------------------------------------------------------------
 .INCLUDE "SND_Data_Comm.inc"
+
+;-------------------------------------------------------------------------------------
+.SECTION "Animated Background Tiles - BANK 00" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame0:
+; Tile index $000
+.db $D7 $28 $28 $28 $E7 $10 $18 $18 $EF $00 $10 $10 $FF $00 $00 $00 $00 $FF $FF $FF $38 $C6 $FF $C7 $00 $78 $FF $FF $00 $27 $FF $FF
+; Tile index $001
+.db $0C $F2 $FF $F3 $01 $20 $FF $FE $80 $00 $FF $7F $C3 $00 $FF $3C $E7 $00 $FF $18 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $002
+.db $FF $00 $00 $00 $C7 $00 $38 $38 $A2 $19 $6D $7D $01 $78 $8E $FE $00 $91 $FF $FF $82 $01 $FF $7D $7C $00 $FF $83 $00 $9E $FF $FF
+; Tile index $003
+.db $00 $00 $FF $FF $B0 $00 $FF $4F $E0 $00 $FF $1F $83 $00 $FF $7C $C7 $00 $FF $38 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame0:
+; Tile index $000
+.db $80 $00 $80 $80 $E0 $80 $E0 $E0 $7C $E0 $FC $FC $1F $FC $FF $FF $C3 $FF $FF $FF $00 $FF $FF $FF $C0 $FF $FF $FF $39 $FF $FF $FF
+; Tile index $001
+.db $01 $00 $01 $01 $07 $01 $07 $07 $3E $07 $3F $3F $F8 $3F $FF $FF $C0 $FF $FF $FF $0E $F3 $FF $FF $79 $8F $FF $FF $E0 $FF $FF $FF
+
+WaterA0Frame0:
+; Tile index $000
+.db $80 $00 $80 $80 $60 $00 $60 $60 $9C $00 $9C $1C $E3 $00 $E3 $03 $3C $00 $3C $00 $FF $00 $FF $00 $3F $00 $3F $00 $C6 $00 $C6 $00
+; Tile index $001
+.db $01 $00 $01 $01 $06 $00 $06 $06 $39 $00 $39 $38 $C7 $00 $C7 $C0 $3F $00 $3F $00 $FD $00 $FD $0C $F6 $00 $F6 $70 $1F $00 $1F $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 01" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame1:
+; Tile index $004
+.db $3F $80 $C0 $C0 $7E $01 $81 $81 $F6 $08 $09 $09 $FF $00 $00 $00 $00 $FF $FF $FF $00 $CE $FF $FF $00 $79 $FE $FF $01 $26 $FD $FF
+; Tile index $005
+.db $0C $F3 $FF $F3 $04 $20 $FF $FB $03 $00 $FF $FC $87 $00 $FF $78 $CF $00 $FF $30 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $006
+.db $EF $10 $10 $10 $7D $82 $82 $82 $3B $44 $FC $C4 $13 $28 $FE $EC $06 $B1 $FF $F9 $86 $21 $FF $79 $7C $80 $FF $83 $20 $C6 $FF $DF
+; Tile index $007
+.db $30 $00 $FF $CF $30 $00 $FF $CF $E2 $00 $FF $1D $06 $00 $FF $F9 $8F $00 $FF $70 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame1:
+; Tile index $002
+.db $00 $00 $00 $00 $98 $00 $98 $98 $FF $18 $FF $FF $E7 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $E0 $FF $FF $FF $1F $FF $FF $FF
+; Tile index $003
+.db $0A $00 $0A $0A $1F $00 $1F $1F $0B $00 $0B $0B $FF $01 $FF $FF $FE $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $57 $FF $FF $FF
+
+WaterA0Frame1:
+; Tile index $002
+.db $00 $00 $00 $00 $98 $00 $98 $98 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E0 $00 $E0 $00
+; Tile index $003
+.db $0A $00 $0A $0A $1F $00 $1F $1F $0B $00 $0B $0B $FE $00 $FE $FE $01 $00 $01 $00 $FF $00 $FF $00 $FF $00 $FF $00 $A8 $00 $A8 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 02" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame2:
+; Tile index $008
+.db $BD $40 $42 $42 $F8 $02 $07 $07 $BD $40 $42 $42 $CF $30 $30 $30 $00 $FF $FF $FF $01 $7E $FF $FE $03 $30 $FF $FC $01 $E6 $FD $FE
+; Tile index $009
+.db $0C $33 $FE $F3 $04 $00 $FF $FB $E3 $00 $FF $1C $40 $00 $FF $BF $F7 $00 $FF $08 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $00A
+.db $D7 $28 $28 $28 $EF $10 $10 $10 $EF $10 $10 $10 $5F $20 $A0 $A0 $00 $BF $FF $FF $B8 $07 $FF $47 $40 $80 $7F $BF $20 $C6 $7F $DF
+; Tile index $00B
+.db $30 $80 $FF $CF $30 $00 $FF $CF $E0 $00 $FF $1F $00 $00 $FF $FF $E2 $00 $FF $1D $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame2:
+; Tile index $004
+.db $00 $00 $00 $00 $1A $00 $1A $1A $FF $18 $FF $FF $E7 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $E0 $FF $FF $FF $1F $FF $FF $FF
+; Tile index $005
+.db $58 $00 $58 $58 $04 $00 $04 $04 $01 $00 $01 $01 $FF $01 $FF $FF $FE $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $57 $FF $FF $FF
+
+WaterA0Frame2:
+; Tile index $004
+.db $00 $00 $00 $00 $1A $00 $1A $1A $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E0 $00 $E0 $00
+; Tile index $005
+.db $58 $00 $58 $58 $04 $00 $04 $04 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $FF $00 $FF $00 $FF $00 $FF $00 $A8 $00 $A8 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 03" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame3:
+; Tile index $00C
+.db $FF $00 $00 $00 $DD $22 $22 $22 $FF $00 $00 $00 $CF $00 $30 $30 $00 $A3 $FF $FF $48 $04 $FB $B7 $32 $04 $FF $CD $01 $C6 $FD $FE
+; Tile index $00D
+.db $04 $03 $FE $FB $C3 $00 $FF $3C $B0 $00 $FF $4F $C3 $00 $FF $3C $9F $00 $FF $60 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $00E
+.db $FD $02 $02 $02 $F8 $06 $07 $07 $FD $00 $02 $02 $7D $00 $82 $82 $00 $BD $FF $FF $00 $27 $DF $FF $90 $6C $BF $6F $00 $C1 $7F $FF
+; Tile index $00F
+.db $40 $87 $FF $BF $80 $00 $FF $7F $0C $00 $FF $F3 $06 $00 $FF $F9 $8F $00 $FF $70 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame3:
+; Tile index $006
+.db $09 $00 $09 $09 $00 $00 $00 $00 $01 $00 $01 $01 $FF $01 $FF $FF $FE $FF $FF $FF $60 $FF $FF $FF $0E $FF $FF $FF $FC $FF $FF $FF
+; Tile index $007
+.db $80 $00 $80 $80 $40 $00 $40 $40 $E0 $00 $E0 $E0 $FF $E0 $FF $FF $1F $FF $FF $FF $00 $FF $FF $FF $0E $FF $FF $FF $87 $FF $FF $FF
+
+WaterA0Frame3:
+; Tile index $006
+.db $09 $00 $09 $09 $00 $00 $00 $00 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $9F $00 $9F $00 $F1 $00 $F1 $00 $03 $00 $03 $00
+; Tile index $007
+.db $80 $00 $80 $80 $40 $00 $40 $40 $E0 $00 $E0 $E0 $1F $00 $1F $1F $E0 $00 $E0 $00 $FF $00 $FF $00 $F1 $00 $F1 $00 $78 $00 $78 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 04" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame4:
+; Tile index $010
+.db $FD $02 $02 $02 $FF $00 $00 $00 $FF $00 $00 $00 $DF $00 $30 $20 $08 $26 $FD $F7 $58 $01 $FE $A7 $30 $05 $FE $CF $00 $CA $FF $FF
+; Tile index $011
+.db $03 $00 $FF $FC $00 $00 $FF $FF $61 $00 $FF $9E $C1 $00 $FF $3E $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $012
+.db $FD $02 $02 $02 $FF $00 $00 $00 $EF $10 $10 $10 $6F $10 $90 $90 $00 $BF $7F $FF $00 $27 $DF $FF $80 $4C $FF $7F $00 $F1 $FF $FF
+; Tile index $013
+.db $80 $37 $FF $7F $00 $00 $FF $FF $06 $00 $FF $F9 $81 $00 $FF $7E $E3 $00 $FF $1C $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame4:
+; Tile index $008
+.db $00 $00 $00 $00 $08 $00 $08 $08 $01 $00 $01 $01 $FF $01 $FF $FF $FE $FF $FF $FF $60 $FF $FF $FF $0E $FF $FF $FF $FC $FF $FF $FF
+; Tile index $009
+.db $00 $00 $00 $00 $00 $00 $00 $00 $E0 $00 $E0 $E0 $FF $E0 $FF $FF $1F $FF $FF $FF $00 $FF $FF $FF $0E $FF $FF $FF $87 $FF $FF $FF
+
+WaterA0Frame4:
+; Tile index $008
+.db $00 $00 $00 $00 $08 $00 $08 $08 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $9F $00 $9F $00 $F1 $00 $F1 $00 $03 $00 $03 $00
+; Tile index $009
+.db $00 $00 $00 $00 $00 $00 $00 $00 $E0 $00 $E0 $E0 $1F $00 $1F $1F $E0 $00 $E0 $00 $FF $00 $FF $00 $F1 $00 $F1 $00 $78 $00 $78 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 05" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame5:
+; Tile index $014
+.db $FF $00 $00 $00 $FF $00 $00 $00 $FE $01 $01 $01 $63 $80 $9C $9C $01 $98 $EE $FE $22 $80 $FF $DD $1C $00 $FF $E3 $00 $C3 $FF $FF
+; Tile index $015
+.db $00 $77 $FF $FF $0C $00 $FF $F3 $17 $00 $FF $E8 $A3 $00 $FF $5C $C7 $00 $FF $38 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $016
+.db $FF $00 $00 $00 $FF $00 $00 $00 $EA $05 $15 $15 $C7 $10 $38 $38 $00 $8F $FF $FF $00 $DF $FF $FF $00 $70 $FF $FF $00 $9E $FF $FF
+; Tile index $017
+.db $00 $68 $FF $FF $00 $1E $FF $FF $00 $00 $FF $FF $81 $00 $FF $7E $8F $00 $FF $70 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame5:
+; Tile index $00A
+.db $00 $00 $00 $00 $2C $00 $2C $2C $10 $00 $10 $10 $FF $00 $FF $FF $FF $FF $FF $FF $00 $FF $FF $FF $01 $FF $FF $FF $8E $FF $FF $FF
+; Tile index $00B
+.db $00 $00 $00 $00 $18 $00 $18 $18 $FF $18 $FF $FF $E7 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $E0 $FF $FF $FF $1E $FF $FF $FF
+
+WaterA0Frame5:
+; Tile index $00A
+.db $00 $00 $00 $00 $2C $00 $2C $2C $10 $00 $10 $10 $FF $00 $FF $FF $00 $00 $00 $00 $FF $00 $FF $00 $FE $00 $FE $00 $71 $00 $71 $00
+; Tile index $00B
+.db $00 $00 $00 $00 $18 $00 $18 $18 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E1 $00 $E1 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 06" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame6:
+; Tile index $018
+.db $FF $00 $00 $00 $FF $00 $00 $00 $E2 $01 $1D $1D $41 $88 $BE $BE $00 $BC $E7 $FF $41 $80 $FF $BE $3F $00 $FF $C0 $00 $C1 $FF $FF
+; Tile index $019
+.db $00 $79 $FF $FF $71 $00 $FF $8E $F8 $00 $FF $07 $4C $00 $FF $B3 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $01A
+.db $FF $00 $00 $00 $FF $00 $00 $00 $EA $05 $15 $15 $C7 $10 $38 $38 $00 $8F $FF $FF $00 $DF $FF $FF $80 $70 $FF $7F $60 $9E $FF $9F
+; Tile index $01B
+.db $40 $28 $FF $BF $10 $00 $FF $EF $E0 $00 $FF $1F $01 $00 $FF $FE $E3 $00 $FF $1C $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame6:
+; Tile index $00C
+.db $00 $00 $00 $00 $82 $00 $82 $82 $00 $00 $00 $00 $FF $00 $FF $FF $FF $FF $FF $FF $00 $FF $FF $FF $01 $FF $FF $FF $8E $FF $FF $FF
+; Tile index $00D
+.db $00 $00 $00 $00 $18 $00 $18 $18 $FF $18 $FF $FF $E7 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $E0 $FF $FF $FF $1E $FF $FF $FF
+
+WaterA0Frame6:
+; Tile index $00C
+.db $00 $00 $00 $00 $82 $00 $82 $82 $00 $00 $00 $00 $FF $00 $FF $FF $00 $00 $00 $00 $FF $00 $FF $00 $FE $00 $FE $00 $71 $00 $71 $00
+; Tile index $00D
+.db $00 $00 $00 $00 $18 $00 $18 $18 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E1 $00 $E1 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 07" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LavaFrame7:
+; Tile index $01C
+.db $FF $00 $00 $00 $FF $00 $00 $00 $9C $63 $63 $63 $80 $3E $7F $7F $44 $88 $BF $BB $2E $41 $FF $D1 $1C $03 $FF $E3 $00 $7C $FF $FF
+; Tile index $01D
+.db $00 $22 $FF $FF $C0 $00 $FF $3F $B0 $00 $FF $4F $C3 $00 $FF $3C $9F $00 $FF $60 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+; Tile index $01E
+.db $FE $01 $01 $01 $C3 $04 $3C $3C $83 $38 $5C $7C $01 $12 $FE $FE $44 $83 $FF $BB $38 $C1 $FF $C7 $00 $80 $FF $FF $00 $E3 $FF $FF
+; Tile index $01F
+.db $00 $50 $FF $FF $40 $00 $FF $BF $01 $00 $FF $FE $03 $00 $FF $FC $8F $00 $FF $70 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $00
+
+WaterA1Frame7:
+; Tile index $00E
+.db $80 $00 $80 $80 $E0 $80 $E0 $E0 $7D $E0 $FD $FD $1F $FC $FF $FF $C3 $FF $FF $FF $00 $FF $FF $FF $C0 $FF $FF $FF $39 $FF $FF $FF
+; Tile index $00F
+.db $01 $00 $01 $01 $07 $01 $07 $07 $3E $07 $3F $3F $F8 $3F $FF $FF $C0 $FF $FF $FF $0E $F3 $FF $FF $79 $8F $FF $FF $E0 $FF $FF $FF
+
+WaterA0Frame7:
+; Tile index $00E
+.db $80 $00 $80 $80 $60 $00 $60 $60 $9D $00 $9D $1D $E3 $00 $E3 $03 $3C $00 $3C $00 $FF $00 $FF $00 $3F $00 $3F $00 $C6 $00 $C6 $00
+; Tile index $00F
+.db $01 $00 $01 $01 $06 $00 $06 $06 $39 $00 $39 $38 $C7 $00 $C7 $C0 $3F $00 $3F $00 $FD $00 $FD $0C $F6 $00 $F6 $70 $1F $00 $1F $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 10" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+CoinFrame0:
+; Tile index $000
+.db $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $07 $07 $07 $07 $08 $06 $05 $04 $0A $0C $08 $08 $17 $0D $09 $09 $16 $0D $09 $09 $16
+; Tile index $001
+.db $0D $09 $09 $16 $0D $09 $09 $16 $0D $09 $09 $16 $0D $09 $09 $16 $0D $09 $09 $16 $06 $05 $04 $0A $07 $07 $07 $08 $03 $03 $03 $04
+; Tile index $002
+.db $00 $00 $00 $00 $00 $00 $00 $00 $00 $60 $00 $80 $C0 $F0 $C0 $00 $C0 $F0 $C0 $00 $60 $F8 $60 $00 $60 $F8 $60 $00 $60 $F8 $60 $00
+; Tile index $003
+.db $60 $F8 $60 $00 $60 $F8 $60 $00 $60 $F8 $60 $00 $60 $F8 $60 $00 $60 $F8 $60 $00 $C0 $F0 $C0 $00 $C0 $F0 $C0 $00 $80 $E0 $80 $00
+
+WCoinFrame0:
+; Tile index $000
+.db $FF $00 $FF $00 $FF $00 $FF $00 $F8 $00 $F8 $07 $F7 $07 $F0 $08 $F6 $07 $F1 $0B $EC $0C $E0 $17 $ED $0D $E0 $16 $ED $0D $E0 $16
+; Tile index $001
+.db $ED $0D $E0 $16 $ED $0D $E0 $16 $ED $0D $E0 $16 $ED $0D $E0 $16 $ED $0D $E0 $16 $F6 $07 $F1 $0B $F7 $07 $F0 $08 $FB $03 $F8 $04
+; Tile index $002
+.db $FF $00 $FF $00 $FF $00 $FF $00 $1F $60 $7F $E0 $CF $F0 $3F $30 $CF $F0 $3F $30 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98
+; Tile index $003
+.db $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $CF $F0 $3F $30 $CF $F0 $3F $30 $9F $E0 $7F $60
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 11" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+CoinFrame1:
+; Tile index $004
+.db $00 $00 $00 $00 $00 $00 $00 $00 $07 $00 $00 $07 $08 $00 $00 $0F $0B $03 $01 $0E $17 $04 $00 $1F $16 $04 $00 $1F $16 $04 $00 $1F
+; Tile index $005
+.db $16 $04 $00 $1F $16 $04 $00 $1F $16 $04 $00 $1F $16 $04 $00 $1F $16 $04 $00 $1F $0B $03 $01 $0E $08 $00 $00 $0F $04 $00 $00 $07
+; Tile index $006
+.db $00 $00 $00 $00 $00 $00 $00 $00 $E0 $60 $60 $80 $30 $30 $30 $C0 $30 $30 $30 $C0 $98 $98 $98 $60 $98 $98 $98 $60 $98 $98 $98 $60
+; Tile index $007
+.db $98 $98 $98 $60 $98 $98 $98 $60 $98 $98 $98 $60 $98 $98 $98 $60 $98 $98 $98 $60 $30 $30 $30 $C0 $30 $30 $30 $C0 $60 $60 $60 $80
+
+WCoinFrame1:
+; Tile index $004
+.db $FF $00 $FF $00 $FF $00 $FF $00 $FF $07 $F8 $07 $F8 $08 $F0 $0F $FB $09 $F2 $0E $F7 $13 $E4 $1F $F6 $12 $E4 $1F $F6 $12 $E4 $1F
+; Tile index $005
+.db $F6 $12 $E4 $1F $F6 $12 $E4 $1F $F6 $12 $E4 $1F $F6 $12 $E4 $1F $F6 $12 $E4 $1F $FB $09 $F2 $0E $F8 $08 $F0 $0F $FC $04 $F8 $07
+; Tile index $006
+.db $FF $00 $FF $00 $FF $00 $FF $00 $FF $E0 $1F $80 $3F $30 $0F $C0 $3F $30 $0F $C0 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60
+; Tile index $007
+.db $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $3F $30 $0F $C0 $3F $30 $0F $C0 $7F $60 $1F $80
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 12" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+CoinFrame2:
+; Tile index $008
+.db $00 $00 $00 $00 $00 $00 $00 $00 $07 $07 $00 $07 $0F $08 $00 $0F $0E $0A $00 $0F $1F $17 $00 $1F $1F $16 $00 $1F $1F $16 $00 $1F
+; Tile index $009
+.db $1F $16 $00 $1F $1F $16 $00 $1F $1F $16 $00 $1F $1F $16 $00 $1F $1F $16 $00 $1F $0E $0A $00 $0F $0F $08 $00 $0F $07 $04 $00 $07
+; Tile index $00A
+.db $00 $00 $00 $00 $00 $00 $00 $00 $80 $80 $00 $E0 $C0 $00 $00 $F0 $C0 $00 $00 $F0 $60 $00 $00 $F8 $60 $00 $00 $F8 $60 $00 $00 $F8
+; Tile index $00B
+.db $60 $00 $00 $F8 $60 $00 $00 $F8 $60 $00 $00 $F8 $60 $00 $00 $F8 $60 $00 $00 $F8 $C0 $00 $00 $F0 $C0 $00 $00 $F0 $80 $00 $00 $E0
+
+WCoinFrame2:
+; Tile index $008
+.db $FF $00 $FF $00 $FF $00 $FF $00 $FF $00 $FF $07 $FF $07 $F8 $0F $FE $04 $FA $0F $FF $08 $F7 $1F $FF $09 $F6 $1F $FF $09 $F6 $1F
+; Tile index $009
+.db $FF $09 $F6 $1F $FF $09 $F6 $1F $FF $09 $F6 $1F $FF $09 $F6 $1F $FF $09 $F6 $1F $FE $04 $FA $0F $FF $07 $F8 $0F $FF $03 $FC $07
+; Tile index $00A
+.db $FF $00 $FF $00 $FF $00 $FF $00 $9F $00 $9F $E0 $CF $C0 $0F $F0 $CF $C0 $0F $F0 $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8
+; Tile index $00B
+.db $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $CF $C0 $0F $F0 $CF $C0 $0F $F0 $9F $80 $1F $E0
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 20" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LaternFrame0:
+; Tile index $000
+.db $F4 $03 $0F $0F $E8 $06 $1F $1F $C0 $0C $3F $3F $E3 $19 $10 $17 $87 $63 $10 $1F $0F $E3 $10 $1F $0F $C6 $11 $3F $3F $BE $01 $7F
+; Tile index $001
+.db $2F $86 $11 $7F $0F $C2 $11 $3F $0F $E3 $10 $1F $87 $63 $10 $1F $E3 $19 $10 $17 $E0 $1C $18 $1B $C0 $3E $3F $3F $E0 $1F $00 $00
+; Tile index $002
+.db $1F $E0 $E0 $E0 $0F $F0 $F0 $F0 $07 $78 $F8 $F8 $8F $30 $10 $D0 $C3 $8C $10 $F0 $E1 $8E $10 $F0 $E1 $C6 $10 $F8 $F9 $FA $00 $FC
+; Tile index $003
+.db $E9 $C2 $10 $FC $E1 $86 $10 $F8 $E1 $8E $10 $F0 $C3 $8C $10 $F0 $8F $30 $10 $D0 $0F $70 $30 $B0 $07 $F8 $F8 $F8 $07 $F8 $00 $00
+
+QBlockFrame0:
+; Tile index $000
+.db $7F $00 $00 $7F $FF $10 $20 $FF $FF $3F $40 $FF $FF $38 $47 $FF $FF $70 $0C $FF $FF $31 $0C $FF $FF $31 $0C $FF $FF $38 $01 $FF
+; Tile index $001
+.db $FF $3E $01 $FF $FF $3F $00 $FF $FF $3E $01 $FF $FF $3E $01 $FF $FF $1F $00 $FF $FF $00 $00 $FF $FF $00 $00 $FF $7F $00 $00 $7F
+; Tile index $002
+.db $FE $00 $00 $FE $FF $00 $00 $FF $FF $F0 $00 $FF $FF $38 $C0 $FF $FF $18 $60 $FF $FF $88 $60 $FF $FF $08 $E0 $FF $FF $08 $80 $FF
+; Tile index $003
+.db $FF $38 $80 $FF $FF $38 $00 $FF $FF $78 $80 $FF $FF $38 $80 $FF $FF $38 $00 $FF $FF $00 $00 $FF $FF $00 $00 $FF $FE $00 $00 $FE
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 21" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LaternFrame1:
+; Tile index $004
+.db $F4 $03 $0F $0F $E8 $07 $1F $1F $C0 $0E $3F $3F $E9 $14 $10 $13 $E3 $19 $10 $17 $C3 $23 $10 $1F $87 $63 $10 $1F $BF $5F $00 $3F
+; Tile index $005
+.db $87 $43 $10 $3F $83 $63 $10 $1F $C3 $23 $10 $1F $E3 $19 $10 $17 $E9 $14 $10 $13 $E4 $1B $18 $18 $C0 $3F $3F $3F $E0 $1F $00 $00
+; Tile index $006
+.db $1F $E0 $E0 $E0 $0F $F0 $F0 $F0 $07 $F8 $F8 $F8 $2F $50 $10 $90 $8F $30 $10 $D0 $87 $88 $10 $F0 $C3 $8C $10 $F0 $FB $F4 $00 $F8
+; Tile index $007
+.db $C3 $84 $10 $F8 $83 $8C $10 $F0 $87 $88 $10 $F0 $8F $30 $10 $D0 $2F $50 $10 $90 $4F $B0 $30 $30 $07 $F8 $F8 $F8 $07 $F8 $00 $00
+
+QBlockFrame1:
+; Tile index $004
+.db $00 $00 $00 $7F $30 $00 $20 $FF $7F $00 $40 $FF $7F $00 $47 $FF $7C $00 $0C $FF $3D $00 $0C $FF $3D $00 $0C $FF $39 $00 $01 $FF
+; Tile index $005
+.db $3F $00 $01 $FF $3F $00 $00 $FF $3F $00 $01 $FF $3F $00 $01 $FF $1F $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $7F
+; Tile index $006
+.db $00 $00 $00 $FE $00 $00 $00 $FF $F0 $00 $00 $FF $F8 $00 $C0 $FF $78 $00 $60 $FF $E8 $00 $60 $FF $E8 $00 $E0 $FF $88 $00 $80 $FF
+; Tile index $007
+.db $B8 $00 $80 $FF $38 $00 $00 $FF $F8 $00 $80 $FF $B8 $00 $80 $FF $38 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FE
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 22" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+LaternFrame2:
+; Tile index $008
+.db $F4 $03 $0F $0F $E8 $07 $1F $1F $C0 $0F $3F $3F $EC $12 $10 $11 $E9 $14 $10 $13 $E3 $1C $10 $13 $C3 $29 $10 $17 $9F $41 $00 $3F
+; Tile index $009
+.db $C3 $29 $10 $17 $E3 $1D $10 $13 $E3 $1C $10 $13 $E9 $14 $10 $13 $EC $12 $10 $11 $E6 $19 $18 $18 $C0 $3F $3F $3F $E0 $1F $00 $00
+; Tile index $00A
+.db $1F $E0 $E0 $E0 $0F $F0 $F0 $F0 $07 $F8 $F8 $F8 $6F $90 $10 $10 $2F $50 $10 $90 $8F $70 $10 $90 $87 $28 $10 $D0 $F3 $04 $00 $F8
+; Tile index $00B
+.db $87 $28 $10 $D0 $8F $70 $10 $90 $8F $70 $10 $90 $2F $50 $10 $90 $6F $90 $10 $10 $CF $30 $30 $30 $07 $F8 $F8 $F8 $07 $F8 $00 $00
+
+QBlockFrame2:
+; Tile index $008
+.db $00 $00 $00 $7F $3F $10 $20 $FF $7F $3F $40 $FF $7F $38 $47 $FF $7C $70 $0C $FF $7D $31 $0C $FF $7D $31 $0C $FF $79 $38 $01 $FF
+; Tile index $009
+.db $7F $3E $01 $FF $7F $3F $00 $FF $7F $3E $01 $FF $7F $3E $01 $FF $7F $1F $00 $FF $3F $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $7F
+; Tile index $00A
+.db $00 $00 $00 $FE $F8 $00 $00 $FF $FC $F0 $00 $FF $FC $38 $C0 $FF $7C $18 $60 $FF $EC $88 $60 $FF $EC $08 $E0 $FF $8C $08 $80 $FF
+; Tile index $00B
+.db $BC $38 $80 $FF $3C $38 $00 $FF $FC $78 $80 $FF $BC $38 $80 $FF $3C $38 $00 $FF $F8 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FE
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 30" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+GrassFrame0:
+; Tile index $000
+.db $07 $00 $07 $00 $69 $07 $69 $06 $FE $61 $FF $00 $F3 $4E $F3 $0C $EF $BF $EF $10 $F3 $7F $FF $00 $FD $47 $FF $00 $DA $BF $DF $20
+; Tile index $001
+.db $00 $00 $00 $00 $01 $00 $01 $00 $02 $01 $02 $01 $05 $03 $05 $02 $35 $03 $35 $02 $4B $37 $4B $34 $EB $56 $EB $14 $FF $1A $FF $00
+; Tile index $002
+.db $3F $CA $3F $C0 $CF $35 $CF $30 $F7 $DA $F7 $08 $7F $DB $FF $00 $BE $6D $FF $00 $DE $BD $FF $00 $DE $BF $FF $00 $9C $FF $FF $00
+; Tile index $003
+.db $40 $00 $40 $00 $A0 $40 $A0 $40 $C0 $80 $C0 $00 $B0 $00 $B0 $00 $F8 $30 $F8 $00 $F6 $40 $F6 $00 $BB $C6 $FB $04 $AE $DC $EE $10
+; Tile index $004
+.db $9C $F8 $DC $20 $B9 $F0 $F9 $00 $6A $F1 $FA $01 $EF $F1 $FF $00 $D7 $EB $FF $00 $D6 $EF $FF $00 $44 $FF $FF $00 $18 $FF $FF $00
+; Tile index $005
+.db $E0 $00 $E0 $00 $70 $E0 $70 $80 $FC $C0 $FC $00 $DA $8C $DA $04 $34 $D8 $F4 $08 $78 $B0 $F8 $00 $E8 $70 $F8 $00 $10 $E0 $F0 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK31" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+GrassFrame1:
+; Tile index $006
+.db $27 $03 $27 $00 $7E $21 $7F $00 $63 $1E $63 $1C $FF $4F $FF $00 $FF $93 $FF $00 $DD $2B $DF $20 $FE $2D $FF $00 $FA $B7 $FF $00
+; Tile index $007
+.db $00 $00 $00 $00 $00 $00 $00 $00 $08 $00 $08 $00 $14 $08 $14 $08 $25 $18 $25 $18 $3A $15 $3A $05 $3F $1B $3F $00 $DF $2B $DF $20
+; Tile index $008
+.db $8E $F7 $8F $70 $F5 $BA $F7 $08 $75 $DA $F7 $08 $BB $6D $FB $04 $BF $6D $FF $00 $DE $BD $FF $00 $DE $BF $FF $00 $3C $FF $FF $00
+; Tile index $009
+.db $00 $00 $00 $00 $00 $00 $00 $00 $30 $00 $30 $00 $F8 $30 $F8 $00 $70 $E0 $70 $80 $F0 $C0 $F0 $00 $F8 $B0 $F8 $00 $D7 $60 $F7 $00
+; Tile index $00A
+.db $9B $67 $FB $04 $A7 $DC $E7 $18 $DD $B8 $DD $20 $BA $F1 $BA $41 $E5 $FB $FD $02 $EF $FF $FF $00 $44 $FF $FF $00 $10 $FF $FF $00
+; Tile index $00B
+.db $80 $00 $80 $00 $38 $00 $38 $00 $CE $38 $CE $30 $7C $E0 $7C $80 $FE $9C $FE $00 $FF $72 $FF $00 $72 $E0 $F2 $00 $90 $E0 $F0 $00
+.ENDS
+
+.SECTION "Animated Background Tiles - BANK 32" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+GrassFrame2:
+; Tile index $00C
+.db $5F $00 $5F $00 $FC $4F $FC $03 $FF $53 $FF $00 $FE $1D $FF $00 $9F $EE $FF $00 $BF $56 $FF $00 $FE $35 $FF $00 $FA $B7 $FF $00
+; Tile index $00D
+.db $00 $00 $00 $00 $00 $00 $00 $00 $03 $00 $03 $00 $14 $03 $14 $03 $6B $16 $6B $14 $BE $54 $BE $40 $DB $66 $DF $20 $6F $32 $6F $10
+; Tile index $00E
+.db $75 $3A $77 $08 $F7 $38 $F7 $08 $3B $DD $3B $C4 $BB $DD $BB $44 $5F $ED $DF $20 $7E $ED $FF $00 $2E $FF $FF $00 $A4 $FF $FF $00
+; Tile index $00F
+.db $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $8C $00 $8C $00 $7A $8C $7A $84 $DD $36 $DD $22 $B5 $7A $BD $42 $6B $F4 $7F $80
+; Tile index $010
+.db $DF $E0 $FF $00 $F1 $CF $F1 $0E $ED $BE $EF $10 $7A $BD $FE $01 $65 $FB $FD $02 $CF $F7 $FF $00 $43 $FE $FF $00 $10 $FF $FF $00
+; Tile index $011
+.db $80 $00 $80 $00 $F0 $80 $F0 $00 $C8 $70 $C8 $30 $74 $E8 $74 $88 $BE $C0 $FE $00 $FF $1E $FF $00 $7E $F0 $FE $00 $94 $E8 $FC $00
+.ENDS

@@ -462,7 +462,7 @@ Mus_LevelVictory:
     .db nRst, $08
     .db nE1, nG1, nC2, nE2, nG2, nC3, $18, nG2, $20
     .db nEb1, $08, nGs1, nC2, nEb2, nGs2, nC3, $18, nGs2, $20
-    .db nF1, $08, nBb1, nD2, nF2, nBb2, nD3, $18, $18, nC4, $24
+    .db nF1, $08, nBb1, nD2, nF2, nBb2, nD3, $18, $18, nC4, $24 ; TOTAL: $144
     smpsStop
 .ENDS
 
@@ -478,7 +478,7 @@ Mus_Death:
     smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
 @ch0:
     .db nRst, $24
-    .db nG1, $1B, $09, $0C, nA1, nB1, nC2, $12, nG1, nC1
+    .db nG1, $1B, $09, $0C, nA1, nB1, nC2, $12, nG1, nC1, $24
     smpsStop
 @ch1:
     smpsModSetup    $00, $01, $10, $FF
@@ -489,7 +489,7 @@ Mus_Death:
     smpsStop
 @ch2:
     .db nRst, $24
-    .db nB2, $09, nF3, $12, $09, $0C, nE3, nD3, nC3, $2F
+    .db nB2, $09, nF3, $12, $09, $0C, nE3, nD3, nC3, $48    ; TOTAL: $B4
     smpsStop
 .ENDS
 

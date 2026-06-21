@@ -964,7 +964,7 @@ FinCCSt:
     LD L, <Enemy_Y_HighPos              ;set enemy's high vertical byte
     LD (HL), $01
     LD L, <Enemy_Y_Position             ;put enemy below the screen, and we are done
-    LD (HL), $F8
+    LD (HL), YPOS_OFFSCREEN_LOGICAL
     RET
 
 ;--------------------------------
@@ -1515,7 +1515,9 @@ InitPiranhaPlant_NOPOP:
     LD (HL), A
 ;
     LD A, $09                           ;set specific value for bounding box control
-    JP SetBBox2
+    LD L, <Enemy_BoundBoxCtrl           ;set bounding box control then leave
+    LD (HL), A
+    RET
 
 
 ;--------------------------------
@@ -1585,7 +1587,7 @@ InitJumpGPTroopa:
 
 TallBBox2:
     LD A, $03                               ;set specific value for bounding box control
-SetBBox2:
+;SetBBox2:
     LD L, <Enemy_BoundBoxCtrl               ;set bounding box control then leave
     LD (HL), A
     RET

@@ -186,13 +186,3 @@
     ADD A, IYL
     LD IYL, A
 .ENDM
-
-;   
-.MACRO negBC_M
-    XOR A
-    SUB A, C
-    LD C, A
-    SBC A, A
-    SUB A, B
-    LD B, A
-.ENDM

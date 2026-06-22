@@ -1279,6 +1279,7 @@ L_WaterArea3:
     .db $5D, $65 ; floor @ Y07
     .db $5D, $67 ; ceiling tile @ Y05
     .db $6D, $65 ; floor @ Y07
+    .db $7D, $65 ; floor @ Y07
 
     .db $ed, $47
     

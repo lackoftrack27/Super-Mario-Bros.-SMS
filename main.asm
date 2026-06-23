@@ -789,8 +789,19 @@ ReadJoypads:
     .ENDIF
 
     LD (SavedJoypad2Bits), A
-;   ACCOUNT FOR PAUSE BUTTON
+;   PAUSE ON CONTROLLER 2 BTN 1 FOR 1 PLAYER GAME
     LD HL, SavedJoypad1Bits
+    LD A, (NumberOfPlayers)
+    OR A
+    JR NZ, PauseBtnChk
+    LD A, (SavedJoypad2Bits)
+    RRCA
+    RRCA
+    AND A, bitValue(SMS_BTN_START)
+    OR A, (HL)
+    LD (HL), A
+;   ACCOUNT FOR PAUSE BUTTON
+PauseBtnChk:
     LD A, (PauseButtonFlag)
     OR A, (HL)
     LD (HL), A

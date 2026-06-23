@@ -1620,7 +1620,7 @@ DrawFireball:
     LD A, (Fireball_Rel_XPos)
     LD (DE), A
 
-DrawFirebar:
+;DrawFirebar:
     INC E
     LD A, (FrameCounter)
     RRCA

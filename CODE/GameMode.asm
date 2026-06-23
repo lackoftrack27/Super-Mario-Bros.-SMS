@@ -1887,7 +1887,11 @@ RunBowserFlame:
 
 RunFirebarObj:
     POP HL
-    CALL ProcFirebar
+    ;CALL ProcFirebar
+    CALL GetEnemyOffscreenBits                  ;get offscreen information
+    LD A, (Enemy_OffscrBits)                    ;check for d3 set
+    AND A, %00001000                            ;if so, branch to leave
+    CALL Z, ProcFirebar
     JP OffscreenBoundsCheck
 
 ;--------------------------------
@@ -2726,40 +2730,54 @@ YPDiff:
 ;vertical adder is same + 8 bytes, two's compliment
 ;if greater than $08 for proper oscillation
 
-.SECTION "FirebarPosLookupTbl" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-FirebarPosLookupTbl:
-    .db $00, $01, $03, $04, $05, $06, $07, $07, $08
-    .db $00, $03, $06, $09, $0b, $0d, $0e, $0f, $10
-    .db $00, $04, $09, $0d, $10, $13, $16, $17, $18
-    .db $00, $06, $0c, $12, $16, $1a, $1d, $1f, $20
-    .db $00, $07, $0f, $16, $1c, $21, $25, $27, $28
-    .db $00, $09, $12, $1b, $21, $27, $2c, $2f, $30
-    .db $00, $0b, $15, $1f, $27, $2e, $33, $37, $38
-    .db $00, $0c, $18, $24, $2d, $35, $3b, $3e, $40
-    .db $00, $0e, $1b, $28, $32, $3b, $42, $46, $48
-    .db $00, $0f, $1f, $2d, $38, $42, $4a, $4e, $50
-    .db $00, $11, $22, $31, $3e, $49, $51, $56, $58
+.SECTION "FirebarPosLookupTbl" BANK BANK_SLOT2 SLOT 2 ALIGN $100 RETURNORG ;FREE BITWINDOW 8 RETURNORG
+; FirebarPosLookupTbl:        ;FirebarTblOffsets[] + OSCILLATED SPINSTATE HIGH BYTE
+;     .db $00, $01, $03, $04, $05, $06, $07, $07, $08
+;     .db $00, $03, $06, $09, $0b, $0d, $0e, $0f, $10
+;     .db $00, $04, $09, $0d, $10, $13, $16, $17, $18
+;     .db $00, $06, $0c, $12, $16, $1a, $1d, $1f, $20
+;     .db $00, $07, $0f, $16, $1c, $21, $25, $27, $28
+;     .db $00, $09, $12, $1b, $21, $27, $2c, $2f, $30
+;     .db $00, $0b, $15, $1f, $27, $2e, $33, $37, $38
+;     .db $00, $0c, $18, $24, $2d, $35, $3b, $3e, $40
+;     .db $00, $0e, $1b, $28, $32, $3b, $42, $46, $48
+;     .db $00, $0f, $1f, $2d, $38, $42, $4a, $4e, $50
+;     .db $00, $11, $22, $31, $3e, $49, $51, $56, $58
 
-FirebarMirrorData:
-    .db $01, $03, $02, $00
+; FirebarMirrorData:          ;SPINSTATE HIGH BYTE
+;     .db $01, $03, $02, $00
 
-FirebarTblOffsets:
-    .db $00, $09, $12, $1b, $24, $2d
-    .db $36, $3f, $48, $51, $5a, $63
+; FirebarTblOffsets:          ;LOOP INDEX
+;     .db $00, $09, $12, $1b, $24, $2d
+;     .db $36, $3f, $48, $51, $5a, $63
 
 ;FirebarYPos:
 ;    .db $0c, $18
+
+FirebarPosLookupTbl:
+    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $01, $03, $04, $06, $07, $09, $0b, $0c, $0e, $0f, $11
+    .db $03, $06, $09, $0c, $0f, $12, $15, $18, $1b, $1f, $22
+    .db $04, $09, $0d, $12, $16, $1b, $1f, $24, $28, $2d, $31
+    .db $05, $0b, $10, $16, $1c, $21, $27, $2d, $32, $38, $3e
+    .db $06, $0d, $13, $1a, $21, $27, $2e, $35, $3b, $42, $49
+    .db $07, $0e, $16, $1d, $25, $2c, $33, $3b, $42, $4a, $51
+    .db $07, $0f, $17, $1f, $27, $2f, $37, $3e, $46, $4e, $56
+    .db $08, $10, $18, $20, $28, $30, $38, $40, $48, $50, $58
+
+FirebarMirrorData:
+    .db $FE, $7F, $7E, $00 
 .ENDS
 
 ProcFirebar:
-    CALL GetEnemyOffscreenBits                  ;get offscreen information
-    LD A, (Enemy_OffscrBits)                    ;check for d3 set
-    AND A, %00001000                            ;if so, branch to leave
-    RET NZ
+    ;CALL GetEnemyOffscreenBits                  ;get offscreen information
+    ;LD A, (Enemy_OffscrBits)                    ;check for d3 set
+    ;AND A, %00001000                            ;if so, branch to leave
+    ;RET NZ
 ;
     LD A, (TimerControl)                        ;if master timer control set, branch
     OR A
-    JP NZ, SusFbar                              ;ahead of this part
+    JR NZ, SusFbar                              ;ahead of this part
 ;
     LD L, <FirebarSpinSpeed                     ;load spinning speed of firebar
     LD B, (HL)                                  ;save spinning speed here
@@ -2769,7 +2787,7 @@ ProcFirebar:
     OR A
     LD L, <FirebarSpinState_Low
     LD A, (HL)
-    JP NZ, SpinCounterClockwise                 ;if moving counter-clockwise, branch to other part                               
+    JR NZ, SpinCounterClockwise                 ;if moving counter-clockwise, branch to other part                               
     ADD A, B                                    ;add spinning speed to what would normally be                                 
     LD (HL), A                                  ;the horizontal speed
     LD L, <FirebarSpinState_High
@@ -2791,52 +2809,96 @@ FirebarSpinDone:
 SusFbar:
     LD L, <Enemy_ID                             ;check enemy identifier
     LD A, (HL)
-    LD IXL, A                                   ;(SMS)save Enemy_ID for later
     CP A, $1F
     LD L, <FirebarSpinState_High              
     LD A, (HL)
-    JP C, SetupGFB                              ;if < $1f (long firebar), branch
+    JR C, SetupGFB                              ;if < $1f (long firebar), branch
     CP A, $08                                   ;check high byte of spinstate
-    JP Z, SkpFSte                               ;if eight, branch to change
+    JR Z, SkpFSte                               ;if eight, branch to change
     CP A, $18
-    JP NZ, SetupGFB                             ;if not at twenty-four branch to not change
+    JR NZ, SetupGFB                             ;if not at twenty-four branch to not change
 SkpFSte:
     INC A                                       ;add one to spinning thing to avoid horizontal state
     LD (HL), A
 ;
 SetupGFB:
-    LD IYL, A                                   ;save high byte of spinning thing, modified or otherwise
+    LD I, A                                     ;save high byte of spinning thing, modified or otherwise
 ;
     CALL RelativeEnemyPosition                  ;get relative coordinates to screen
 ;
-    PUSH HL                                     ;(SMS)save Object_Offset
     LD L, <Enemy_SprDataOffset                  ;get OAM data offset
     LD E, (HL)
     LD D, >Sprite_Y_Position
     LD A, (Enemy_Rel_YPos)                      ;get relative vertical coordinate
-    LD H, A                                     ;also save here
+    LD IXL, A                                   ;also save here
     SUB A, SMS_PIXELYOFFSET
     LD (DE), A                                  ;store as Y in OAM data
     LD A, (Enemy_Rel_XPos)                      ;get relative horizontal coordinate
     SLA E
     SET 7, E
     LD (DE), A                                  ;store as X in OAM data
-    LD L, A                                     ;also save here
+    LD IXH, A                                   ;also save here
     CALL FirebarCollision                       ;draw fireball part and do collision detection
 ;
     LD IYH, $05                                 ;load value for short firebars by default
-    LD A, IXL                                   ; Enemy_ID
+    LD L, <Enemy_ID                             ;check enemy identifier
+    LD A, (HL)
     CP A, $1F                                   ;are we doing a long firebar?
-    JP C, SetMFbar                              ;no, branch then
+    JR C, SetMFbar                              ;no, branch then
     LD IYH, $0B                                 ;otherwise load value for long firebars
 SetMFbar:
-    LD IXH, $00                                 ;initialize counter here
+    PUSH HL                                     ;(SMS)save Object_Offset
+
+GetFirebarPosition:                             ;this was moved out of DrawFbar for performance
+    LD A, I
+    AND A, %00001111                            ;mask out low nybble
+    CP A, $09
+    JR C, GetHAdder                             ;if lower than $09, branch ahead
+    XOR A, %00001111                            ;otherwise get two's compliment to oscillate
+    INC A
+GetHAdder:
+    LD C, A                                     ;use as index into FirebarPosLookupTbl
+    ADD A, A
+    ADD A, C
+    ADD A, A
+    ADD A, A
+    SUB A, C
+    LD H, >FirebarPosLookupTbl
+    LD L, A
 ;
+    LD A, I                                     ;get A back
+    ADD A, $08                                  ;add eight this time, to get vertical adder
+    AND A, %00001111                            ;mask out high nybble
+    CP A, $09                                   ;if lower than $09, branch ahead
+    JR C, GetVAdder                             ;otherwise get two's compliment
+    XOR A, %00001111
+    INC A
+GetVAdder:
+    LD C, A                                     ;use index into FirebarPosLookupTbl
+    ADD A, A
+    ADD A, C
+    ADD A, A
+    ADD A, A
+    SUB A, C
+    LD B, H
+    LD C, A
+
 DrawFbar:
-    LD A, IYL                                   ;load high byte of spinstate
-    CALL GetFirebarPosition                     ;get fireball position data depending on firebar part, then position it properly, draw it and do collision detection
-    LD A, IXH                                   ;check which firebar part
-    CP A, $04
+    PUSH HL
+    LD A, I                                     ;get A one last time
+    RRCA                                        ;divide by eight or shift three to the right
+    RRCA
+    RRCA
+    AND A, $1F
+    LD HL, FirebarMirrorData                    ;use as offset
+    addAToHL8_M
+    LD A, (HL)                                  ;load mirroring data here
+    LD IXL, A
+    POP HL
+
+    CALL DrawFirebar_Collision
+    LD A, IYH
+    CP A, $07
     JP NZ, NextFbar
     LD DE, (DuplicateObj_Offset)                ;if we arrive at fifth firebar part,
     LD E, <Enemy_SprDataOffset                  ;get offset from long firebar and load OAM data offset
@@ -2846,100 +2908,55 @@ DrawFbar:
     LD E, A
     LD D, >Sprite_X_Position
 NextFbar:
-    INC IXH                                     ;move onto the next firebar part
-    LD A, IXH
-    CP A, IYH                                   ;if we end up at the maximum part, go on and leave
-    JP C, DrawFbar                              ;otherwise go back and do another
+    INC L                                       ;move onto the next firebar part
+    INC C
+    DEC IYH                                     ;if we end up at the maximum part, go on and leave
+    JP NZ, DrawFbar                             ;otherwise go back and do another
     POP HL                                      ;(SMS)restore Object_Offset
     RET
 
-GetFirebarPosition:
-    LD B, A                                     ;save high byte of spinstate
-    AND A, %00001111                            ;mask out low nybble
-    CP A, $09
-    JP C, GetHAdder                             ;if lower than $09, branch ahead
-    XOR A, %00001111                            ;otherwise get two's compliment to oscillate
-    INC A
-GetHAdder:
-    LD C, A                                     ;store result, modified or not, here
-    LD A, IXH                                   ;load number of firebar ball where we're at
-    LD HL, FirebarTblOffsets                    ;load offset to firebar position data
-    addAToHL8_M
-    LD A, (HL)
-    ADD A, C                                    ;add oscillated high byte of spinstate
-    LD L, <FirebarPosLookupTbl                  ;to offset here and use as new offset
-    addAToHL8_M                                 ;get data here and store as horizontal adder
-    LD C, (HL)
-;
-    LD A, B                                     ;get A back
-    ADD A, $08                                  ;add eight this time, to get vertical adder
-    AND A, %00001111                            ;mask out high nybble
-    CP A, $09                                   ;if lower than $09, branch ahead
-    JP C, GetVAdder                             ;otherwise get two's compliment
-    XOR A, %00001111
-    INC A
-GetVAdder:
-    LD IXL, A                                   ;store result here
-    LD A, IXH
-    LD L, <FirebarTblOffsets                    ;load offset to firebar position data again
-    addAToHL8_M
-    LD A, (HL)
-    ADD A, IXL                                  ;this time add value in $02 to offset here and use as offset
-    LD L, <FirebarPosLookupTbl                  ;get data here and store as vertical adder
-    addAToHL8_M
-    LD A, (HL)
-    LD IXL, A
-;
-    LD A, B                                     ;get A one last time
-    RRCA                                        ;divide by eight or shift three to the right
-    RRCA
-    RRCA
-    AND A, $1F
-    LD L, <FirebarMirrorData                    ;use as offset
-    addAToHL8_M
-    LD B, (HL)                                  ;load mirroring data here
-    ; FALL THROUGH
-
-;   B - MIRROR DATA
-;   C - H ADDER
-;   IXL - V ADDER
-;   DE - Sprite X Pos
+;   HL: H ADDER PTR
+;   BC: V ADDER PTR
+;   DE: SAT PTR
+;   IXL - MIRROR BYTE
 DrawFirebar_Collision:
-    LD A, C                                     ;load horizontal adder we got from position loader
-    SRL B                                       ;shift LSB of mirror data
-    JP C, AddHA                                 ;if carry was set, skip this part
+    LD A, (HL)                                  ;load horizontal adder we got from position loader
+    INC IXL                                     ;shift LSB of mirror data
+    JP M, AddHA                                 ;if carry was set, skip this part
     NEG                                         ;otherwise get two's compliment of horizontal adder
 AddHA:
-    LD HL, Enemy_Rel_XPos                       ;add horizontal coordinate relative to screen to
-    ADD A, (HL)                                 ;horizontal adder, modified or otherwise
+    LD IXH, A
+    LD A, (Enemy_Rel_XPos)                      ;store Enemy_Rel_XPos in IYL
+    LD IYL, A                                   ;add horizontal coordinate relative to screen to
+    ADD A, IXH                                  ;horizontal adder, modified or otherwise
+    LD IXH, A                                   ;store here for now
     LD (DE), A                                  ;store as X coordinate here
-    LD C, (HL)                                  ;(SMS)store Enemy_Rel_XPos in C to avoid HL use
-    LD L, A                                     ;store here for now
-    CP A, C                                     ;compare X coordinate of sprite to original X of firebar
-    JP NC, SubtR1                               ;if sprite coordinate => original coordinate, branch
-    LD A, C                                     ;otherwise subtract sprite X from the
-    SUB A, L                                    ;original one and skip this part
+    CP A, IYL                                   ;compare X coordinate of sprite to original X of firebar
+    JR NC, SubtR1                               ;if sprite coordinate => original coordinate, branch
+    LD A, IYL                                   ;otherwise subtract sprite X from the
+    SUB A, IXH                                  ;original one and skip this part
     JP ChkFOfs
+    
 SubtR1:
-    SUB A, C                                    ;subtract original X from the current sprite X
+    SUB A, IYL                                  ;subtract original X from the current sprite X
 ChkFOfs:
     CP A, $59                                   ;if difference of coordinates within a certain range,
-    JP C, VAHandl                               ;continue by handling vertical adder
+    JR C, VAHandl                               ;continue by handling vertical adder
     LD A, YPOS_OFFSCREEN_LOGICAL                ;otherwise, load offscreen Y coordinate
     JP SetVFbr                                  ;and unconditionally branch to move sprite offscreen
 VAHandl:
     LD A, (Enemy_Rel_YPos)                      ;if vertical relative coordinate offscreen,
     CP A, YPOS_OFFSCREEN_LOGICAL                ;skip ahead of this part and write into sprite Y coordinate
-    JP Z, SetVFbr
-    LD C, A                                     ;(SMS)store Enemy_Rel_YPos in C to avoid HL use
-    LD A, IXL                                   ;load vertical adder we got from position loader
-    SRL B                                       ;shift LSB of mirror data one more time
-    JP C, AddVA                                 ;if carry was set, skip this part
+    JR Z, SetVFbr
+    INC IXL                                     ;shift LSB of mirror data one more time
+    LD IXL, A
+    LD A, (BC)                                  ;load vertical adder we got from position loader
+    JP M, AddVA                                 ;if carry was set, skip this part
     NEG                                         ;otherwise get two's compliment of second part
 AddVA:
-    ADD A, C                                    ;add vertical coordinate relative to screen to the second data
+    ADD A, IXL                                  ;add vertical coordinate relative to screen to the second data
 SetVFbr:
-    LD H, A                                     ;also store here for now
+    LD IXL, A                                   ;also store here for now
     SUB A, SMS_PIXELYOFFSET
     RES 7, E
     SRL E
@@ -2948,80 +2965,88 @@ SetVFbr:
     SET 7, E
     ; FALL THROUGH
 
+;   HL: H ADDER PTR (NOT USED, BUT SHOULDN'T BE TOUCHED)
+;   BC: V ADDER PTR (NOT USED, BUT SHOULDN'T BE TOUCHED)
 ;   DE: Sprite X Pos PTR
-;   HL: YPOS/XPOS
+;   IX: XPOS/YPOS
 FirebarCollision:
-    CALL DrawFirebar                            ;run sub here to draw current tile of firebar
+    INC E                                       ;draw current tile of firebar
+    LD A, (FrameCounter)
+    RRCA
+    RRCA
+    AND A, $03
+    ADD A, $21
+    LD (DE), A
     INC E                                       ;move to next sprite entry
 ;
     LD A, (TimerControl)                        ;if star mario invincibility timer
-    LD B, A
+    LD IYL, A
     LD A, (StarInvincibleTimer)                 ;or master timer controls set
-    OR A, B
+    OR A, IYL
     RET NZ                                      ;then skip all of this
 ;
-    LD B, A                                     ;otherwise initialize counter
+    LD IYL, A                                   ;otherwise initialize counter
     LD A, (Player_Y_HighPos)                    ;if player's vertical high byte offscreen,
     DEC A
     RET NZ                                      ;skip all of this
     LD A, (Player_Y_Position)                   ;get player's vertical position
-    LD C, A
     LD A, (PlayerSize)                          ;get player's size
     OR A
-    JP NZ, AdjSm                                ;if player small, branch to alter variables
+    JR NZ, AdjSm                                ;if player small, branch to alter variables
     LD A, (CrouchingFlag)
     OR A
-    LD A, C
-    JP Z, FBCLoop                               ;if player big and not crouching, jump ahead
-AdjSm:
-    LD B, $02                                   ;if small or big but crouching, execute this part
-    LD A, $18                                   ;first increment our counter twice (setting $02 as flag)
-    ADD A, C                                    ;then add 24 pixels to the player's vertical coordinate
+    LD A, (Player_Y_Position)
+    JR Z, FBCLoop                               ;if player big and not crouching, jump ahead
+AdjSm:                                          ;if small or big but crouching, execute this part
+    LD IYL, $02                                 ;first increment our counter twice (setting $02 as flag)
+    LD A, (Player_Y_Position)
+    ADD A, $18                                  ;then add 24 pixels to the player's vertical coordinate                                   
 ;
 FBCLoop:
-    SUB A, H                                    ;subtract vertical position of firebar from the player's
+    SUB A, IXL                                  ;subtract vertical position of firebar from the player's
     JP P, ChkVFBD                               ;if player lower on the screen than firebar, skip two's compliment part 
     NEG                                         ;otherwise get two's compliment                          
 ChkVFBD:
     CP A, $08                                   ;if difference => 8 pixels, skip ahead of this part
-    JP NC, Chk2Ofs
-    LD A, L                                     ;if firebar on far right on the screen, skip this,
+    JR NC, Chk2Ofs
+    LD A, IXH                                   ;if firebar on far right on the screen, skip this,
     CP A, $F0                                   ;because, really, what's the point?
-    JP NC, Chk2Ofs
+    JR NC, Chk2Ofs
     LD A, (Sprite_X_Position + $02)             ;get OAM X coordinate for sprite #1
     ADD A, $04                                  ;add four pixels
-    LD C, A                                     ;store here
-    SUB A, L                                    ;subtract horizontal coordinate of firebar from the X coordinate of player's sprite 1
+    SUB A, IXH                                  ;subtract horizontal coordinate of firebar from the X coordinate of player's sprite 1
     JP P, ChkFBCl                               ;if modded X coordinate to the right of firebar, skip two's compliment part
     NEG                                         ;otherwise get two's compliment
 ChkFBCl:
     CP A, $08                                   ;if difference < 8 pixels, collision, thus branch
-    JP C, ChgSDir                               ;to process
+    JR C, ChgSDir                               ;to process
 Chk2Ofs:
-    LD A, B                                     ;if value of $02 was set earlier for whatever reason,
+    LD A, IYL                                   ;if value of $02 was set earlier for whatever reason,
     CP A, $02                                   ;branch to increment OAM offset and leave, no collision
     RET Z
-    LD C, $0C                                   ;otherwise get temp here and use as offset
-    OR A
-    JP Z, +
-    LD C, $18
+    OR A                                        ;otherwise get temp here and use as offset
+    LD A, (Player_Y_Position)
+    JR Z, +
+    ADD A, $0C
 +:
-    LD A, (Player_Y_Position)                   ;add value loaded with offset to player's vertical coordinate
-    ADD A, C
-    INC B                                       ;then increment temp and jump back
+    ADD A, $0C                                  ;add value loaded with offset to player's vertical coordinate
+    INC IYL                                     ;then increment temp and jump back
     JP FBCLoop
 ;
 ChgSDir:
-    LD A, C                                     ;if OAM X coordinate of player's sprite 1
-    CP A, L                                     ;is greater than horizontal coordinate of firebar
+    LD A, (Sprite_X_Position + $02)             ;if OAM X coordinate of player's sprite 1
+    ADD A, $04
+    CP A, IXH                                   ;is greater than horizontal coordinate of firebar
     LD A, $01                                   ;set movement direction by default
-    JP NC, SetSDir                              ;then do not alter movement direction
+    JR NC, SetSDir                              ;then do not alter movement direction
     INC A                                       ;otherwise increment it
 SetSDir:
     LD (Enemy_MovingDir), A                     ;store movement direction here
+    PUSH BC
     PUSH DE                                     ;save SAT Address
     CALL InjurePlayer                           ;perform sub to hurt or kill player
     POP DE                                      ;restore SAT Address
+    POP BC
     RET
 
 ;--------------------------------

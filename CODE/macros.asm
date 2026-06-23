@@ -9,6 +9,12 @@
 
 .FUNCTION StripeCount(v) -(v << $01) & $00FF
 
+.IF PALBUILD != $00
+    .FUNCTION TempoFunc(v) MAX(0, 256-ROUND((256-v) * 1.2057))
+.ELSE
+    .FUNCTION TempoFunc(v) v
+.ENDIF
+
 
 ;   Macros for BG collision
 .MACRO BlockBufferColli_Head

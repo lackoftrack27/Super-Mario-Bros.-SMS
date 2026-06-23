@@ -532,4 +532,4 @@ Mus_GameVictory:
     .INCLUDE "SND_Data_PAL.inc"
 .ENDIF
 
-    .INCLUDE "SND_Data_NTSC_FM.inc"
+    .INCLUDE "SND_Data_FM.inc"

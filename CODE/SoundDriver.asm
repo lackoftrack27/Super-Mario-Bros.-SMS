@@ -1839,9 +1839,19 @@ PSGDrumTable:
 
 .SECTION "Speed Up Tempo Table (FM)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 SpeedUpTempoTableFM:
-    .db $38, $23, $83, $59, $0E, $23, $5F
-    .db $16, $16, $6A, $AD, $7A, $48, $00
-    .db $66, $66, $00
+    .db TempoFunc($38), TempoFunc($23), TempoFunc($83)
+    .db TempoFunc($59)
+.IF PALBUILD == $00
+    .db TempoFunc($0E)
+.ELSE
+    .db TempoFunc($87)
+.ENDIF
+    .db TempoFunc($23), TempoFunc($5F)
+    ;
+    .db TempoFunc($8B), TempoFunc($8B), TempoFunc($6A)
+    .db TempoFunc($AD), TempoFunc($7A), TempoFunc($48), $00
+    ;
+    .db TempoFunc($66), TempoFunc($66), $00
 .ENDS
 
 ;--------------------------------
@@ -2098,15 +2108,6 @@ FMVolEnv0A:
 FMVolEnv0B:
     .db $00, $00, $80
 .ENDS
-
-;--------------------------------
-
-;   Mod Setup (4), Volume Env, Patch Env
-
-; .SECTION "FMDrumTable" BANK BANK_SOUND SLOT 2 FREE BITWINDOW 8 RETURNORG
-; FMDrumTable:
-;     .db $00, $02, $DA, $FF, $00, $13
-; .ENDS
 
 ;--------------------------------
 

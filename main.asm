@@ -231,6 +231,16 @@ ResetStart:
 ;   RESET GRAPHIC & SOUND BITFLAGS
     XOR A
     LD (OptionBitflags), A
+.IF INSTANTBOOT != $00
+    LD HL, SndChannelProcessMUS
+    LD (MusicRoutine), HL
+    LD A, $01
+    LD (OptionBitflags), A
+    LD HL, ColorRotation
+    LD (AnimateRoutine), HL
+    LD HL, BowserGfxDraw_NES
+    LD (BowserDrawRoutine), HL
+.ELSE
 ;   ------ OPTION SCREEN PROCESS ------
     ; LOAD BACKGROUND DATA
     LD A, :Tiles_BG_Options
@@ -416,7 +426,6 @@ OptionUpdateSettings:
     OUT (C), D
 OptionDrawPlayer:
     CALL PlayerGfxHandler           ;draw player
-    ;CALL SoundEngine                ;do sound processing
     LD A, $01                       ;signal that we have completed a frame on time
     LD (FrameDoneFlag), A
 OptionNMIWait:
@@ -425,6 +434,7 @@ OptionNMIWait:
     JR NZ, OptionNMIWait
     JP OptionsLoop
 ;   ------ END OF OPTION SCREEN PROCESS ------
+.ENDIF
 MainGameInit:
     DI                              ;disable interrupts
     LD A, %10100000                 ;turn off screen
@@ -493,8 +503,6 @@ EndlessLoop:
     LD A, (FrameDoneFlag)
     OR A
     JP NZ, EndlessLoop
-    ; --- SOUND UPDATE ---
-    ;CALL SoundEngine
     ; --- PAUSE ROUTINE ---
     LD A, (OperMode)                ;are we in victory mode?
     CP A, MODE_VICTORY              ;if so, go ahead
@@ -719,7 +727,6 @@ SoundUpdate:
     POP BC
 ;   NMI END
     POP AF
-    ;EI                              ;enable Z80 interrupts
     RET
 
 ;-------------------------------------------------------------------------------------

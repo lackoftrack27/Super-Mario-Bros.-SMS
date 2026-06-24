@@ -464,17 +464,17 @@ Mus_LevelVictory:
     .db nG1, $06, nC2, nE2, nG2, nC3, nE3, nG3, $12, nE3
     .db nGs1, $06, nC2, nEb2, nGs2, nC3, nEb3, nGs3, $12, nEb3
     .db nBb1, $06, nD2, nF2, nBb2, nD3, nF3, nBb3, $12, $06, $06, $06
-    .db nE3, $1C
+    .db nE3, $1B
     smpsStop
 @ch2:
     .db nRst, $06
     .db nE1, nG1, nC2, nE2, nG2, nC3, $12, nG2, $18
     .db nEb1, $06, nGs1, nC2, nEb2, nGs2, nC3, $12, nGs2, $18
-    .db nF1, $06, nBb1, nD2, nF2, nBb2, nD3, $12, $12, nC4, $1C
+    .db nF1, $06, nBb1, nD2, nF2, nBb2, nD3, $12, $12, nC4, $1B
     smpsStop
 .ENDS
 
-;   PAL DIFF: ~17% FASTER
+;   PAL DIFF: 25% FASTER
 .SECTION "MUS Data - Death" BANK BANK_SOUND SLOT 2 FREE
 Mus_Death:
     ; MAIN HEADER
@@ -485,19 +485,19 @@ Mus_Death:
     smpsChanHeader  Mus_Death@ch2,      $00, $00, $00, $0C  ; PULSE 2   (CH1)
     smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
 @ch0:
-    .db nRst, $1E
-    .db nG1, $17, $08, $0A, nA1, nB1, nC2, $0F, nG1, nC1
+    .db nRst, $18
+    .db nG1, $12, $06, $08, nA1, nB1, nC2, $0C, nG1, nC1, $18
     smpsStop
 @ch1:
     smpsModSetup    $00, $01, $10, $FF
-    .db nBb2, $03, nB2, nC3, $19
+    .db nBb2, $02, nB2, nC3, $14
     smpsModSetup    $00, $01, $12, $FF
     smpsPSGVoice    $0C
-    .db nG2, $08, nD3, $0F, $08, $0A, nC3, nB2, nG2, $08, nE2, $0F, $08, nC2, $0A
+    .db nG2, $06, nD3, $0C, $06, $08, nC3, nB2, nG2, $06, nE2, $0C, $06, nC2, $08
     smpsStop
 @ch2:
-    .db nRst, $1E
-    .db nB2, $08, nF3, $0F, $08, $0A, nE3, nD3, nC3, $28
+    .db nRst, $18
+    .db nB2, $06, nF3, $0C, $06, $08, nE3, nD3, nC3, $30
     smpsStop
 .ENDS
 

@@ -7,7 +7,7 @@ VictoryMode:
     CALL Z, AnimateBGTiles          ;update tile animations
     LD A, (OperMode_Task)           ;get current task of victory mode
     OR A
-    JP Z, @AutoPlayer               ;if on bridge collapse, skip enemy processing
+    JR Z, @AutoPlayer               ;if on bridge collapse, skip enemy processing
     LD H, >Enemy_ID
     LD (ObjectOffset), HL           ;otherwise reset enemy object offset 
     CALL EnemiesAndLoopsCore        ;and run enemy code
@@ -41,7 +41,7 @@ SetupVictoryMode:
     LD A, (WorldNumber)             ;load either retainer or princess palettes
     CP A, WORLD8
     LD A, VRAMTBL_RETAINERPAL
-    JP NZ, +
+    JR NZ, +
     INC A
 +:
     LD (VRAM_Buffer_AddrCtrl), A
@@ -56,10 +56,10 @@ PlayerVictoryWalk:
     LD A, (Player_PageLoc)          ;get player's page location
     LD HL, DestinationPageLoc       ;compare with destination page location
     CP A, (HL)
-    JP NZ, @PerformWalk             ;if page locations don't match, branch
+    JR NZ, @PerformWalk             ;if page locations don't match, branch
     LD A, (Player_X_Position)       ;otherwise get player's horizontal position
     CP A, $60                       ;compare with preset horizontal position
-    JP NC, @DontWalk                ;if still on other page, branch ahead
+    JR NC, @DontWalk                ;if still on other page, branch ahead
 @PerformWalk:
     LD HL, VictoryWalkControl       ;otherwise increment value and Y
     INC (HL)
@@ -70,7 +70,7 @@ PlayerVictoryWalk:
     LD A, (ScreenLeft_PageLoc)      ;check page location of left side of screen
     LD HL, DestinationPageLoc       ;against set value here
     CP A, (HL)
-    JP Z, @ExitVWalk                ;branch if equal to change modes if necessary
+    JR Z, @ExitVWalk                ;branch if equal to change modes if necessary
     LD A, (ScrollFractional)
     ADD A, $80                      ;do fixed point math on fractional part of scroll
     LD (ScrollFractional), A        ;save fractional movement amount
@@ -84,7 +84,7 @@ PlayerVictoryWalk:
 @ExitVWalk:
     LD A, (VictoryWalkControl)      ;load value set here
     OR A
-    JP Z, PrintVictoryMessages@IncModeTask_A    ;if zero, branch to change modes
+    JR Z, PrintVictoryMessages@IncModeTask_A    ;if zero, branch to change modes
     RET                             ;otherwise leave     
 
 ;-------------------------------------------------------------------------------------
@@ -92,50 +92,50 @@ PlayerVictoryWalk:
 PrintVictoryMessages:
     LD A, (SecondaryMsgCounter)     ;load secondary message counter
     OR A
-    JP NZ, @IncMsgCounter           ;if set, branch to increment message counters
+    JR NZ, @IncMsgCounter           ;if set, branch to increment message counters
 ;
     LD A, (PrimaryMsgCounter)       ;otherwise load primary message counter
     OR A
-    JP Z, @ThankPlayer              ;if set to zero, branch to print first message
+    JR Z, @ThankPlayer              ;if set to zero, branch to print first message
 ;
     ;CP A, $09                       ;if at 9 or above, branch elsewhere (this comparison
-    ;JP NC, @IncMsgCounter           ;is residual code, counter never reaches 9)
+    ;JR NC, @IncMsgCounter           ;is residual code, counter never reaches 9)
     LD E, A
     LD A, (WorldNumber)             ;check world number
     CP A, WORLD8
     LD A, E
-    JP NZ, @MRetainerMsg            ;if not at world 8, skip to next part
+    JR NZ, @MRetainerMsg            ;if not at world 8, skip to next part
     CP A, $03                       ;check primary message counter again
-    JP C, @IncMsgCounter            ;if not at 3 yet (world 8 only), branch to increment
+    JR C, @IncMsgCounter            ;if not at 3 yet (world 8 only), branch to increment
     DEC A                           ;otherwise subtract one
     JP @ThankPlayer                 ;and skip to next part
 @MRetainerMsg:
     CP A, $02                       ;check primary message counter
-    JP C, @IncMsgCounter            ;if not at 2 yet (world 1-7 only), branch
+    JR C, @IncMsgCounter            ;if not at 2 yet (world 1-7 only), branch
 @ThankPlayer:
     OR A
     LD C, A                         ;put primary message counter into Y
-    JP NZ, @SecondPartMsg           ;if counter nonzero, skip this part, do not print first message
+    JR NZ, @SecondPartMsg           ;if counter nonzero, skip this part, do not print first message
     LD A, (CurrentPlayer)           ;otherwise get player currently on the screen
     OR A
-    JP Z, @EvalForMusic             ;if mario, branch
+    JR Z, @EvalForMusic             ;if mario, branch
     INC C                           ;otherwise increment Y once for luigi and
-    JP NZ, @EvalForMusic            ;do an unconditional branch to the same place
+    JR NZ, @EvalForMusic            ;do an unconditional branch to the same place
 @SecondPartMsg:
     INC C                           ;increment Y to do world 8's message
     LD A, (WorldNumber)
     CP A, WORLD8                    ;check world number
-    JP Z, @EvalForMusic             ;if at world 8, branch to next part
+    JR Z, @EvalForMusic             ;if at world 8, branch to next part
     DEC C                           ;otherwise decrement Y for world 1-7's message
     LD A, C
     CP A, $04                       ;if counter at 4 (world 1-7 only)
-    JP NC, @SetEndTimer             ;branch to set victory end timer
+    JR NC, @SetEndTimer             ;branch to set victory end timer
     CP A, $03                       ;if counter at 3 (world 1-7 only)
-    JP NC, @IncMsgCounter           ;branch to keep counting
+    JR NC, @IncMsgCounter           ;branch to keep counting
 @EvalForMusic:
     LD A, C
     CP A, $03                       ;if counter not yet at 3 (world 8 only), branch
-    JP NZ, @PrintMsg                ;to print message only (note world 1-7 will only    
+    JR NZ, @PrintMsg                ;to print message only (note world 1-7 will only    
     LD A, SNDID_GAMEDONE            ;reach this code if counter = 0, and will always branch)
     LD (MusicTrack0.SoundQueue), A  ;otherwise load victory music first (world 8 only)
 @PrintMsg:
@@ -168,7 +168,7 @@ PlayerEndWorld:
 ;
     LD A, (WorldNumber)             ;check world number
     CP A, WORLD8                    ;if on world 8, player is done with game, 
-    JP NC, @EndChkBButton           ;thus branch to read controller
+    JR NC, @EndChkBButton           ;thus branch to read controller
 ;
     XOR A
     LD (AreaNumber), A              ;otherwise initialize area number used as offset

@@ -74,37 +74,37 @@ GameMenuRoutine:
     JP Z, @ChkContinue              ;if either start or A + start, execute here
 @ChkSelect:
     CP A, bitValue(SMS_BTN_UP)      ;check to see if the select button was pressed [Up/Down for SMS]
-    JP Z, @SelectBLogic             ;if so, branch reset demo timer
+    JR Z, @SelectBLogic             ;if so, branch reset demo timer
     CP A, bitValue(SMS_BTN_DOWN)
-    JP Z, @SelectBLogic             ;if so, branch reset demo timer
+    JR Z, @SelectBLogic             ;if so, branch reset demo timer
     LD A, (DemoTimer)               ;otherwise check demo timer
     OR A
-    JP NZ, @ChkWorldSel             ;if demo timer not expired, branch to check world selection
+    JR NZ, @ChkWorldSel             ;if demo timer not expired, branch to check world selection
     LD (SelectTimer), A             ;set controller bits here if running demo
     CALL DemoEngine                 ;run through the demo actions
-    JP C, @ResetTitle               ;if carry flag set, demo over, thus branch
+    JR C, @ResetTitle               ;if carry flag set, demo over, thus branch
     JP @RunDemo                     ;otherwise, run game engine for demo
 @ChkWorldSel:
     LD HL, WorldSelectEnableFlag    ;check to see if world selection has been enabled
     BIT 0, (HL)
-    JP Z, @NullJoypad
+    JR Z, @NullJoypad
     LD A, B
     CP A, bitValue(SMS_BTN_2)       ;if so, check to see if the B button was pressed (Button 2 for SMS)
-    JP NZ, @NullJoypad
+    JR NZ, @NullJoypad
     INC E                           ;if so, increment Y and execute same code as select (E for Z80)
 @SelectBLogic:
     LD A, (DemoTimer)               ;if select or B pressed, check demo timer one last time
     OR A
-    JP Z, @ResetTitle               ;if demo timer expired, branch to reset title screen mode
+    JR Z, @ResetTitle               ;if demo timer expired, branch to reset title screen mode
     LD A, $18                       ;otherwise reset demo timer
     LD (DemoTimer), A
     LD A, (SelectTimer)             ;check select/B button timer
     OR A
-    JP NZ, @NullJoypad              ;if not expired, branch
+    JR NZ, @NullJoypad              ;if not expired, branch
     LD A, $10
     LD (SelectTimer), A             ;otherwise reset select button timer
     DEC E                           ;was the B button pressed earlier?  if so, branch
-    JP Z, @IncWorldSel              ;note this will not be run if world selection is disabled
+    JR Z, @IncWorldSel              ;note this will not be run if world selection is disabled
     
     .IF SINGLEPLAYERONLY != $00
     JP @NullJoypad                  ;don't allow user to select 2 Players
@@ -149,10 +149,10 @@ GameMenuRoutine:
 @ChkContinue:
     LD A, (DemoTimer)               ;if timer for demo has expired, reset modes
     OR A
-    JP Z, @ResetTitle
+    JR Z, @ResetTitle
     LD A, B
     BIT SMS_BTN_LEFT, A             ;check to see if A button was also pushed
-    JP Z, @StartWorld1              ;if not, don't load continue function's world number
+    JR Z, @StartWorld1              ;if not, don't load continue function's world number
     LD A, (ContinueWorld)           ;load previously saved world number for secret
     CALL @GoContinue                ;continue function when pressing A + start
 @StartWorld1:
@@ -214,7 +214,7 @@ DrawMushroomIcon:
 ;
     LD A, (OptionBitflags)          ;make mushroom icon use bg palette if doing NES GFX
     AND A, $01
-    JP Z, +
+    JR Z, +
     XOR A
     LD (VRAM_Buffer1 + $04), A
 ;
@@ -237,7 +237,7 @@ DrawMushroomIcon:
     LD A, (OptionBitflags)          ;use spr palette for default, bg palette for NES
     AND A, $01
     LD A, $08
-    JP Z, +
+    JR Z, +
     XOR A
 +:
     LD (HL), A
@@ -265,7 +265,7 @@ DemoEngine:
 ;
     LD A, (DemoActionTimer)         ;load current action timer
     OR A
-    JP NZ, @DoAction                ;if timer still counting down, skip
+    JR NZ, @DoAction                ;if timer still counting down, skip
 ;
     LD HL, DemoAction               ;if expired, increment action, X
     INC (HL)

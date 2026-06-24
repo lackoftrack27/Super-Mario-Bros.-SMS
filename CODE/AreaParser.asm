@@ -214,7 +214,7 @@ RenderSceneryTerrain:
 ;   BACKGROUND SCENERY
     LD A, (BackgroundScenery)       ;do we need to render the background scenery?
     OR A
-    JP Z, RendFore                  ;if not, skip to check the foreground
+    JR Z, RendFore                  ;if not, skip to check the foreground
 ;   Calculate which third of the page we're on (0, 1, or 2)
     LD A, (CurrentPageLoc)          ;otherwise check for every third page
 @ThirdP:
@@ -243,7 +243,7 @@ RenderSceneryTerrain:
     addAToHL8_M
     LD A, (HL)                      ;load data from sum of offsets
     OR A
-    JP Z, RendFore                  ;if zero, no scenery for that part
+    JR Z, RendFore                  ;if zero, no scenery for that part
 ;   Extract low nybble (metatile type) and high nybble (height)
     ; metatile
     PUSH AF
@@ -271,13 +271,13 @@ SceLoop1:
     LDI                     
     INC A
     CP A, $0B                       ;if at this location, leave loop (Terrain starts here)
-    JP Z, RendFore
+    JR Z, RendFore
     DJNZ SceLoop1                   ;decrement until counter expires, barring exception
 ;   FOREGROUND SCENERY
 RendFore:
     LD A, (ForegroundScenery)       ;check for foreground data needed or not
     OR A
-    JP Z, RendTerr                  ;if not, skip this part
+    JR Z, RendTerr                  ;if not, skip this part
 ;   Get pointer to foreground type's data
     DEC A
     ADD A, A                        ; multiply by 12 (length of MetatileBuffer)
@@ -290,7 +290,7 @@ RendFore:
 ;
     LD A, (AreaType)
     CP A, $03
-    JP NZ, +
+    JR NZ, +
     LD HL, ForeSceneryData@OverLava
 +:
 ;   Copy foreground scenery data to metatile buffer
@@ -299,7 +299,7 @@ RendFore:
 SceLoop2:
     LD A, (HL)
     OR A
-    JP Z, NoFore                    ;do not store if zero found
+    JR Z, NoFore                    ;do not store if zero found
     LD (DE), A
 NoFore:
     INC HL
@@ -314,15 +314,15 @@ RendTerr:
     LD IYL, $00                     ;flag to render castle ceiling and floor
     LD A, (AreaType)
     CP A, $03
-    JP NZ, +
+    JR NZ, +
     LD IYL, $01                     ;render castle ceiling
 +:
     ;LD A, (AreaType)                ;check world type for water level
     OR A
-    JP NZ, TerMTile                 ;if not water level, skip this part
+    JR NZ, TerMTile                 ;if not water level, skip this part
     LD A, (WorldNumber)             ;check world number, if not world number eight
     CP A, WORLD8                    ;then skip this part
-    JP NZ, TerMTile
+    JR NZ, TerMTile
     ;LD A, MT_SOLIDBLK_WHITE         ;if set as water level and world number eight,
     LD A, MT_CASTLECEILING_L
     LD IYL, $01
@@ -331,7 +331,7 @@ TerMTile:
     LD A, (CloudTypeOverride)       ;check for cloud type override
     OR A
     LD A, MT_CLOUDGND               ;if set, use cloud block terrain
-    JP NZ, StoreMT
+    JR NZ, StoreMT
     LD HL, TerrainMetatiles         ;otherwise get appropriate metatile for area type
     LD A, (AreaType)
     addAToHL8_M
@@ -348,10 +348,10 @@ TerrLoop:
     LD C, (HL)                      ;get one of the terrain rendering bit data
     LD A, (CloudTypeOverride)       ;skip if value here is zero
     OR A
-    JP Z, NoCloud2
+    JR Z, NoCloud2
     LD A, IXL                       ;otherwise, check if we're doing the ceiling byte
     OR A
-    JP Z, NoCloud2
+    JR Z, NoCloud2
     LD A, C                         ;if not, mask out all but d3
     AND A, %00001000
     LD C, A
@@ -359,16 +359,16 @@ NoCloud2:
     LD B, $08                       ;start at beginning of bitmasks
 TerrBChk:
     RR C                            ;rotate byte and check if carry occured
-    JP C, RenderBit                 ;if not set, skip this part (do not write terrain to buffer)
+    JR C, RenderBit                 ;if not set, skip this part (do not write terrain to buffer)
     LD A, IYL                       ;
     DEC A
-    JP NZ, NextTBit
+    JR NZ, NextTBit
     INC IYL                         ;set flag to render castle floor
     JP NextTBit
 RenderBit:
     LD A, IYL                       ;check if rendering castle floor top
     CP A, $02
-    JP NZ, +                        ;if not, skip
+    JR NZ, +                        ;if not, skip
     LD IXH, MT_CASTLEFLOOR_TOP      ;set metatile to castle floor top
 +:
     ;
@@ -377,10 +377,10 @@ RenderBit:
     ;
     LD A, IYL                       ;check if doing castle ceiling/floor rendering
     OR A
-    JP Z, NextTBit                  ;if not, skip
+    JR Z, NextTBit                  ;if not, skip
     ;
     CP A, $02                       ;check if rendering if castle floor top
-    JP NZ, +                        ;if not, skip
+    JR NZ, +                        ;if not, skip
     LD IYL, $00                     ;disable castle ceiling/floor processing
     INC IXH                         ;set metatile to castle floor bottom
     INC IXH
@@ -389,7 +389,7 @@ RenderBit:
 +:
     LD A, IYH                       ;check if we need to render right castle ceiling tile               
     AND A, $01
-    JP NZ, NextTBit                 ;if not, skip
+    JR NZ, NextTBit                 ;if not, skip
     LD A, IXH
     INC A
     LD (DE), A
@@ -398,13 +398,13 @@ NextTBit:
     INC IXL
     LD A, IXL
     CP A, $0D
-    JP Z, RendBBuf                  ;if we're at the end, break out of this loop
+    JR Z, RendBBuf                  ;if we're at the end, break out of this loop
     LD A, (AreaType)                ;check world type for underground area
     CP A, $02
-    JP NZ, EndUChk                  ;if not underground, skip this part
+    JR NZ, EndUChk                  ;if not underground, skip this part
     LD A, IXL
     CP A, $0B
-    JP NZ, EndUChk                  ;if we're at the bottom of the screen, override
+    JR NZ, EndUChk                  ;if we're at the bottom of the screen, override
     LD IXH, MT_ROCK                 ;old terrain type with ground level terrain type
 EndUChk:
     INC IYH                         ;toggle castle ceiling tile flag
@@ -420,7 +420,7 @@ RendBBuf:
     ;CALL GetBlockBufferAddr         ;get block buffer address from where we're at
     LD DE, Block_Buffer_1
     BIT 4, A
-    JP Z, +
+    JR Z, +
     LD E, <Block_Buffer_2
 +:
     AND A, $0F                      ;mask out high nybble
@@ -440,7 +440,7 @@ ChkMTLow:
     LD L, A
     LD A, (BC)                      ;reload original unmasked value here
     CP A, (HL)                      ;check for certain values depending on bits set
-    JP NC, StrBlock                 ;if equal or greater, branch
+    JR NC, StrBlock                 ;if equal or greater, branch
     XOR A                           ;if less, init value before storing
 StrBlock:
     LD (DE), A                      ;store value into block buffer
@@ -493,7 +493,7 @@ ProcADLoop:
     LD A, (DE)                              ;get first byte of area object
     ; Check for end-of-area marker
     CP A, $D0                               ;if end-of-area, skip all this crap
-    JP Z, RdyDecode
+    JR Z, RdyDecode
     ; Check if this buffer slot is already in use
     LD A, (HL)                              ;check area object buffer flag
     OR A
@@ -518,15 +518,15 @@ Chk1Row13:
     LD A, (DE)                              ;reread first byte of level object
     AND A, $0F                              ;mask out high nybble
     CP A, $0D                               ;row 13?
-    JP NZ, Chk1Row14
+    JR NZ, Chk1Row14
     INC E                                   ;if so, reread second byte of level object
     LD A, (DE)
     DEC E                                   ;decrement to get ready to read first byte
     AND A, %01000000                        ;check for d6 set (if not, object is page control)
-    JP NZ, CheckRear
+    JR NZ, CheckRear
     LD A, (AreaObjectPageSel)               ;if page select is set, do not reread
     OR A
-    JP NZ, CheckRear
+    JR NZ, CheckRear
     ; Set new page location from lower 5 bits
     INC E                                   ;if d6 not set, reread second byte
     LD A, (DE)
@@ -539,17 +539,17 @@ Chk1Row13:
     JP NextAObj
 Chk1Row14:
     CP A, $0E                               ;row 14?
-    JP NZ, CheckRear
+    JR NZ, CheckRear
     LD A, (BackloadingFlag)                 ;check flag for saved page number and branch if set
     OR A
-    JP NZ, RdyDecode                        ;to render the object (otherwise bg might not look right)
+    JR NZ, RdyDecode                        ;to render the object (otherwise bg might not look right)
     ; Check if object is behind renderer
 CheckRear:
     LD A, (CurrentPageLoc)                  ;check to see if current page of level object is
     LD B, A
     LD A, (AreaObjectPageLoc)               ;behind current page of renderer
     CP A, B
-    JP C, SetBehind                         ;if so branch
+    JR C, SetBehind                         ;if so branch
 RdyDecode:
     CALL DecodeAreaData                     ;do sub and do not turn on flag
     JP ChkLength
@@ -613,23 +613,23 @@ Chk1stB:
 ;   Determine base offset for object type lookup
     LD B, $10                               ;load offset of 16 for special row 15
     CP A, $0F                               ;row 15?
-    JP Z, ChkRow14                          ;if so, keep the offset of 16
+    JR Z, ChkRow14                          ;if so, keep the offset of 16
     LD B, $08                               ;otherwise load offset of 8 for special row 12
     CP A, $0C                               ;row 12?
-    JP Z, ChkRow14                          ;if so, keep the offset value of 8
+    JR Z, ChkRow14                          ;if so, keep the offset value of 8
     LD B, $00                               ;otherwise nullify value by default
 ;   Handle rows
 ChkRow14:
     LD IXH, B                               ;store whatever value we just loaded here
     ;LD HL, (ObjectOffset)
     CP A, $0E                               ;row 14?
-    JP NZ, ChkRow13 
+    JR NZ, ChkRow13 
     LD IXH, $00                             ;if so, load offset with $00
     LD A, $4A ;LD A, $2E                               ;and load A with another value
     JP NormObj                              ;unconditional branch
 ChkRow13:
     CP A, $0D                               ;row 13?
-    JP NZ, ChkSRows
+    JR NZ, ChkSRows
     LD IXH, $22                             ;if so, load offset with 34
     ; Check if this is a page control object (d6 clear)                     
     INC E
@@ -639,7 +639,7 @@ ChkRow13:
     ; Check for loop command (low nybble = 0x4B with d6 set)
     AND A, %01111111                        ;mask out d7
     CP A, $4B                               ;check for loop command in low nybble
-    JP NZ, Mask2MSB                         ;(plus d6 set for object other than page control)
+    JR NZ, Mask2MSB                         ;(plus d6 set for object other than page control)
     LD A, $01
     LD (LoopCommand), A                     ;if loop command, set loop command flag
 Mask2MSB:
@@ -649,11 +649,11 @@ Mask2MSB:
 ;   Get Object ID
 ChkSRows:
     CP A, $0C                               ;row 12-15?
-    JP NC, SpecObj
+    JR NC, SpecObj
     INC E
     LD A, (DE)                               ;if not, get second byte of level object
     AND A, %01110000                        ;mask out all but d6-d4
-    JP NZ, LrgObj                           ;if any bits set, branch to handle large object
+    JR NZ, LrgObj                           ;if any bits set, branch to handle large object
     ; Get Normal Object's ID
     LD IXH, $16                             ;otherwise set offset of 24 for small object
     LD A, (DE)                              ;reload second byte of level object
@@ -663,10 +663,10 @@ ChkSRows:
 LrgObj:
     LD IXL, A                               ;store value here (branch for large objects)
     CP A, $70                               ;check for vertical pipe object
-    JP NZ, NotWPipe
+    JR NZ, NotWPipe
     LD A, (DE)
     AND A, %00001000                        ;if d3 clear, branch to get original value
-    JP Z, NotWPipe
+    JR Z, NotWPipe
     LD IXL, $00                             ;otherwise, nullify value for warp pipe
 NotWPipe:
     LD A, IXL                               ;get value and jump ahead
@@ -698,7 +698,7 @@ NormObj:
     
     LD A, (AreaDataOffset)                  ;get old offset of level pointer
     LD E, A
-    JP Z, InitRear
+    JR Z, InitRear
     ; Not on current page, so check for row 14 and backload flag
     LD A, (DE)                               ;reload first byte
     AND A, %00001111
@@ -706,13 +706,13 @@ NormObj:
     RET NZ
     LD A, (BackloadingFlag)                 ;if so, check backloading flag
     OR A
-    JP NZ, StrAObj                          ;if set, branch to render object, else leave
+    JR NZ, StrAObj                          ;if set, branch to render object, else leave
     RET
     ; On current page: check backloading initialization
 InitRear:
     LD A, (BackloadingFlag)                 ;check backloading flag to see if it's been initialized
     OR A
-    JP Z, BackColC                          ;branch to column-wise check
+    JR Z, BackColC                          ;branch to column-wise check
     XOR A                                   ;if not, initialize both backloading and
     LD (BackloadingFlag), A                 ;behind-renderer flags and leave
     LD (BehindAreaParserFlag), A
@@ -1616,7 +1616,7 @@ VerticalPipe:
 ;
     LD A, IXL                           ;check to see if value was nullified earlier
     OR A
-    JP Z, WarpPipe                      ;(if d3, the usage control bit of second byte, was set)
+    JR Z, WarpPipe                      ;(if d3, the usage control bit of second byte, was set)
     INC C
     INC C
     INC C
@@ -1628,14 +1628,14 @@ WarpPipe:
     LD E, A
     LD A, (AreaNumber)
     OR A, E                             ;if at world 1-1, do not add piranha plant ever
-    JP Z, DrawPipe
+    JR Z, DrawPipe
     LD L, <AreaObjectLength
     LD C, (HL)                          ;if on second column of pipe, branch
     LD A, C
     OR A
-    JP Z, DrawPipe                      ;(because we only need to do this once)
+    JR Z, DrawPipe                      ;(because we only need to do this once)
     CALL FindEmptyEnemySlot             ;check for an empty moving data buffer space
-    JP C, DrawPipe                      ;if not found, too many enemies, thus skip
+    JR C, DrawPipe                      ;if not found, too many enemies, thus skip
     CALL GetAreaObjXPosition            ;get horizontal pixel coordinate
     LD (HL), $01                        ;activate enemy flag
     LD L, <Enemy_ID
@@ -1659,7 +1659,7 @@ DrawPipe:
     LD C, A
     LD A, (AltEntranceControl)          ;AltEntranceControl != 0 OR ~IXL != 0
     OR A, C
-    JP Z, DrawPipe_1
+    JR Z, DrawPipe_1
 ;   FOR BLOCKS UNDER PIPESHAFT (TERRAIN)
     LD A, IXH
     INC A
@@ -2122,11 +2122,11 @@ HoleMetatiles:
 
 Hole_Empty:
     CALL ChkLrgObjLength                ;get lower nybble and save as length
-    JP NC, NoWhirlP                     ;skip this part if length already loaded
+    JR NC, NoWhirlP                     ;skip this part if length already loaded
 ;
     LD A, (AreaType)                    ;check for water type level
     OR A
-    JP NZ, NoWhirlP                     ;if not water type, skip this part
+    JR NZ, NoWhirlP                     ;if not water type, skip this part
 ;
     LD A, (Whirlpool_Offset)            ;get offset for data used by cannons and whirlpools
     ADD A, >Whirlpool_LeftExtent        ;(SMS) set high byte of RAM address (index)
@@ -2152,7 +2152,7 @@ Hole_Empty:
     INC H                               
     LD A, H
     CP A, >Whirlpool_Length + $05       ;increment and check offset
-    JP C, StrWOffset                    ;if not yet reached fifth whirlpool, branch
+    JR C, StrWOffset                    ;if not yet reached fifth whirlpool, branch
     LD A, >Whirlpool_Length             ;otherwise initialize it
 StrWOffset:
     SUB A, >Whirlpool_Length
@@ -2178,26 +2178,26 @@ RenderUnderPart:
 @loop:
     LD A, (HL)                          ;check current spot to see if there's something
     OR A
-    JP Z, DrawThisRow                   ;we need to keep, if nothing, go ahead
+    JR Z, DrawThisRow                   ;we need to keep, if nothing, go ahead
     CP A, MT_TREELEDGE_MID
-    JP Z, WaitOneRow                    ;if middle part (tree ledge), wait until next row
+    JR Z, WaitOneRow                    ;if middle part (tree ledge), wait until next row
     CP A, MT_MUSHROOM_MID
-    JP Z, WaitOneRow                    ;if middle part (mushroom ledge), wait until next row
+    JR Z, WaitOneRow                    ;if middle part (mushroom ledge), wait until next row
     CP A, MT_QBLK_COIN
-    JP Z, DrawThisRow                   ;if question block w/ coin, overwrite
+    JR Z, DrawThisRow                   ;if question block w/ coin, overwrite
 ;
     CP A, MT_TREELEDGE_TRUCK            ;don't overwrite the center tiles of the tree trunk
-    JP Z, WaitOneRow
+    JR Z, WaitOneRow
     CP A, MT_TREELEDGE_TRUCK_CB
-    JP Z, WaitOneRow
+    JR Z, WaitOneRow
 ;
     CP A, MT_QBLK_COIN
-    JP NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
+    JR NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
     CP A, MT_ROCK
-    JP NZ, DrawThisRow                  ;if cracked rock terrain, overwrite
+    JR NZ, DrawThisRow                  ;if cracked rock terrain, overwrite
     LD A, E
     CP A, MT_MSTUMP_BOT
-    JP Z, WaitOneRow                    ;if stem top of mushroom, wait until next row
+    JR Z, WaitOneRow                    ;if stem top of mushroom, wait until next row
 DrawThisRow:
     LD (HL), E                          ;render contents of A from routine that called this
 WaitOneRow:

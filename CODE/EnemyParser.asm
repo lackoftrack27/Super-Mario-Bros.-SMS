@@ -13,10 +13,10 @@ ProcessEnemyData:
 ;CheckEndofBuffer:
     AND A, %00001111                ;check for special row $0e
     CP A, $0E
-    JP Z, CheckRightBounds          ;if found, branch, otherwise
+    JR Z, CheckRightBounds          ;if found, branch, otherwise
     LD A, H                         ;check for end of buffer
     CP A, >Enemy_ID_05
-    JP C, CheckRightBounds          ;if not at end of buffer, branch
+    JR C, CheckRightBounds          ;if not at end of buffer, branch
 ;
     INC E
     LD A, (DE)                      ;check for specific value here
@@ -40,10 +40,10 @@ CheckRightBounds:
     INC E
     LD A, (DE)                      ;if MSB of enemy object is clear, branch to check for row $0f
     ADD A, A
-    JP NC, CheckPageCtrlRow
+    JR NC, CheckPageCtrlRow
     LD A, (EnemyObjectPageSel)      ;if page select already set, do not set again
     OR A
-    JP NZ, CheckPageCtrlRow
+    JR NZ, CheckPageCtrlRow
 ;
     INC A                           ;otherwise, if MSB is set, set page select 
     LD (EnemyObjectPageSel), A
@@ -56,11 +56,11 @@ CheckPageCtrlRow:
     LD A, (DE)                      ;reread first byte
     AND A, $0F
     CP A, $0F                       ;check for special row $0f
-    JP NZ, PositionEnemyObj         ;if not found, branch to position enemy object
+    JR NZ, PositionEnemyObj         ;if not found, branch to position enemy object
 ;
     LD A, (EnemyObjectPageSel)      ;if page select set,
     OR A
-    JP NZ, PositionEnemyObj         ;branch without reading second byte
+    JR NZ, PositionEnemyObj         ;branch without reading second byte
 ;
     INC E
     LD A, (DE)                      ;otherwise, get second byte, mask out 2 MSB
@@ -94,12 +94,12 @@ PositionEnemyObj:
     LD L, <Enemy_PageLoc
     LD A, (HL)                      ;without subtracting, then subtract borrow
     SBC A, C                        ;from page location
-    JP NC, CheckRightExtBounds      ;if enemy object beyond or at boundary, branch
+    JR NC, CheckRightExtBounds      ;if enemy object beyond or at boundary, branch
 ;
     LD A, (DE)
     AND A, %00001111                ;check for special row $0e
     CP A, $0E                       ;if found, jump elsewhere
-    JP Z, ParseRow0e
+    JR Z, ParseRow0e
     JP CheckThreeBytes              ;if not found, unconditional jump
 
 CheckRightExtBounds:
@@ -109,7 +109,7 @@ CheckRightExtBounds:
     LD A, IXL ;LD A, (Temp_Bytes + $06)        ;then subtract borrow from page control temp
     LD L, <Enemy_PageLoc            ;plus carry
     SBC A, (HL)
-    JP C, CheckFrenzyBuffer         ;if enemy object beyond extended boundary, branch
+    JR C, CheckFrenzyBuffer         ;if enemy object beyond extended boundary, branch
 ;
     LD L, <Enemy_Y_HighPos          ;store value in vertical high byte
     LD (HL), $01
@@ -123,32 +123,32 @@ CheckRightExtBounds:
     LD (HL), A
 ;
     CP A, $E0                       ;do one last check for special row $0e
-    JP Z, ParseRow0e                ;(necessary if branched to $c1cb)???
+    JR Z, ParseRow0e                ;(necessary if branched to $c1cb)???
 ;
     INC E
     LD A, (DE)                      ;get second byte of object
     AND A, %01000000                ;check to see if hard mode bit is set
-    JP Z, CheckForEnemyGroup        ;if not, branch to check for group enemy objects
+    JR Z, CheckForEnemyGroup        ;if not, branch to check for group enemy objects
 ;
     LD A, (SecondaryHardMode)       ;if set, check to see if secondary hard mode flag
     OR A
-    JP Z, Inc2B                     ;is on, and if not, branch to skip this object completely
+    JR Z, Inc2B                     ;is on, and if not, branch to skip this object completely
 
 CheckForEnemyGroup:
     LD A, (DE)                      ;get second byte and mask out 2 MSB
     AND A, %00111111
     CP A, $37                       ;check for value below $37
-    JP C, BuzzyBeetleMutate
+    JR C, BuzzyBeetleMutate
     CP A, $3F                       ;if $37 or greater, check for value
     JP C, HandleGroupEnemies        ;below $3f, branch if below $3f
 
 BuzzyBeetleMutate:
     CP A, OBJECTID_Goomba           ;if below $37, check for goomba
-    JP NZ, StrID                    ;value ($3f or more always fails)
+    JR NZ, StrID                    ;value ($3f or more always fails)
     LD A, (PrimaryHardMode)         ;check if primary hard mode flag is set
     OR A
     LD A, OBJECTID_Goomba
-    JP Z, StrID                     
+    JR Z, StrID                     
     LD A, OBJECTID_BuzzyBeetle      ;and if so, change goomba to buzzy beetle
 StrID:
     LD L, <Enemy_ID
@@ -162,13 +162,13 @@ StrID:
     LD L, <Enemy_Flag               ;check to see if flag is set
     LD A, (HL)
     OR A
-    JP NZ, Inc2B                    ;if not, leave, otherwise branch
+    JR NZ, Inc2B                    ;if not, leave, otherwise branch
     RET
 
 CheckFrenzyBuffer:
     LD A, (EnemyFrenzyBuffer)       ;if enemy object stored in frenzy buffer
     OR A
-    JP NZ, StrFre                   ;then branch ahead to store in enemy object buffer
+    JR NZ, StrFre                   ;then branch ahead to store in enemy object buffer
 ;
     LD A, (VineFlagOffset)          ;otherwise check vine flag offset
     CP A, $01
@@ -195,7 +195,7 @@ ParseRow0e:
     LD C, A
     LD A, (WorldNumber)
     CP A, C                         ;is it the same world number as we're on?
-    JP NZ, Inc3B                    ;if not, do not use (this allows multiple uses
+    JR NZ, Inc3B                    ;if not, do not use (this allows multiple uses
 ;
     DEC E                           ;of the same area, like the underground bonus areas)
     LD A, (DE)                      ;otherwise, get second byte and use as offset
@@ -214,7 +214,7 @@ CheckThreeBytes:
     LD A, (DE)                      ;get first byte
     AND A, %00001111                ;check for special row $0e
     CP A, $0E
-    JP NZ, Inc2B
+    JR NZ, Inc2B
 Inc3B:
     LD A, (EnemyDataOffset)         ;if row = $0e, increment three bytes
     ADD A, $03
@@ -234,7 +234,7 @@ CheckpointEnemyID:
     LD L, <Enemy_ID
     LD A, (HL)
     CP A, $15                       ;check enemy object identifier for $15 or greater
-    JP NC, InitEnemyRoutines        ;and branch straight to the jump engine if found
+    JR NC, InitEnemyRoutines        ;and branch straight to the jump engine if found
 ;
     EX AF, AF'                      ;save identifier in Y register for now
 ;
@@ -344,7 +344,7 @@ Setup_Vine_NOPOP:
     LD A, (DE)
     LD (HL), A
 ;    
-    JP NZ, NextVO                   ;if set at all, don't bother to store vertical
+    JR NZ, NextVO                   ;if set at all, don't bother to store vertical
     SUB A, SMS_PIXELYOFFSET
     LD (VineStart_Y_Position), A    ;otherwise store vertical coordinate here
 NextVO: 
@@ -419,11 +419,11 @@ InitNormalEnemy_NOPOP:
 
     .IF PALBUILD == $00
     LD A, $F8                       ;load default offset
-    JP Z, GetESpd
+    JR Z, GetESpd
     LD A, $F4                       ;if not set, load alternate offset
     .ELSE
     LD A, $F6                       ;PAL diff: Faster speed to compensate FPS difference
-    JP Z, GetESpd
+    JR Z, GetESpd
     LD A, $F1
     .ENDIF
 
@@ -460,7 +460,7 @@ InitHammerBro:
     LD A, (SecondaryHardMode)       ;get secondary hard mode flag
     OR A
     LD A, $80                       ;HBroWalkingTimerData
-    JP Z, +
+    JR Z, +
     LD A, $50                       ;HBroWalkingTimerData + $01
 +:
     LD (BC), A                      ;set value as delay for hammer bro to walk left
@@ -607,7 +607,7 @@ LakituAndSpinyHandler:
 ChkLak:
     LD A, (DE)                          ;check all enemy slots to see
     CP A, OBJECTID_Lakitu               ;if lakitu is on one of them
-    JP Z, CreateSpiny                   ;if so, branch out of this loop
+    JR Z, CreateSpiny                   ;if so, branch out of this loop
     DEC D                               ;otherwise check another slot
     DJNZ ChkLak                         ;loop until all slots are checked
 ;
@@ -622,7 +622,7 @@ ChkLak:
 ChkNoEn:
     LD A, (HL)                          ;check enemy buffer flag for non-active enemy slot
     OR A
-    JP Z, CreateL                       ;branch out of loop if found
+    JR Z, CreateL                       ;branch out of loop if found
     DEC H                               ;otherwise check next slot
     DJNZ ChkNoEn                        ;branch until all slots are checked
     JP RetEOfs                          ;if no empty slots were found, branch to leave
@@ -840,7 +840,7 @@ InitFlyingCheepCheep:
     LD A, (SecondaryHardMode)
     OR A
     LD A, $03                           ;load Y with default value
-    JP Z, MaxCC                         ;if secondary hard mode flag not set, do not increment Y
+    JR Z, MaxCC                         ;if secondary hard mode flag not set, do not increment Y
     INC A                               ;otherwise, increment Y to allow as many as four onscreen
 MaxCC:
     LD (Temp_Bytes + $00), A            ;store whatever pseudorandom bits are in Y
@@ -869,7 +869,7 @@ MaxCC:
     LD A, (Player_X_Speed)              ;check player's horizontal speed
     OR A
     LD A, $00                           ;load default value
-    JP Z, GSeed                         ;if player not moving left or right, skip this part
+    JR Z, GSeed                         ;if player not moving left or right, skip this part
     LD A, (Player_X_Speed)              ;if moving to the right but not very quickly,
     
     .IF PALBUILD == $00
@@ -879,7 +879,7 @@ MaxCC:
     .ENDIF
 
     LD A, $04
-    JP C, GSeed                         ;do not change A
+    JR C, GSeed                         ;do not change A
     ADD A, A                            ;otherwise, multiply A by 2
 GSeed:
     PUSH AF                             ;save to stack
@@ -916,11 +916,11 @@ RSeed:
 ;
     LD A, (Player_X_Speed)              ;if player moving left or right, branch ahead of this part
     OR A
-    JP NZ, D2XPos1
+    JR NZ, D2XPos1
     LD A, (Temp_Bytes + $00)            ;get first LSFR or third LSFR lower nybble
     LD C, A
     AND A, %00000010                    ;and check for d1 set
-    JP Z, D2XPos1                       ;if d1 not set, branch
+    JR Z, D2XPos1                       ;if d1 not set, branch
     LD L, <Enemy_X_Speed
     LD A, (HL)                          ;if d1 set, change horizontal speed
     NEG                                 ;into two's compliment, thus moving in the opposite
@@ -934,7 +934,7 @@ D2XPos1:
     addAToDE8_M
     LD A, C
     AND A, %00000010
-    JP Z, D2XPos2                       ;check for d1 set again, branch again if not set
+    JR Z, D2XPos2                       ;check for d1 set again, branch again if not set
     LD A, (Player_X_Position)           ;get player's horizontal position
     EX DE, HL
     ADD A, (HL)                         ;if d1 set, add value obtained from pseudorandom offset              
@@ -1009,7 +1009,7 @@ InitBowser:
     LD BC, _sizeof_BowserPaletteData
     LD A, (OptionBitflags)
     AND A, $01
-    JP Z, +
+    JR Z, +
     LD HL, BowserPaletteData_NES
     LD BC, _sizeof_BowserPaletteData_NES
 +:
@@ -1025,7 +1025,7 @@ InitBowser:
     LD A, (WorldNumber)
     CP A, WORLD8
     LD A, SNDID_BOWSER_FM
-    JP NZ, +
+    JR NZ, +
     INC A
 +:
     LD (MusicTrack0.SoundQueue), A
@@ -1113,7 +1113,7 @@ InitBowserFlame:
     LD E, <Enemy_ID                     ;check for bowser
     LD A, (DE)
     CP A, OBJECTID_Bowser
-    JP Z, SpawnFromMouth                ;branch if found
+    JR Z, SpawnFromMouth                ;branch if found
 ;
     CALL SetFlameTimer                  ;get timer data based on flame counter
     ADD A, $20                          ;add 32 frames by default
@@ -1121,7 +1121,7 @@ InitBowserFlame:
     LD A, (SecondaryHardMode)           ;if secondary mode flag not set, use as timer setting
     OR A
     LD A, C
-    JP Z, SetFrT
+    JR Z, SetFrT
     SUB A, $10                          ;otherwise subtract 16 frames for secondary hard mode       
 SetFrT:
     LD (FrenzyEnemyTimer), A            ;set timer accordingly
@@ -1188,7 +1188,7 @@ SpawnFromMouth:
     LD L, <Enemy_Y_Position             ;compare value to flame's current vertical position
     CP A, (HL)
     LD A, $FF                           ;load default offset
-    JP C, SetMF                         ;if less, do not increment offset
+    JR C, SetMF                         ;if less, do not increment offset
     LD A, $01                           ;otherwise use 2nd value
 SetMF:
     LD L, <Enemy_Y_MoveForce            ;save to vertical movement force
@@ -1318,7 +1318,7 @@ BulletBillCheepCheep:
 ;
     LD A, (AreaType)                    ;are we in a water-type level?
     OR A
-    JP NZ, DoBulletBills                ;if not, branch elsewhere
+    JR NZ, DoBulletBills                ;if not, branch elsewhere
 ;
     LD A, H                             ;are we past third enemy slot?
     CP A, $C4
@@ -1330,12 +1330,12 @@ BulletBillCheepCheep:
     LD A, (BC)
     LD C, $00                           ;load default offset
     CP A, $AA                           ;check first part of LSFR against preset value
-    JP C, ChkW2                         ;if less than preset, do not increment offset
+    JR C, ChkW2                         ;if less than preset, do not increment offset
     INC C                               ;otherwise increment
 ChkW2:
     LD A, (WorldNumber)                 ;check world number
     CP A, WORLD2
-    JP Z, Get17ID                       ;if we're on world 2, do not increment offset
+    JR Z, Get17ID                       ;if we're on world 2, do not increment offset
     INC C                               ;otherwise increment
 Get17ID:
     LD A, C
@@ -1349,7 +1349,7 @@ Set17ID:
 ;
     LD A, (BitMFilter)                  ;if not all bits set, skip init part and compare bits
     INC A
-    JP NZ, GetRBit
+    JR NZ, GetRBit
     LD (BitMFilter), A                  ;initialize vertical position filter
 ;
 GetRBit:
@@ -1367,7 +1367,7 @@ GetRBit:
 ChkRBit:
     LD A, (BitMFilter)                  ;perform AND on filter
     AND A, C
-    JP Z, AddFBit
+    JR Z, AddFBit
     RLC C                               ;shift bitmask
     INC E                               ;increment offset
     LD A, E                             ;mask out all but 3 LSB thus keeping it 0-7
@@ -1398,7 +1398,7 @@ BB_SLoop:
     INC D                               ;move onto the next slot
     LD A, D
     CP A, $C6                           ;branch to play sound if we've done all slots
-    JP NC, FireBulletBill
+    JR NC, FireBulletBill
     LD E, <Enemy_Flag                   ;if enemy buffer flag not set,
     LD A, (DE)
     OR A
@@ -1429,20 +1429,20 @@ HandleGroupEnemies:
     SUB A, $37                          ;subtract $37 from second byte read
     PUSH AF                             ;save result in stack for now
     CP A, $04                           ;was byte in $3b-$3e range?
-    JP NC, SnglID                       ;if so, branch
+    JR NC, SnglID                       ;if so, branch
 ;
     PUSH AF                             ;save another copy to stack
     LD IXL, OBJECTID_Goomba             ;load value for goomba enemy
     LD A, (PrimaryHardMode)             ;if primary hard mode flag not set,
     OR A
-    JP Z, PullID                        ;branch, otherwise change to value
+    JR Z, PullID                        ;branch, otherwise change to value
     LD IXL, OBJECTID_BuzzyBeetle        ;for buzzy beetle
 PullID:
     POP AF                              ;get second copy from stack
 SnglID:
     AND A, $02                          ;check to see if d1 was set
     LD C, $B0                           ;load default y coordinate
-    JP Z, SetYGp                        ;if not, branch and use default
+    JR Z, SetYGp                        ;if not, branch and use default
     LD C, $70                           ;otherwise move y coordinate up
 SetYGp:
     LD A, (ScreenRight_PageLoc)         ;get page number of right edge of screen
@@ -1452,7 +1452,7 @@ SetYGp:
     LD B, $02                           ;load two enemies by default
     POP AF                              ;get first copy from stack
     SRL A                               ;check to see if d0 was set
-    JP NC, CntGrp                       ;if not, use default value
+    JR NC, CntGrp                       ;if not, use default value
     INC B                               ;otherwise increment to three enemies
 CntGrp:
 GrLoop:
@@ -1556,7 +1556,7 @@ LakituChk:
     LD E, <Enemy_ID                     ;check enemy identifiers
     LD A, (DE)
     CP A, OBJECTID_Lakitu               ;for lakitu
-    JP NZ, NextFSlot
+    JR NZ, NextFSlot
     LD E, <Enemy_State                  ;if found, set state
     LD A, $01
     LD (DE), A
@@ -1603,7 +1603,7 @@ InitBalPlatform:
 ;
     LD A, (SecondaryHardMode)               ;if secondary hard mode flag not set,
     OR A
-    JP NZ, AlignP                           ;branch ahead
+    JR NZ, AlignP                           ;branch ahead
     LD BC, $FFF8                            ;otherwise set value here
     CALL PosPlatform                        ;do a sub to add or subtract pixels
 AlignP:
@@ -1676,11 +1676,11 @@ SPBBox:
     LD A, (AreaType)
     CP A, $03                               ;check for castle-type level
     LD A, $05                               ;set default bounding box size control
-    JP Z, CasPBB                            ;use default value if found
+    JR Z, CasPBB                            ;use default value if found
     LD A, (SecondaryHardMode)               ;otherwise check for secondary hard mode flag
     OR A
     LD A, $05
-    JP NZ, CasPBB                           ;if set, use default value
+    JR NZ, CasPBB                           ;if set, use default value
     LD A, $06                               ;use alternate value if not castle or secondary not set
 CasPBB:
     LD L, <Enemy_BoundBoxCtrl               ;set bounding box size control here and leave

@@ -28,7 +28,7 @@ RunGameOver:
     LD (DisableScreenFlag), A
     LD A, (SavedJoypad1Bits)
     AND A, bitValue(SMS_BTN_1)      ;check controller for start pressed (button 1)
-    JP NZ, TerminateGame
+    JR NZ, TerminateGame
     LD A, (ScreenTimer)             ;if not pressed, wait for
     OR A                            ;screen timer to expire
     RET NZ
@@ -36,7 +36,7 @@ TerminateGame:
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A  ; EVENT
     CALL TransposePlayers           ;check if other player can keep
-    JP C, ContinueGame              ;going, and do so if possible
+    JR C, ContinueGame              ;going, and do so if possible
     LD A, (WorldNumber)             ;otherwise put world number of current
     LD (ContinueWorld), A           ;player into secret continue function variable
     XOR A

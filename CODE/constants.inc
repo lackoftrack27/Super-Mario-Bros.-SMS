@@ -103,7 +103,7 @@
 
 .DEFINE BLANKTILE               $00
 
-.DEFINE STACK_PTR               $DFF0;$C1FF
+.DEFINE STACK_PTR               $DFF0
 
     ; BACKGROUND TILE VRAM OFFSETS
 .DEFINE VRAM_ADR_BG_COMM        VRAM_ADR_BG
@@ -148,7 +148,8 @@
 
 .DEFINE BANK_SOUND          $0A
 
-.DEFINE SEMIFREEAREA        3/9/8
+.DEFINE OPTFLAG_GFX         $00
+.DEFINE OPTFLAG_FM          $01
 
 ;-------------------------------------------------------------------------------------
 ;   GAME CONSTANTS

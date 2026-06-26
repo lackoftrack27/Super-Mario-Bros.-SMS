@@ -656,7 +656,7 @@ PlayerFireFlower:
 CyclePlayerPalette:
     AND A, $03                          ;mask out all but d1-d0 (previously d3-d2)
     LD HL, OptionBitflags               ;jump if doing NES gfx
-    BIT 0, (HL)
+    BIT OPTFLAG_GFX, (HL)
     JP NZ, CyclePlayerPalette_NES
     LD IXL, A                           ;store result here to use as palette bits
     LD A, (Player_SprAttrib)            ;get player attributes
@@ -675,7 +675,7 @@ CyclePlayerPalette_NES:
 
 ResetPalFireFlower:
     LD A, (OptionBitflags)              ;skip if doing NES gfx
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, +
     LD A, (Player_SprAttrib)            ;clear sprite palette selector for player
     AND A, %11111100
@@ -1465,7 +1465,7 @@ PJumpSnd:
 SJumpSnd:
     LD (SFXTrack0.SoundQueue), A
     LD A, (OptionBitflags)              ;load additional sfx layer if in FM mode
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     JP Z, X_Physics
     LD A, B
     LD (MusicTrack3.SoundQueue), A

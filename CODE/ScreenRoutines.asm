@@ -31,7 +31,7 @@ InitScreen:
 ;
     LD A, VRAMTBL_UNDERPAL          ;into buffer pointer
     LD HL, OptionBitflags
-    BIT 0, (HL)
+    BIT OPTFLAG_GFX, (HL)
     JP Z, +
     ADD A, $15
 +:
@@ -63,7 +63,7 @@ WriteTopStatusLine:
     CALL WriteGameText              ;output it
 ;
     LD A, (OptionBitflags)          ;skip if on default gfx
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP Z, IncSubtask
     LD A, $01                       ;make coin tile use bg palette
     LD (VRAM_Buffer1 + $19), A
@@ -261,7 +261,7 @@ GetAreaPalette:
     addAToHL8_M
     LD A, (HL)
     LD HL, OptionBitflags
-    BIT 0, (HL)
+    BIT OPTFLAG_GFX, (HL)
     JP Z, +
     ADD A, $15
 +:
@@ -303,7 +303,7 @@ GetBackgroundColor:
     addAToHL8_M
     LD A, (HL)
     LD HL, OptionBitflags
-    BIT 0, (HL)
+    BIT OPTFLAG_GFX, (HL)
     JP Z, +
     ADD A, $15
 +:
@@ -368,7 +368,7 @@ ChkFiery:
     INC B
 StartClrGet:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, GetPlayerColors_NES
     LD A, (PlayerGfxBank)
     AND A, %11111101                ;remove old player bit
@@ -427,7 +427,7 @@ GetAlternatePalette1:
     JP NZ, IncSubtask
 ;
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, VRAMTBL_MUSHROOMPAL           ;if found, load appropriate palette
     JP Z, +
     ADD A, $15  
@@ -472,7 +472,7 @@ DrawTitleScreen:
 @SkipTileLoad:
 ;   Set Buffer control
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, VRAMTBL_TITLESCREEN           ;set buffer transfer control to $0300,
     JP Z, +
     ADD A, $15
@@ -637,7 +637,7 @@ WaterAreaSetup:
     JP TileLoadDone
 OverWorldSetup:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, TileLoadDone
     ; DO DIFFERENT SETUP FOR SNOW LEVELS
     LD A, (BackgroundColorCtrl)
@@ -691,7 +691,7 @@ SnowOverworldSetup:
 UndergroundSetup:
     ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, @ClearLaternArea
     LD A, ASSET_BGUNDERGROUND
     CALL AssetLoader

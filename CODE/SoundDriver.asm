@@ -79,7 +79,7 @@ SoundEngine:
     OUT (PSG_PORT), A
     ; SILENCE ALL FM CHANNELS
     LD A, (OptionBitflags)
-    AND A, %00000010
+    AND A, bitValue(OPTFLAG_FM)
     CALL NZ, SndStopAllFM@WriteFM
     ; UPDATE ONLY SFX TRACK 0 FOR PAUSE SFX
     LD A, BANK_SOUND
@@ -144,7 +144,7 @@ RunSoundSubroutines:
     CALL NZ, SndChannelProcessSFX
     ; LAYERED SFX (ONLY IN FM MODE)
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     JR Z, SkipSFX
     LD HL, MusicTrack3
     BIT CHANCON_PLAYING, (HL)
@@ -162,7 +162,7 @@ SkipSFX:
     LD (HL), A
     JR NC, SkipSoundRoutines
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     LD HL, MusicTrack0.Duration
     JR Z, TempoWaitPSG
     LD H, >FMTrack0
@@ -311,7 +311,7 @@ SndInitMemory:
     DJNZ -
     ; PUT ON MUSIC TRACK 3 ON PSG CHANNEL 2 IN FM MODE
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     RET Z
     LD A, CHAN2_BITS
     LD (MusicTrack3.ChanBits), A
@@ -472,7 +472,7 @@ SndProcessQueueSFX:
     RET Z
 ;   DO ADDITIONAL PROCESSING IF DOING LAYERED SFX IN FM MODE
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     JR Z, @GetSFXData
     LD A, (HL)
     CP A, SNDID_POWERUP
@@ -523,7 +523,7 @@ SndProcessQueueSFX:
     LD (HL), $01    ; Duration
 ;   INCREMENT VOLUME BY 1 IF DOING FM MUSIC
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     JP Z, +
     LD L, <SFXTrack0.Volume
     INC (HL)
@@ -1524,7 +1524,7 @@ CoordFlagTable:
     CP A, >SFXTrack0
     RET C
     LD A, (OptionBitflags)
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     RET NZ
     LD L, <SFXTrack0.Control
     DEC H

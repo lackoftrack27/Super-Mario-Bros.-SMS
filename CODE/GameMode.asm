@@ -6340,7 +6340,7 @@ HandlePowerUpCollision:
     LD A, SNDID_POWERUP             ;play the power-up sound
     LD (SFXTrack1.SoundQueue), A
     LD A, (OptionBitflags)          ;load additional sfx layer if in FM mode
-    AND A, $01 << $01
+    AND A, bitValue(OPTFLAG_FM)
     JR Z, +
     LD A, SNDID_POWERUP_01
     LD (MusicTrack3.SoundQueue), A

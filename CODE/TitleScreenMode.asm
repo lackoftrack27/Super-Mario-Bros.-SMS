@@ -213,7 +213,7 @@ DrawMushroomIcon:
     LDIR
 ;
     LD A, (OptionBitflags)          ;make mushroom icon use bg palette if doing NES GFX
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JR Z, +
     XOR A
     LD (VRAM_Buffer1 + $04), A
@@ -235,7 +235,7 @@ DrawMushroomIcon:
     INC L
 
     LD A, (OptionBitflags)          ;use spr palette for default, bg palette for NES
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, $08
     JR Z, +
     XOR A

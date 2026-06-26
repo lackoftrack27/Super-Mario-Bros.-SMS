@@ -913,7 +913,7 @@ NotLastStair:
     OR A
     JP NZ, RenderUnderStairs
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD (HL), MT_CASTLESTAIRS_TOP
     JP Z, RenderUnderStairs
     LD (HL), MT_SOLIDBLK_WHITE
@@ -921,7 +921,7 @@ NotLastStair:
 
 RenderUnderStairs:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD C, MT_CASTLESTAIRS_BOT
     JP Z, +
     LD C, MT_SOLIDBLK_WHITE
@@ -967,7 +967,7 @@ CastleFloorLeftWallY0B:
 
 CastleFloorLeftWallMain:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     RET NZ
 ;
     LD (HL), MT_CASTLEFLOOR_LTOP
@@ -1005,7 +1005,7 @@ CastleFloorLeftY0B:
 
 CastleFloorLeftMain:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     RET NZ
 ;
     LD A, (HL)
@@ -1049,7 +1049,7 @@ CastleFloorRightWallY0B:
 
 CastleFloorRightWallMain:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     RET NZ
 ;
     LD (HL), MT_CASTLEFLOOR_RTOP
@@ -1087,7 +1087,7 @@ CastleFloorRightY0B:
 
 CastleFloorRightMain:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     RET NZ
 ;
     LD A, (HL)
@@ -1116,7 +1116,7 @@ CastleFloorBodyY0B:
 
 CastleFloorBodyMain:
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     RET NZ
 ;
     LD (HL), MT_CASTLEFLOOR_TOP
@@ -1833,7 +1833,7 @@ CoinMetatileData:
 
 RowOfCoins:
     LD A, (OptionBitflags)              ;always load watercoin if doing NES GFX
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, MT_WATERCOIN
     JP NZ, GetRow
 ;
@@ -2505,7 +2505,7 @@ GetAreaDataAddrs:
     LD (AreaStyle), A
     ; Correct palette on w6-3 (only for default gfx)
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, +
     LD A, (BackgroundColorCtrl)
     CP A, $07
@@ -2548,7 +2548,7 @@ GetAreaDataAddrs:
     LD (MAPPER_SLOT2), A
 ;   set bonus area flag for underground coin room (FM only)
     LD A, (OptionBitflags)
-    AND A, %00000010
+    AND A, bitValue(OPTFLAG_FM)
     RET Z
     LD A, (AreaPointer)
     AND A, $7F

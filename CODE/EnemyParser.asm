@@ -1008,7 +1008,7 @@ InitBowser:
     LD HL, BowserPaletteData            ;load palette for bowser depending on gfx mode
     LD BC, _sizeof_BowserPaletteData
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JR Z, +
     LD HL, BowserPaletteData_NES
     LD BC, _sizeof_BowserPaletteData_NES
@@ -1020,7 +1020,7 @@ InitBowser:
     LD HL, (ObjectOffset)
 ;
     LD A, (OptionBitflags)              ;play boss music if doing FM sound
-    AND A, %00000010
+    AND A, bitValue(OPTFLAG_FM)
     RET Z
     LD A, (WorldNumber)
     CP A, WORLD8

@@ -234,7 +234,7 @@ ResetStart:
 .IF INSTANTBOOT != $00
     LD HL, SndChannelProcessMUS
     LD (MusicRoutine), HL
-    LD A, $01
+    LD A, bitValue(OPTFLAG_GFX)
     LD (OptionBitflags), A
     LD HL, ColorRotation
     LD (AnimateRoutine), HL
@@ -276,10 +276,10 @@ ResetStart:
     ; INITIALIZE BASIC MEMORY
     LD HL, WarmBootOffset
     CALL InitializeMemory
+    CALL SndInitMemory@InitSndLinearMem
     LD HL, SndChannelProcessMUS
     LD (MusicRoutine), HL
     XOR A
-    LD (SndPauseFlag), A
     LD (BGTileQueue0.UpdateFlag), A
     LD (BGTileQueue1.UpdateFlag), A
     LD (BGTileQueue2.UpdateFlag), A
@@ -327,9 +327,9 @@ OptionsCheckJoypad:
     JR Z, OptionCheckBtn1           ;if neither up or down is pressed, skip
     AND A, $01 << SMS_BTN_UP        ;check if up is pressed
     LD A, (OptionBitflags)          ;clear bit 0 of bit flags by default
-    RES 0, A
+    RES OPTFLAG_GFX, A
     JR NZ, +                        ;if so, skip
-    SET 0, A                        ;else, set bit 0 (do NES gfx)
+    SET OPTFLAG_GFX, A              ;else, set bit 0 (do NES gfx)
 +:
     LD (OptionBitflags), A
     LD A, SNDID_BEEP                ;do beep sfx
@@ -355,7 +355,7 @@ OptionCheckBtn2:
     AND A, $01 << SMS_BTN_2
     JR Z, OptionUpdateSettings
     LD A, (OptionBitflags)
-    XOR A, $01 << $01
+    XOR A, bitValue(OPTFLAG_FM)
     LD (OptionBitflags), A
     LD A, SNDID_BEEP                ;do beep sfx
     LD (SFXTrack0.SoundQueue), A
@@ -364,7 +364,7 @@ OptionUpdateSettings:
     DEC (HL)
     ;
     LD A, (OptionBitflags)          ;set values depending on bit 0 of option bit flags
-    AND A, %00000001
+    AND A, bitValue(OPTFLAG_GFX)
     JR NZ, +
     LD A, BANK_PLAYERGFX00
     LD (PlayerGfxBank), A
@@ -393,7 +393,7 @@ OptionUpdateSettings:
     OR A
     JR Z, OptionDrawPlayer
     LD A, (OptionBitflags)          ;set values depending on bit 1 of option bit flags
-    AND A, %00000010
+    AND A, bitValue(OPTFLAG_FM)
     JR NZ, +
     XOR A
     OUT (AUDIO_CONTROL), A
@@ -1020,7 +1020,7 @@ GetAreaMusic:
     OR A
     RET NZ
     LD A, (OptionBitflags)              ;depending on sound mode, play title or silence
-    AND A, %00000010
+    AND A, bitValue(OPTFLAG_FM)
     LD A, SNDID_TITLE_FM
     JP NZ, StoreMusicDirect
     LD A, SNDID_SILENCE
@@ -1094,7 +1094,7 @@ InitializeMemory:
     LD HL, VRAM_Buffer2
     LD (VRAM_Buffer2_Ptr), HL
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, BANK_PLAYERGFX00
     JR Z, +
     LD A, BANK_PLAYERGFX04
@@ -1134,7 +1134,7 @@ InitializeMemoryExceptSND:
     LD HL, VRAM_Buffer2
     LD (VRAM_Buffer2_Ptr), HL
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, BANK_PLAYERGFX00
     JR Z, +
     LD A, BANK_PLAYERGFX04
@@ -1225,22 +1225,36 @@ WriteGameText:
     LD (DE), A
     POP AF                                  ;pull original text number from stack
     CP A, $04                               ;are we printing warp zone?
-    JP NC, PrintWarpZoneNumbers
+    JR NC, PrintWarpZoneNumbers
     CP A, $02                               ;are we printing the time up or game over screen?
-    JP NC, CheckPlayerName                  ;if so, print player's name
+    JR NC, CheckPlayerName                  ;if so, print player's name
     OR A                                    ;are we printing the top status bar?
     RET Z                                   ;if so, we're done
     LD A, (NumberofLives)                   ;otherwise, check number of lives
     INC A                                   ;and increment by one for display
-    CP A, $10                               ;more than 9 lives?
-    JP C, PutLives
-    SUB A, $10                              ;if so, subtract 10 and put a crown tile
-    LD HL, VRAM_Buffer1 + $0F               ;next to the difference...strange things happen if
-    LD (HL), BG_MACRO($0E)                  ;the number of lives exceeds 19
-    INC L
-    LD (HL), $01
+    CP A, $0A                               ;more than 9 lives?
+    JR C, PutLives
+    CP A, $64                               ;more than 99 lives?
+    JR C, +
+    LD A, $63                               ;if so, cap at 99
++:
+    SUB A, $0A                              ;get BCD value from table
+    LD HL, LivesBCDTable
+    addAToHL8_M
+    LD A, (HL)
+    RRCA
+    RRCA
+    RRCA
+    RRCA
+    AND A, $0F
+    ADD A, BG_TILE_OFFSET                   ;writes tens place digit
+    LD (VRAM_Buffer1 + $0B), A
+    LD A, $01
+    LD (VRAM_Buffer1 + $0C), A
+    LD A, (HL)
+    AND A, $0F
 PutLives:
-    ADD A, BG_TILE_OFFSET
+    ADD A, BG_TILE_OFFSET                   ;write ones place digit
     LD (VRAM_Buffer1 + $0D), A                    
     LD A, (WorldNumber)                     ;write world and level numbers (incremented for display)
     ADD A, BG_TILE_OFFSET + $01             ;to the buffer in the spaces surrounding the dash
@@ -1251,14 +1265,18 @@ PutLives:
     RET
 
 CheckPlayerName:
+    RRCA                                    ;set carry flag for later jump
     LD A, (NumberOfPlayers)                 ;are we doing a 2 player game?
-    OR A
-    RET Z                                   ;if not, exit
+    DEC A
+    RET NZ                                  ;if not, exit
 ;
-    LD HL, MarioName                        ;load name based on which player is currently playing
+    LD HL, MarioName
     LD A, (CurrentPlayer)
-    OR A
-    JP Z, +
+    JR C, +                                 ;jump if displaying game over screen
+    XOR A, $01                              ;for time up, switch name if CurrentPlayer == 0
++:
+    OR A                                    ;for game over, switch name if CurrentPlayer == 1
+    JR Z, +
     LD HL, LuigiName
 +:
     LD BC, $000A
@@ -1288,6 +1306,16 @@ PrintWarpZoneNumbers:
     LDI
     LD (VRAM_Buffer1_Ptr), DE               ;load new buffer pointer at end of message
     RET
+
+.SECTION "LivesBCDTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+LivesBCDTable:
+    .db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+    .db $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
+    .db $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57
+    .db $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $70, $71, $72, $73
+    .db $74, $75, $76, $77, $78, $79, $80, $81, $82, $83, $84, $85, $86, $87, $88, $89
+    .db $90, $91, $92, $93, $94, $95, $96, $97, $98, $99
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 ;$00(IXL) - used to store status bar nybbles
@@ -1584,7 +1612,7 @@ StreamPlayerTiles:
 StreamAnimatedBGTiles:
 ;   EXIT IF ON NES GFX
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, TileStreamRet
 ;
     LD C, VDPCON_PORT
@@ -1782,7 +1810,7 @@ AssetLoaderTableNES:
 ;   OUTPUT: HL - SRC ADDRESS, DE - DEST ADDRESS, A - BANK
 AssetLoader:
     LD HL, OptionBitflags
-    BIT 0, (HL)
+    BIT OPTFLAG_GFX, (HL)
     LD HL, AssetLoaderTable
     JP Z, +
     LD HL, AssetLoaderTableNES

@@ -3,7 +3,7 @@
 VictoryMode:
     CALL VictoryModeSubroutines     ;run victory mode subroutines
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     CALL Z, AnimateBGTiles          ;update tile animations
     LD A, (OperMode_Task)           ;get current task of victory mode
     OR A
@@ -36,7 +36,7 @@ SetupVictoryMode:
     LD (MusicTrack0.SoundQueue), A  ;play win castle music (EVENT)
 ;
     LD A, (OptionBitflags)          ;skip if on NES graphics
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP NZ, IncModeTask_B
     LD A, (WorldNumber)             ;load either retainer or princess palettes
     CP A, WORLD8

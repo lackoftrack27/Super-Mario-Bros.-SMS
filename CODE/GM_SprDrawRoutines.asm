@@ -2268,7 +2268,7 @@ CntPl:
     JP NZ, DoChangeSize                 ;then branch to some other code
 ;
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP Z, FindPlayerAction
 ;
     ; All this is for lower body swim tile changes
@@ -2362,7 +2362,7 @@ PlayerGfxProcessing:
     LD (HL), A                          ;otherwise store animation timer into fireball throw timer
 
     LD A, (OptionBitflags)
-    AND A, $01
+    AND A, bitValue(OPTFLAG_GFX)
     JP Z, +
     LD A, (Player_X_Speed)
     LD HL, Left_Right_Buttons

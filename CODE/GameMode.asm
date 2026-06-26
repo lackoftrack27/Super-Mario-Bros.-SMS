@@ -386,9 +386,6 @@ AnimateBGTiles:
     LD (BGTileQueue0.TileAdr + $01), A
 @UpdateSlot1:
     LD HL, BGTileQueue1.Timer
-    ;LD A, (HL)
-    ;OR A
-    ;JP M, @UpdateSlot2
     DEC (HL)
     JR NZ, @UpdateSlot2
     LD A, (BGTileQueue1.TimerReset)
@@ -667,7 +664,6 @@ ProcAirBubbles:
     OR A
     RET NZ
 
-    ;LD B, $03                       ;otherwise load counter and use as offset
     LD H, >Bubble_Y_Position + $02
 BublLoop:
 .REPEAT $03
@@ -678,7 +674,6 @@ BublLoop:
     CALL DrawBubble                 ;draw the air bubble                
     DEC H
 .ENDR
-    ;DJNZ BublLoop                   ;do this until all three are handled
     RET
 
 .SECTION "FireballXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -1560,17 +1555,17 @@ PowerUpObjHandler:
 ;
     LD A, (TimerControl)                    ;if master timer control set,
     OR A
-    JP NZ, RunPUSubs                        ;branch ahead to enemy object routines
+    JR NZ, RunPUSubs                        ;branch ahead to enemy object routines
 ;
     LD A, (PowerUpType)                     ;check power-up type
     OR A
-    JP Z, ShroomM                           ;if normal mushroom, branch ahead to move it
+    JR Z, ShroomM                           ;if normal mushroom, branch ahead to move it
 ;
     CP A, $03
-    JP Z, ShroomM                           ;if 1-up mushroom, branch ahead to move it
+    JR Z, ShroomM                           ;if 1-up mushroom, branch ahead to move it
 ;
     CP A, $02
-    JP NZ, RunPUSubs                        ;if not star, branch elsewhere to skip movement
+    JR NZ, RunPUSubs                        ;if not star, branch elsewhere to skip movement
 ;
     CALL MoveJumpingEnemy_NOPOP             ;otherwise impose gravity on star power-up and make it jump
     CALL EnemyJump                          ;note that green paratroopa shares the same code here
@@ -1584,7 +1579,7 @@ ShroomM:
 GrowThePowerUp:
     LD A, (FrameCounter)                    ;get frame counter
     AND A, $03                              ;mask out all but 2 LSB
-    JP NZ, ChkPUSte                         ;if any bits set here, branch
+    JR NZ, ChkPUSte                         ;if any bits set here, branch
 ;
     LD L, <Enemy_Y_Position                 ;otherwise decrement vertical coordinate slowly
     DEC (HL)
@@ -1593,7 +1588,7 @@ GrowThePowerUp:
     LD A, (HL)
     INC (HL)                                ;increment state for next frame (to make power-up rise)
     CP A, $11                               ;if power-up object state not yet past 16th pixel,
-    JP C, ChkPUSte                          ;branch ahead to last part here
+    JR C, ChkPUSte                          ;branch ahead to last part here
 ;
     LD A, %10000000                         ;otherwise set d7 in power-up object's state
     LD (HL), A
@@ -1779,12 +1774,8 @@ WrCMTile:
     LD A, (VineHeight)                      ;check vine height
     CP A, $20                               ;if vine small (less than 32 pixels tall)
     RET C                                   ;then branch ahead to leave
-    ;LD H, $C6
-    ;LD A, $01
-    LD BC, $0410
-    ;LD C, $1B                               ;set C to offset to get block at ($04, $10) of coordinates
-    ;CALL BlockBufferCollision               ;do a sub to get block buffer address set, return contents
-    CALL BlockBufferCollision_A1
+    LD BC, $0410                            ;get block at ($04, $10) of coordinates
+    CALL BlockBufferCollision_A1            ;do a sub to get block buffer address set, return contents
     LD A, IXL
     CP A, $D0                               ;if vertical high nybble offset beyond extent of
     RET NC                                  ;current block buffer, branch to leave, do not write
@@ -2173,30 +2164,30 @@ SetShim:
 MoveNormalEnemy:
     POP HL
 MoveNormalEnemy_NOPOP:
-    LD C, $00                               ;init Y to leave horizontal movement as-is
+    LD BC, XSpeedAdderData                  ;init Y to leave horizontal movement as-is
     LD L, <Enemy_State
     LD A, (HL)
     BIT 6, A                                ;check enemy state for d6 set, if set skip
-    JP NZ, FallE                            ;to move enemy vertically, then horizontally if necessary
+    JR NZ, FallE                            ;to move enemy vertically, then horizontally if necessary
 ;
     OR A                                    ;check enemy state for d7 set
     JP M, SteadM                            ;if set, branch to move enemy horizontally
 ;
     BIT 5, A                                ;check enemy state for d5 set
-    JP NZ, MoveDefeatedEnemy                ;if set, branch to move defeated enemy object
+    JR NZ, MoveDefeatedEnemy                ;if set, branch to move defeated enemy object
 ;
     AND A, %00000111                        ;check d2-d0 of enemy state for any set bits
     JP Z, SteadM                            ;if enemy in normal state, branch to move enemy horizontally
 ;
     CP A, $05
-    JP Z, FallE                             ;if enemy in state used by spiny's egg, go ahead here
+    JR Z, FallE                             ;if enemy in state used by spiny's egg, go ahead here
 ;
     CP A, $03
-    JP NC, ReviveStunned                    ;if enemy in states $03 or $04, skip ahead to yet another part
+    JR NC, ReviveStunned                    ;if enemy in states $03 or $04, skip ahead to yet another part
 ;
 FallE:
     CALL MoveD_EnemyVertically              ;do a sub here to move enemy downwards
-    LD C, $00
+    LD BC, XSpeedAdderData
     LD L, <Enemy_State                      ;check for enemy state $02
     LD A, (HL)
     CP A, $02
@@ -2212,7 +2203,7 @@ FallE:
     ; FALL THROUGH
 
 SlowM:
-    LD C, $01                               ;increment Y to slow horizontal movement
+    INC C                                   ;increment Y to slow horizontal movement
 SteadM:
     LD L, <Enemy_X_Speed                    ;get current horizontal speed
     LD A, (HL)
@@ -2222,10 +2213,7 @@ SteadM:
     INC C                                   ;otherwise increment Y to next data
     INC C
 AddHS:
-    LD A, C
-    LD BC, XSpeedAdderData                  ;add value here to slow enemy down if necessary
-    addAToBC8_M
-    LD A, (BC)
+    LD A, (BC)                              ;add value here to slow enemy down if necessary
     ADD A, (HL)
     LD (HL), A                              ;save as horizontal speed temporarily
 ;
@@ -2249,22 +2237,21 @@ ReviveStunned:
     LD (HL), A
 ;
     LD A, (FrameCounter)                    ;get d0 of frame counter
-    AND A, $01
-    LD C, A                                 ;use as Y and increment for movement direction
-    INC C
+    AND A, $01                              
+    INC A                                   ;increment for movement direction
     LD L, <Enemy_MovingDir                  ;store as pseudorandom movement direction
-    LD (HL), C
+    LD (HL), A
 ;
-    DEC C                                   ;decrement for use as pointer
+    DEC A                                   ;decrement for use as pointer
+    ADD A, <RevivedXSpeed
+    LD C, A
     LD A, (PrimaryHardMode)                 ;check primary hard mode flag
     OR A
     JP Z, SetRSpd                           ;if not set, use pointer as-is
     INC C                                   ;otherwise increment 2 bytes to next data
     INC C
 SetRSpd:
-    LD A, C                                 ;load and store new horizontal speed
-    LD BC, RevivedXSpeed
-    addAToBC8_M
+    LD B, >RevivedXSpeed                    ;load and store new horizontal speed
     LD A, (BC)
     LD L, <Enemy_X_Speed
     LD (HL), A
@@ -2401,7 +2388,7 @@ DecSeXM:
 MoveWithXMCntrs:
     LD L, <XMoveSecondaryCounter            ;save secondary counter to stack
     LD A, (HL)
-    EX AF, AF' ;PUSH AF
+    PUSH AF
 ;
     LD C, $01                               ;set value here by default
     LD L, <XMovePrimaryCounter
@@ -2420,7 +2407,7 @@ XMRight:
     LD (HL), C
     CALL MoveEnemyHorizontally
     LD (Temp_Bytes + $00), A                ;save value obtained from sub here
-    EX AF, AF' ;POP AF                                  ;get secondary counter from stack
+    POP AF                                  ;get secondary counter from stack
     LD L, <XMoveSecondaryCounter            ;and return to original place
     LD (HL), A
     RET
@@ -2592,7 +2579,7 @@ ChkNearPlayer:
     LD L, <Enemy_Y_Position                 ;get vertical coordinate
     LD A, (HL)
 
-    .IF PALBUILD == $00                     ;CHECK FOR 6502 CARRY?
+    .IF PALBUILD == $00                     ;6502 used adc without clc, but carry is never set
     ADD A, $10                              ;add sixteen pixels           
     .ELSE
     ADD A, $0C                              ;add twelve pixels;PAL bugfix: Bloopers can get closer vertically
@@ -2643,7 +2630,7 @@ MoveSwimmingCheepCheep:
     SUB A, $0A                              ;subtract ten for cheep-cheep identifiers
     LD A, $40                               ;use as offset
     JP Z, +
-    ADD A, A    ; $80
+    ADD A, A                                ;SwimCCXMoveData[1]
 +:
     LD C, A                                 ;store value here
 ;
@@ -3209,7 +3196,7 @@ ChkPSpeed:
     LD (Temp_Bytes + $00), A                    ;store as new value
     LD E, A                                     ;save in E for later loop
 ;
-    LD C, $00                                   ;init offset
+    LD BC, Temp_Bytes + $01                     ;init offset
     LD A, (Player_X_Speed)
     OR A
     JP Z, SubDifAdj                             ;if player not moving horizontally, branch
@@ -3244,12 +3231,9 @@ ChkEmySpd:
     LD A, (HL)
     OR A
     JP NZ, SubDifAdj                            ;branch if nonzero
-    LD C, $00                                   ;otherwise reinit offset
+    LD C, <Temp_Bytes + $01                     ;otherwise reinit offset
 SubDifAdj:
-    LD A, C
-    LD BC, Temp_Bytes + $01                     ;get one of three saved values from earlier
-    addAToBC8_M
-    LD A, (BC)
+    LD A, (BC)                                  ;get one of three saved values from earlier
     LD B, E                                     ;get saved horizontal difference
     INC B
 SPixelLak:
@@ -6359,7 +6343,7 @@ HandlePowerUpCollision:
     AND A, $01 << $01
     JR Z, +
     LD A, SNDID_POWERUP_01
-    LD (SFXTrack0.SoundQueue), A
+    LD (MusicTrack3.SoundQueue), A
 +:
 ;
     LD A, (PowerUpType)             ;check power-up type

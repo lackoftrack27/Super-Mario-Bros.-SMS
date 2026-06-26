@@ -1468,7 +1468,7 @@ SJumpSnd:
     AND A, $01 << $01
     JP Z, X_Physics
     LD A, B
-    LD (SFXTrack1.SoundQueue), A
+    LD (MusicTrack3.SoundQueue), A
 ;
 ;   HORIZONTAL PHYSICS
 ;

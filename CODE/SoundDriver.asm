@@ -63,10 +63,6 @@
 ;-------------------------------------------------------------------------------------
 
 SoundEngine:
-;   SILENCE CHANNELS IF IN TITLE SCREEN MODE
-    ;LD A, (OperMode)
-    ;OR A
-    ;JP Z, SndStopAll@WritePSG
 ;   SET FREQUENCY TABLE PTR TO PSG
     LD HL, PSGFreqTable
     LD (SndFreqTablePtr), HL
@@ -112,20 +108,47 @@ SoundEngine:
 RunSoundSubroutines:
     LD A, BANK_SOUND
     LD (MAPPER_SLOT2), A
-;
+;   SKIP SFX ON TITLE SCREEN/DEMO
     LD A, (OperMode)
     OR A
-    JP Z, SkipSFX
+    JR Z, SkipSFX
 ;   SFX UPDATE
+    ; HANDLE ALL QUEUES
+    LD HL, SFXTrack0.SoundQueue
+    LD A, (HL)
+    OR A
+    CALL NZ, SndProcessQueueSFX
+    LD HL, SFXTrack1.SoundQueue
+    LD A, (HL)
+    OR A
+    CALL NZ, SndProcessQueueSFX
+    LD HL, SFXTrack2.SoundQueue
+    LD A, (HL)
+    OR A
+    CALL NZ, SndProcessQueueSFX
+    LD HL, MusicTrack3.SoundQueue
+    LD A, (HL)
+    OR A
+    CALL NZ, SndProcessQueueSFX
     ; SFX TRACK 0 (TONE)
-    LD H, >SFXTrack0
-    CALL SndChannelProcessSFX
+    LD HL, SFXTrack0
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX
     ; SFX TRACK 1 (TONE)
-    LD H, >SFXTrack1
-    CALL SndChannelProcessSFX
+    LD HL, SFXTrack1
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX
     ; SFX TRACK 2 (NOISE)
-    LD H, >SFXTrack2
-    CALL SndChannelProcessSFX
+    LD HL, SFXTrack2
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX
+    ; LAYERED SFX (ONLY IN FM MODE)
+    LD A, (OptionBitflags)
+    AND A, $01 << $01
+    JR Z, SkipSFX
+    LD HL, MusicTrack3
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX
 ;   MUSIC UPDATE
 SkipSFX:
     LD IX, (MusicRoutine)
@@ -137,8 +160,12 @@ SkipSFX:
     LD HL, SndTempoTimeout
     ADD A, (HL)
     LD (HL), A
-    JP NC, SkipSoundRoutines
+    JR NC, SkipSoundRoutines
+    LD A, (OptionBitflags)
+    AND A, $01 << $01
     LD HL, MusicTrack0.Duration
+    JR Z, TempoWaitPSG
+    LD H, >FMTrack0
     INC (HL)
     INC H
     INC (HL)
@@ -147,19 +174,24 @@ SkipSFX:
     INC H
     INC (HL)
     INC H
-    INC H
-    INC H
-    INC H
-    LD B, $09
--:
     INC (HL)
     INC H
-    DJNZ -
+TempoWaitPSG:
+    INC (HL)
+    INC H
+    INC (HL)
+    INC H
+    INC (HL)
+    INC H
+    INC (HL)
     ; FALL THROUGH
 
 SkipSoundRoutines:
     XOR A
-    LD HL, SFXTrack0.SoundQueue
+    ;LD HL, SFXTrack0.SoundQueue
+    LD HL, MusicTrack3.SoundQueue
+    LD (HL), A
+    INC H
     LD (HL), A
     INC H
     LD (HL), A
@@ -277,20 +309,26 @@ SndInitMemory:
     LD (HL), C
     INC C
     DJNZ -
+    ; PUT ON MUSIC TRACK 3 ON PSG CHANNEL 2 IN FM MODE
+    LD A, (OptionBitflags)
+    AND A, $01 << $01
+    RET Z
+    LD A, CHAN2_BITS
+    LD (MusicTrack3.ChanBits), A
     RET
 
 ;-------------------------------------------------------------------------------------
 
 SndChannelProcessSFX:
-;   PROCESS QUEUE IF IT ISN'T EMPTY
-    LD L, <SFXTrack0.SoundQueue
-    LD A, (HL)
-    OR A
-    CALL NZ, SndProcessQueueSFX
-;   TRACK PLAYING CHECK
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_PLAYING, (HL)
-    RET Z
+; ;   PROCESS QUEUE IF IT ISN'T EMPTY
+;     LD L, <SFXTrack0.SoundQueue
+;     LD A, (HL)
+;     OR A
+;     CALL NZ, SndProcessQueueSFX
+; ;   TRACK PLAYING CHECK
+;     LD L, <SFXTrack0.Control
+;     BIT CHANCON_PLAYING, (HL)
+;     RET Z
 @TrackUpdate:
 ;   TRACK UPDATE
     LD L, <SFXTrack0.Duration
@@ -432,38 +470,24 @@ SndProcessQueueSFX:
     LD A, (HL)
     CP A, SNDID_1UP
     RET Z
-;   DO ADDITIONAL PROCESSING IF DOING JUMP SFX IN FM MODE
+;   DO ADDITIONAL PROCESSING IF DOING LAYERED SFX IN FM MODE
     LD A, (OptionBitflags)
     AND A, $01 << $01
-    JP Z, @GetSFXData
+    JR Z, @GetSFXData
     LD A, (HL)
+    CP A, SNDID_POWERUP
+    JR Z, +
     CP A, SNDID_JUMPSMALL
-    JP Z, +
+    JR Z, +
     CP A, SNDID_JUMPBIG
-    JP NZ, @GetSFXData
+    JR NZ, @GetSFXData
 +:
-    ; SKIP IF JUMP SFX IS REPLAYING
+    ; SKIP IF PARENT SFX IS REPLAYING
     DEC L           ; SoundQueue
     CP A, (HL)
-    JP Z, @GetSFXData
-    ; SKIP IF SFXTrack1 HAS A SFX IN QUEUE
-    INC H           ; SFXTrack1
-    LD A, (HL)
-    OR A
-    JP NZ, ++
-    ; SKIP IF SFXTrack1's PLAYING SFX ISN'T 2ND PART OF JUMPING SFX
-    INC L           ; SoundPlaying
-    LD A, (HL)
-    CP A, SNDID_JUMPSMALL_01
-    JP Z, +
-    CP A, SNDID_JUMPBIG_01
-    JP NZ, ++
-+:
-    ; FINALLY, SILENCE SFXTrack1
-    DEC L           ; SoundQueue
-    LD (HL), SNDID_SFX_SILENCE
-++:
-    DEC H           ; SFXTrack0
+    JR Z, @GetSFXData
+    LD A, SNDID_SFX_SILENCE
+    LD (MusicTrack3.SoundQueue), A
 @GetSFXData:
 ;   USE AS OFFSET INTO SndIndexTable
     LD L, <SFXTrack0.SoundPlaying
@@ -503,6 +527,7 @@ SndProcessQueueSFX:
     JP Z, +
     LD L, <SFXTrack0.Volume
     INC (HL)
+    RET
 +:
 ;   SET SFX OVERRIDE BIT ON MUSIC TRACK THAT SHARES CHANNEL
     DEC H
@@ -1243,9 +1268,6 @@ SndWriteChannelDataFM:
 
 ;   HL - TRACK RAM, BC - TRACK DATA POINTER
 SndProcessCF:
-;   PUSH RETURN ADDRESS
-    LD DE, CoordFlagTable@return
-    PUSH DE
 ;   CONVERT FLAG INTO OFFSET
     SUB A, CF_START
     LD E, A
@@ -1253,10 +1275,11 @@ SndProcessCF:
     ADD A, E
 ;   ADD TO TABLE
     LD IX, CoordFlagTable
-    addAToIX_M
+    addAToIX8_M
     LD A, (BC)
     JP (IX)
 
+.SECTION "Coordination Flag Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 CoordFlagTable:
     JP @cfSetPatchEnv       ; $E0 (SET FM PATCH ENVELOPE)
     JP @cfDetune            ; $E1 (DETUNE)
@@ -1283,7 +1306,7 @@ CoordFlagTable:
     JP @cfJumpTo            ; $F6 (JUMP TO)
     JP @cfLoop              ; $F7 (LOOP SECTION)
     JP @cfCall              ; $F8 (CALL)
-
+.ENDS
 
 @return:
     ; ADVANCE TRACK POINTER AND CONTINUE READING IT
@@ -1294,20 +1317,20 @@ CoordFlagTable:
 @cfSetPatchEnv:
     LD L, <FMTrack0.PatchEnvelope
     LD (HL), A
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E1 - CHANGE DETUNE
 @cfDetune:
     LD L, <SFXTrack0.Detune
     LD (HL), A
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E2 - FM SUSTAIN ON
 @cfSusOn:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <FMTrack0.Control
     SET CHANCON_FMSUSTAIN, (HL)
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E3 - CALL RETURN
 @cfCallReturn:
@@ -1321,35 +1344,33 @@ CoordFlagTable:
     LD A, L
     LD L, <SFXTrack0.StackPointer
     LD (HL), A
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E6 - FM SUSTAIN OFF
 @cfSusOff:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <FMTrack0.Control
     RES CHANCON_FMSUSTAIN, (HL)
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E7 - SET NO ATTACK FLAG
 @cfNoAtk:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <SFXTrack0.Control
     SET CHANCON_NOATK, (HL)
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   E9 - TRANSPOSITION CHANGE
 @cfTranspose:
     LD L, <SFXTrack0.Transpose
     ADD A, (HL)
     LD (HL), A
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   EA - SET TEMPO
 @cfTempo:
     LD (SndCurrentTempo), A
-    ;XOR A
-    ;LD (SndTempoTimeout), A
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   EC - VOLUME CHANGE
 @cfChangePSGVol:
@@ -1357,16 +1378,16 @@ CoordFlagTable:
     ADD A, (HL)
     LD (HL), A
     CP A, $0F
-    RET C
+    JR C, @return
     LD (HL), $0F
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   ED - CH4 DRUM MODE
 @cfDrumMode:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <SFXTrack0.Control
     SET CHANCON_DRUMMODE, (HL)
-    RET
+    JR @return
 ;   ---------------------------------------------
 ;   EF - SET FM VOICE
 @cfSetFMInst:
@@ -1375,7 +1396,7 @@ CoordFlagTable:
     LD (HL), A
     ; EXIT IF USING BUILT IN INSTRUMENTS
     CP A, $10
-    RET C
+    JR C, @return
     ; ELSE, SET INSTRUMENT TO CUSTOM
     LD (HL), $00
     ; USE VALUE AS INDEX INTO INSTRUMENT TABLE
@@ -1432,7 +1453,7 @@ CoordFlagTable:
     OUT (OPLLREG_PORT), A
     LD A, (DE)
     OUT (OPLLDATA_PORT), A
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F0 - MODULATION SETUP + ON
 @cfModSetup:
@@ -1442,6 +1463,8 @@ CoordFlagTable:
     LD (HL), C
     INC L
     LD (HL), B
+    LD DE, CoordFlagTable@return
+    PUSH DE
 @@SndSetModulation: ; (FOR IF MODULATION IS TURNED ON DURING A NOTE)
     ; PUT TRACK ADR INTO HL AND ADD OFFSET TO MODULATION SETTINGS
     INC L
@@ -1477,7 +1500,7 @@ CoordFlagTable:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <SFXTrack0.Control
     SET CHANCON_MOD, (HL)
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F2 - STOP
 @cfStopTrack:
@@ -1492,7 +1515,7 @@ CoordFlagTable:
     ; SILENCE CHANNEL
     CALL SndStopChannel@SilenceChan
     ; REMOVE CALLERS (EXIT OUT OF SndChannelProcessXXX)
-    POP DE  ; CF RETURN CALLER
+    ;POP DE  ; CF RETURN CALLER
     POP DE  ; READ STREAM CALLER
     ; CLEAR SFX OVERRIDE BIT ON MUSIC TRACK IF CURRENTLY PROCESSING A SFX TRACK
     LD A, H
@@ -1500,6 +1523,9 @@ CoordFlagTable:
     JP NC, +
     CP A, >SFXTrack0
     RET C
+    LD A, (OptionBitflags)
+    AND A, $01 << $01
+    RET NZ
     LD L, <SFXTrack0.Control
     DEC H
     DEC H
@@ -1517,13 +1543,13 @@ CoordFlagTable:
     DEC BC  ; NO PARAMETER BYTES
     LD L, <SFXTrack0.Control
     RES CHANCON_MOD, (HL)
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F5 - SET PSG ENVELOPE
 @cfSetEnvelope:
     LD L, <SFXTrack0.Envelope
     LD (HL), A
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F6 - JUMP TO ADDRESS
 @cfJumpTo:
@@ -1534,7 +1560,7 @@ CoordFlagTable:
     LD C, E
     LD B, A
     DEC BC
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F7 - LOOP SECTION
 @cfLoop:
@@ -1555,7 +1581,7 @@ CoordFlagTable:
     JP NZ, @cfJumpTo
     ; ELSE, CONTINUE ON
     INC BC
-    RET
+    JP @return
 ;   ---------------------------------------------
 ;   F8 - CALL SUBROUTINE
 @cfCall:
@@ -1578,7 +1604,7 @@ CoordFlagTable:
     LD C, E
     LD B, D
     DEC BC
-    RET
+    JP @return
 
 ;-------------------------------------------------------------------------------------
 

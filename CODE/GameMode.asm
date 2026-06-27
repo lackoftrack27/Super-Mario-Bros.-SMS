@@ -8448,20 +8448,21 @@ GetMaskedOffScrBits:
 ;
     LD A, (ScreenLeft_PageLoc)              ;subtract borrow from current page location
     LD E, A
-    LD L, <Enemy_PageLoc                    ;of left side
-    LD A, (HL)
+    ;LD L, <Enemy_PageLoc                    ;of left side
+    DEC L                                   ;<Enemy_PageLoc
+    LD A, (HL)                              ;of left side
     SBC A, E
     JP M, CMBits                            ;if enemy object is beyond left edge, branch
 ;
     OR A, D
-    JP Z, CMBits                            ;if precisely at the left edge, branch
+    JR Z, CMBits                            ;if precisely at the left edge, branch
     LD C, B                                 ;if to the right of left edge, use value in $00 for A
 CMBits:
     LD A, (Enemy_OffscrBits)                ;otherwise use contents of C
     AND A, C
     LD L, <EnemyOffscrBitsMasked            ;preserve bitwise whatever's in here
     LD (HL), A                              ;save masked offscreen bits here
-    JP NZ, MoveBoundBoxOffscreen            ;if anything set here, branch
+    JR NZ, MoveBoundBoxOffscreen            ;if anything set here, branch
     ; FALL THROUGH
 
 SetupEOffsetFBBox:
@@ -8472,7 +8473,7 @@ SetupEOffsetFBBox:
 LargePlatformBoundBox:
     CALL GetXOffscreenBits                  ;jump directly to the sub for horizontal offscreen bits
     CP A, $FE                               ;if completely offscreen, branch to put entire bounding
-    JP C, SetupEOffsetFBBox                 ;box offscreen, otherwise start getting coordinates
+    JR C, SetupEOffsetFBBox                 ;box offscreen, otherwise start getting coordinates
     ; FALL THROUGH
 
 MoveBoundBoxOffscreen:
@@ -8545,7 +8546,7 @@ CheckRightScreenBBox:
     DEC L                                   ;<SprObject_PageLoc
     LD A, (HL)                              ;get page location
     SBC A, C                                ;subtract from middle page location
-    JP C, CheckLeftScreenBBox               ;if object is on the left side of the screen, branch
+    JR C, CheckLeftScreenBBox               ;if object is on the left side of the screen, branch
 ;
     LD L, <BoundingBox_DR_XPos              ;check right-side edge of bounding box for offscreen
     LD A, (HL)
@@ -8586,16 +8587,15 @@ SOLft:
 ;$06(STACK) - second object's offset
 ;$07(B) - counter
 
+;BoundingBox_UL_Corner: [$00] 1ST LOOP
+;BoundingBox_UL_YPos:   [$01] 2ND LOOP
+;BoundingBox_LR_Corner: [$02] 1ST LOOP
+;BoundingBox_DR_YPos:   [$03] 2ND LOOP
+
 PlayerCollisionCore:
-    LD H, >Player_Y_Position                      ;initialize X to use player's bounding box for comparison
+    LD H, >Player_Y_Position                    ;initialize X to use player's bounding box for comparison
 
 SprObjectCollisionCore:
-    LD B, $02                                   ;save as counter, compare horizontal coordinates first
-
-    ;BoundingBox_UL_Corner: [$00] 1ST LOOP
-    ;BoundingBox_UL_YPos:   [$01] 2ND LOOP
-    ;BoundingBox_LR_Corner: [$02] 1ST LOOP
-    ;BoundingBox_DR_YPos:   [$03] 2ND LOOP
     LD E, <BoundingBox_UL_Corner                ;(SMS)offsets for first loop
     LD L, E
 
@@ -8603,76 +8603,63 @@ SprObjectCollisionCore:
 ;   Y - 2ND OBJECT OFFSET
 CollisionCoreLoop:
     LD A, (DE)                                  ;compare left/top coordinates
-    CP A, (HL)                                  ;of first and second objects' bounding boxes
-    JP NC, FirstBoxGreater                      ;if first left/top => second, branch
-;
+    LD B, (HL)
+    CP A, B                                     ;of first and second objects' bounding boxes
     INC L
     INC L                                       ;BoundingBox_LR_Corner
-    CP A, (HL)                                  ;otherwise compare to right/bottom of second
-    JP C, SecondBoxVerticalChk                  ;if first left/top < second right/bottom, branch elsewhere
-    JP Z, CollisionFound                        ;if somehow equal, collision, thus branch
+    LD E, L
+    JR NC, FirstBoxGreater                      ;if first left/top => second, branch
 ;
-    INC E
-    INC E                                       ;BoundingBox_LR_Corner
+    CP A, (HL)                                  ;otherwise compare to right/bottom of second
+    JR C, SecondBoxVerticalChk                  ;if first left/top < second right/bottom, branch elsewhere
+    JR Z, CollisionFound                        ;if somehow equal, collision, thus branch
+;
     LD A, (DE)                                  ;if somehow greater, check to see if bottom of
     DEC E
     DEC E                                       ;BoundingBox_UL_Corner
     EX DE, HL                                   ;(SMS)swap DE, HL to effectively do 'CP A, (DE)'
     CP A, (HL)                                  ;first object's bounding box is greater than its top
     EX DE, HL                                   ;(SMS)revert swap
-    JP C, CollisionFound                        ;if somehow less, vertical wrap collision, thus branch
+    JR C, CollisionFound                        ;if somehow less, vertical wrap collision, thus branch
 ;
-    DEC L
-    DEC L                                       ;BoundingBox_UL_Corner
-    CP A, (HL)                                  ;otherwise compare bottom of first bounding box to the top
-    JP NC, CollisionFound                       ;of second box, and if equal or greater, collision, thus branch
+    CP A, B                                     ;otherwise compare bottom of first bounding box to the top
+    JR NC, CollisionFound                       ;of second box, and if equal or greater, collision, thus branch
 ;
     OR A                                        ;otherwise return with carry clear and Y = $0006
     RET                                         ;note horizontal wrapping never occurs
 
-;   E = BoundingBox_UL_Corner
+;   E = BoundingBox_LR_Corner
 ;   L = BoundingBox_LR_Corner
 SecondBoxVerticalChk:
     LD A, (HL)                                  ;check to see if the vertical bottom of the box
-    DEC L
-    DEC L                                       ;BoundingBox_UL_Corner
-    CP A, (HL)                                  ;is greater than the vertical top
-    JP C, CollisionFound                        ;if somehow less, vertical wrap collision, thus branch
+    CP A, B                                     ;is greater than the vertical top
+    JR C, CollisionFound                        ;if somehow less, vertical wrap collision, thus branch
 ;
-    INC E
-    INC E                                       ;BoundingBox_LR_Corner
     LD A, (DE)                                  ;otherwise compare horizontal right or vertical bottom
-    CP A, (HL)                                  ;of first box with horizontal left or vertical top of second box
-    JP NC, CollisionFound                       ;if equal or greater, collision, thus branch
+    CP A, B                                     ;of first box with horizontal left or vertical top of second box
+    JR NC, CollisionFound                       ;if equal or greater, collision, thus branch
 ;
     OR A                                        ;otherwise return with carry clear and Y = $0006
     RET
 
-;   E = BoundingBox_UL_Corner
-;   L = BoundingBox_UL_Corner
+;   E = BoundingBox_LR_Corner
+;   L = BoundingBox_LR_Corner
 FirstBoxGreater:
-    CP A, (HL)                                  ;compare first and second box horizontal left/vertical top again
-    JP Z, CollisionFound                        ;if first coordinate = second, collision, thus branch
+    JR Z, CollisionFound                        ;if first coordinate = second, collision, thus branch
 ;
-    INC L
-    INC L                                       ;BoundingBox_LR_Corner
     CP A, (HL)                                  ;if not, compare with second object right or bottom edge
-    JP C, CollisionFound                        ;if left/top of first less than or equal to right/bottom of second
-    JP Z, CollisionFound                        ;then collision, thus branch
-;
-    INC E
-    INC E                                       ;BoundingBox_LR_Corner
+    JR C, CollisionFound                        ;if left/top of first less than or equal to right/bottom of second
+    JR Z, CollisionFound                        ;then collision, thus branch
+;                               
     EX DE, HL
     CP A, (HL)                                  ;otherwise check to see if top of first box is greater than bottom
     EX DE, HL
-    JP C, NoCollisionFound                      ;if less than or equal, no collision, branch to end
-    JP Z, NoCollisionFound
+    JR C, NoCollisionFound                      ;if less than or equal, no collision, branch to end
+    RET Z
 ;
-    DEC L
-    DEC L                                       ;BoundingBox_UL_Corner
     LD A, (DE)                                  ;otherwise compare bottom of first to top of second
-    CP A, (HL)                                  ;if bottom of first is greater than top of second, vertical wrap
-    JP NC, CollisionFound                       ;collision, and branch, otherwise, proceed onwards here
+    CP A, B                                     ;if bottom of first is greater than top of second, vertical wrap
+    JR NC, CollisionFound                       ;collision, and branch, otherwise, proceed onwards here
     ; FALL THROUGH
 
 NoCollisionFound:
@@ -8682,8 +8669,74 @@ NoCollisionFound:
 CollisionFound:
     LD E, <BoundingBox_UL_Corner + $01          ;increment offsets on both objects to check
     LD L, E                                     ;the vertical coordinates
-    DJNZ CollisionCoreLoop                      ;decrement counter to reflect this and if counter not expired, branch to loop
-    SCF                                         ;otherwise we already did both sets, therefore collision, so set carry
+
+;   --- LOOP 2 ---
+    LD A, (DE)                                  ;compare left/top coordinates
+    LD B, (HL)
+    CP A, B
+    INC L
+    INC L                                       ;BoundingBox_DR_YPos
+    LD E, L
+    JR NC, FirstBoxGreater_Loop2                ;if first left/top => second, branch
+;
+    CP A, (HL)                                  ;otherwise compare to right/bottom of second
+    JR C, SecondBoxVerticalChk_Loop2            ;if first left/top < second right/bottom, branch elsewhere
+    JR Z, CollisionFound_Loop2                  ;if somehow equal, collision, thus branch
+;
+    LD A, (DE)                                  ;if somehow greater, check to see if bottom of
+    DEC E
+    DEC E                                       ;BoundingBox_UL_YPos
+    EX DE, HL                                   ;(SMS)swap DE, HL to effectively do 'CP A, (DE)'
+    CP A, (HL)                                  ;first object's bounding box is greater than its top
+    EX DE, HL                                   ;(SMS)revert swap
+    RET C                                       ;if somehow less, vertical wrap collision, thus branch
+;
+    CP A, B                                     ;otherwise compare bottom of first bounding box to the top
+    JR NC, CollisionFound_Loop2                 ;of second box, and if equal or greater, collision, thus branch
+;
+    OR A                                        ;otherwise return with carry clear and Y = $0006
+    RET                                         ;note horizontal wrapping never occurs
+
+;   E = BoundingBox_DR_YPos
+;   L = BoundingBox_DR_YPos
+SecondBoxVerticalChk_Loop2:
+    LD A, (HL)                                  ;check to see if the vertical bottom of the box
+    CP A, B                                     ;is greater than the vertical top
+    RET C                                       ;if somehow less, vertical wrap collision, thus branch
+;
+    LD A, (DE)                                  ;otherwise compare horizontal right or vertical bottom
+    CP A, B                                     ;of first box with horizontal left or vertical top of second box
+    JR NC, CollisionFound_Loop2                 ;if equal or greater, collision, thus branch
+;
+    OR A                                        ;otherwise return with carry clear and Y = $0006
+    RET
+
+;   E = BoundingBox_DR_YPos
+;   L = BoundingBox_DR_YPos
+FirstBoxGreater_Loop2:
+    JR Z, CollisionFound_Loop2                  ;if first coordinate = second, collision, thus branch
+;
+    CP A, (HL)                                  ;if not, compare with second object right or bottom edge
+    RET C                                       ;if left/top of first less than or equal to right/bottom of second
+    JR Z, CollisionFound_Loop2                  ;then collision, thus branch
+;                               
+    EX DE, HL
+    CP A, (HL)                                  ;otherwise check to see if top of first box is greater than bottom
+    EX DE, HL
+    JR C, NoCollisionFound_Loop2                ;if less than or equal, no collision, branch to end
+    RET Z
+;
+    LD A, (DE)                                  ;otherwise compare bottom of first to top of second
+    CP A, B                                     ;if bottom of first is greater than top of second, vertical wrap
+    JR NC, CollisionFound_Loop2                 ;collision, and branch, otherwise, proceed onwards here
+    ; FALL THROUGH
+
+NoCollisionFound_Loop2:
+    OR A                                        ;clear carry, then load value set earlier, then leave
+    RET                                         ;not bother checking vertical ones, because what's the point?
+
+CollisionFound_Loop2:
+    SCF                                         ;we've done both sets, therefore collision, so set carry
     RET
 
 ;-------------------------------------------------------------------------------------

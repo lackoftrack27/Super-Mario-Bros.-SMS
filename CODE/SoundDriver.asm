@@ -151,8 +151,8 @@ RunSoundSubroutines:
     CALL NZ, SndChannelProcessSFX
 ;   MUSIC UPDATE
 SkipSFX:
-    LD IX, (MusicRoutine)
-    CALL IndirectCallIX
+    LD HL, (MusicRoutine)
+    CALL IndirectCallHL
     XOR A
     LD (MusicTrack0.SoundQueue), A
     ; TEMPO WAIT (ONLY FOR MUSIC)
@@ -320,15 +320,6 @@ SndInitMemory:
 ;-------------------------------------------------------------------------------------
 
 SndChannelProcessSFX:
-; ;   PROCESS QUEUE IF IT ISN'T EMPTY
-;     LD L, <SFXTrack0.SoundQueue
-;     LD A, (HL)
-;     OR A
-;     CALL NZ, SndProcessQueueSFX
-; ;   TRACK PLAYING CHECK
-;     LD L, <SFXTrack0.Control
-;     BIT CHANCON_PLAYING, (HL)
-;     RET Z
 @TrackUpdate:
 ;   TRACK UPDATE
     LD L, <SFXTrack0.Duration
@@ -1274,10 +1265,16 @@ SndProcessCF:
     ADD A, A
     ADD A, E
 ;   ADD TO TABLE
-    LD IX, CoordFlagTable
-    addAToIX8_M
+    ;LD IX, CoordFlagTable
+    ;addAToIX8_M
+    ;LD A, (BC)
+    ;JP (IX)
+    LD E, H
+    LD HL, CoordFlagTable
+    addAToHL8_M
     LD A, (BC)
-    JP (IX)
+    JP (HL)
+
 
 .SECTION "Coordination Flag Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 CoordFlagTable:
@@ -1315,12 +1312,14 @@ CoordFlagTable:
 ;   ---------------------------------------------
 ;   E0 - SET FM PATCH ENVELOPE
 @cfSetPatchEnv:
+    LD H, E
     LD L, <FMTrack0.PatchEnvelope
     LD (HL), A
     JR @return
 ;   ---------------------------------------------
 ;   E1 - CHANGE DETUNE
 @cfDetune:
+    LD H, E
     LD L, <SFXTrack0.Detune
     LD (HL), A
     JR @return
@@ -1328,6 +1327,7 @@ CoordFlagTable:
 ;   E2 - FM SUSTAIN ON
 @cfSusOn:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <FMTrack0.Control
     SET CHANCON_FMSUSTAIN, (HL)
     JR @return
@@ -1335,6 +1335,7 @@ CoordFlagTable:
 ;   E3 - CALL RETURN
 @cfCallReturn:
     ; POP RETURN ADDRESS OFF THE STACK
+    LD H, E
     LD L, <SFXTrack0.StackPointer
     LD L, (HL)
     LD B, (HL)
@@ -1349,6 +1350,7 @@ CoordFlagTable:
 ;   E6 - FM SUSTAIN OFF
 @cfSusOff:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <FMTrack0.Control
     RES CHANCON_FMSUSTAIN, (HL)
     JR @return
@@ -1356,12 +1358,14 @@ CoordFlagTable:
 ;   E7 - SET NO ATTACK FLAG
 @cfNoAtk:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <SFXTrack0.Control
     SET CHANCON_NOATK, (HL)
     JR @return
 ;   ---------------------------------------------
 ;   E9 - TRANSPOSITION CHANGE
 @cfTranspose:
+    LD H, E
     LD L, <SFXTrack0.Transpose
     ADD A, (HL)
     LD (HL), A
@@ -1369,11 +1373,13 @@ CoordFlagTable:
 ;   ---------------------------------------------
 ;   EA - SET TEMPO
 @cfTempo:
+    LD H, E
     LD (SndCurrentTempo), A
     JR @return
 ;   ---------------------------------------------
 ;   EC - VOLUME CHANGE
 @cfChangePSGVol:
+    LD H, E
     LD L, <SFXTrack0.Volume
     ADD A, (HL)
     LD (HL), A
@@ -1385,6 +1391,7 @@ CoordFlagTable:
 ;   ED - CH4 DRUM MODE
 @cfDrumMode:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <SFXTrack0.Control
     SET CHANCON_DRUMMODE, (HL)
     JR @return
@@ -1392,6 +1399,7 @@ CoordFlagTable:
 ;   EF - SET FM VOICE
 @cfSetFMInst:
     ; SET INSTRUMENT
+    LD H, E
     LD L, <FMTrack0.Instrument
     LD (HL), A
     ; EXIT IF USING BUILT IN INSTRUMENTS
@@ -1457,6 +1465,7 @@ CoordFlagTable:
 ;   ---------------------------------------------
 ;   F0 - MODULATION SETUP + ON
 @cfModSetup:
+    LD H, E
     LD L, <SFXTrack0.Control
     SET CHANCON_MOD, (HL)
     LD L, <SFXTrack0.ModPointer
@@ -1498,6 +1507,7 @@ CoordFlagTable:
 ;   F1 - MODULATION ON
 @cfModOn:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <SFXTrack0.Control
     SET CHANCON_MOD, (HL)
     JP @return
@@ -1505,6 +1515,7 @@ CoordFlagTable:
 ;   F2 - STOP
 @cfStopTrack:
     ; CLEAR NO ATTACK BIT && PLAYING BIT
+    LD H, E
     LD L, <SFXTrack0.Control
     LD A, (HL)
     AND A, ~($01 << CHANCON_NOATK | $01 << CHANCON_PLAYING)
@@ -1541,12 +1552,14 @@ CoordFlagTable:
 ;   F1 - MODULATION OFF
 @cfModOff:
     DEC BC  ; NO PARAMETER BYTES
+    LD H, E
     LD L, <SFXTrack0.Control
     RES CHANCON_MOD, (HL)
     JP @return
 ;   ---------------------------------------------
 ;   F5 - SET PSG ENVELOPE
 @cfSetEnvelope:
+    LD H, E
     LD L, <SFXTrack0.Envelope
     LD (HL), A
     JP @return
@@ -1554,6 +1567,7 @@ CoordFlagTable:
 ;   F6 - JUMP TO ADDRESS
 @cfJumpTo:
     ; SET TRACK POINTER TO GIVEN ADDRESS
+    LD H, E
     LD E, A
     INC BC
     LD A, (BC)
@@ -1566,6 +1580,7 @@ CoordFlagTable:
 @cfLoop:
     INC BC
     ; GET LOOP COUNTER AND CHECK IF NEEDS TO BE SET
+    LD H, E
     ADD A, <SFXTrack0.LoopCounters
     LD L, A
     LD A, (HL)
@@ -1586,6 +1601,7 @@ CoordFlagTable:
 ;   F8 - CALL SUBROUTINE
 @cfCall:
     ; SAVE GIVEN ADDRESS IN DE
+    LD H, E
     LD E, A
     INC BC
     LD A, (BC)

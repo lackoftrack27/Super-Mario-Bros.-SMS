@@ -785,6 +785,7 @@ L_CastleArea6:
 ;level 3-3
 L_GroundArea1:
     .db $94, $11
+    .db $F1
     .db $0f, $26, $fe, $10, $28, $94, $65, $15, $eb, $12
     .db $fa, $41, $4a, $96, $54, $40, $a4, $42, $b7, $13
     .db $e9, $19, $f5, $15, $11, $80, $47, $42, $71, $13
@@ -833,6 +834,7 @@ L_GroundArea3:
 ;level 6-2
 L_GroundArea4:
     .db $54, $21
+    .db $F1
     .db $0f, $26, $a7, $22, $37, $fb, $73, $20, $83, $07
     .db $87, $02, $93, $20, $c7, $73, $04, $f1, $06, $31
     .db $39, $71, $59, $71, $e7, $73, $37, $a0, $47, $04
@@ -854,6 +856,7 @@ L_GroundArea4:
 ;level 3-1
 L_GroundArea5:
     .db $52, $31
+    .db $F1
     .db $0f, $20, $6e, $66, $07, $81, $36, $01, $66, $00
     .db $a7, $22, $08, $f2, $67, $7b, $dc, $02, $98, $f2
     .db $d7, $20, $39, $f1, $9f, $33, $dc, $27, $dc, $57
@@ -978,6 +981,7 @@ L_GroundArea13:
 ;level 6-3
 L_GroundArea14:
     .db $97, $11
+    .db $F1
     .db $0f, $26, $fe, $10, $2b, $92, $57, $12, $8b, $12
     .db $c0, $41, $f7, $13, $5b, $92, $69, $0b, $bb, $12
     .db $b2, $46, $19, $93, $71, $00, $17, $94, $7c, $14
@@ -987,7 +991,8 @@ L_GroundArea14:
     .db $b7, $14, $1b, $94, $49, $0b, $bb, $12, $fc, $13
     .db $ff, $12, $03, $c1, $2f, $15, $43, $12, $4b, $13
     .db $77, $13, $9d, $4a, $15, $c1, $a1, $41, $c3, $12
-    .db $fe, $01, $7d, $c1, $9e, $42, $cf, $20
+    ;.db $fe, $01, $7d, $c1, $9e, $42, $cf, $20
+    .db $fe, $11, $7d, $c1, $9e, $42, $cf, $20
     .db $D0
 
 ; ---
@@ -995,6 +1000,7 @@ L_GroundArea14:
 ;level 6-1
 L_GroundArea15:
     .db $52, $21
+    .db $F1
     .db $0f, $20, $6e, $44, $0c, $f1, $4c, $01, $aa, $35
     .db $d9, $34, $ee, $20, $08, $b3, $37, $32, $43, $04
     .db $4e, $21, $53, $20, $7c, $01, $97, $21, $b7, $07
@@ -1105,6 +1111,7 @@ L_GroundArea21:
 ;level 3-2
 L_GroundArea22:
     .db $96, $31
+    .db $F1
     .db $0f, $26, $0d, $03, $1a, $60, $77, $42, $c4, $00
     .db $c8, $62, $b9, $e1, $d3, $06, $d7, $07, $f9, $61
     .db $0c, $81, $4e, $b1, $8e, $b1, $bc, $01, $e4, $50
@@ -1183,17 +1190,44 @@ L_UndergroundArea3:
 
 ;water area used in levels 5-2 and 6-2
 L_WaterArea1:
-    .db $41, $01
-    .db $b4, $34, $c8, $52, $f2, $51, $47, $d3, $6c, $03
-    .db $65, $49, $9e, $07, $be, $01, $cc, $03, $fe, $07
-    .db $0d, $c9, $1e, $01, $6c, $01, $62, $35, $63, $53
-    .db $8a, $41, $ac, $01, $b3, $53, $e9, $51, $26, $c3
+    .db $41, $11 ;$01
+    .db $F2
+    .db $b4, $34
+    .db $c8, $52
+    .db $f2, $51
+    .db $47, $d3
+    .db $5e, $10    ;!!!
+    .db $6c, $03
+    .db $65, $49
+    .db $9e, $17 ;$07
+    .db $be, $10 ;.db $be, $01
+    .db $cc, $03
+    .db $fe, $17 ;$07
+    .db $0d, $c9
+    .db $1e, $11 ;$01
+    .db $5e, $10    ; !!!
+    .db $6c, $01
+    .db $62, $35, $63, $53
+    .db $7e, $11    ; !!!
+    .db $8a, $41
+    .db $9E, $10    ; !!!
+    .db $ac, $01
+    .db $BE, $11    ; !!!
+    .db $b3, $53
+    .db $e9, $51
+    .db $26, $c3
     .db $27, $33, $63, $43, $64, $33, $ba, $60, $c9, $61
     
     .IF PALBUILD == $00
-    .db $ce, $0b, $e5, $09, $ee, $0f, $7d, $ca, $7d, $47
+    .db $ce, $1B ;$0b
+    .db $e5, $09
+    .db $ee, $1F ;$0f
+    .db $7d, $ca, $7d, $47
     .ELSE
-    .db $ce, $0b, $de, $0f, $e5, $09, $7d, $ca, $7d, $47    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .db $ce, $1B ;$0b
+    .db $de, $1F ;$0f
+    .db $e5, $09
+    .db $7d, $ca, $7d, $47    ; PAL bugfix: Close 1-tile gap above exit pipe
     .ENDIF
     
     .db $D0
@@ -1203,16 +1237,28 @@ L_WaterArea1:
 ;level 2-2/7-2
 L_WaterArea2:
     .db $41, $01
+    .db $F2
     .db $b8, $52, $ea, $41, $27, $b2, $b3, $42, $16, $d4
     .db $4a, $42, $a5, $51, $a7, $31, $27, $d3, $08, $e2
-    .db $16, $64, $2c, $04, $38, $42, $76, $64, $88, $62
+    .db $16, $64
+    .db $1E, $00    ; !!!
+    .db $2c, $04, $38, $42
+    .db $6E, $01    ; !!!
+    .db $76, $64, $88, $62
     .db $de, $07, $fe, $01, $0d, $c9, $23, $32, $31, $51
     .db $98, $52, $0d, $c9, $59, $42, $63, $53, $67, $31
     .db $14, $c2, $36, $31, $87, $53, $17, $e3, $29, $61
+    .db $2E, $00    ; !!!
     .db $30, $62, $3c, $08, $42, $37, $59, $40, $6a, $42
-    .db $99, $40, $c9, $61, $d7, $63, $39, $d1, $58, $52
-    .db $c3, $67, $d3, $31, $dc, $06, $f7, $42, $fa, $42
-    .db $23, $b1, $43, $67, $c3, $34, $c7, $34, $d1, $51
+    .db $99, $40
+    .db $BE, $01    ; !!!
+    .db $c9, $61, $d7, $63, $39, $d1, $58, $52
+    .db $c3, $67
+    .db $CE, $00    ; !!!
+    .db $d3, $31, $dc, $06, $f7, $42, $fa, $42
+    .db $23, $b1
+    .db $3E, $01    ; !!!
+    .db $43, $67, $c3, $34, $c7, $34, $d1, $51
     .db $43, $b3, $47, $33, $9a, $30, $a9, $61, $b8, $62
     
     .IF PALBUILD == $00
@@ -1226,8 +1272,8 @@ L_WaterArea2:
 ;water area used in level 8-4
 L_WaterArea3:
     .db $49, $0f
-
-    .db $1e, $01
+    .db $F2
+    .db $1e, $21 ;$01
 
     .db $1D, $4C ; ceiling tile @ Y00
     .db $2D, $66 ; ceiling tile @ Y0B
@@ -1236,24 +1282,24 @@ L_WaterArea3:
 
     .db $5D, $64 ; left floor wall @ Y0B
     
-    .db $5e, $07
+    .db $5e, $27 ;$07
 
     .db $6D, $4C ; ceiling tile @ Y00
     .db $6D, $60 ; left floor @ Y0A
     .db $6D, $57 ; left floor wall @ Y08
     
-    .db $ae, $0b
+    .db $ae, $2B ;$0b
     
     .db $BD, $4F ; ceiling tile @ Y03
     .db $BD, $54 ; left floor @ Y07
     
-    .db $1e, $82
+    .db $1e, $A2 ;$82
 
     .db $1D, $4E ; ceiling tile @ Y02
     .db $1D, $62 ; right floor @ Y0A
     .db $1D, $55 ; right floor wall @ Y07
 
-    .db $6e, $88
+    .db $6e, $A8 ;$88
 
     .db $7D, $4D ; ceiling tile @ Y01
     .db $7D, $60 ; left floor @ Y0A
@@ -1262,7 +1308,9 @@ L_WaterArea3:
     .db $9D, $62 ; right floor @ Y0A
     .db $9D, $59 ; right floor wall @ Y08
     
-    .db $9e, $02, $0d, $04, $2e, $0b
+    .db $9e, $22 ;$02
+    .db $0d, $04
+    .db $2e, $2B ;$0b
 
     .db $3D, $4D ; ceiling tile @ Y01
     .db $3D, $60 ; left floor @ Y0A
@@ -1270,9 +1318,9 @@ L_WaterArea3:
     
     .IF PALBUILD == $00
     .db $45, $09
-    .db $4e, $0f
+    .db $4e, $2F ;$0f
     .ELSE
-    .db $3e, $0f    ; PAL bugfix: Close 1-tile gap above exit pipe
+    .db $3e, $2F ;$0f    ; PAL bugfix: Close 1-tile gap above exit pipe
     .db $45, $09
     .ENDIF
 

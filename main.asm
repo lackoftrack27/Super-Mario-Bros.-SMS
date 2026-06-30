@@ -62,17 +62,8 @@ addAToHL:
     .db $00                     ; FILL
 
 
-;   INFO: GIVEN HL, HL WILL BE REPLACE WITH (HL)
-;   INPUT: HL - VALUE,
-;   OUTPUT: HL - (VALUE)
-;   USES: HL, A
+;   INFO: TIME WASTER WHEN ACCESSING YM2413
 .ORG $0018
-;getDataAtHL:
-    ; LD A, (HL)
-    ; INC HL
-    ; LD H, (HL)
-    ; LD L, A
-    ; RET
 SndFMWriteDelay:
     PUSH HL
     POP HL
@@ -719,9 +710,7 @@ SoundUpdate:
     PUSH BC
     PUSH DE
     PUSH HL
-    PUSH IX
     CALL SoundEngine
-    POP IX
     POP HL
     POP DE
     POP BC
@@ -1178,6 +1167,7 @@ OperModeExecutionTree:
 
 ;   AREA PARSER (TILE BACKGROUND)
 .INCLUDE "AreaParser.asm"
+.INCLUDE "BackSceneryData.inc"
 
 ;   ENEMY PARSER (SPRITE OBJECTS)
 .INCLUDE "EnemyParser.asm"
@@ -1728,10 +1718,10 @@ AssetLoaderTable:
     .dw Tiles_BG_Castle, $2F20 | VRAMWRITE
     ;
     .db :Tiles_BG_Water
-    .dw Tiles_BG_Water, $3300 | VRAMWRITE
+    .dw Tiles_BG_Water, VRAM_ADR_BG_LVL | VRAMWRITE ;$3300 | VRAMWRITE
     ;
     .db :Tiles_BG_WaterCastle
-    .dw Tiles_BG_WaterCastle, $3680 | VRAMWRITE
+    .dw Tiles_BG_WaterCastle, VRAM_ADR_BG_LVL | VRAMWRITE ;$3680 | VRAMWRITE
     ;
     .db :Tiles_SPR_Enemies
     .dw Tiles_SPR_Enemies, $0820 | VRAMWRITE
@@ -2756,6 +2746,49 @@ Palette2_MTiles:
     ; Lava
     .dw $01EC, $01ED, $01EE, $01EF                                          ; waves
     .dw $01E5, $01E5, $01E5, $01E5                                          ; body
+    ; Stars for Night Levels
+    .dw $0000, $0000, $0000, $01CA
+    .dw $0000, $0000, $01CB, $0000
+    .dw $0000, $0000, $01CC, $0000
+    .dw $0000, $01CD, $0000, $0000
+    .dw $01CD, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $01CE
+    .dw $0000, $0000, $0000, $01CF
+    .dw $0000, $0000, $01CD, $0000
+    .dw $0000, $0000, $01D0, $0000
+    .dw $0000, $0000, $01CE, $0000
+    .dw $0000, $01D0, $0000, $0000
+    .dw $01CA, $0000, $0000, $0000
+    .dw $01D0, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $01CB
+    .dw $0000, $01CE, $0000, $0000
+    .dw $0000, $01CB, $0000, $0000
+    .dw $0000, $0000, $0000, $01CD
+    ; Background for Water Levels (Except area in W8-4)
+    .dw $0148, $0149, $01E7, $014A
+    .dw $014B, $014C, $014D, $014E
+    .dw $014F, $0150, $0151, $0152
+    .dw $01E7, $0153, $01E7, $01E7
+    .dw $0154, $0155, $0156, $0157
+    .dw $0158, $0150, $0159, $0152
+    .dw $015A, $015B, $015C, $015D
+    .dw $015E, $015F, $0160, $0161
+    .dw $0162, $0150, $0163, $0152
+    .dw $0164, $0165, $0166, $0167
+    .dw $0168, $0169, $016A, $016B
+    .dw $016C, $0155, $016D, $0157
+    .dw $016E, $016F, $015C, $015D
+    .dw $0170, $0171, $0172, $0161
+    .dw $0164, $0165, $0173, $0174
+    .dw $0168, $0169, $0175, $0176
+    .dw $01E7, $01E7, $01E7, $0177
+    .dw $01E7, $01E7, $0178, $0179
+    .dw $017A, $017B, $017C, $017D
+    .dw $017E, $0155, $017F, $0157
+    .dw $0180, $0181, $0159, $0182
+    .dw $0183, $014C, $0184, $014E
+    .dw $0185, $0186, $0187, $017D
+    .dw $0188, $0189, $0184, $018A
     ; --- METATILES WITH COLLISION START HERE ---
     ; Cloud Terrain
     .dw BG_MACRO($0129), BG_MACRO($012A), BG_MACRO($0329), BG_MACRO($032A)
@@ -2764,6 +2797,46 @@ Palette2_MTiles:
     
 
 Palette3_MTiles:
+    ; Background for water area in W8-4
+    .dw $0148, $0149, $014A, $014B
+    .dw $014C, $014D, $014E, $014F
+    .dw $01E7, $0150, $01E7, $0151
+    .dw $0152, $0153, $0154, $0155
+    .dw $01E7, $0156, $01E7, $0157
+    .dw $0158, $0159, $015A, $015B
+    .dw $01E7, $01E7, $01E7, $015C
+    .dw $01E7, $0150, $015D, $015E
+    .dw $01E7, $01E7, $015F, $0160
+    .dw $0161, $0162, $0163, $0164
+    .dw $0165, $0166, $0167, $0168
+    .dw $0158, $0159, $0169, $015B
+    .dw $016A, $016B, $016C, $016D
+    .dw $016E, $016F, $0170, $0171
+    .dw $016E, $0172, $0170, $0171
+    .dw $0173, $0149, $0174, $014B
+    .dw $0175, $0176, $0177, $0178
+    .dw $0179, $017A, $017B, $01E7
+    .dw $017C, $017D, $01E7, $017E
+    .dw $017F, $014D, $0180, $014F
+    .dw $016A, $0181, $016C, $0182
+    .dw $037B, $01E7, $0183, $0184
+    .dw $01E7, $0185, $015D, $015E
+    .dw $0186, $0153, $0154, $0155
+    .dw $0175, $0187, $0177, $0188
+    .dw $0165, $0189, $0167, $0164
+    .dw $018A, $016B, $018B, $018C
+    .dw $018D, $018E, $0177, $0178
+    .dw $018A, $018F, $0190, $0191
+    .dw $016E, $016F, $01E7, $0171
+    .dw $01E7, $0379, $01E7, $01E7
+    .dw $0192, $017A, $01E7, $01E7
+    .dw $01E7, $0185, $01E7, $0151
+    .dw $0158, $0159, $0193, $0194
+    .dw $0195, $0196, $0197, $0195
+    .dw $01C4, $01C5, $01C6, $01C7
+    .dw $01E7, $01DC, $015D, $01DD
+    .dw $01DE, $01DF, $01E0, $01E1
+    .dw $01E2, $0197, $0196, $01E2
     ; --- METATILES WITH COLLISION START HERE ---
     ; Question Blocks
     .dw BG_MACRO($01A9), BG_MACRO($01AA), BG_MACRO($01AB), BG_MACRO($01AC)  ; with coin
@@ -2864,7 +2937,7 @@ Tiles_BG_Castle:
     .INCBIN "BG_Castle.zx7"
 .ENDS
 
-.SECTION "BG Water Castle Tiles" BANK BANK_PLAYERGFX05 SLOT 2 FREE
+.SECTION "BG Water Castle Tiles" BANK BANK_PLAYERGFX04 SLOT 2 FREE
 
 Tiles_BG_WaterCastle:
     .INCBIN "BG_WaterCastle.zx7"

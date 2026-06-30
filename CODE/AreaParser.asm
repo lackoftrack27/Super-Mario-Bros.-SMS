@@ -55,79 +55,132 @@ IncrementColumnPos:
 
 .SECTION "BG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   BACKGROUND SCENERY (0 - NO SCENERY, 1 - CLOUDS, 2 - CLOUDS/MOUNTAINS/GRASS, 3 - CLOUDS/TREES/FENCES)
-;   ONLY 1,2,3 HAVE INDEXES
-;   VALUES ARE OFFSETS INTO BackSceneryData
 BSceneDataOffsets:
-    .db $00, $30, $60, $90
+    ;.db $00, $30, $60, $90
+    ; BANK 0
+    .dw BackSceneryData@Clouds
+    .dw BackSceneryData@Mountains
+    .dw BackSceneryData@Trees
+    ; BANK 1
+    .dw BackSceneryData@Laterns
+    .dw BackSceneryData@CloudsNight
+    .dw BackSceneryData@MountainsNight
+    .dw BackSceneryData@TreesNight
+    ; BANK 2
+    .dw BackSceneryData@Water00
+    .dw BackSceneryData@Water01
+    .dw BackSceneryData@WaterCastle
 .ENDS
 
-.SECTION "BG Scenery Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+.SECTION "BG Scenery Data - Clouds" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   HIGH NIBBLE: HEIGHT, LOW NIBBLE: OFFSET-1 INTO BackSceneryMetatiles
 ;   0 = NO DATA (SKIP)
 BackSceneryData:
-;   clouds
-    .db $93, $00, $00, $11, $12, $12, $13, $00
-    .db $00, $51, $52, $53, $00, $00, $00, $00
-
-    .db $00, $00, $01, $02, $02, $03, $00, $00
-    .db $00, $00, $00, $00, $91, $92, $93, $00
-
-    .db $00, $00, $00, $51, $52, $53, $41, $42
-    .db $43, $00, $00, $00, $00, $00, $91, $92
-;   mountains and bushes
-    .db $97, $87, $88, $89, $99, $00, $00, $00
-    .db $11, $12, $13, $a4, $a5, $a5, $a5, $a6
-
-    .db $97, $98, $99, $01, $02, $03, $00, $a4
-    .db $a5, $a6, $00, $11, $12, $12, $12, $13
-
-    .db $00, $00, $00, $00, $01, $02, $02, $03
-    .db $00, $a4, $a5, $a5, $a6, $00, $00, $00
-;   trees and fences
-    .db $11, $12, $12, $13, $00, $00, $00, $00
-    .db $00, $00, $00, $9c, $00, $8b, $aa, $aa
-
-    .db $aa, $aa, $11, $12, $13, $8b, $00, $9c
-    .db $9c, $00, $00, $01, $02, $03, $11, $12
-
-    .db $12, $13, $00, $00, $00, $00, $aa, $aa
-    .db $9c, $aa, $00, $8b, $00, $01, $02, $03
-;   laterns
-    .db $00, $00, $00, $00, $00, $00, $4D, $4E
-    .db $00, $00, $00, $00, $00, $00, $00, $00
-
-    .db $00, $00, $00, $00, $00, $00, $4D, $4E
-    .db $00, $00, $00, $00, $00, $00, $00, $00
-
-    .db $00, $00, $00, $00, $00, $00, $00, $1D
-    .db $1E, $00, $00, $00, $00, $00, $00, $00
+@Clouds:
+    ; .db $93, $00, $00, $11, $12, $12, $13, $00, $00, $51, $52, $53, $00, $00, $00, $00
+    ; .db $00, $00, $01, $02, $02, $03, $00, $00, $00, $00, $00, $00, $91, $92, $93, $00
+    ; .db $00, $00, $00, $51, $52, $53, $41, $42, $43, $00, $00, $00, $00, $00, $91, $92
+    .db $01, $00, $00, $02, $03, $03, $04, $00, $00, $05, $06, $07, $00, $00, $00, $00
+    .db $00, $00, $08, $09, $09, $0A, $00, $00, $00, $00, $00, $00, $0B, $0C, $01, $00
+    .db $00, $00, $00, $05, $06, $07, $0D, $0E, $0F, $00, $00, $00, $00, $00, $0B, $0C
 .ENDS
 
-.SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-BackSceneryMetatiles:
-;   Clouds
-    .db MT_CLOUD_LEFT, MT_CLOUD_LEFTBOT, MT_BLANK               ; left
-    .db MT_CLOUD_MID, MT_CLOUD_MIDBOT, MT_BLANK                 ; middle
-    .db MT_CLOUD_RIGHT, MT_CLOUD_RIGHTBOT, MT_BLANK             ; right
-;   Bush/Grass
-    .db MT_BUSH_LEFT, MT_BLANK, MT_BLANK                        ; left
-    .db MT_BUSH_MID, MT_BLANK, MT_BLANK                         ; middle
-    .db MT_BUSH_RIGHT, MT_BLANK, MT_BLANK                       ; right
-;   Mountains
-    .db MT_BLANK, MT_MOUNT_LEFT, MT_MOUNT_LEFTBOT               ; left
-    ;.db MT_MOUNT_MIDTOP, MT_MOUNT_LEFTBOT,  MT_MOUNT_MIDBOT     ; middle
-    .db MT_MOUNT_MIDTOP, $01,  MT_MOUNT_MIDBOT     ; middle
-    .db MT_BLANK, MT_MOUNT_RIGHT, MT_MOUNT_RIGHTBOT             ; right
-;   Fence
-    .db MT_FENCE, MT_BLANK, MT_BLANK
-;   Trees
-    .db MT_TALLTREE_TOP, MT_TALLTREE_BOT, MT_TREE_TRUNK         ; tall
-    .db MT_SMALLTREE_TOP, MT_TREE_TRUNK, MT_TREE_TRUNK          ; short
-;   Latern
-    .db MT_LATERN_LT, MT_LATERN_LB, MT_BLANK
-    .db MT_LATERN_RT, MT_LATERN_RB, MT_BLANK
+.SECTION "BG Scenery Data - Mountains" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Mountains:
+    ; .db $97, $87, $88, $89, $99, $00, $00, $00, $11, $12, $13, $a4, $a5, $a5, $a5, $a6
+    ; .db $97, $98, $99, $01, $02, $03, $00, $a4, $a5, $a6, $00, $11, $12, $12, $12, $13
+    ; .db $00, $00, $00, $00, $01, $02, $02, $03, $00, $a4, $a5, $a5, $a6, $00, $00, $00
+    .db $10, $11, $12, $13, $14, $00, $00, $00, $02, $03, $04, $15, $16, $16, $16, $17
+    .db $10, $18, $14, $08, $09, $0A, $00, $15, $16, $17, $00, $02, $03, $03, $03, $04
+    .db $00, $00, $00, $00, $08, $09, $09, $0A, $00, $15, $16, $16, $17, $00, $00, $00
 .ENDS
-; ---
+
+.SECTION "BG Scenery Data - Trees" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Trees:
+    ; .db $11, $12, $12, $13, $00, $00, $00, $00, $00, $00, $00, $9c, $00, $8b, $aa, $aa
+    ; .db $aa, $aa, $11, $12, $13, $8b, $00, $9c, $9c, $00, $00, $01, $02, $03, $11, $12
+    ; .db $12, $13, $00, $00, $00, $00, $aa, $aa, $9c, $aa, $00, $8b, $00, $01, $02, $03
+    .db $02, $03, $03, $04, $00, $00, $00, $00, $00, $00, $00, $19, $00, $1A, $1B, $1B
+    .db $1B, $1B, $02, $03, $04, $1A, $00, $19, $19, $00, $00, $08, $09, $0A, $02, $03
+    .db $03, $04, $00, $00, $00, $00, $1B, $1B, $19, $1B, $00, $1A, $00, $08, $09, $0A
+.ENDS
+
+.SECTION "BG Scenery Data - Laterns" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Laterns:
+    ; .db $00, $00, $00, $00, $00, $00, $4D, $4E, $00, $00, $00, $00, $00, $00, $00, $00
+    ; .db $00, $00, $00, $00, $00, $00, $4D, $4E, $00, $00, $00, $00, $00, $00, $00, $00
+    ; .db $00, $00, $00, $00, $00, $00, $00, $1D, $1E, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $8E, $8F, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $8E, $8F, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $00, $90, $91, $00, $00, $00, $00, $00, $00, $00
+.ENDS
+
+.SECTION "BG Scenery Data - CloudsNight" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@CloudsNight:
+    .db $1C, $1D, $1E, $02, $1F, $03, $20, $21, $22, $23, $24, $07, $25, $00, $26, $27
+    .db $00, $28, $29, $2A, $09, $2B, $2C, $2D, $2E, $00, $00, $2F, $30, $31, $01, $32
+    .db $33, $1D, $1E, $05, $34, $07, $0D, $35, $36, $37, $38, $00, $25, $00, $39, $3A
+.ENDS
+
+.SECTION "BG Scenery Data - MountainsNight" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@MountainsNight:
+    .db $3B, $3C, $3D, $13, $3E, $00, $3F, $21, $40, $03, $41, $15, $42, $16, $43, $44
+    .db $10, $45, $46, $47, $09, $2B, $2C, $48, $49, $17, $00, $4A, $4B, $4C, $03, $4D
+    .db $33, $1D, $1E, $00, $4E, $09, $4F, $50, $22, $51, $52, $16, $53, $00, $26, $27
+.ENDS
+
+.SECTION "BG Scenery Data - TreesNight" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@TreesNight:
+    .db $54, $55, $56, $04, $57, $00, $3F, $21, $22, $37, $38, $19, $25, $1A, $58, $59
+    .db $1B, $5A, $5B, $03, $04, $1A, $2C, $5C, $5D, $00, $00, $5E, $5F, $60, $02, $61
+    .db $62, $63, $64, $00, $57, $00, $65, $66, $67, $68, $38, $1A, $25, $08, $69, $0A
+.ENDS
+
+.SECTION "BG Scenery Data - Water (2-2/7-2)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Water00:
+    .db $6A, $6B, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6E, $6F, $70, $71, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $72, $73, $74, $75, $76, $77
+.ENDS
+
+.SECTION "BG Scenery Data - Water (5-2/6-2)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Water01:
+    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6E, $6F, $70, $71, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D
+.ENDS
+
+.SECTION "BG Scenery Data - Water Castle" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@WaterCastle:
+    .db $78, $79, $7A, $7B, $78, $79, $7C, $7D, $7E, $7F, $80, $81, $7E, $7F, $80, $81
+    .db $82, $83, $80, $81, $84, $85, $86, $7B, $78, $79, $7C, $7D, $82, $83, $80, $87
+    .db $88, $89, $8A, $8B, $8C, $8D, $80, $81, $84, $85, $86, $7B, $78, $79, $7A, $7B
+.ENDS
+
+;.SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; BackSceneryMetatiles:
+; ;   Clouds
+;     .db MT_CLOUD_LEFT, MT_CLOUD_LEFTBOT, MT_BLANK               ; left
+;     .db MT_CLOUD_MID, MT_CLOUD_MIDBOT, MT_BLANK                 ; middle
+;     .db MT_CLOUD_RIGHT, MT_CLOUD_RIGHTBOT, MT_BLANK             ; right
+; ;   Bush/Grass
+;     .db MT_BUSH_LEFT, MT_BLANK, MT_BLANK                        ; left
+;     .db MT_BUSH_MID, MT_BLANK, MT_BLANK                         ; middle
+;     .db MT_BUSH_RIGHT, MT_BLANK, MT_BLANK                       ; right
+; ;   Mountains
+;     .db MT_BLANK, MT_MOUNT_LEFT, MT_MOUNT_LEFTBOT               ; left
+;     ;.db MT_MOUNT_MIDTOP, MT_MOUNT_LEFTBOT,  MT_MOUNT_MIDBOT     ; middle
+;     .db MT_MOUNT_MIDTOP, $01,  MT_MOUNT_MIDBOT     ; middle
+;     .db MT_BLANK, MT_MOUNT_RIGHT, MT_MOUNT_RIGHTBOT             ; right
+; ;   Fence
+;     .db MT_FENCE, MT_BLANK, MT_BLANK
+; ;   Trees
+;     .db MT_TALLTREE_TOP, MT_TALLTREE_BOT, MT_TREE_TRUNK         ; tall
+;     .db MT_SMALLTREE_TOP, MT_TREE_TRUNK, MT_TREE_TRUNK          ; short
+; ;   Latern
+;     .db MT_LATERN_LT, MT_LATERN_LB, MT_BLANK
+;     .db MT_LATERN_RT, MT_LATERN_RB, MT_BLANK
+;.ENDS
 
 .SECTION "FG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   FOREGROUND SCENERY (0 - NO SCENERY, 1 - WATER, 2 - BRICK WALL, 3 - OVER WATER)
@@ -143,8 +196,10 @@ FSceneDataOffsets:
 ;   0 = NO DATA (SKIP)
 ForeSceneryData:
 @Water:
+    ;.db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
+    ;.db MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_SOLIDBLK_WATER;, MT_SOLIDBLK_WATER
     .db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
-    .db MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_SOLIDBLK_WATER;, MT_SOLIDBLK_WATER
+    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
 @Wall:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_BRICK
     .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_BLANK;, MT_BLANK
@@ -217,11 +272,22 @@ RenderSceneryTerrain:
     JR Z, RendFore                  ;if not, skip to check the foreground
 ;   Calculate which third of the page we're on (0, 1, or 2)
     LD A, (CurrentPageLoc)          ;otherwise check for every third page
-@ThirdP:
-    CP A, $03
-    JP M, @RendBack                 ;if less than three we're there
-    SUB A, $03                      ;if 3 or more, subtract 3 and 
-    JP @ThirdP                      ;do an unconditional branch
+    ; Get CurrentPageLoc mod 3
+    LD C, A                         ;add nibbles
+    RRCA
+    RRCA
+    RRCA
+    RRCA
+    ADD A, C
+    ADC A, $00                      ;n mod 15 (+1) in both nibbles
+    LD C, A                         ;add half nibbles
+    RRCA
+    RRCA
+    ADD A, C
+    ADC A, $01
+    JR Z, @RendBack
+    AND A, $03
+    DEC A
 ;   Combine page third with column position and bg scenery offset
 @RendBack:
     ADD A, A                        ;multiply by 16
@@ -235,44 +301,73 @@ RenderSceneryTerrain:
     LD HL, BSceneDataOffsets
     LD A, (BackgroundScenery)
     DEC A
-    addAToHL8_M
-    LD A, (HL)                     
-    ADD A, B                        ;add to it bg scenery offset
+    ;addAToHL8_M
+    ;LD A, (HL)              
+    ;ADD A, B                        ;add to it bg scenery offset
 ;   Use as offset into BackSceneryData
-    LD HL, BackSceneryData
+    ;LD HL, BackSceneryData
+    ;addAToHL8_M
+    ADD A, A                        ;get pointer to bg scenery data
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    LD A, B                         ;get data for current column
     addAToHL8_M
     LD A, (HL)                      ;load data from sum of offsets
     OR A
     JR Z, RendFore                  ;if zero, no scenery for that part
 ;   Extract low nybble (metatile type) and high nybble (height)
-    ; metatile
-    PUSH AF
-    AND A, $0F                      ;save to stack and clear high nybble
-    DEC A                           ;subtract one (because low nybble is $01-$0c)
-    LD B, A                         ;save low nybble
-    ADD A, A                        ;multiply by three (shift to left and add result to old one)
-    ADD A, B                        ;note that since d7 was nulled, the carry flag is always clear
-    LD HL, BackSceneryMetatiles     ;save as offset for background scenery metatile data
-    addAToHL8_M
-    ; height
-    POP AF                          ;get high nybble from stack, move low
-    RRCA
-    RRCA
-    RRCA
-    RRCA
-    AND A, $0F
-    LD B, A                         ;save for next loop
-    LD DE, MetatileBuffer           ;use as second offset (used to determine height)
+;     ; metatile
+;     PUSH AF
+;     AND A, $0F                      ;save to stack and clear high nybble
+;     DEC A                           ;subtract one (because low nybble is $01-$0c)
+;     LD B, A                         ;save low nybble
+;     ADD A, A                        ;multiply by three (shift to left and add result to old one)
+;     ADD A, B                        ;note that since d7 was nulled, the carry flag is always clear
+;     LD HL, BackSceneryMetatiles     ;save as offset for background scenery metatile data
+;     addAToHL8_M
+;     ; height
+;     POP AF                          ;get high nybble from stack, move low
+;     RRCA
+;     RRCA
+;     RRCA
+;     RRCA
+;     AND A, $0F
+;     LD B, A                         ;save for next loop
+;     LD DE, MetatileBuffer           ;use as second offset (used to determine height)
+;     addAToDE8_M
+; ;   Copy 3 metatiles starting at the height position
+;     LD A, B
+;     LD BC, $03FF                    ; C == $FF so LDI won't mess up DJNZ
+; SceLoop1:
+;     LDI                     
+;     INC A
+;     CP A, $0B                       ;if at this location, leave loop (Terrain starts here)
+;     JR Z, RendFore
+;     DJNZ SceLoop1                   ;decrement until counter expires, barring exception
+    DEC A
+    LD DE, BackSceneryColumnPtrs    ; load metatile list for column type
+    LD L, A
+    LD H, $00
+    ADD HL, HL
+    ADD HL, DE
+    LD A, (HL)
+    INC HL
+    LD H, (HL)
+    LD L, A
+    LD D, >MetatileBuffer
+-:
+    LD A, (HL)                      ; get row of metatile
+    LD C, A                         ; also store here
+    AND A, $7F                      ; remove terminator bit
+    LD E, <MetatileBuffer           ; store metatile into MetatileBuffer at the correct index
     addAToDE8_M
-;   Copy 3 metatiles starting at the height position
-    LD A, B
-    LD BC, $03FF                    ; C == $FF so LDI won't mess up DJNZ
-SceLoop1:
-    LDI                     
-    INC A
-    CP A, $0B                       ;if at this location, leave loop (Terrain starts here)
-    JR Z, RendFore
-    DJNZ SceLoop1                   ;decrement until counter expires, barring exception
+    INC HL
+    LDI
+    INC C                           ; check if that was the last metatile in the list
+    JP P, -                         ; if not (bit 7 clear), keep processing list
 ;   FOREGROUND SCENERY
 RendFore:
     LD A, (ForegroundScenery)       ;check for foreground data needed or not
@@ -1141,7 +1236,7 @@ AlterAreaAttributes:
     AND A, %00001111                    ;mask out high nybble and store as
     LD (TerrainControl), A              ;new terrain height type bits
     LD A, (BackgroundScenery)
-    AND A, %00000100                    ;preserve d2 of background scenery
+    AND A, %00001100                    ;preserve d2 of background scenery
     LD B, A                             ;store in B
     POP AF
     AND A, %00110000                    ;pull and mask out all but d5 and d4
@@ -2115,18 +2210,17 @@ DrawQBlk:
 
 ;--------------------------------
 
-.SECTION "Hole Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-HoleMetatiles:
-    .db MT_WATER, MT_BLANK, MT_BLANK, MT_BLANK
-.ENDS
+; .SECTION "Hole Metatile TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; HoleMetatiles:
+;     .db MT_WATER, MT_BLANK, MT_BLANK, MT_BLANK
+; .ENDS
 
 Hole_Empty:
     CALL ChkLrgObjLength                ;get lower nybble and save as length
-    JR NC, NoWhirlP                     ;skip this part if length already loaded
-;
     LD A, (AreaType)                    ;check for water type level
-    OR A
-    JR NZ, NoWhirlP                     ;if not water type, skip this part
+    DEC A
+    JP P, NoWhirlP                      ;if not water type, skip this part
+    RET NC                              ;skip this part if length already loaded
 ;
     LD A, (Whirlpool_Offset)            ;get offset for data used by cannons and whirlpools
     ADD A, >Whirlpool_LeftExtent        ;(SMS) set high byte of RAM address (index)
@@ -2157,11 +2251,14 @@ Hole_Empty:
 StrWOffset:
     SUB A, >Whirlpool_Length
     LD (Whirlpool_Offset), A            ;save new offset here
+    RET
+    
 NoWhirlP:
-    LD A, (AreaType)                    ;get appropriate metatile, then
-    LD HL, HoleMetatiles
-    addAToHL8_M
-    LD A, (HL)                          ;render the hole proper
+    ;LD A, (AreaType)                    ;get appropriate metatile, then
+    ;LD HL, HoleMetatiles
+    ;addAToHL8_M
+    ;LD A, (HL)                          ;render the hole proper
+    LD A, MT_BLANK
     LD BC, $080F                        ;start at ninth row and go to bottom, run RenderUnderPart
     ; FALL THROUGH
 
@@ -2523,7 +2620,7 @@ GetAreaDataAddrs:
     LD A, (BackgroundScenery)
     LD C, A
     LD A, B
-    AND A, %00000001
+    AND A, %00000011
     RLCA
     RLCA
     OR A, C

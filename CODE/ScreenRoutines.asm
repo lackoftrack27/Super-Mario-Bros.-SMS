@@ -621,6 +621,24 @@ WaterAreaSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
+    ; CLEAR BG AREA WITH WATER TILE FOR NES GFX MODE
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR Z, +
+    LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
+    RST setVDPAddress
+    LD BC, $8003
+-:
+    XOR A
+    OUT (VDPDATA_PORT), A
+    OUT (VDPDATA_PORT), A
+    OUT (VDPDATA_PORT), A
+    DEC A
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+    DEC C
+    JP NZ, -
++:
     ; LOAD WATER CASTLE TILES IF ON W8-4
     LD A, (WorldNumber)
     LD H, A
@@ -659,6 +677,7 @@ OverWorldSetup:
     LD HL, BGTileQueue2.UpdateFlag
     LD (HL), $00
     LD A, (BackgroundScenery)           ; IF BACKGROUND DOESN'T HAVE GRASS, SKIP
+    AND A, $03
     CP A, $02
     JP NZ, TileLoadDone
     LD HL, AnimatedBGTileInits@Grass

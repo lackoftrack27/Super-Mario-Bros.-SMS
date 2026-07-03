@@ -577,7 +577,7 @@ ChkHoleX:
     ;OR A
     ;RET NZ                              ;branch to leave if so
     LD A, (MusicTrack0.SoundPlaying)
-    CP A, SNDID_GAMEOVER
+    CP A, SNDID_DEATH
     RET Z
 
     LD A, $06                           ;otherwise set to run lose life routine
@@ -714,7 +714,7 @@ ResetPalStar:
 .SECTION "BlockYPosAdderData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BlockYPosAdderData:
     .db $04, $12                    ; BIG, SMALL/CROUCH
-    ;.db $12, $12, $12, $12
+    .db $12, $12                    ; excess in case player somehow is able to crouch while small
 .ENDS
 
 PlayerHeadCollision:

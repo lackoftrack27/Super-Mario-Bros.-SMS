@@ -1141,6 +1141,8 @@ HammerEnemyOfsData:
 
     .db $C5, $C5, $C5, $C6, $C6, $C6
     .db $C7, $C7, $C7
+    ; $C7 is out of bounds, but works because nothing uses Enemy_Flag_06
+    ; The value is always 0
 .ENDS
 
 .SECTION "HammerXSpdData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG

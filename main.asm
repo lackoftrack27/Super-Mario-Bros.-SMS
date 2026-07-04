@@ -174,11 +174,11 @@ Start:
     ; REENABLE IO
     LD A, (MemoryControlValue)
     OUT (MEM_CONTROL), A
-    ; CHECK IF COUNTER IS 4 (ONLY JAPANESE SMS OR AFTERMARKET UNIT. MARK3 NOT ALLOWED DUE TO NO FM/PSG MIXING)
+    ; CHECK COUNTER (1 OR 3 = NO FM. 2 = MARK3. 4 = J-SMS/AFTERMARKET)
     LD A, C
-    CP A, $04
+    RRCA
     LD A, $00
-    JR NZ, +
+    JR C, +
     LD A, $01
 +:
     LD (FMDetectedFlag), A

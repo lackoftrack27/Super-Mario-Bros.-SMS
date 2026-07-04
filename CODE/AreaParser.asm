@@ -1747,7 +1747,7 @@ WarpPipe:
     CALL GetAreaObjYPosition            ;get piranha plant's vertical coordinate and store here
     LD L, <Enemy_Y_Position
     LD (HL), A
-    CALL InitPiranhaPlant_NOPOP
+    CALL InitPiranhaPlant
 DrawPipe:
     LD A, IXL
     CPL

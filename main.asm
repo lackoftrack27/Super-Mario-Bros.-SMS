@@ -91,9 +91,10 @@ setVDPAddress:
 ;   INFO: JUMPS TO AN ADDRESS GIVEN AN OFFSET
 ;   INPUT: A - OFFSET
 ;   OUTPUT: NONE
-;   USES: HL, AF
+;   USES: HL', AF
 .ORG $0028
 JumpEngine:
+    EXX                         ;switch to shadow regs to preserve HL (ObjectOffset)
     POP HL                      ;pull saved return address from stack
     ADD A, A                    ;shift bit from contents of A
     addAToHL_M                  ;load pointer from indirect
@@ -101,8 +102,10 @@ JumpEngine:
     INC HL                      ;it will return to the execution before the sub
     LD H, (HL)                  ;that called this routine
     LD L, A
-    JP (HL)                     ;jump to the address we loaded
-    .db $00, $00, $00, $00      ;FILL
+    PUSH HL                     ;put new address onto the stack
+    EXX                         ;switch back to normal regs
+    RET                         ;"return" to new address
+    .db $00
 
 ;-------------------------------------------------------------------------------------
 ;   VDP VECTOR

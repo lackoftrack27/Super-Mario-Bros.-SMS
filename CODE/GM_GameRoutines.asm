@@ -145,7 +145,7 @@ ChkOverR:
     LD (Block_Y_Position), A
     LD H, >Enemy_ID_05                  ;set offset in X for last enemy object buffer slot, set offset in Y for object coordinates used earlier
     LD D, >Block_State
-    CALL Setup_Vine_NOPOP               ;do a sub to grow vine
+    CALL Setup_Vine                     ;do a sub to grow vine
 ChkSwimE:
     LD A, (AreaType)                    ;if level is water-type,
     OR A
@@ -887,7 +887,6 @@ BumpBlock:
     JP C, BlockCode                 ;branch to use current number
     SUB A, $05                      ;otherwise subtract 5 for second set to get proper number
 BlockCode:
-    PUSH HL
     RST JumpEngine                  ;run appropriate subroutine depending on block number
 
     .dw MushFlowerBlock
@@ -903,27 +902,24 @@ BlockCode:
 ;--------------------------------
 
 MushFlowerBlock:
-    POP HL
     XOR A                           ;load mushroom/fire flower into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 StarBlock:
-    POP HL
     LD A, $02                       ;load star into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 ExtraLifeMushBlock:
-    POP HL
     LD A, $03                       ;load 1-up mushroom into power-up type
     LD (PowerUpType), A
     JP SetupPowerUp
 
 VineBlock:
-    POP DE                          ;put block offset into DE
+    EX DE, HL                       ;put block offset into DE
     LD H, $C6                       ;load last slot for enemy object buffer
-    JP Setup_Vine_NOPOP             ;set up vine object
+    JP Setup_Vine                   ;set up vine object
 
 ;--------------------------------
 

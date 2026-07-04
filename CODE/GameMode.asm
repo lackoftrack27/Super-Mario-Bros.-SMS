@@ -1447,7 +1447,7 @@ InitLCmd:
 ;--------------------------------
 
 ChkEnemyFrenzy_POP:
-    POP HL
+    POP HL                          ;get back object offset if coming from FindLoop
 ChkEnemyFrenzy:
     LD A, (EnemyFrenzyQueue)        ;check for enemy object in frenzy queue
     OR A
@@ -1476,7 +1476,6 @@ RunEnemyObjectsCore:
     LD A, (HL)                      ;otherwise subtract $14 from the value and use
     SUB A, $14                      ;as value for jump engine
 JmpEO:
-    PUSH HL                         ;(SMS) save ObjectOffset
     RST JumpEngine
 
     .dw RunNormalEnemies  ;for objects $00-$14
@@ -1520,8 +1519,6 @@ JmpEO:
 ;-------------------------------------------------------------------------------------
 
 WarpZoneObject:
-    POP HL
-;
     LD A, (ScrollLock)                      ;check for scroll lock flag
     OR A
     RET Z                                   ;branch if not set to leave
@@ -1542,8 +1539,6 @@ WarpZoneObject:
 ;--------------------------------
 
 PowerUpObjHandler:
-    POP HL
-;
     LD HL, Enemy_State_05                   ;set object offset for last slot in enemy object buffer
     LD (ObjectOffset), HL
 ;
@@ -1567,12 +1562,12 @@ PowerUpObjHandler:
     CP A, $02
     JR NZ, RunPUSubs                        ;if not star, branch elsewhere to skip movement
 ;
-    CALL MoveJumpingEnemy_NOPOP             ;otherwise impose gravity on star power-up and make it jump
+    CALL MoveJumpingEnemy                   ;otherwise impose gravity on star power-up and make it jump
     CALL EnemyJump                          ;note that green paratroopa shares the same code here
     JP RunPUSubs                            ;then jump to other power-up subroutines
 ;
 ShroomM:
-    CALL MoveNormalEnemy_NOPOP              ;do sub to make mushrooms move
+    CALL MoveNormalEnemy                    ;do sub to make mushrooms move
     CALL EnemyToBGCollisionDet              ;deal with collisions
     JP RunPUSubs                            ;run the other subroutines
 
@@ -1623,8 +1618,6 @@ RunPUSubs:
 ; .ENDS
 
 JumpspringHandler:
-    POP HL
-;
     CALL GetEnemyOffscreenBits              ;get offscreen information
 ;
     LD A, (TimerControl)                    ;check master timer control
@@ -1712,8 +1705,6 @@ DrawJSpr:
 ; .ENDS
 
 VineObjectHandler:
-    POP HL
-;
     LD A, H
     CP A, $C6                               ;check enemy offset for special use slot
     RET NZ                                  ;if not in last slot, branch to leave
@@ -1789,15 +1780,11 @@ WrCMTile:
 ;--------------------------------
 
 NoRunCode:
-    POP HL
-;
     RET
 
 ;--------------------------------
 
 RunRetainerObj:
-    POP HL
-RunRetainerObj_NOPOP:
     CALL GetEnemyOffscreenBits
     CALL RelativeEnemyPosition
     LD A, (Enemy_OffscrBits)
@@ -1809,8 +1796,6 @@ RunRetainerObj_NOPOP:
 ;--------------------------------
 
 RunNormalEnemies:
-    POP HL
-;
     ;lda #$00                  ;init sprite attributes
     ;sta Enemy_SprAttrib,x
     CALL GetEnemyOffscreenBits  ; 3,
@@ -1832,7 +1817,6 @@ RunNormalEnemies:
 EnemyMovementSubs:
     LD L, <Enemy_ID
     LD A, (HL)
-    PUSH HL
     RST JumpEngine
 
     .dw MoveNormalEnemy      ;only objects $00-$14 use this table
@@ -1860,13 +1844,11 @@ EnemyMovementSubs:
 ;--------------------------------
 
 NoMoveCode:
-    POP HL
     RET
 
 ;--------------------------------
 
 RunBowserFlame:
-    POP HL
     CALL ProcBowserFlame
     CALL GetEnemyOffscreenBits
     CALL RelativeEnemyPosition
@@ -1877,7 +1859,6 @@ RunBowserFlame:
 ;--------------------------------
 
 RunFirebarObj:
-    POP HL
     ;CALL ProcFirebar
     CALL GetEnemyOffscreenBits                  ;get offscreen information
     LD A, (Enemy_OffscrBits)                    ;check for d3 set
@@ -1888,7 +1869,6 @@ RunFirebarObj:
 ;--------------------------------
 
 RunSmallPlatform:
-    POP HL
     CALL GetEnemyOffscreenBits
     CALL RelativeEnemyPosition
     CALL SmallPlatformBoundBox
@@ -1901,7 +1881,6 @@ RunSmallPlatform:
 ;--------------------------------
 
 RunLargePlatform:
-    POP HL
     CALL GetEnemyOffscreenBits
     CALL RelativeEnemyPosition
     CALL LargePlatformBoundBox
@@ -1916,7 +1895,6 @@ RunLargePlatform:
 ;--------------------------------
 
 LargePlatformSubroutines:
-    PUSH HL
     LD L, <Enemy_ID
     LD A, (HL)
     SUB A, $24
@@ -1961,8 +1939,6 @@ EraseEnemyObject:
 ;-------------------------------------------------------------------------------------
 
 MovePodoboo:
-    POP HL
-;
     LD A, H                                 ;check enemy timer
     SUB A, $C1
     LD BC, EnemyIntervalTimer
@@ -1972,7 +1948,7 @@ MovePodoboo:
     JP NZ, MoveJ_EnemyVertically            ;branch to move enemy if not expired
 ;
     PUSH BC                                 ;save enemy timer
-    CALL InitPodoboo_NOPOP                  ;otherwise set up podoboo again
+    CALL InitPodoboo                        ;otherwise set up podoboo again
 ;
     LD A, H                                 ;get part of LSFR
     SUB A, $C1
@@ -2010,8 +1986,6 @@ RevivedXSpeed:
 .ENDS
 
 ProcHammerBro:
-    POP HL
-;
     LD L, <Enemy_State                      ;check hammer bro's enemy state for d5 set
     BIT 5, (HL)
     JP NZ, MoveDefeatedEnemy                ;if set, jump to something else
@@ -2159,11 +2133,9 @@ Shimmy:
 SetShim:
     LD L, <Enemy_MovingDir                  ;set moving direction
     LD (HL), C
-    JP MoveNormalEnemy_NOPOP
+    ; FALL THROUGH
 
 MoveNormalEnemy:
-    POP HL
-MoveNormalEnemy_NOPOP:
     LD BC, XSpeedAdderData                  ;init Y to leave horizontal movement as-is
     LD L, <Enemy_State
     LD A, (HL)
@@ -2281,16 +2253,12 @@ ChkKillGoomba:
 ;--------------------------------
 
 MoveJumpingEnemy:
-    POP HL
-MoveJumpingEnemy_NOPOP:
     CALL MoveJ_EnemyVertically              ;do a sub to impose gravity on green paratroopa
     JP MoveEnemyHorizontally                ;jump to move enemy horizontally
 
 ;--------------------------------
 
 ProcMoveRedPTroopa:
-    POP HL
-;
     LD L, <Enemy_Y_Speed                    ;check for any vertical force or speed
     LD A, (HL)
     LD L, <Enemy_Y_MoveForce
@@ -2327,8 +2295,6 @@ MoveRedPTUpOrDown:
 ;$01 - used to store maximum value for secondary counter
 
 MoveFlyGreenPTroopa:
-    POP HL
-;
     CALL XMoveCntr_GreenPTroopa             ;do sub to increment primary and secondary counters
     CALL MoveWithXMCntrs                    ;do sub to move green paratroopa accordingly, and horizontally
 ;
@@ -2420,8 +2386,6 @@ XMRight:
 ; .ENDS
 
 MoveBloober:
-    POP HL
-;
     LD L, <Enemy_State                      ;check enemy state for d5 set
     LD A, (HL)
     AND A, %00100000
@@ -2595,8 +2559,6 @@ ChkNearPlayer:
 ;--------------------------------
 
 MoveBulletBill:
-    POP HL
-;
     LD L, <Enemy_State                      ;check bullet bill's enemy object state for d5 set
     LD A, (HL)
     AND A, %00100000
@@ -2617,8 +2579,6 @@ MoveBulletBill:
 ; .ENDS
 
 MoveSwimmingCheepCheep:
-    POP HL
-;
     LD L, <Enemy_State                      ;check cheep-cheep's enemy object state
     LD A, (HL)
     AND A, %00100000                        ;for d5 set
@@ -3048,8 +3008,6 @@ FlyCCBPriority:
 .ENDS
 
 MoveFlyingCheepCheep:
-    POP HL
-;
 
 .IF PALBUILD == $00
     LD L, <Enemy_State                          ;check cheep-cheep's enemy state
@@ -3106,8 +3064,6 @@ FlyCC:
 ;    .db $15, $30, $40
 
 MoveLakitu:
-    POP HL
-;
     LD L, <Enemy_State                          ;check lakitu's enemy state
     LD A, (HL)
     BIT 5, A                                    ;for d5 set
@@ -3332,8 +3288,6 @@ PRandomRange:
 .ENDS
 
 RunBowser:
-    POP HL
-;
     LD L, <Enemy_State                          ;if d5 in enemy state is not set
     LD A, (HL)
     AND A, %00100000                            ;then branch elsewhere to run bowser
@@ -4023,8 +3977,6 @@ M1FOfs:
 ;--------------------------------
 
 RunFireworks:
-    POP HL
-;
     LD L, <ExplosionTimerCounter            ;decrement explosion timing counter here
     DEC (HL)
     JP NZ, SetupExpl                        ;if not expired, skip this part
@@ -4072,8 +4024,6 @@ FireworksSoundScore:
 ;    .db $54, $55, $56, $57
 
 RunStarFlagObj:
-    POP HL
-;
     XOR A                                   ;initialize enemy frenzy buffer
     LD (EnemyFrenzyBuffer), A
 ;
@@ -4081,7 +4031,6 @@ RunStarFlagObj:
     CP A, $05                               ;if greater than 5, branch to exit
     RET NC
 ;
-    PUSH HL
     RST JumpEngine                          ;otherwise jump to appropriate sub
 
     .dw StarFlagExit
@@ -4091,8 +4040,6 @@ RunStarFlagObj:
     .dw DelayToAreaEnd
 
 GameTimerFireworks:
-    POP HL
-;
     LD C, $05                               ;set default state for star flag object
     LD A, (GameTimerDisplay+2)              ;get game timer's last digit
     CP A, $01
@@ -4117,12 +4064,9 @@ IncrementSFTask1:
     RET
 
 StarFlagExit:
-    POP HL
     RET
 
 AwardGameTimerPoints:
-    POP HL
-;
     EX DE, HL
     LD HL, GameTimerDisplay                 ;check all game timer digits for any intervals left
     LD A, (HL)
@@ -4165,8 +4109,6 @@ ELPGive:
     JP UpdateNumber                         ;jump to print the new score and game timer
 
 RaiseFlagSetoffFWorks:
-    POP HL
-;
     LD L, <Enemy_Y_Position                 ;check star flag's vertical position
     LD A, (HL)
     CP A, $72                               ;against preset value
@@ -4245,8 +4187,6 @@ IncrementSFTask2:
     RET
 
 DelayToAreaEnd:
-    POP HL
-;
     CALL DrawStarFlag                       ;do sub to draw star flag
 ;
     LD A, H                                 ;if interval timer set in previous task
@@ -4266,8 +4206,6 @@ DelayToAreaEnd:
 ;$00(C) - used to store horizontal difference between player and piranha plant
 
 MovePiranhaPlant:
-    POP HL
-;
     LD L, <Enemy_State                      ;check enemy state
     LD A, (HL)
     OR A
@@ -4358,8 +4296,6 @@ RiseFallPiranhaPlant:
 ;DE - Object_Offset of the 2nd platform
 
 BalancePlatform:
-    POP HL
-;
     LD L, <Enemy_Y_HighPos                      ;check high byte of vertical position
     LD A, (HL)
     CP A, $03
@@ -4678,8 +4614,6 @@ PlatformFall:
 ;--------------------------------
 
 YMovingPlatform:
-    POP HL
-;
     LD L, <Enemy_Y_Speed                        ;if platform moving up or down, skip ahead to
     LD A, (HL)
     LD L, <Enemy_Y_MoveForce
@@ -4725,8 +4659,6 @@ ChkYPCollision:
 ;$00(B) - used as adder to position player hotizontally
 
 XMovingPlatform:
-    POP HL
-;
     LD A, $0E                                   ;load preset maximum value for secondary counter
     CALL XMoveCntr_Platform                     ;do a sub to increment counters for movement
 ;
@@ -4763,8 +4695,6 @@ SetPVar:
 ;--------------------------------
 
 DropPlatform:
-    POP HL
-;
     LD L, <PlatformCollisionFlag                ;if no collision between platform and player
     LD A, (HL)                                  ;occurred, just leave without moving anything
     OR A
@@ -4776,8 +4706,6 @@ DropPlatform:
 ;--------------------------------
 
 RightPlatform:
-    POP HL
-;
     CALL MoveEnemyHorizontally                  ;move platform with current horizontal speed, if any
     LD B, A                                     ;store saved value here
 ;
@@ -4800,8 +4728,6 @@ RightPlatform:
 ;--------------------------------
 
 MoveLargeLiftPlat:
-    POP HL
-;
     CALL MoveLiftPlatforms                      ;execute common to all large and small lift platforms
     JP ChkYPCollision                           ;branch to position player correctly
 
@@ -5547,7 +5473,6 @@ PutBlockMetatile_RHalf:
 ;   DE - Misc Object
 ;   HL - Block Object
 CoinBlock:
-    POP HL
     CALL FindEmptyMiscSlot              ;set offset for empty or last misc object buffer slot
 ;
     LD L, <Block_PageLoc                ;get page location of block object

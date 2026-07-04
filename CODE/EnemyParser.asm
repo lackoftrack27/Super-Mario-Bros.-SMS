@@ -249,7 +249,6 @@ CheckpointEnemyID:
     EX AF, AF'                      ;get identifier back and use as offset for jump engine
 
 InitEnemyRoutines:
-    PUSH HL                         ;(SMS) save ObjectOffset
     RST JumpEngine
 
 ;   jump engine table for newly loaded enemy objects
@@ -319,8 +318,6 @@ InitEnemyRoutines:
 ;   HL - ENEMY OFFSET
 ;   DE - BLOCK OFFSET
 Setup_Vine:
-    POP HL
-Setup_Vine_NOPOP:
     LD L, <Enemy_ID                 ;load identifier for vine object 
     LD (HL), OBJECTID_VineObject    ;store in buffer
 ;
@@ -366,21 +363,17 @@ NextVO:
 ;--------------------------------
 
 NoInitCode:
-    POP HL
     RET                             ;this executed when enemy object has no init code
 
 ;--------------------------------
 
 InitGoomba:
-    POP HL
-    CALL InitNormalEnemy_NOPOP      ;set appropriate horizontal speed
+    CALL InitNormalEnemy            ;set appropriate horizontal speed
     JP SmallBBox                    ;set $09 as bounding box control, set other values
 
 ;--------------------------------
 
 InitPodoboo:
-    POP HL
-InitPodoboo_NOPOP:
     LD L, <Enemy_Y_HighPos          ;set enemy position to below
     LD (HL), $02
     LD L, <Enemy_Y_Position         ;the bottom of the screen
@@ -400,8 +393,6 @@ InitPodoboo_NOPOP:
 ;--------------------------------
 
 InitRetainerObj:
-    POP HL
-;
     XOR A
     LD (RetainerDrawnFlag), A
 ;
@@ -412,8 +403,6 @@ InitRetainerObj:
 ;--------------------------------
 
 InitNormalEnemy:
-    POP HL
-InitNormalEnemy_NOPOP:
     LD A, (PrimaryHardMode)         ;check for primary hard mode flag set
     OR A
 
@@ -436,9 +425,7 @@ SetESpd:
 ;--------------------------------
 
 InitRedKoopa:
-    POP HL
-;
-    CALL InitNormalEnemy_NOPOP      ;load appropriate horizontal speed
+    CALL InitNormalEnemy            ;load appropriate horizontal speed
     LD L, <Enemy_State              ;set enemy state for red koopa troopa $03
     LD (HL), $01
     RET
@@ -446,8 +433,6 @@ InitRedKoopa:
 ;--------------------------------
 
 InitHammerBro:
-    POP HL
-;
     LD A, H
     SUB A, $C1
     LD BC, EnemyIntervalTimer
@@ -470,16 +455,12 @@ InitHammerBro:
 ;--------------------------------
 
 InitHorizFlySwimEnemy:
-    POP HL
-InitHorizFlySwimEnemy_NOPOP:
     XOR A                           ;initialize horizontal speed
     JP SetESpd
 
 ;--------------------------------
 
 InitBloober:
-    POP HL
-;
     LD L, <BlooperMoveSpeed         ;initialize horizontal speed
     LD (HL), $00
 SmallBBox:
@@ -489,8 +470,6 @@ SmallBBox:
 ;--------------------------------
 
 InitRedPTroopa:
-    POP HL
-;
     LD L, <Enemy_Y_Position         ;set vertical coordinate into location to
     LD A, (HL)
     LD L, <RedPTroopaOrigXPos       ;be used as original vertical coordinate
@@ -528,8 +507,6 @@ InitVStf:
 ;--------------------------------
 
 InitBulletBill:
-    POP HL
-;
     LD L, <Enemy_MovingDir          ;set moving direction for left
     LD (HL), $02
     LD L, <Enemy_BoundBoxCtrl       ;set bounding box control for $09
@@ -539,8 +516,6 @@ InitBulletBill:
 ;--------------------------------
 
 InitCheepCheep:
-    POP HL
-;
     CALL SmallBBox                  ;set vertical bounding box, speed, init others
 ;
     LD A, H
@@ -561,8 +536,6 @@ InitCheepCheep:
 ;--------------------------------
 
 InitLakitu:
-    POP HL
-;
     LD A, (EnemyFrenzyBuffer)       ;check to see if an enemy is already in
     OR A
     JP NZ, EraseEnemyObject         ;the frenzy buffer, and branch to kill lakitu if so
@@ -570,7 +543,7 @@ InitLakitu:
 SetupLakitu:
     XOR A                           ;erase counter for lakitu's reappearance
     LD (LakituReappearTimer), A
-    JP InitHorizFlySwimEnemy_NOPOP  ;set $03 as bounding box, set other attributes
+    JP InitHorizFlySwimEnemy        ;set $03 as bounding box, set other attributes
     ;JP TallBBox2                   ;set $03 as bounding box again (not necessary) and leave
 
 ;--------------------------------
@@ -589,8 +562,6 @@ PRDiffAdjustData:
 .ENDS 
 
 LakituAndSpinyHandler:
-    POP HL
-;
     LD A, (FrenzyEnemyTimer)            ;if timer here not expired, leave
     OR A
     RET NZ
@@ -744,14 +715,10 @@ FirebarSpinDirData:
 .ENDS
 
 InitLongFirebar:
-    POP HL
-;
     CALL DuplicateEnemyObj              ;create enemy object for long firebar
-    JP InitShortFirebar_NOPOP
+    ; FALL THROUGH
 
 InitShortFirebar:
-    POP HL
-InitShortFirebar_NOPOP:
     LD L, <FirebarSpinState_Low         ;initialize low byte of spin state
     LD (HL), $00
 ;
@@ -818,8 +785,6 @@ FlyCCTimerData:
 .ENDS
 
 InitFlyingCheepCheep:
-    POP HL
-;
     LD A, (FrenzyEnemyTimer)            ;if timer here not expired yet, branch to leave
     OR A
     RET NZ
@@ -970,8 +935,6 @@ FinCCSt:
 ;--------------------------------
 
 InitBowser:
-    POP HL
-;
     CALL DuplicateEnemyObj              ;jump to create another bowser object
 ;
     LD A, H                             ;save offset of first here
@@ -1097,8 +1060,6 @@ FlameYPosData:
 ;     .db $ff, $01
 
 InitBowserFlame:
-    POP HL
-;
     LD A, (FrenzyEnemyTimer)            ;if timer not expired yet, branch to leave
     OR A
     RET NZ
@@ -1225,8 +1186,6 @@ FireworksYPosData:
 .ENDS
 
 InitFireworks:
-    POP HL
-;
     LD A, (FrenzyEnemyTimer)            ;if timer not expired yet, branch to leave
     OR A
     RET NZ
@@ -1310,8 +1269,6 @@ SwimCC_IDData:
 .ENDS
 
 BulletBillCheepCheep:
-    POP HL
-;
     LD A, (FrenzyEnemyTimer)            ;if timer not expired yet, branch to leave
     OR A
     RET NZ
@@ -1495,8 +1452,6 @@ GSltLp:
 ;--------------------------------
 
 InitPiranhaPlant:
-    POP HL
-InitPiranhaPlant_NOPOP:
     LD L, <PiranhaPlant_Y_Speed         ;set initial speed
     LD (HL), $01
 ;
@@ -1523,8 +1478,6 @@ InitPiranhaPlant_NOPOP:
 ;--------------------------------
 
 InitEnemyFrenzy:
-    POP HL
-    PUSH HL
     LD L, <Enemy_ID                     ;load enemy identifier
     LD A, (HL)                          ;save in enemy frenzy buffer
     LD (EnemyFrenzyBuffer), A
@@ -1542,14 +1495,11 @@ InitEnemyFrenzy:
 ;--------------------------------
 
 NoFrenzyCode:
-    POP HL
     RET
 
 ;--------------------------------
 
 EndFrenzy:
-    POP HL
-;
     LD D, $C6                           ;start at last slot
     LD B, $06
 LakituChk:
@@ -1573,8 +1523,6 @@ NextFSlot:
 ;--------------------------------
 
 InitJumpGPTroopa:
-    POP HL
-;
     LD L, <Enemy_MovingDir                  ;set for movement to the left
     LD (HL), $02
     LD L, <Enemy_X_Speed
@@ -1595,8 +1543,6 @@ TallBBox2:
 ;--------------------------------
 
 InitBalPlatform:
-    POP HL
-;
     LD L, <Enemy_Y_Position                 ;raise vertical position by two pixels
     DEC (HL)
     DEC (HL)
@@ -1623,14 +1569,10 @@ SetBPA:
     LD BC, $0008
     CALL PosPlatform                        ;do a sub to add 8 pixels, then run shared code here
     ; FALL THROUGH
-    JP InitDropPlatform_NOPOP
 
 ;--------------------------------
 
 InitDropPlatform:
-    POP HL
-;
-InitDropPlatform_NOPOP:
     LD L, <PlatformCollisionFlag            ;set some value here
     LD (HL), $FF
 ;
@@ -1639,8 +1581,6 @@ InitDropPlatform_NOPOP:
 ;--------------------------------
 
 InitHoriPlatform:
-    POP HL
-;
     LD L, <XMoveSecondaryCounter            ;init one of the moving counters
     LD (HL), $00
 ;
@@ -1649,8 +1589,6 @@ InitHoriPlatform:
 ;--------------------------------
 
 InitVertPlatform:
-    POP HL
-;
     LD C, $40                               ;set default value here
     LD L, <Enemy_Y_Position                 ;check vertical position
     LD A, (HL)
@@ -1690,22 +1628,16 @@ CasPBB:
 ;--------------------------------
 
 LargeLiftUp:
-    POP HL
-;
-    CALL PlatLiftUp_NOPOP                   ;execute code for platforms going up
+    CALL PlatLiftUp                         ;execute code for platforms going up
     JP SPBBox                               ;overwrite bounding box for large platforms
 
 LargeLiftDown:
-    POP HL
-;
-    CALL PlatLiftDown_NOPOP                 ;execute code for platforms going down
+    CALL PlatLiftDown                       ;execute code for platforms going down
     JP SPBBox                               ;jump to overwrite bounding box size control
 
 ;--------------------------------
 
 PlatLiftUp:
-    POP HL
-PlatLiftUp_NOPOP:
     LD L, <Enemy_Y_MoveForce                ;set movement amount here
     LD (HL), $10
     LD L, <Enemy_Y_Speed                    ;set moving speed for platforms going up
@@ -1715,8 +1647,6 @@ PlatLiftUp_NOPOP:
 ;--------------------------------
 
 PlatLiftDown:
-    POP HL
-PlatLiftDown_NOPOP:
     LD L, <Enemy_Y_MoveForce                ;set movement amount here
     LD (HL), $F0
     LD L, <Enemy_Y_Speed                    ;set moving speed for platforms going down
@@ -1757,5 +1687,4 @@ PosPlatform:
 ;--------------------------------
 
 EndOfEnemyInitCode:
-    POP HL
     RET

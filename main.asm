@@ -41,9 +41,9 @@ BootVector:
 .ORG $0008
 ResetVector:
     DI
+    NOP
     LD SP, STACK_PTR
     JP ResetStart
-    .db $00                     ; FILL
 
 
 ;   GIVEN A VALUE IN BOTH A AND HL, THE VALUE IN A WILL BE ADDED TO HL
@@ -164,7 +164,7 @@ Start:
     IN A, (AUDIO_CONTROL)
     AND A, $03
     CP A, E
-    JP NZ, +
+    JR NZ, +
     INC C
 +:
     DJNZ -
@@ -178,7 +178,7 @@ Start:
     LD A, C
     CP A, $04
     LD A, $00
-    JP NZ, +
+    JR NZ, +
     LD A, $01
 +:
     LD (FMDetectedFlag), A
@@ -253,7 +253,7 @@ ResetStart:
     ; DISPLAY SOUND SELECTION IF FM CHIP IS DETECTED
     LD A, (FMDetectedFlag)
     OR A
-    JP Z, +
+    JR Z, +
     LD HL, $2048 | VRAMWRITE
     RST setVDPAddress
     LD HL, Map_BG_SoundSelect@Line1
@@ -496,30 +496,30 @@ ColdBoot:
 EndlessLoop:
     LD A, (FrameDoneFlag)
     OR A
-    JP NZ, EndlessLoop
+    JR NZ, EndlessLoop
     ; --- PAUSE ROUTINE ---
     LD A, (OperMode)                ;are we in victory mode?
     CP A, MODE_VICTORY              ;if so, go ahead
-    JP Z, ChkPauseTimer
+    JR Z, ChkPauseTimer
     CP A, MODE_GAMEPLAY             ;are we in game mode?
-    JP NZ, UpdateTopScore           ;if not, leave
+    JR NZ, UpdateTopScore           ;if not, leave
     LD A, (OperMode_Task)           ;if we are in game mode, are we running game engine?
     CP A, $03
-    JP NZ, UpdateTopScore
+    JR NZ, UpdateTopScore           ;if not, leave
 ChkPauseTimer:
     LD A, (GamePauseTimer)          ;check if pause timer is still counting down
     OR A
-    JP Z, ChkStart
+    JR Z, ChkStart
     DEC A
     LD (GamePauseTimer), A          ;if so, decrement and leave
     JP UpdateTopScore
 ChkStart:
     LD A, (SavedJoypad1Bits)        ;check to see if start is pressed
     AND A, $01 << SMS_BTN_START
-    JP Z, ClrPauseTimer
+    JR Z, ClrPauseTimer
     LD A, (GamePauseStatus)         ;check to see if timer flag is set
     AND A, $80                      ;and if so, do not reset timer
-    JP NZ, UpdateTopScore
+    JR NZ, UpdateTopScore
     LD A, $2B                       ;set pause timer
     LD (GamePauseTimer), A
     LD A, SNDID_PAUSE
@@ -542,15 +542,15 @@ UpdateTopScore:
     LD DE, OffScr_ScoreDisplay + $05    ;now do luigi's score
     CALL TopScoreCheck
     ; --- TIMER UPDATE ---
-    LD A, (GamePauseStatus)
+    LD A, (GamePauseStatus)         ;check for pause status
     RRCA
-    JP C, TickPRNG
+    JR C, TickPRNG
     LD HL, TimerControl
     LD A, (HL)
     OR A                            ;if master timer control not set, decrement
-    JP Z, DecTimers                 ;all frame and interval timers
+    JR Z, DecTimers                 ;all frame and interval timers
     DEC (HL)
-    JP NZ, NoDecTimers
+    JR NZ, NoDecTimers
 DecTimers:
     LD DE, Timers + $14             ;load end offset for end of frame timers
     LD B, $15
@@ -567,7 +567,7 @@ DecTimers:
 DecTimersLoop:
     LD A, (DE)                      ;check current timer
     OR A
-    JP Z, SkipExpTimer              ;if current timer expired, branch to skip,
+    JR Z, SkipExpTimer              ;if current timer expired, branch to skip,
     DEC A                           ;otherwise decrement the current timer
     LD (DE), A
 SkipExpTimer:
@@ -634,7 +634,7 @@ NonMaskableInterrupt:
 ;   SKIP VDP UPDATE AND JOYPAD READING IF ON A LAG FRAME
     LD A, (FrameDoneFlag)
     RRA
-    JP NC, LagFrame
+    JR NC, LagFrame
     LD (FrameDoneFlag), A
 ;   SET VDP HSCROLL TO HSCROLL VALUE FROM LAST PROCESSED GAME FRAME
     LD A, (HorizontalScroll)
@@ -683,7 +683,7 @@ NonMaskableInterrupt:
     LD HL, VRAM_Buffer2
     LD A, (VRAM_Buffer_AddrCtrl)    ;check for usage of $0341 (VRAM_Buffer2)
     CP A, VRAMTBL_BUFFER2
-    JP Z, +                         ;if not used, skip
+    JR Z, +                         ;if not used, skip
     LD HL, VRAM_Buffer1
     LD (VRAM_Buffer1_Ptr), HL
 +:
@@ -701,7 +701,7 @@ TileStreamRet:
 ;   DON'T SET H-INT IF SPRITE 0 FLAG ISN'T SET (LAG FRAMES ALWAYS SET H-INT)
     LD A, (Sprite0HitDetectFlag)
     OR A
-    JP Z, SoundUpdate
+    JR Z, SoundUpdate
 LagFrame:
     LD A, %00110100
     OUT (VDPCON_PORT), A
@@ -815,6 +815,7 @@ PauseBtnChk:
     IN A, CONTROLPORT1
     CPL
     LD (HL), A
+    LD C, A
     ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN
     AND A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
     CP A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
@@ -832,7 +833,16 @@ PauseBtnChk:
     LD (HL), A
     LD A, B
     LD (MDControllerBitsOld), A
-    RET
+    ; DO SOFT RESET IF (START + A + B + C) IS PRESSED
+    LD A, C
+    AND A, bitValue(P1_BTN_2) | bitValue(P1_BTN_1)      ; no debounce on START + A
+    CP A, bitValue(P1_BTN_2) | bitValue(P1_BTN_1)
+    RET NZ
+    LD A, (SavedJoypad1Bits)
+    AND A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)    ; no debounce on B + C
+    CP A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
+    RET NZ
+    RST ResetVector
 
 ;-------------------------------------------------------------------------------------
 
@@ -952,16 +962,16 @@ SpriteShuffler:
     LD A, (HL)
     INC (HL)
     CP A, $02
-    JP NZ, +
+    JR NZ, +
     LD (HL), $00
 ;   USE AS OFFSET INTO SpriteSlotTable
 +:
-    ADD A, A
-    ADD A, A
-    ADD A, A
-    LD B, A
-    ADD A, A
-    ADD A, B
+    ADD A, A                            ; *2
+    ADD A, A                            ; *4
+    ADD A, A                            ; *8
+    LD B, A                             ; B = A*8
+    ADD A, A                            ; *16
+    ADD A, B                            ; *24 (16 + 8)
     ADD A, <SpriteSlotTable
     LD L, A
     LD H, >SpriteSlotTable
@@ -1006,7 +1016,7 @@ MoveSpritesOffscreen:
 GetAreaMusic:
     LD A, (OperMode)                    ;if in title screen mode, skip
     OR A
-    JP NZ, NotOnTitleScreen
+    JR NZ, NotOnTitleScreen
 ;
     LD A, (TitleLoadedFlag)             ;if after initial load at title screen, exit
     OR A
@@ -1014,26 +1024,26 @@ GetAreaMusic:
     LD A, (OptionBitflags)              ;depending on sound mode, play title or silence
     AND A, bitValue(OPTFLAG_FM)
     LD A, SNDID_TITLE_FM
-    JP NZ, StoreMusicDirect
+    JR NZ, StoreMusicDirect
     LD A, SNDID_SILENCE
     JP StoreMusicDirect
 ;
 NotOnTitleScreen:
     LD A, (AltEntranceControl)          ;check for specific alternate mode of entry
     CP A, $02                           ;if found, branch without checking starting position
-    JP Z, ChkAreaType                   ;from area object data header
+    JR Z, ChkAreaType                   ;from area object data header
 ;
     LD C, $05                           ;select music for pipe intro scene by default
     LD A, (PlayerEntranceCtrl)          ;check value from level header for certain values
     CP A, $06
-    JP Z, StoreMusic                    ;load music for pipe intro scene if header
+    JR Z, StoreMusic                    ;load music for pipe intro scene if header
     CP A, $07                           ;start position either value $06 or $07
-    JP Z, StoreMusic
+    JR Z, StoreMusic
 ChkAreaType:
     LD C, $04                           ;select music for cloud type level
     LD A, (BonusAreaFlag)               ;use it for in bonus area (cloud or underground coin room)
     OR A
-    JP NZ, StoreMusic
+    JR NZ, StoreMusic
     LD A, (AreaType)                    ;else, load area type as offset for music bit
     LD C, A
 StoreMusic:
@@ -1805,7 +1815,7 @@ AssetLoader:
     LD HL, OptionBitflags
     BIT OPTFLAG_GFX, (HL)
     LD HL, AssetLoaderTable
-    JP Z, +
+    JR Z, +
     LD HL, AssetLoaderTableNES
 +:
     LD B, A

@@ -83,10 +83,10 @@ GameMenuRoutine:
     LD (SelectTimer), A             ;set controller bits here if running demo
     CALL DemoEngine                 ;run through the demo actions
     JR C, @ResetTitle               ;if carry flag set, demo over, thus branch
-    JP @RunDemo                     ;otherwise, run game engine for demo
+    JR @RunDemo                     ;otherwise, run game engine for demo
 @ChkWorldSel:
-    LD HL, WorldSelectEnableFlag    ;check to see if world selection has been enabled
-    BIT 0, (HL)
+    LD A, (WorldSelectEnableFlag)   ;check to see if world selection has been enabled
+    OR A
     JR Z, @NullJoypad
     LD A, B
     CP A, bitValue(SMS_BTN_2)       ;if so, check to see if the B button was pressed (Button 2 for SMS)
@@ -107,14 +107,14 @@ GameMenuRoutine:
     JR Z, @IncWorldSel              ;note this will not be run if world selection is disabled
     
     .IF SINGLEPLAYERONLY != $00
-    JP @NullJoypad                  ;don't allow user to select 2 Players
+    JR @NullJoypad                  ;don't allow user to select 2 Players
     .ENDIF
 
     LD A, (NumberOfPlayers)         ;if no, must have been the select button, therefore
     XOR A, $01                      ;change number of players and draw icon accordingly
     LD (NumberOfPlayers), A
     CALL DrawMushroomIcon
-    JP @NullJoypad
+    JR @NullJoypad
 @IncWorldSel:
     LD A, (WorldSelectNumber)       ;increment world select number
     INC A

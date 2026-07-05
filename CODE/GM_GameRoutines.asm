@@ -109,6 +109,7 @@ SetStPos:
     LD (Player_SprAttrib), A
 ;
     CALL GetPlayerColors                ;get appropriate player palette
+    LD H, >Bubble_Y_Position            ;SetupBubble expects ObjectOffset to be 0
 ;
     LD A, (GameTimerSetting)            ;get timer control value from header
     OR A
@@ -117,10 +118,10 @@ SetStPos:
     OR A
     JP Z, ChkOverR                      ;old game timer setting
 ;
-    LD HL, GameTimerData
+    LD DE, GameTimerData
     LD A, (GameTimerSetting)
-    addAToHL8_M
-    LD A, (HL)                          ;if game timer is set and game timer flag is also set,
+    addAToDE8_M
+    LD A, (DE)                          ;if game timer is set and game timer flag is also set,
 
     .IF SHORTTIMER != $00
     LD A, $02                           ;shorter timer to quickly get to 'Hurry Up'
@@ -146,6 +147,7 @@ ChkOverR:
     LD H, >Enemy_ID_05                  ;set offset in X for last enemy object buffer slot, set offset in Y for object coordinates used earlier
     LD D, >Block_State
     CALL Setup_Vine                     ;do a sub to grow vine
+    LD H, >Bubble_Y_Position + $05      ;add 5 to start of bubble vars to facilitate a complex bug. Would also require moving EnemyDataLow and level data
 ChkSwimE:
     LD A, (AreaType)                    ;if level is water-type,
     OR A

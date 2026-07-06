@@ -3298,7 +3298,7 @@ Mus_FinalBowser_FM:
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
-    smpsModSetup    $10, $01, $FE, $03
+    smpsModSetup    $10, $01, $FF, $03
     smpsPatchEnv $15
     .db nG3, $09, nBb3, $03, nRst, $06
 
@@ -3402,7 +3402,7 @@ Mus_FinalBowser_FM:
 
 ;   --- CHANNEL 2 DATA ---
 @ch2:
-    smpsModSetup    $10, $01, $FE, $03
+    smpsModSetup    $10, $01, $FF, $03
     smpsPatchEnv $15
     .db nD3, $09, nF3, $03, nRst, $06
 
@@ -3481,7 +3481,7 @@ Mus_FinalBowser_FM:
 
 ;   --- CHANNEL 3 DATA ---
 @ch3:
-    smpsModSetup    $10, $01, $FE, $03
+    smpsModSetup    $10, $01, $FF, $03
     smpsPatchEnv $15
     .db nE3, $09, nG3, $03, nRst, $06
     
@@ -3591,7 +3591,7 @@ Mus_FinalBowser_FM:
 
 ;   --- CHANNEL 5 DATA ---
 @ch5:
-    smpsModSetup    $10, $01, $FE, $03
+    smpsModSetup    $10, $01, $FF, $03
     smpsPatchEnv $15
     .db nC3, $09, nEb3, $03, nRst, $06
 

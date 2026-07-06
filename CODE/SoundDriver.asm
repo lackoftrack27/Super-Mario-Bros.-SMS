@@ -1546,6 +1546,7 @@ CoordFlagTable:
     RET
 +:
     RET NZ
+    XOR A
     LD (MusicTrack0.SoundPlaying), A
     RET
 ;   ---------------------------------------------

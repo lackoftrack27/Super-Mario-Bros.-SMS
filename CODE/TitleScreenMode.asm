@@ -59,6 +59,11 @@ GameMenuRoutine:
     LD A, WORLDSELECT
     LD (WorldNumber), A
     .ENDIF
+    .IF LEVELSELECT != $00
+    LD A, LEVELSELECT
+    LD (LevelNumber), A
+    LD (AreaNumber), A
+    .ENDIF
 ;
     LD A, $01                       ;set initial load flag
     LD (TitleLoadedFlag), A

@@ -5,6 +5,7 @@
 .DEFINE NOINVALIDINPUTS         $01
 .DEFINE PALBUILD                $00
 .DEFINE WORLDSELECT             $00
+.DEFINE LEVELSELECT             $00
 .DEFINE BOOTPALTILES            $00
 .DEFINE INSTANTBOOT             $00
 

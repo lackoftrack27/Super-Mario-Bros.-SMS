@@ -120,7 +120,7 @@ PrintVictoryMessages:
     OR A
     JR Z, @EvalForMusic             ;if mario, branch
     INC C                           ;otherwise increment Y once for luigi and
-    JR NZ, @EvalForMusic            ;do an unconditional branch to the same place
+    JR @EvalForMusic                ;do an unconditional branch to the same place
 @SecondPartMsg:
     INC C                           ;increment Y to do world 8's message
     LD A, (WorldNumber)
@@ -135,8 +135,15 @@ PrintVictoryMessages:
 @EvalForMusic:
     LD A, C
     CP A, $03                       ;if counter not yet at 3 (world 8 only), branch
-    JR NZ, @PrintMsg                ;to print message only (note world 1-7 will only    
-    LD A, SNDID_GAMEDONE            ;reach this code if counter = 0, and will always branch)
+    JR NZ, @PrintMsg                ;to print message only (note world 1-7 will only...    
+    LD A, (OptionBitflags)          ;skip next check if not doing FM music
+    AND A, bitValue(OPTFLAG_FM)
+    JR Z, +
+    LD A, (MusicTrack0.SoundPlaying);wait until castle complete music is over
+    OR A
+    RET NZ
++:
+    LD A, SNDID_GAMEDONE            ;...reach this code if counter = 0, and will always branch)
     LD (MusicTrack0.SoundQueue), A  ;otherwise load victory music first (world 8 only)
 @PrintMsg:
     LD A, C                         ;put primary message counter in A

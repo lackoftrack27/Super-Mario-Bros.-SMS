@@ -931,13 +931,13 @@ IndirectCallIY:
 
 TopScoreCheck:
     LD HL, TopScoreDisplay + $05        ;start with the lowest digit
-    LD B, $06
 GetScoreDiff:
+    .REPEAT $06
     LD A, (DE)                          ;subtract each player digit from each high score digit
     SBC A, (HL)                         ;from lowest to highest, if any top score digit exceeds
     DEC E                               ;any player digit, borrow will be set until a subsequent
     DEC L                               ;subtraction clears it (player digit is higher than top)
-    DJNZ GetScoreDiff
+    .ENDR
     RET C                               ;check to see if borrow is still set, if so, no new high score
 ;
     INC E                               ;increment X and Y once to the start of the score

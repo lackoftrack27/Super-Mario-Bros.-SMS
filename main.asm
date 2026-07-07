@@ -135,7 +135,7 @@ VdpVector:
 .ORGA $0066
 PauseBtnVector:
     PUSH AF                     ; SAVE AF
-    LD A, $01 << SMS_BTN_START
+    LD A, bitValue(SMS_BTN_START)
     LD (PauseButtonFlag), A
     POP AF                      ; RESTORE AF
     RETN                        ; RETURN FROM NMI
@@ -317,9 +317,9 @@ OptionsCheckJoypad:
     LD (Temp_Bytes + $00), A
     LD A, (HL)
     ; --- BUTTON UP/DOWN PROCESS ---
-    AND A, $01 << SMS_BTN_UP | $01 << SMS_BTN_DOWN
+    AND A, bitValue(SMS_BTN_UP) | bitValue(SMS_BTN_DOWN)
     JR Z, OptionCheckBtn1           ;if neither up or down is pressed, skip
-    AND A, $01 << SMS_BTN_UP        ;check if up is pressed
+    AND A, bitValue(SMS_BTN_UP)     ;check if up is pressed
     LD A, (OptionBitflags)          ;clear bit 0 of bit flags by default
     RES OPTFLAG_GFX, A
     JR NZ, +                        ;if so, skip
@@ -333,7 +333,7 @@ OptionsCheckJoypad:
     ; --- BUTTON 1 PROCESS ---
 OptionCheckBtn1:
     LD A, (SavedJoypad1Bits)        ;check if button 1 is being pressed
-    AND A, $01 << SMS_BTN_1
+    AND A, bitValue(SMS_BTN_1)
     JR Z, OptionCheckBtn2           ;if not, skip
     LD A, $01                       ;set flag to signal that we are leaving the options menu
     LD (Temp_Bytes + $01), A
@@ -346,7 +346,7 @@ OptionCheckBtn2:
     OR A
     JR Z, OptionUpdateSettings
     LD A, (SavedJoypad1Bits)
-    AND A, $01 << SMS_BTN_2
+    AND A, bitValue(SMS_BTN_2)
     JR Z, OptionUpdateSettings
     LD A, (OptionBitflags)
     XOR A, bitValue(OPTFLAG_FM)
@@ -515,7 +515,7 @@ ChkPauseTimer:
     JP UpdateTopScore
 ChkStart:
     LD A, (SavedJoypad1Bits)        ;check to see if start is pressed
-    AND A, $01 << SMS_BTN_START
+    AND A, bitValue(SMS_BTN_START)
     JR Z, ClrPauseTimer
     LD A, (GamePauseStatus)         ;check to see if timer flag is set
     AND A, $80                      ;and if so, do not reset timer
@@ -733,7 +733,7 @@ JoypadTable:
 
 ReadJoypads:
 ;   SET PORT 1'S TH TO HIGH OUTPUT
-    LD A, ~($01 << P1_TH_DIR)
+    LD A, ~(bitValue(P1_TH_DIR))
     OUT (IO_CONTROL), A
 ;   CONTROL 1
     LD HL, JoypadTable
@@ -809,7 +809,7 @@ PauseBtnChk:
 ;   MD CONTROLLER PAUSE CHECK
     LD HL, MDControllerBits
     ; SET PORT 1'S TH TO LOW OUTPUT
-    LD A, ~($01 << P1_TH_LVL | $01 << P1_TH_DIR)
+    LD A, ~(bitValue(P1_TH_LVL) | bitValue(P1_TH_DIR))
     OUT (IO_CONTROL), A
     ; GET INPUTS (A, START)
     IN A, CONTROLPORT1
@@ -817,8 +817,8 @@ PauseBtnChk:
     LD (HL), A
     LD C, A
     ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN
-    AND A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
-    CP A, $01 << P1_DIR_LEFT | $01 << P1_DIR_RIGHT
+    AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
+    CP A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
     RET NZ
     ; DEBOUNCE INPUTS AND SET START BUTTON IF NEWLY PRESSED
     LD B, (HL)
@@ -827,7 +827,7 @@ PauseBtnChk:
     AND A, (HL)
     LD (HL), A
     LD HL, SavedJoypad1Bits
-    AND A, $01 << P1_BTN_2
+    AND A, bitValue(P1_BTN_2)
     RRCA            ; MOVE TO SMS_BTN_START INDEX
     OR A, (HL)
     LD (HL), A

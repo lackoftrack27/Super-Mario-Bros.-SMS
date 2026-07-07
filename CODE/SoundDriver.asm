@@ -15,11 +15,11 @@
 
 ;   PSG CHANNEL BITS
 .DEFINE CHAN0_BITS  $00
-.DEFINE CHAN1_BITS  $01 << CHAN_BIT0
-.DEFINE CHAN2_BITS  $01 << CHAN_BIT1
-.DEFINE CHAN3_BITS  ($01 << CHAN_BIT0) | ($01 << CHAN_BIT1)
+.DEFINE CHAN1_BITS  bitValue(CHAN_BIT0)
+.DEFINE CHAN2_BITS  bitValue(CHAN_BIT1)
+.DEFINE CHAN3_BITS  bitValue(CHAN_BIT0) | bitValue(CHAN_BIT1)
 .DEFINE CHANALL_BITS    CHAN3_BITS
-.DEFINE LATCH_VOL   ($01 << OP_BIT) | ($01 << LATCH_BIT)
+.DEFINE LATCH_VOL   bitValue(OP_BIT) | bitValue(LATCH_BIT)
 
 ;   PSG NOISE TYPES
 .DEFINE NOISE_TONE0 $00
@@ -98,7 +98,7 @@ SoundEngine:
     RET C
     ; CHECK IF PAUSE SFX HAS FINISHED PLAYING
     LD A, (SFXTrack0.Control)
-    AND A, $01 << CHANCON_PLAYING
+    AND A, bitValue(CHANCON_PLAYING)
     RET NZ
     ; CLEAR SOUND FLAG (NORMAL OPERATION WILL RESUME)
     XOR A
@@ -373,7 +373,7 @@ SndChannelProcessMUS:
     CALL NZ, SndProcessQueueMusic
 ;   CHECK SECONDARY QUEUE (FOR HURRY UP)
     LD A, (MusicTrack0.Control)
-    AND A, $01 << CHANCON_PLAYING
+    AND A, bitValue(CHANCON_PLAYING)
     JP NZ, +
     LD A, (MusicTrack1.SoundQueue)
     OR A
@@ -487,7 +487,7 @@ SndProcessQueueSFX:
     SUB A, $81
     ADD A, A
     LD L, <SFXTrack0.Control
-    LD (HL), $01 << CHANCON_PLAYING
+    LD (HL), bitValue(CHANCON_PLAYING)
     INC L
     EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
     LD HL, SndIndexTable
@@ -620,7 +620,7 @@ SndProcessQueueMusic:
     LD E, <SFXTrack0.Control
     LD A, D
     CP A, >MusicTrack0
-    LD A, $01 << CHANCON_PLAYING 
+    LD A, bitValue(CHANCON_PLAYING)
     JP Z, +
     INC D
     INC D
@@ -630,9 +630,9 @@ SndProcessQueueMusic:
     DEC D
     DEC D
     RLCA
-    LD A, $01 << CHANCON_PLAYING
+    LD A, bitValue(CHANCON_PLAYING)
     JP NC, +
-    LD A, $01 << CHANCON_PLAYING | $01 << CHANCON_SFX
+    LD A, bitValue(CHANCON_PLAYING) | bitValue(CHANCON_SFX)
 +:
     LD (DE), A
     INC E
@@ -658,7 +658,7 @@ SndReadTrackStream:
 ;   CLEAR 'NO ATTACK' FLAG && REST FLAG
     LD L, <SFXTrack0.Control
     LD A, (HL)
-    AND A, ~($01 << CHANCON_NOATK | $01 << CHANCON_REST)
+    AND A, ~(bitValue(CHANCON_NOATK) | bitValue(CHANCON_REST))
     LD (HL), A
 ;   GET TRACK POINTER
     INC L
@@ -818,7 +818,7 @@ SndWriteChannelData:
 ;   WRITE FREQUENCY TO PSG
     LD A, E
     AND A, $0F
-    OR A, $01 << LATCH_BIT
+    OR A, bitValue(LATCH_BIT)
     LD L, <SFXTrack0.ChanBits
     OR A, (HL)
     OUT (PSG_PORT), A
@@ -1042,7 +1042,7 @@ SndProcessQueueMusicFM:
     LD (DE), A
     ; SET PLAYING FLAG
     LD E, <FMTrack0.Control
-    LD A, $01 << CHANCON_PLAYING 
+    LD A, bitValue(CHANCON_PLAYING)
     LD (DE), A
     INC E
     INC D           ; Point to next music track
@@ -1060,7 +1060,7 @@ SndChannelProcessFM:
     CALL NZ, SndProcessQueueMusicFM
 ;   CHECK SECONDARY QUEUE (FOR HURRY UP)
     LD A, (FMTrack0.Control)
-    AND A, $01 << CHANCON_PLAYING
+    AND A, bitValue(CHANCON_PLAYING)
     JP NZ, +
     LD A, (MusicTrack1.SoundQueue)
     OR A
@@ -1518,7 +1518,7 @@ CoordFlagTable:
     LD H, E
     LD L, <SFXTrack0.Control
     LD A, (HL)
-    AND A, ~($01 << CHANCON_NOATK | $01 << CHANCON_PLAYING)
+    AND A, ~(bitValue(CHANCON_NOATK) | bitValue(CHANCON_PLAYING))
     LD (HL), A
     ; CLEAR SOUND ID
     LD L, <SFXTrack0.SoundPlaying

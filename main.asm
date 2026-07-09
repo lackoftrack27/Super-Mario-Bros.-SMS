@@ -1274,11 +1274,11 @@ CheckPlayerName:
     RET NZ                                  ;if not, exit
 ;
     LD HL, MarioName
-    LD A, (CurrentPlayer)
+    LD A, (CurrentPlayerGfx)
     JR C, +                                 ;jump if displaying game over screen
-    XOR A, $01                              ;for time up, switch name if CurrentPlayer == 0
+    XOR A, $01                              ;for time up, switch name if CurrentPlayerGfx == 0
 +:
-    OR A                                    ;for game over, switch name if CurrentPlayer == 1
+    OR A                                    ;for game over, switch name if CurrentPlayerGfx == 1
     JR Z, +
     LD HL, LuigiName
 +:

@@ -70,6 +70,9 @@ TransposePlayers:
     LD A, (CurrentPlayer)           ;invert bit to update
     XOR A, $01                      ;which player is on the screen
     LD (CurrentPlayer), A
+    LD A, (CurrentPlayerGfx)
+    XOR A, %00000001
+    LD (CurrentPlayerGfx), A
     LD HL, OnscreenPlayerInfo       ;transpose the information
     LD DE, OffscreenPlayerInfo      ;of the onscreen player
     LD B, $07                       ;with that of the offscreen player

@@ -36,11 +36,11 @@ InitializeGame:
 PrimaryGameSetup:
 ;
     LD A, $01
-    LD (FetchNewGameTimerFlag), A       ;set flag to load game timer from header
-    LD (PlayerSize), A                  ;set player's size to small
+    LD (FetchNewGameTimerFlag), A   ;set flag to load game timer from header
+    LD (PlayerSize), A              ;set player's size to small
 ;
     INC A
-    LD (NumberofLives), A               ;give each player three lives
+    LD (NumberofLives), A           ;give each player three lives
     LD (OffScr_NumberofLives), A
     JP SecondaryGameSetup
 
@@ -82,6 +82,8 @@ GameMenuRoutine:
     JR Z, @SelectBLogic             ;if so, branch reset demo timer
     CP A, bitValue(SMS_BTN_DOWN)
     JR Z, @SelectBLogic             ;if so, branch reset demo timer
+    CP A, bitValue(SMS_BTN_RIGHT)   ;if right isn't pressed, skip
+    JR Z, @SelectBLogic
     LD A, (DemoTimer)               ;otherwise check demo timer
     OR A
     JR NZ, @ChkWorldSel             ;if demo timer not expired, branch to check world selection
@@ -110,7 +112,16 @@ GameMenuRoutine:
     LD (SelectTimer), A             ;otherwise reset select button timer
     DEC E                           ;was the B button pressed earlier?  if so, branch
     JR Z, @IncWorldSel              ;note this will not be run if world selection is disabled
-    
+    LD A, B
+    CP A, bitValue(SMS_BTN_RIGHT)   ;if right isn't pressed, skip
+    JR NZ, @TogglePlayers
+    LD A, (CurrentPlayerGfx)        ;toggle player graphics
+    XOR A, %00000001
+    LD (CurrentPlayerGfx), A
+    LD (PlayerGfxOffset_Old), A     ;invalidate old gfx offset to ensure tile stream occurs
+    JR @NullJoypad    
+@TogglePlayers:
+
     .IF SINGLEPLAYERONLY != $00
     JR @NullJoypad                  ;don't allow user to select 2 Players
     .ENDIF
@@ -120,6 +131,7 @@ GameMenuRoutine:
     LD (NumberOfPlayers), A
     CALL DrawMushroomIcon
     JR @NullJoypad
+;
 @IncWorldSel:
     LD A, (WorldSelectNumber)       ;increment world select number
     INC A
@@ -136,6 +148,7 @@ GameMenuRoutine:
     ADD A, BG_TILE_OFFSET
     INC A                           ;proper display, and put in blank byte before
     LD (VRAM_Buffer1+3), A          ;null terminator
+;
 @NullJoypad:
     XOR A                           ;clear joypad bits for player 1
     LD (SavedJoypad1Bits), A

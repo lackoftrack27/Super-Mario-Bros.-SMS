@@ -116,7 +116,7 @@ PrintVictoryMessages:
     OR A
     LD C, A                         ;put primary message counter into Y
     JR NZ, @SecondPartMsg           ;if counter nonzero, skip this part, do not print first message
-    LD A, (CurrentPlayer)           ;otherwise get player currently on the screen
+    LD A, (CurrentPlayerGfx)        ;otherwise get player currently on the screen
     OR A
     JR Z, @EvalForMusic             ;if mario, branch
     INC C                           ;otherwise increment Y once for luigi and

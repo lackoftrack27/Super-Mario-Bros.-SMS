@@ -169,7 +169,7 @@ OutputInter:
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
     ; UPLOAD PLAYER EMBLEM
-    LD A, (CurrentPlayer)
+    LD A, (CurrentPlayerGfx)
     OR A
     LD A, ASSET_EMBLEM_M
     JP Z, +
@@ -355,7 +355,7 @@ SetBGColor:
 
 GetPlayerColors:
     LD BC, $0000 | BANK_PLAYERGFX00 ; B = PALETTE, C = BANK
-    LD A, (CurrentPlayer)           ;check which player is on the screen
+    LD A, (CurrentPlayerGfx)        ;check which player is on the screen
     OR A
     JP Z, ChkFiery
     INC C                           ;load offset for luigi
@@ -452,7 +452,7 @@ DrawTitleScreen:
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
 ;   UPLOAD PLAYER EMBLEM
-    LD A, (CurrentPlayer)
+    LD A, (CurrentPlayerGfx)
     OR A
     LD A, ASSET_EMBLEM_M
     JP Z, +

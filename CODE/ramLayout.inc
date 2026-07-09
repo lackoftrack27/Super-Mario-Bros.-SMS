@@ -1019,6 +1019,7 @@
     AreaPointer:                    dsb $01
     EntrancePage:                   dsb $01
     AltEntranceControl:             dsb $01
+    CurrentPlayerGfx:               dsb $01
     CurrentPlayer:                  dsb $01 ; 0 = mario, 1 = luigi
     PlayerSize:                     dsb $01 ; 0 = big, 1 = small
     Player_Pos_ForScroll:           dsb $01

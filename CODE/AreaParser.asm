@@ -3,7 +3,7 @@
 AreaParserTaskHandler:
     LD A, (AreaParserTaskNum)   ;check number of tasks here
     OR A
-    JP NZ, DoAPTasks            ;if already set, go ahead
+    JR NZ, DoAPTasks            ;if already set, go ahead
     LD A, $08
     LD (AreaParserTaskNum), A   ;otherwise, set eight by default
 DoAPTasks:
@@ -36,7 +36,7 @@ IncrementColumnPos:
     INC A
     AND A, %00001111            ;mask out higher nybble
     LD (HL), A
-    JP NZ, @NoColWrap
+    JR NZ, @NoColWrap
     LD HL, CurrentPageLoc       ;and increment page number where we're at
     INC (HL)
 @NoColWrap:
@@ -597,10 +597,10 @@ ProcADLoop:
     INC E
     LD A, (DE)                              ;get second byte of area object
     ADD A, A                                ;check for page select bit (d7), branch if not set
-    JP NC, Chk1Row13
+    JR NC, Chk1Row13
     LD A, (AreaObjectPageSel)               ;check page select
     OR A
-    JP NZ, Chk1Row13
+    JR NZ, Chk1Row13
     PUSH HL
     LD HL, AreaObjectPageSel
     LD (HL), $01                            ;if not already set, set it now
@@ -954,7 +954,7 @@ CastleCeilingTileMain:
     INC L
     LD A, (HL)
     CP A, MT_CASTLECEILING_L
-    JP Z, ReplaceWithSingle
+    JR Z, ReplaceWithSingle
     CP A, MT_CASTLECEILING_R
     RET NZ
 ReplaceWithSingle:
@@ -992,13 +992,13 @@ CastleStairsY07:
 CastleStairsMain:
     CALL ChkLrgObjFixedLength
     EX DE, HL
-    JP NZ, NotLastStair
+    JR NZ, NotLastStair
 ;
     LD (HL), MT_CASTLESTAIRS_END
     INC L
     LD A, (HL)
     OR A
-    JP NZ, RenderUnderStairs
+    JR NZ, RenderUnderStairs
     LD (HL), MT_CASTLESTAIRS_ENDL
     INC L
     JP RenderUnderStairs
@@ -1006,11 +1006,11 @@ CastleStairsMain:
 NotLastStair:
     LD A, (HL)
     OR A
-    JP NZ, RenderUnderStairs
+    JR NZ, RenderUnderStairs
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     LD (HL), MT_CASTLESTAIRS_TOP
-    JP Z, RenderUnderStairs
+    JR Z, RenderUnderStairs
     LD (HL), MT_SOLIDBLK_WHITE
     ; FALL THROUGH
 
@@ -1018,7 +1018,7 @@ RenderUnderStairs:
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     LD C, MT_CASTLESTAIRS_BOT
-    JP Z, +
+    JR Z, +
     LD C, MT_SOLIDBLK_WHITE
 ;
 +:
@@ -1026,7 +1026,7 @@ RenderUnderStairs:
 -:
     LD A, (HL)
     OR A
-    JP NZ, +
+    JR NZ, +
     LD (HL), C
 +:
     INC L
@@ -1106,7 +1106,7 @@ CastleFloorLeftMain:
     LD A, (HL)
     CP A, MT_CASTLEFLOOR_TOP
     LD A, MT_CASTLEFLOOR_LTOP
-    JP Z, +
+    JR Z, +
     LD A, MT_CASTLEFLOOR_LBOT
 +:
     LD (HL), A
@@ -1188,7 +1188,7 @@ CastleFloorRightMain:
     LD A, (HL)
     CP A, MT_CASTLEFLOOR_TOP
     LD A, MT_CASTLEFLOOR_RTOP
-    JP Z, +
+    JR Z, +
     LD A, MT_CASTLEFLOOR_RBOT
 +:
     LD (HL), A
@@ -1225,13 +1225,12 @@ CastleFloorBodyMain:
 ;--------------------------------
 
 AlterAreaAttributes:
-    LD HL, (ObjectOffset)
     LD L, <AreaObjOffsetBuffer          
     LD E, (HL)                          ;load offset for level object data saved in buffer
     INC E                               ;load second byte
     LD A, (DE)
     BIT 6, A
-    JP NZ, Alter2                       ;branch if d6 is set
+    JR NZ, Alter2                       ;branch if d6 is set
     PUSH AF                             ;pull and push offset to copy to A
     AND A, %00001111                    ;mask out high nybble and store as
     LD (TerrainControl), A              ;new terrain height type bits
@@ -1250,7 +1249,7 @@ AlterAreaAttributes:
 Alter2:
     AND A, %00000111                    ;mask out all but 3 LSB
     CP A, $04                           ;if four or greater, set color control bits
-    JP C, SetFore                       ;and nullify foreground scenery bits
+    JR C, SetFore                       ;and nullify foreground scenery bits
     LD (BackgroundColorCtrl), A
     XOR A
 SetFore:
@@ -1264,11 +1263,11 @@ ScrollLockObject_Warp:
     LD B, $04                           ;load value of 4 for game text routine as default
     LD A, (WorldNumber)                 ;warp zone (4-3-2), then check world number
     OR A
-    JP Z, WarpNum
+    JR Z, WarpNum
     INC B                               ;if world number > 1, increment for next warp zone (5)
     LD A, (AreaType)                    ;check area type
     DEC A
-    JP NZ, WarpNum                      ;if ground area type, increment for last warp zone
+    JR NZ, WarpNum                      ;if ground area type, increment for last warp zone
     INC B                               ;(8-7-6) and move on
 WarpNum:
     LD A, B
@@ -1294,7 +1293,7 @@ KillEnemies:
 KillELoop:
     LD A, (DE)                          ;check for identifier in enemy object buffer
     CP A, C                             ;if not found, branch
-    JP NZ, NoKillE
+    JR NZ, NoKillE
     LD (HL), $00                        ;if found, deactivate enemy object flag
 NoKillE:
     DEC D                               ;do this until all slots are checked
@@ -1343,7 +1342,7 @@ TreeLedge:
     LD L, <AreaObjectLength
     LD A, (HL)                          ;check length counter for expiration
     OR A
-    JP Z, EndTreeL
+    JR Z, EndTreeL
     JP P, MidTreeL
     LD (HL), C                          ;store lower nybble into buffer flag as length of ledge
     LD L, <TreeLedgeLength
@@ -1352,37 +1351,37 @@ TreeLedge:
     LD E, A
     LD A, (CurrentColumnPos)
     OR A, E                             ;are we at the start of the level?
-    JP Z, MidTreeL
+    JR Z, MidTreeL
     LD A, MT_TREELEDGE_LEFT             ;render start of tree ledge
     JP NoUnder
 MidTreeL:
     LD B, IXH                           ;render middle of tree ledge
+    EX DE, HL                           ;DE: TreeLedgeLength, HL: MetatileBuffer
     LD HL, MetatileBuffer               ;note that this is also used if ledge position is
     LD A, B
     addAToHL8_M
     LD (HL), MT_TREELEDGE_MID           ;at the start of level for continuous effect
     ;LD A, MT_TREELEDGE_TRUCK
     ; ALL-STARS
-    EX DE, HL
+    EX DE, HL                           ;DE: MetatileBuffer, HL: TreeLedgeLength
     ; CHECK IF TOTAL LENGTH IS 2
-    LD HL, (ObjectOffset)
     LD L, <TreeLedgeLength
     LD A, (HL)
     CP A, $02
     LD A, MT_TREELEDGE_TRUCK_ST
-    JP Z, MidTreeLSetMT
+    JR Z, MidTreeLSetMT
     ; CHECK IF AT 1ST COLUMN OF TRUNK
     LD A, (HL)
     LD L, <AreaObjectLength
     SUB A, (HL)
     DEC A
     LD A, MT_TREELEDGE_TRUCK_LT         ; LEFT EDGE
-    JP Z, MidTreeLSetMT
+    JR Z, MidTreeLSetMT
     ; CHECK IF LAST COLUMN OF TRUNK
     LD A, (HL)
     DEC A
     LD A, MT_TREELEDGE_TRUCK            ; CENTER
-    JP NZ, MidTreeLSetMT
+    JR NZ, MidTreeLSetMT
     LD A, MT_TREELEDGE_TRUCK_RT         ; RIGHT EDGE
 MidTreeLSetMT:
     INC E
@@ -1397,7 +1396,7 @@ EndTreeL:
 MushroomLedge:
     CALL ChkLrgObjLength                ;get shroom dimensions
     LD IYL, C                           ;store length here for now
-    JP NC, EndMushL
+    JR NC, EndMushL
     LD A, (HL)                          ;AreaObjectLength
     LD L, <MushroomLedgeHalfLen
     SRL A
@@ -1409,7 +1408,7 @@ EndMushL:
     LD C, A
     OR A
     LD A, MT_MUSHROOM_RIGHT             ;if at the end, render end of mushroom
-    JP Z, NoUnder
+    JR Z, NoUnder
     LD L, <MushroomLedgeHalfLen         ;get divided length and store where length
     LD A, (HL)
     LD IYL, A                           ;was stored originally
@@ -1446,11 +1445,11 @@ PulleyRopeMetatiles:
 PulleyRopeObject:
     CALL ChkLrgObjLength                ;get length of pulley/rope object
     LD DE, PulleyRopeMetatiles          ;initialize metatile offset
-    JP C, RenderPul                     ;if starting, render left pulley
+    JR C, RenderPul                     ;if starting, render left pulley
     INC DE
     LD A, (HL)                          ;if not at the end, render rope (AreaObjectLength)
     OR A
-    JP NZ, RenderPul
+    JR NZ, RenderPul
     INC DE                              ;otherwise render right pulley
 RenderPul:
     LD A, (DE)
@@ -1503,7 +1502,7 @@ CastleObject:
     OR A
     LD A, (HL)
     LD HL, CastleMetatiles
-    JP Z, +
+    JR Z, +
     LD HL, CastleMetatilesPriority
 +:
     addAToHL8_M
@@ -1517,7 +1516,7 @@ CRendLoop:
     INC B
     LD A, IYL
     OR A
-    JP Z, ChkCFloor                     ;have we reached upper limit yet?
+    JR Z, ChkCFloor                     ;have we reached upper limit yet?
     LD A, L                             ;if not, increment column-wise
     ADD A, $05                          ;to byte in next row
     LD L, A
@@ -1536,13 +1535,13 @@ ChkCFloor:
     LD L, <AreaObjectLength
     LD A, (HL)                          ;check length
     CP A, $01                           ;if length almost about to expire, put brick at floor
-    JP Z, PlayerStop
+    JR Z, PlayerStop
     LD A, IXH                           ;check starting row for tall castle ($00) (Y was loaded here)
     OR A
     LD A, (HL)                          ; RELOAD
-    JP NZ, NotTall
+    JR NZ, NotTall
     CP A, $03                           ;if found, then check to see if we're at the second column
-    JP Z, PlayerStop
+    JR Z, PlayerStop
 NotTall:
     CP A, $02                           ;if not tall castle, check to see if we're at the third column
     RET NZ                              ;if we aren't and the castle is tall, don't create flag yet
@@ -1648,7 +1647,7 @@ RenderSidewaysPipe:
     addAToHL8_M
     LD A, (HL)                          ;check for value $00 based on horizontal offset
     OR A
-    JP Z, DrawSidePart                  ;if found, do not draw the vertical pipe shaf
+    JR Z, DrawSidePart                  ;if found, do not draw the vertical pipe shaf
 ;
     LD B, $00
     LD C, IYL                           ;init buffer offset and get vertical length
@@ -1807,7 +1806,7 @@ Hole_Water:
     LD A, (AreaType)
     CP A, $03
     LD A, MT_WATER_TOP                  ;render waves
-    JP NZ, +
+    JR NZ, +
     LD A, MT_LAVA_TOP
 +:
     LD (MetatileBuffer+10), A
@@ -1849,7 +1848,7 @@ Bridge_Low:
     CALL ChkLrgObjLength                ;get low nybble and save as length
     LD A, B
     LD HL, MetatileBuffer
-    JP Z, EndBridge
+    JR Z, EndBridge
     JP P, MidBridge
     addAToHL8_M
     LD (HL), MT_RAIL_LEFT               ;render bridge railing
@@ -1908,11 +1907,11 @@ EndlessRope:
     JP DrawRope
 
 BalancePlatRope:
-    ;PUSH HL                            ;save object buffer offset for now
     LD BC, $010F                        ;blank out all from second row to the bottom
     LD A, MT_PULLEY_BLANK               ;with blank used for balance platform rope
+    PUSH HL                             ;save object buffer offset for now
     CALL RenderUnderPart
-    ;POP HL                             ;get back object buffer offset
+    POP HL                              ;get back object buffer offset
     CALL GetLrgObjAttrib                ;get vertical length from lower nybble
     LD B, $01
 DrawRope:
@@ -1930,7 +1929,7 @@ RowOfCoins:
     LD A, (OptionBitflags)              ;always load watercoin if doing NES GFX
     AND A, bitValue(OPTFLAG_GFX)
     LD A, MT_WATERCOIN
-    JP NZ, GetRow
+    JR NZ, GetRow
 ;
     LD A, (AreaType)                    ;get area type
     LD DE, CoinMetatileData
@@ -2000,7 +1999,7 @@ RowOfBricks:
     LD C, A
     LD A, (CloudTypeOverride)           ;check for cloud type override
     OR A
-    JP Z, DrawBricks
+    JR Z, DrawBricks
     LD C, $04                           ;if cloud type, override area type
 DrawBricks:
     LD A, C
@@ -2014,13 +2013,13 @@ RowOfSolidBlocks:
     LD DE, SolidBlockMetatiles
     LD A, IXH
     DEC A
-    LD HL, MetatileBuffer
-    addAToHL8_M
-    LD A, (HL)
+    LD BC, MetatileBuffer
+    addAToBC8_M
+    LD A, (BC)
     CP A, MT_PIPESHAFT_LEFT
-    JP Z, +
+    JR Z, +
     CP A, MT_PIPESHAFT_RIGHT
-    JP NZ, RowOfSolidBlocks_0
+    JR NZ, RowOfSolidBlocks_0
 +:
     LD E, <SolidBlockMetatilesPriority
 RowOfSolidBlocks_0:
@@ -2091,7 +2090,7 @@ SetupCannon:
     INC H
     LD A, H
     CP A, >Cannon_Y_Position + $06      ;increment and check offset
-    JP C, StrCOffset                    ;if not yet reached sixth cannon, branch to save offset
+    JR C, StrCOffset                    ;if not yet reached sixth cannon, branch to save offset
     LD A, >Cannon_Y_Position            ;otherwise initialize it
 StrCOffset:
     SUB A, >Cannon_Y_Position
@@ -2113,7 +2112,7 @@ StaircaseRowData:
 StaircaseObject:
     CALL ChkLrgObjLength                ;check and load length
     LD HL, StaircaseControl
-    JP NC, NextStair                    ;if length already loaded, skip init part
+    JR NC, NextStair                    ;if length already loaded, skip init part
     LD (HL), $09                        ;start past the end for the bottom of the staircase
 NextStair:
     DEC (HL)                            ;move onto next step (or first if starting)
@@ -2194,7 +2193,7 @@ BrickWithItem:
     LD A, (AreaType)                    ;check level type for ground level
     DEC A
     LD A, $00                           ;load default adder for bricks with lines
-    JP Z, BWithL                        ;if ground type, do not start with 5
+    JR Z, BWithL                        ;if ground type, do not start with 5
     LD A, $05                           ;otherwise use adder for bricks without lines
 BWithL:
     ADD A, IXH                          ;add object ID to adder
@@ -2313,7 +2312,6 @@ ChkLrgObjLength:
     CALL GetLrgObjAttrib            ;get row location and size (length if branched to from here)
 
 ChkLrgObjFixedLength:
-    LD HL, (ObjectOffset)
     LD L, <AreaObjectLength
     LD A, (HL)                      ;check for set length counter
     OR A                            ;clear carry flag for not just starting
@@ -2323,7 +2321,6 @@ ChkLrgObjFixedLength:
     RET
 
 GetLrgObjAttrib:
-    LD HL, (ObjectOffset)
     LD L, <AreaObjOffsetBuffer      ;get offset saved from area obj decoding routine
     LD A, (HL)
     LD E, A                         ;get first byte of level object
@@ -2365,7 +2362,7 @@ GetAreaObjYPosition:
 ; GetBlockBufferAddr:
 ;     LD DE, Block_Buffer_1
 ;     BIT 4, A
-;     JP Z, +
+;     JR Z, +
 ;     LD E, <Block_Buffer_2
 ; +:
 ;     AND A, $0F              ;mask out high nybble
@@ -2435,7 +2432,7 @@ DrawMTLoop:
     ADD A, A
     ADD A, IXL                          ;add column position
     ADD A, A                            ;NOTICE: Overflow can occur here
-    JP NC, +
+    JR NC, +
     INC H
 +:
     addAToHL_M
@@ -2467,7 +2464,7 @@ DrawMTLoop:
     INC (HL)
     LD A, (HL)                          ;check current low byte
     AND A, %00111111                    ;if no wraparound, just skip this part
-    JP NZ, SetVRAMCtrl
+    JR NZ, SetVRAMCtrl
     LD (HL), $40                        ;if wraparound occurs, make sure low byte stays
 SetVRAMCtrl:
     LD A, VRAMTBL_BUFFER2
@@ -2475,7 +2472,7 @@ SetVRAMCtrl:
 
     LD A, D
     CP A, >VRAM_Buffer2
-    JP NZ, +
+    JR NZ, +
     LD (VRAM_Buffer2_Ptr), DE
     RET
 +:
@@ -2561,7 +2558,7 @@ GetAreaDataAddrs:
     LD B, A
     AND A, %00000111                ;save 3 LSB for foreground scenery or bg color control
     CP A, $04
-    JP C, @StoreFore
+    JR C, @StoreFore
     LD (BackgroundColorCtrl), A     ;if 4 or greater, save value here as bg color control
     XOR A
 @StoreFore:
@@ -2594,7 +2591,7 @@ GetAreaDataAddrs:
     RLCA                            ;rotate bits over to LSBs
     RLCA
     CP A, %00000011                 ;if set to 3, store here
-    JP NZ, @StoreStyle              ;and nullify other value
+    JR NZ, @StoreStyle              ;and nullify other value
     LD (CloudTypeOverride), A       ;otherwise store value in other place
     LD (BonusAreaFlag), A
     XOR A
@@ -2603,10 +2600,10 @@ GetAreaDataAddrs:
     ; Correct palette on w6-3 (only for default gfx)
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JP NZ, +
+    JR NZ, +
     LD A, (BackgroundColorCtrl)
     CP A, $07
-    JP NZ, +
+    JR NZ, +
     LD A, $04
     LD (BackgroundColorCtrl), A
 +:
@@ -2616,7 +2613,7 @@ GetAreaDataAddrs:
     LD B, A
     AND A, $F0
     CP A, $F0
-    JP NZ, +
+    JR NZ, +
     LD A, (BackgroundScenery)
     LD C, A
     LD A, B
@@ -2631,7 +2628,7 @@ GetAreaDataAddrs:
 ;
     LD A, (TitleLoadedFlag)         ;skip copying level data to RAM
     OR A                            ;if past initial load on title screen
-    JP NZ, +
+    JR NZ, +
 ;
     LD DE, AreaDataBank
     LD BC, $0100

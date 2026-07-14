@@ -527,4 +527,8 @@ Mus_GameVictory:
     .INCLUDE "SND_Data_PAL.inc"
 .ENDIF
 
-    .INCLUDE "SND_Data_FM.inc"
+; -----------------------------------------------------------
+;                       FM MUSIC DATA
+; -----------------------------------------------------------
+
+.INCLUDE "SND_Data_FM.inc"

@@ -3172,14 +3172,14 @@ Map_BG_SoundSelect:
 .BANK BANK_PLAYERGFX04 SLOT 2
 
 .SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Left]" FORCE ORG $0000
-    .INCLUDE "SPR_Mario00.inc"
+.INCLUDE "SPR_Mario00.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
 .BANK BANK_PLAYERGFX05 SLOT 2
 
 .SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Right]" FORCE ORG $0000
-    .INCLUDE "SPR_Mario10.inc"
+.INCLUDE "SPR_Mario10.inc"
 .ENDS
 
 .INCDIR "ASSETS"

@@ -1,8 +1,9 @@
 ; -----------------------------------------------------------
 ;                   FM MUSIC DATA
 ; -----------------------------------------------------------
+.BANK BANK_SOUND SLOT 2
 
-.SECTION "MUS Data - Hurry Up (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Hurry Up (FM)" FREE
 Mus_HurryUp_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8B)   ; PAL: $74
@@ -42,7 +43,7 @@ Mus_HurryUp_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Game Victory (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Game Victory (FM)" FREE
 Mus_GameVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($AD)  ;PAL: $9C
@@ -205,7 +206,7 @@ Mus_GameVictory_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Underwater (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Underwater (FM)" FREE
 Mus_Water_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($62)  ;PAL: $41, $10
@@ -540,7 +541,7 @@ Mus_Water_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Overworld (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Overworld (FM)" FREE
 Mus_Overworld_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($4D)  ;PAL: $29, $00
@@ -1528,7 +1529,7 @@ Mus_Overworld_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Underground (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Underground (FM)" FREE
 Mus_Underground_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($AD)  ;PAL: $9C, $6A
@@ -1669,7 +1670,7 @@ Mus_Underground_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Castle (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Castle (FM)" FREE
 Mus_Castle_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($83)  ; PAL: $6A, $38
@@ -1817,7 +1818,7 @@ Mus_Castle_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Pipe Intro (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Pipe Intro (FM)" FREE
 Mus_PipeIntro_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($4D)  ;PAL: $29, $00
@@ -1863,7 +1864,7 @@ Mus_PipeIntro_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Invincible (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Invincible (FM)" FREE
 Mus_Invincible_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($74)  ;PAL: $58, $3F
@@ -2029,7 +2030,7 @@ Mus_Invincible_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Level Victory (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Level Victory (FM)" FREE
 Mus_LevelVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8B) ;$16
@@ -2192,7 +2193,7 @@ Mus_LevelVictory_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Death (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Death (FM)" FREE
 Mus_Death_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($48)  ;PAL: $23
@@ -2267,7 +2268,7 @@ Mus_Death_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Game Over (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Game Over (FM)" FREE
 Mus_GameOver_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($7A)  ;PAL: $5F
@@ -2358,7 +2359,7 @@ Mus_GameOver_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - World Victory (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - World Victory (FM)" FREE
 Mus_WorldVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($6A)  ;PAL: $4C
@@ -2458,7 +2459,7 @@ Mus_WorldVictory_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Cloud/Bonus (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Cloud/Bonus (FM)" FREE
 Mus_Cloud_FM:
     ; MAIN HEADER
 .IF PALBUILD == $00
@@ -3037,7 +3038,7 @@ Mus_Cloud_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Bowser (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Bowser (FM)" FREE
 Mus_Bowser_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8F)  ;PAL: $78, $47
@@ -3281,7 +3282,7 @@ Mus_Bowser_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Final Bowser (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Final Bowser (FM)" FREE
 Mus_FinalBowser_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8F)  ;PAL: $78, $47
@@ -3722,7 +3723,7 @@ Mus_FinalBowser_FM:
 
 ;   ----------------------------------
 
-.SECTION "MUS Data - Title (FM)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Title (FM)" FREE
 Mus_Title_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($6A)

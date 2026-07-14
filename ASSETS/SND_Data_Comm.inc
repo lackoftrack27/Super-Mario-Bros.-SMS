@@ -195,20 +195,19 @@
 .ENDE
 
 
-/*
------------------------------------------------------------
-                    SOUND EFFECT DATA
------------------------------------------------------------
-*/
+; -----------------------------------------------------------
+;                     SOUND EFFECT DATA
+; -----------------------------------------------------------
+.BANK BANK_SOUND SLOT 2
 
-.SECTION "SFX Data - 1UP" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - 1UP" FREE
 SFX_1UP:
     smpsChanHeader  SFX_1UP + 6,            $00 $00 $00 $03
     .db nE4, $08, nG4, nE5, nC5, nD5, nG5
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Score Tick" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Score Tick" FREE
 SFX_Beep:
     smpsChanHeader  SFX_Beep + 6,           $00 $03 $00 $00
     .db nB3, $04 ;$05
@@ -218,7 +217,7 @@ SFX_Beep:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Bump" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Bump" FREE
 SFX_Bump:
     smpsChanHeader  SFX_Bump + 6,           $00 $00 $00 $00
     smpsModSetup    $00, $01, $3B, $FF
@@ -229,7 +228,7 @@ SFX_Bump:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Cannon, Fireworks" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Cannon, Fireworks" FREE
 SFX_Cannon:
     smpsChanHeader  SFX_Cannon + 6,         $00 $00 $00 $00
     smpsModSetup    $00, $01, $1D, $FF
@@ -239,7 +238,7 @@ SFX_Cannon:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Coin" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Coin" FREE
 SFX_Coin:
     smpsChanHeader  SFX_Coin + 6,           $00 $00 $00 $02
     .db nB3, $05
@@ -247,14 +246,14 @@ SFX_Coin:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Fireball" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Fireball" FREE
 SFX_Fireball:
     smpsChanHeader  SFX_Fireball + 6,       $00 $00 $00 $00
     .db nG1, $01, nG2, nG3, nG4
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Flagpole" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Flagpole" FREE
 SFX_Flagpole:
     smpsChanHeader  SFX_Flagpole + 6,       $00 $02 $00 $00
     smpsModSetup    $00, $02, $F3, $FF
@@ -262,14 +261,14 @@ SFX_Flagpole:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Flame" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Flame" FREE
 SFX_Flame:
     smpsChanHeader  SFX_Flame + 6,          $00 $00 $00 $05
     .db nLow, $3F
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Item Reveal" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Item Reveal" FREE
 SFX_Item:
     smpsChanHeader  SFX_Item + 6,           $00 $01 $00 $00
     .db nC2, $03, nG2, $02, nGs2
@@ -279,7 +278,7 @@ SFX_Item:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Big Jump" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Big Jump" FREE
 SFX_JumpBig:
     smpsChanHeader  SFX_JumpBig + 6,        $00 $00 $00 $06
     smpsModSetup    $00, $01, $02, $FF
@@ -293,7 +292,7 @@ SFX_JumpBig:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Small Jump" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Small Jump" FREE
 SFX_JumpSml:
     smpsChanHeader  SFX_JumpSml + 6,        $00 $00 $00 $06
     smpsModSetup    $00, $01, $01, $FF
@@ -307,7 +306,7 @@ SFX_JumpSml:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Kick" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Kick" FREE
 SFX_Kick:
     smpsChanHeader  SFX_Kick + 6,           $00 $00 $00 $00
     .db nBb2, $01
@@ -316,7 +315,7 @@ SFX_Kick:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Pause" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Pause" FREE
 SFX_Pause:
     smpsChanHeader  SFX_Pause + 6,          $00 $00 $00 $01
     .db nE4, $06, nC4, nE4
@@ -324,7 +323,7 @@ SFX_Pause:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Pipe" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Pipe" FREE
 SFX_Pipe:
     smpsChanHeader  SFX_Pipe + 6,           $00 $02 $00 $00
     .db nRst, $03
@@ -336,7 +335,7 @@ SFX_Pipe:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Powerup" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Powerup" FREE
 SFX_Powerup:
     smpsChanHeader  SFX_Powerup + 6,        $00 $01 $00 $00
     .db nC3, $02, nG2, nC3, nF3, nG3, nC4, nG3
@@ -345,7 +344,7 @@ SFX_Powerup:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Brick Shatter" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Brick Shatter" FREE
 SFX_Shatter:
     smpsChanHeader  SFX_Shatter + 6,        $00 $00 $00 $00
     .db nRst, $01, nLow, nRst, nHi, nLow, nRst
@@ -360,7 +359,7 @@ SFX_Shatter:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Swim, Stomp" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Swim, Stomp" FREE
 SFX_Swim:
     smpsChanHeader  SFX_Swim + 6,           $00 $00 $00 $04
     smpsModSetup    $01, $01, $F7, $FF
@@ -370,7 +369,7 @@ SFX_Swim:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Vine" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Vine" FREE
 SFX_Vine:
     smpsChanHeader  SFX_Vine + 6,           $00 $01 $00 $00
     .db nC2, $03, nG2, $02, nGs2
@@ -384,7 +383,7 @@ SFX_Vine:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Bowser Fall" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Bowser Fall" FREE
 SFX_BowserFall:
     smpsChanHeader  SFX_BowserFall + $06,   $00 $00 $00 $00
     smpsModSetup    $00, $02, $17, $FF
@@ -394,12 +393,12 @@ SFX_BowserFall:
 
 ;---
 
-.SECTION "SFX Data - Powerup (P1)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Powerup (P1)" FREE
 SFX_Powerup_P1:
     smpsChanHeader  SFX_Powerup + 6,        $0C $03 $00 $00
 .ENDS
 
-.SECTION "SFX Data - Big Jump (P1)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Big Jump (P1)" FREE
 SFX_JumpBig_P1:
     smpsChanHeader  SFX_JumpBig_P1 + 6,        $0C $0F $00 $06
     smpsModSetup    $00, $01, $01, $FF
@@ -414,7 +413,7 @@ SFX_JumpBig_P1:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Small Jump (P1)" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Small Jump (P1)" FREE
 SFX_JumpSml_P1:
     smpsChanHeader  SFX_JumpSml_P1 + 6,        $0C $0F $00 $06
     smpsModSetup    $00, $01, $01, $FF
@@ -429,19 +428,17 @@ SFX_JumpSml_P1:
     smpsStop
 .ENDS
 
-.SECTION "SFX Data - Silence" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "SFX Data - Silence" FREE
 SFX_Silence:
     smpsChanHeader  SFX_Silence + 6,        $00 $0F $00 $00
     smpsStop
 .ENDS
 
-/*
------------------------------------------------------------
-                    COMMON MUSIC DATA
------------------------------------------------------------
-*/
+; -----------------------------------------------------------
+;                     COMMON MUSIC DATA
+; -----------------------------------------------------------
 
-.SECTION "MUS Data - Silence" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Silence" FREE
 Mus_Silence:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -459,7 +456,7 @@ Mus_Silence:
     smpsStop
 .ENDS
 
-.SECTION "MUS Data - Hurry Up" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Hurry Up" FREE
 Mus_HurryUp:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -494,7 +491,7 @@ Mus_HurryUp:
     smpsStop
 .ENDS
 
-.SECTION "MUS Data - Game Victory" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Game Victory" FREE
 Mus_GameVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -520,11 +517,9 @@ Mus_GameVictory:
     smpsJump Mus_GameVictory@ch2@loopPoint
 .ENDS
 
-/*
------------------------------------------------------------
-                REGION DEPENDENT MUSIC DATA
------------------------------------------------------------
-*/
+; -----------------------------------------------------------
+;                 REGION DEPENDENT MUSIC DATA
+; -----------------------------------------------------------
 
 .IF PALBUILD == $00
     .INCLUDE "SND_Data_NTSC.inc"

@@ -1,11 +1,10 @@
-/*
------------------------------------------------------------
-                    PAL MUSIC DATA
------------------------------------------------------------
-*/
+; -----------------------------------------------------------
+;                     PAL MUSIC DATA
+; -----------------------------------------------------------
+.BANK BANK_SOUND SLOT 2
 
 ;   PAL DIFF: 25% FASTER. NO 'HURRY UP'
-.SECTION "MUS Data - Water" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Water" FREE
 Mus_Water:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00  ; $00, $00
@@ -72,7 +71,7 @@ Mus_Water:
 .ENDS
 
 ;   PAL DIFF: ~17% FASTER
-.SECTION "MUS Data - Overworld" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Overworld" FREE
 Mus_Overworld:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $33  ; $33, $00
@@ -306,7 +305,7 @@ Mus_Overworld:
 .ENDS
 
 ;   PAL DIFF: ~17% FASTER
-.SECTION "MUS Data - Underground" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Underground" FREE
 Mus_Underground:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $55  ; $40, $00
@@ -345,7 +344,7 @@ Mus_Underground:
 .ENDS
 
 ;   PAL DIFF: 20% FASTER
-.SECTION "MUS Data - Castle" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Castle" FREE
 Mus_Castle:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $40  ; $40, $00
@@ -390,7 +389,7 @@ Mus_Castle:
 .ENDS
 
 ;   PAL DIFF: 25% FASTER. NO 'HURRY UP'
-.SECTION "MUS Data - Invincible" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Invincible" FREE
 Mus_Cloud:
 Mus_Invincible:
     ; MAIN HEADER
@@ -420,7 +419,7 @@ Mus_Invincible:
 .ENDS
 
 ;   PAL DIFF: ~17% FASTER
-.SECTION "MUS Data - Pipe Intro" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Pipe Intro" FREE
 Mus_PipeIntro:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $33  ; $33, $00
@@ -445,7 +444,7 @@ Mus_PipeIntro:
 .ENDS
 
 ;   PAL DIFF: 25% FASTER
-.SECTION "MUS Data - Level Victory" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Level Victory" FREE
 Mus_LevelVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -475,7 +474,7 @@ Mus_LevelVictory:
 .ENDS
 
 ;   PAL DIFF: 25% FASTER
-.SECTION "MUS Data - Death" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Death" FREE
 Mus_Death:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -502,7 +501,7 @@ Mus_Death:
 .ENDS
 
 ;   PAL DIFF: ~17% FASTER
-.SECTION "MUS Data - Game Over" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - Game Over" FREE
 Mus_GameOver:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
@@ -526,7 +525,7 @@ Mus_GameOver:
 .ENDS
 
 ;   PAL DIFF: 25% FASTER
-.SECTION "MUS Data - World Victory" BANK BANK_SOUND SLOT 2 FREE
+.SECTION "MUS Data - World Victory" FREE
 Mus_WorldVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00

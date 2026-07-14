@@ -2,6 +2,9 @@
 ;   Author: LackofTrack
 
 ;   Used "SMBDIS.ASM" by doppelganger for reference
+;   Used "smb1-bugfix" by TakuikaNinja for reference
+
+;   Assembled with WLA DX v10.7
 
 ;-------------------------------------------------------------------------------------
 ;   SET INCLUDE DIRECTORY
@@ -3089,81 +3092,93 @@ Map_BG_SoundSelect:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 0]" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX00 SLOT 2
+
+.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 0]" FORCE ORG $0000
 .INCLUDE "SPR_Mario00.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 1]" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $1000
+.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 1]" FORCE ORG $1000
 .INCLUDE "SPR_Mario01.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 2]" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $2000
+.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 2]" FORCE ORG $2000
 .INCLUDE "SPR_Mario02.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 3]" BANK BANK_PLAYERGFX00 SLOT 2 FORCE ORG $3000
+.SECTION "Uncompressed Player Tiles - Mario [Right, Palette 3]" FORCE ORG $3000
 .INCLUDE "SPR_Mario03.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 0]" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX01 SLOT 2
+
+.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 0]" FORCE ORG $0000
 .INCLUDE "SPR_Mario10.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 1]" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $1000
+.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 1]" FORCE ORG $1000
 .INCLUDE "SPR_Mario11.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 2]" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $2000
+.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 2]" FORCE ORG $2000
 .INCLUDE "SPR_Mario12.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 3]" BANK BANK_PLAYERGFX01 SLOT 2 FORCE ORG $3000
+.SECTION "Uncompressed Player Tiles - Mario [Left, Palette 3]" FORCE ORG $3000
 .INCLUDE "SPR_Mario13.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 0]" BANK BANK_PLAYERGFX02 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX02 SLOT 2
+
+.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 0]" FORCE ORG $0000
 .INCLUDE "SPR_Luigi00.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 1]" BANK BANK_PLAYERGFX02 SLOT 2 FORCE ORG $1000
+.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 1]" FORCE ORG $1000
 .INCLUDE "SPR_Luigi01.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 2]" BANK BANK_PLAYERGFX02 SLOT 2 FORCE ORG $2000
+.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 2]" FORCE ORG $2000
 .INCLUDE "SPR_Luigi02.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 3]" BANK BANK_PLAYERGFX02 SLOT 2 FORCE ORG $3000
+.SECTION "Uncompressed Player Tiles - Luigi [Right, Palette 3]" FORCE ORG $3000
 .INCLUDE "SPR_Luigi03.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 0]" BANK BANK_PLAYERGFX03 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX03 SLOT 2
+
+.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 0]" FORCE ORG $0000
 .INCLUDE "SPR_Luigi10.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 1]" BANK BANK_PLAYERGFX03 SLOT 2 FORCE ORG $1000
+.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 1]" FORCE ORG $1000
 .INCLUDE "SPR_Luigi11.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 2]" BANK BANK_PLAYERGFX03 SLOT 2 FORCE ORG $2000
+.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 2]" FORCE ORG $2000
 .INCLUDE "SPR_Luigi12.inc"
 .ENDS
 
-.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 3]" BANK BANK_PLAYERGFX03 SLOT 2 FORCE ORG $3000
+.SECTION "Uncompressed Player Tiles - Luigi [Left, Palette 3]" FORCE ORG $3000
 .INCLUDE "SPR_Luigi13.inc"
 .ENDS
 
 .INCDIR "ASSETS/NES"
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Left]" BANK BANK_PLAYERGFX04 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX04 SLOT 2
+
+.SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Left]" FORCE ORG $0000
     .INCLUDE "SPR_Mario00.inc"
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Right]" BANK BANK_PLAYERGFX05 SLOT 2 FORCE ORG $0000
+.BANK BANK_PLAYERGFX05 SLOT 2
+
+.SECTION "Uncompressed Player Tiles (NES) - Mario/Luigi [Right]" FORCE ORG $0000
     .INCLUDE "SPR_Mario10.inc"
 .ENDS
 
@@ -3173,7 +3188,9 @@ Map_BG_SoundSelect:
 .INCLUDE "SND_Data_Comm.inc"
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Animated Background Tiles - BANK 00" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.BANK BANK_SLOT2 SLOT 2
+
+.SECTION "Animated Background Tiles - BANK 00" ALIGN $100
 LavaFrame0:
 ; Tile index $000
 .db $D7 $28 $28 $28 $E7 $10 $18 $18 $EF $00 $10 $10 $FF $00 $00 $00 $00 $FF $FF $FF $38 $C6 $FF $C7 $00 $78 $FF $FF $00 $27 $FF $FF
@@ -3195,9 +3212,8 @@ WaterA0Frame0:
 .db $80 $00 $80 $80 $60 $00 $60 $60 $9C $00 $9C $1C $E3 $00 $E3 $03 $3C $00 $3C $00 $FF $00 $FF $00 $3F $00 $3F $00 $C6 $00 $C6 $00
 ; Tile index $001
 .db $01 $00 $01 $01 $06 $00 $06 $06 $39 $00 $39 $38 $C7 $00 $C7 $C0 $3F $00 $3F $00 $FD $00 $FD $0C $F6 $00 $F6 $70 $1F $00 $1F $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 01" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame1:
 ; Tile index $004
 .db $3F $80 $C0 $C0 $7E $01 $81 $81 $F6 $08 $09 $09 $FF $00 $00 $00 $00 $FF $FF $FF $00 $CE $FF $FF $00 $79 $FE $FF $01 $26 $FD $FF
@@ -3219,9 +3235,8 @@ WaterA0Frame1:
 .db $00 $00 $00 $00 $98 $00 $98 $98 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E0 $00 $E0 $00
 ; Tile index $003
 .db $0A $00 $0A $0A $1F $00 $1F $1F $0B $00 $0B $0B $FE $00 $FE $FE $01 $00 $01 $00 $FF $00 $FF $00 $FF $00 $FF $00 $A8 $00 $A8 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 02" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame2:
 ; Tile index $008
 .db $BD $40 $42 $42 $F8 $02 $07 $07 $BD $40 $42 $42 $CF $30 $30 $30 $00 $FF $FF $FF $01 $7E $FF $FE $03 $30 $FF $FC $01 $E6 $FD $FE
@@ -3243,9 +3258,8 @@ WaterA0Frame2:
 .db $00 $00 $00 $00 $1A $00 $1A $1A $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E0 $00 $E0 $00
 ; Tile index $005
 .db $58 $00 $58 $58 $04 $00 $04 $04 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $FF $00 $FF $00 $FF $00 $FF $00 $A8 $00 $A8 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 03" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame3:
 ; Tile index $00C
 .db $FF $00 $00 $00 $DD $22 $22 $22 $FF $00 $00 $00 $CF $00 $30 $30 $00 $A3 $FF $FF $48 $04 $FB $B7 $32 $04 $FF $CD $01 $C6 $FD $FE
@@ -3267,9 +3281,8 @@ WaterA0Frame3:
 .db $09 $00 $09 $09 $00 $00 $00 $00 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $9F $00 $9F $00 $F1 $00 $F1 $00 $03 $00 $03 $00
 ; Tile index $007
 .db $80 $00 $80 $80 $40 $00 $40 $40 $E0 $00 $E0 $E0 $1F $00 $1F $1F $E0 $00 $E0 $00 $FF $00 $FF $00 $F1 $00 $F1 $00 $78 $00 $78 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 04" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame4:
 ; Tile index $010
 .db $FD $02 $02 $02 $FF $00 $00 $00 $FF $00 $00 $00 $DF $00 $30 $20 $08 $26 $FD $F7 $58 $01 $FE $A7 $30 $05 $FE $CF $00 $CA $FF $FF
@@ -3291,9 +3304,8 @@ WaterA0Frame4:
 .db $00 $00 $00 $00 $08 $00 $08 $08 $01 $00 $01 $01 $FE $00 $FE $FE $01 $00 $01 $00 $9F $00 $9F $00 $F1 $00 $F1 $00 $03 $00 $03 $00
 ; Tile index $009
 .db $00 $00 $00 $00 $00 $00 $00 $00 $E0 $00 $E0 $E0 $1F $00 $1F $1F $E0 $00 $E0 $00 $FF $00 $FF $00 $F1 $00 $F1 $00 $78 $00 $78 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 05" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame5:
 ; Tile index $014
 .db $FF $00 $00 $00 $FF $00 $00 $00 $FE $01 $01 $01 $63 $80 $9C $9C $01 $98 $EE $FE $22 $80 $FF $DD $1C $00 $FF $E3 $00 $C3 $FF $FF
@@ -3315,9 +3327,8 @@ WaterA0Frame5:
 .db $00 $00 $00 $00 $2C $00 $2C $2C $10 $00 $10 $10 $FF $00 $FF $FF $00 $00 $00 $00 $FF $00 $FF $00 $FE $00 $FE $00 $71 $00 $71 $00
 ; Tile index $00B
 .db $00 $00 $00 $00 $18 $00 $18 $18 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E1 $00 $E1 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 06" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame6:
 ; Tile index $018
 .db $FF $00 $00 $00 $FF $00 $00 $00 $E2 $01 $1D $1D $41 $88 $BE $BE $00 $BC $E7 $FF $41 $80 $FF $BE $3F $00 $FF $C0 $00 $C1 $FF $FF
@@ -3339,9 +3350,8 @@ WaterA0Frame6:
 .db $00 $00 $00 $00 $82 $00 $82 $82 $00 $00 $00 $00 $FF $00 $FF $FF $00 $00 $00 $00 $FF $00 $FF $00 $FE $00 $FE $00 $71 $00 $71 $00
 ; Tile index $00D
 .db $00 $00 $00 $00 $18 $00 $18 $18 $E7 $00 $E7 $E7 $18 $00 $18 $00 $FF $00 $FF $00 $FF $00 $FF $00 $1F $00 $1F $00 $E1 $00 $E1 $00
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 07" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LavaFrame7:
 ; Tile index $01C
 .db $FF $00 $00 $00 $FF $00 $00 $00 $9C $63 $63 $63 $80 $3E $7F $7F $44 $88 $BF $BB $2E $41 $FF $D1 $1C $03 $FF $E3 $00 $7C $FF $FF
@@ -3365,7 +3375,7 @@ WaterA0Frame7:
 .db $01 $00 $01 $01 $06 $00 $06 $06 $39 $00 $39 $38 $C7 $00 $C7 $C0 $3F $00 $3F $00 $FD $00 $FD $0C $F6 $00 $F6 $70 $1F $00 $1F $00
 .ENDS
 
-.SECTION "Animated Background Tiles - BANK 10" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.SECTION "Animated Background Tiles - BANK 10" ALIGN $100
 CoinFrame0:
 ; Tile index $000
 .db $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $07 $07 $07 $07 $08 $06 $05 $04 $0A $0C $08 $08 $17 $0D $09 $09 $16 $0D $09 $09 $16
@@ -3385,9 +3395,8 @@ WCoinFrame0:
 .db $FF $00 $FF $00 $FF $00 $FF $00 $1F $60 $7F $E0 $CF $F0 $3F $30 $CF $F0 $3F $30 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98
 ; Tile index $003
 .db $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $67 $F8 $9F $98 $CF $F0 $3F $30 $CF $F0 $3F $30 $9F $E0 $7F $60
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 11" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 CoinFrame1:
 ; Tile index $004
 .db $00 $00 $00 $00 $00 $00 $00 $00 $07 $00 $00 $07 $08 $00 $00 $0F $0B $03 $01 $0E $17 $04 $00 $1F $16 $04 $00 $1F $16 $04 $00 $1F
@@ -3407,9 +3416,8 @@ WCoinFrame1:
 .db $FF $00 $FF $00 $FF $00 $FF $00 $FF $E0 $1F $80 $3F $30 $0F $C0 $3F $30 $0F $C0 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60
 ; Tile index $007
 .db $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $9F $98 $07 $60 $3F $30 $0F $C0 $3F $30 $0F $C0 $7F $60 $1F $80
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 12" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 CoinFrame2:
 ; Tile index $008
 .db $00 $00 $00 $00 $00 $00 $00 $00 $07 $07 $00 $07 $0F $08 $00 $0F $0E $0A $00 $0F $1F $17 $00 $1F $1F $16 $00 $1F $1F $16 $00 $1F
@@ -3431,7 +3439,7 @@ WCoinFrame2:
 .db $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $67 $60 $07 $F8 $CF $C0 $0F $F0 $CF $C0 $0F $F0 $9F $80 $1F $E0
 .ENDS
 
-.SECTION "Animated Background Tiles - BANK 20" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.SECTION "Animated Background Tiles - BANK 20" ALIGN $100
 LaternFrame0:
 ; Tile index $000
 .db $F4 $03 $0F $0F $E8 $06 $1F $1F $C0 $0C $3F $3F $E3 $19 $10 $17 $87 $63 $10 $1F $0F $E3 $10 $1F $0F $C6 $11 $3F $3F $BE $01 $7F
@@ -3451,9 +3459,8 @@ QBlockFrame0:
 .db $FE $00 $00 $FE $FF $00 $00 $FF $FF $F0 $00 $FF $FF $38 $C0 $FF $FF $18 $60 $FF $FF $88 $60 $FF $FF $08 $E0 $FF $FF $08 $80 $FF
 ; Tile index $003
 .db $FF $38 $80 $FF $FF $38 $00 $FF $FF $78 $80 $FF $FF $38 $80 $FF $FF $38 $00 $FF $FF $00 $00 $FF $FF $00 $00 $FF $FE $00 $00 $FE
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 21" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LaternFrame1:
 ; Tile index $004
 .db $F4 $03 $0F $0F $E8 $07 $1F $1F $C0 $0E $3F $3F $E9 $14 $10 $13 $E3 $19 $10 $17 $C3 $23 $10 $1F $87 $63 $10 $1F $BF $5F $00 $3F
@@ -3473,9 +3480,8 @@ QBlockFrame1:
 .db $00 $00 $00 $FE $00 $00 $00 $FF $F0 $00 $00 $FF $F8 $00 $C0 $FF $78 $00 $60 $FF $E8 $00 $60 $FF $E8 $00 $E0 $FF $88 $00 $80 $FF
 ; Tile index $007
 .db $B8 $00 $80 $FF $38 $00 $00 $FF $F8 $00 $80 $FF $B8 $00 $80 $FF $38 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FE
-.ENDS
 
-.SECTION "Animated Background Tiles - BANK 22" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 LaternFrame2:
 ; Tile index $008
 .db $F4 $03 $0F $0F $E8 $07 $1F $1F $C0 $0F $3F $3F $EC $12 $10 $11 $E9 $14 $10 $13 $E3 $1C $10 $13 $C3 $29 $10 $17 $9F $41 $00 $3F
@@ -3497,7 +3503,7 @@ QBlockFrame2:
 .db $BC $38 $80 $FF $3C $38 $00 $FF $FC $78 $80 $FF $BC $38 $80 $FF $3C $38 $00 $FF $F8 $00 $00 $FF $00 $00 $00 $FF $00 $00 $00 $FE
 .ENDS
 
-.SECTION "Animated Background Tiles - BANK 30" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+.SECTION "Animated Background Tiles - BANK 30" ALIGN $100
 GrassFrame0:
 ; Tile index $000
 .db $07 $00 $07 $00 $69 $07 $69 $06 $FE $61 $FF $00 $F3 $4E $F3 $0C $EF $BF $EF $10 $F3 $7F $FF $00 $FD $47 $FF $00 $DA $BF $DF $20
@@ -3511,9 +3517,10 @@ GrassFrame0:
 .db $9C $F8 $DC $20 $B9 $F0 $F9 $00 $6A $F1 $FA $01 $EF $F1 $FF $00 $D7 $EB $FF $00 $D6 $EF $FF $00 $44 $FF $FF $00 $18 $FF $FF $00
 ; Tile index $005
 .db $E0 $00 $E0 $00 $70 $E0 $70 $80 $FC $C0 $FC $00 $DA $8C $DA $04 $34 $D8 $F4 $08 $78 $B0 $F8 $00 $E8 $70 $F8 $00 $10 $E0 $F0 $00
-.ENDS
+; padding
+.dsb $40, $00
 
-.SECTION "Animated Background Tiles - BANK31" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 GrassFrame1:
 ; Tile index $006
 .db $27 $03 $27 $00 $7E $21 $7F $00 $63 $1E $63 $1C $FF $4F $FF $00 $FF $93 $FF $00 $DD $2B $DF $20 $FE $2D $FF $00 $FA $B7 $FF $00
@@ -3527,9 +3534,10 @@ GrassFrame1:
 .db $9B $67 $FB $04 $A7 $DC $E7 $18 $DD $B8 $DD $20 $BA $F1 $BA $41 $E5 $FB $FD $02 $EF $FF $FF $00 $44 $FF $FF $00 $10 $FF $FF $00
 ; Tile index $00B
 .db $80 $00 $80 $00 $38 $00 $38 $00 $CE $38 $CE $30 $7C $E0 $7C $80 $FE $9C $FE $00 $FF $72 $FF $00 $72 $E0 $F2 $00 $90 $E0 $F0 $00
-.ENDS
+; padding
+.dsb $40, $00
 
-.SECTION "Animated Background Tiles - BANK 32" BANK BANK_SLOT2 SLOT 2 ALIGN $100
+; ----------
 GrassFrame2:
 ; Tile index $00C
 .db $5F $00 $5F $00 $FC $4F $FC $03 $FF $53 $FF $00 $FE $1D $FF $00 $9F $EE $FF $00 $BF $56 $FF $00 $FE $35 $FF $00 $FA $B7 $FF $00

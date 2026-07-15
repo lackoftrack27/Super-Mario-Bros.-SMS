@@ -126,10 +126,6 @@ RunSoundSubroutines:
     LD A, (HL)
     OR A
     CALL NZ, SndProcessQueueSFX
-    LD HL, MusicTrack3.SoundQueue
-    LD A, (HL)
-    OR A
-    CALL NZ, SndProcessQueueSFX
     ; SFX TRACK 0 (TONE)
     LD HL, SFXTrack0
     BIT CHANCON_PLAYING, (HL)
@@ -188,10 +184,7 @@ TempoWaitPSG:
 
 SkipSoundRoutines:
     XOR A
-    ;LD HL, SFXTrack0.SoundQueue
-    LD HL, MusicTrack3.SoundQueue
-    LD (HL), A
-    INC H
+    LD HL, SFXTrack0.SoundQueue
     LD (HL), A
     INC H
     LD (HL), A
@@ -466,19 +459,17 @@ SndProcessQueueSFX:
     AND A, bitValue(OPTFLAG_FM)
     JR Z, @GetSFXData
     LD A, (HL)
-    CP A, SNDID_POWERUP
-    JR Z, +
-    CP A, SNDID_JUMPSMALL
-    JR Z, +
-    CP A, SNDID_JUMPBIG
-    JR NZ, @GetSFXData
-+:
-    ; SKIP IF PARENT SFX IS REPLAYING
+    CP A, SNDID_JUMPBIG_01
+    JR C, @GetSFXData
+    ; SKIP IF SFX IS REPLAYING
     DEC L           ; SoundQueue
     CP A, (HL)
     JR Z, @GetSFXData
-    LD A, SNDID_SFX_SILENCE
-    LD (MusicTrack3.SoundQueue), A
+    ; ELSE, SILENCE 2ND LAYER
+    XOR A
+    LD (MusicTrack3.Control), A
+    LD A, ~CHANALL_BITS | CHAN2_BITS
+    OUT (PSG_PORT), A
 @GetSFXData:
 ;   USE AS OFFSET INTO SndIndexTable
     LD L, <SFXTrack0.SoundPlaying
@@ -505,7 +496,7 @@ SndProcessQueueSFX:
     LDI             ; EnvelopeIndex (Doesn't matter)
     LDI             ; Envelope
 ;
-    EX DE, HL
+    EX DE, HL       ; DE - TRACK DATA, HL - TRACK RAM
     XOR A
     LD (HL), A      ; SavedDuration
     INC L
@@ -518,9 +509,31 @@ SndProcessQueueSFX:
     JP Z, +
     LD L, <SFXTrack0.Volume
     INC (HL)
+;   SET UP 2ND LAYER IF DOING LAYERED SFX IN FM MODE
+    LD L, <SFXTrack0.SoundPlaying
+    LD A, (HL)
+    CP A, SNDID_JUMPBIG_01
+    RET C
+    LD HL, MusicTrack3.Control
+    LD (HL), bitValue(CHANCON_PLAYING)
+    INC L
+    EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
+    LDI             ; DataPointer
+    LDI             ; DataPointer + $01
+    LDI             ; Transpose
+    LDI             ; Volume
+    LDI             ; EnvelopeIndex (Doesn't matter)
+    LDI             ; Envelope
+    EX DE, HL       ; DE - TRACK DATA, HL - TRACK RAM
+    XOR A
+    LD (HL), A      ; SavedDuration
+    INC L
+    LD (HL), A      ; Detune
+    INC L
+    LD (HL), $01    ; Duration
     RET
 +:
-;   SET SFX OVERRIDE BIT ON MUSIC TRACK THAT SHARES CHANNEL
+;   SET SFX OVERRIDE BIT ON MUSIC TRACK THAT SHARES CHANNEL (PSG MODE ONLY)
     DEC H
     DEC H
     DEC H
@@ -1718,11 +1731,10 @@ SndIndexTable:
     .dw Mus_Bowser_FM
     .dw Mus_FinalBowser_FM
     .dw Mus_Title_FM
-    ; ADDITIONAL SFX ($32 - $35)
+    ; ADDITIONAL SFX ($32 - $34)
     .dw SFX_JumpBig_P1
     .dw SFX_JumpSml_P1
     .dw SFX_Powerup_P1
-    .dw SFX_Silence
 .ENDS
 
 ;--------------------------------

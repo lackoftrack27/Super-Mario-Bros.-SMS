@@ -1464,9 +1464,9 @@ SJumpSnd:
     LD (SFXTrack0.SoundQueue), A
     LD A, (OptionBitflags)              ;load additional sfx layer if in FM mode
     AND A, bitValue(OPTFLAG_FM)
-    JP Z, X_Physics
+    JR Z, X_Physics
     LD A, B
-    LD (MusicTrack3.SoundQueue), A
+    LD (SFXTrack0.SoundQueue), A
 ;
 ;   HORIZONTAL PHYSICS
 ;

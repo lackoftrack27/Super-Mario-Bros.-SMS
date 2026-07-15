@@ -6264,14 +6264,13 @@ HandlePowerUpCollision:
     LD A, $06                       ;award 1000 points to player by default
     CALL SetupFloateyNumber
 ;
-    LD A, SNDID_POWERUP             ;play the power-up sound
-    LD (SFXTrack1.SoundQueue), A
-    LD A, (OptionBitflags)          ;load additional sfx layer if in FM mode
+    LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
+    LD A, SNDID_POWERUP             ;play the power-up sound
     JR Z, +
-    LD A, SNDID_POWERUP_01
-    LD (MusicTrack3.SoundQueue), A
+    LD A, SNDID_POWERUP_01          ;load additional sfx layer if in FM mode
 +:
+    LD (SFXTrack1.SoundQueue), A
 ;
     LD A, (PowerUpType)             ;check power-up type
     CP A, $02

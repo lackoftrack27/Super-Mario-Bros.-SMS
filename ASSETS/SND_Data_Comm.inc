@@ -191,7 +191,6 @@
     SNDID_JUMPBIG_01    DB
     SNDID_JUMPSMALL_01  DB
     SNDID_POWERUP_01    DB
-    SNDID_SFX_SILENCE   DB
 .ENDE
 
 
@@ -395,15 +394,18 @@ SFX_BowserFall:
 
 .SECTION "SFX Data - Powerup (P1)" FREE
 SFX_Powerup_P1:
-    smpsChanHeader  SFX_Powerup + 6,        $0C $03 $00 $00
+    smpsChanHeader  SFX_Powerup + 6,        $00 $02 $00 $00
+    smpsChanHeader  SFX_Powerup + 6,        $0C $05 $00 $00
 .ENDS
 
 .SECTION "SFX Data - Big Jump (P1)" FREE
 SFX_JumpBig_P1:
-    smpsChanHeader  SFX_JumpBig_P1 + 6,        $0C $0F $00 $06
+    smpsChanHeader  SFX_JumpBig + 6,        $00 $01 $00 $06
+    smpsChanHeader  @Layer2,                $0C $0F $00 $06
+@Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nD2, $03
-    smpsChangeVol   $F3
+    smpsChangeVol   $F5
     smpsNoAtk
     smpsModSetup    $00, $04, $03, $FF
     .db $05
@@ -415,22 +417,18 @@ SFX_JumpBig_P1:
 
 .SECTION "SFX Data - Small Jump (P1)" FREE
 SFX_JumpSml_P1:
-    smpsChanHeader  SFX_JumpSml_P1 + 6,        $0C $0F $00 $06
+    smpsChanHeader  SFX_JumpSml + 6,        $00 $01 $00 $06
+    smpsChanHeader  @Layer2,                $0C $0F $00 $06
+@Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03
-    smpsChangeVol   $F3
+    smpsChangeVol   $F5
     smpsNoAtk
     smpsModSetup    $00, $04, $01, $FF
     .db $05
     smpsNoAtk
     smpsModSetup    $00, $02, $F9, $FF
     .db $15
-    smpsStop
-.ENDS
-
-.SECTION "SFX Data - Silence" FREE
-SFX_Silence:
-    smpsChanHeader  SFX_Silence + 6,        $00 $0F $00 $00
     smpsStop
 .ENDS
 

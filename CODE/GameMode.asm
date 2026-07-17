@@ -96,7 +96,7 @@ InitializeArea:
 
     IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
     EI
-    RET
+    JP FadeOutScreen
 
 ;-------------------------------------------------------------------------------------
 

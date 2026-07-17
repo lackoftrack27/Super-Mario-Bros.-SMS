@@ -1153,6 +1153,9 @@
     SndFreqTablePtr:                dsb $02
     TitleLoadedFlag:                dsb $01
     BGTileQueue2GrassFlag:          dsb $01
+    PaletteFadeBuffer:              dsb $20
+    PaletteFadeFlag:                dsb $01
+    VDPStatus:                      dsb $01
 ;
     BGTileQueue0                    INSTANCEOF _AnimatedBGTileQueue
     BGTileQueue1                    INSTANCEOF _AnimatedBGTileQueue

@@ -188,11 +188,11 @@ ChgAreaPipe:
     LD HL, AltEntranceControl           ;when timer expires set mode of alternate entry
     LD (HL), C
 ChgAreaMode:
-   XOR A
-   LD (OperMode_Task), A                ;set secondary mode of operation
-   LD (Sprite0HitDetectFlag), A         ;disable sprite 0 check
-   LD (DisableScreenFlag), A            ;disable screen output
-   RET
+    XOR A
+    LD (OperMode_Task), A                ;set secondary mode of operation
+    LD (Sprite0HitDetectFlag), A         ;disable sprite 0 check
+    LD (DisableScreenFlag), A            ;disable screen output
+    JP FadeOutScreen
 
 EnterSidePipe:
     LD A, $08                           ;set player's horizontal speed
@@ -336,8 +336,11 @@ PlayerLoseLife:
     XOR A
     LD (Sprite0HitDetectFlag), A        ;disable screen and sprite 0 check
     LD (DisableScreenFlag), A
+    CALL FadeOutScreen
+;
     LD A, SNDID_SILENCE
     LD (MusicTrack0.SoundQueue), A      ; EVENT
+;
     LD HL, NumberofLives                ;take one life from player
     DEC (HL)
     JP P, StillInGame                   ;if player still has lives, branch

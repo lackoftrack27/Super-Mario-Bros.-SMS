@@ -15,7 +15,8 @@ SetupGameOver:
     LD (ScreenRoutineTask), A       ;and game over modes
     LD (Sprite0HitDetectFlag), A    ;disable sprite 0 check
     LD (DisableScreenFlag), A       ;disable screen output
-    INC A
+    CALL FadeOutScreen
+    LD A, $01
     LD (OperMode_Task), A           ;set secondary mode to 1    
     LD A, SNDID_GAMEOVER
     LD (MusicTrack0.SoundQueue), A    ; EVENT
@@ -26,6 +27,7 @@ SetupGameOver:
 RunGameOver:
     LD A, $40                       ;reenable screen
     LD (DisableScreenFlag), A
+    CALL FadeInScreen
     LD A, (SavedJoypad1Bits)
     AND A, bitValue(SMS_BTN_1)      ;check controller for start pressed (button 1)
     JR NZ, TerminateGame
@@ -43,7 +45,7 @@ TerminateGame:
     LD (OperMode_Task), A           ;reset all modes to title screen
     LD (ScreenTimer), A
     LD (OperMode), A
-    RET
+    JP FadeOutScreen
 
 ContinueGame:
     CALL LoadAreaPointer            ;update level pointer with

@@ -25,18 +25,24 @@ ScreenRoutines:
 InitScreen:
     CALL MoveAllSpritesOffscreen    ;initialize all sprites including sprite #0
     CALL InitializeNameTables       ;and erase both name and attribute tables
+;
+    CALL IncSubtask
     LD A, (OperMode)
     OR A
-    JP Z, IncSubtask                ;if mode still 0, do not load
+    RET Z                           ;if mode still 0, do not load background palette
 ;
-    LD A, VRAMTBL_UNDERPAL          ;into buffer pointer
-    LD HL, OptionBitflags
-    BIT OPTFLAG_GFX, (HL)
-    JP Z, +
-    ADD A, $15
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR Z, +
+    LD A, VRAMTBL_UNDERPAL
+    LD (VRAM_Buffer_AddrCtrl), A    ;for NES GFX, store offset into buffer control
+    RET
 +:
-    LD (VRAM_Buffer_AddrCtrl), A    ;store offset into buffer control
-    JP IncSubtask                   ;move onto next task
+    LD HL, UndergroundPaletteData   ;else, load palette into fade buffer
+    LD DE, PaletteFadeBuffer
+    LD BC, $20
+    LDIR
+    RET
 
 ;-------------------------------------------------------------------------------------
 
@@ -62,12 +68,13 @@ WriteTopStatusLine:
     XOR A                           ;select main status bar
     CALL WriteGameText              ;output it
 ;
-    LD A, (OptionBitflags)          ;skip if on default gfx
+    CALL IncSubtask
+    LD A, (OptionBitflags)          ;exit if on default gfx
     AND A, bitValue(OPTFLAG_GFX)
-    JP Z, IncSubtask
-    LD A, $01                       ;make coin tile use bg palette
+    RET Z
+    LD A, $01                       ;else, make coin tile use bg palette
     LD (VRAM_Buffer1 + $19), A
-    JP IncSubtask                   ;onto the next task
+    RET                             ;onto the next task
 
 ;-------------------------------------------------------------------------------------
 
@@ -106,7 +113,7 @@ WriteBottomStatusLine:
 DisplayTimeUp:
     LD A, (GameTimerExpiredFlag)    ;if game timer not expired, increment task
     OR A
-    JP Z, NoTimeUp                  ;control 2 tasks forward, otherwise, stay here
+    JR Z, NoTimeUp                  ;control 2 tasks forward, otherwise, stay here
     XOR A
     LD (GameTimerExpiredFlag), A    ;reset timer expiration flag
     LD A, $02                       ;output time-up screen to buffer
@@ -119,9 +126,12 @@ NoTimeUp:
 ;-------------------------------------------------------------------------------------
 
 ResetSpritesAndScreenTimer:
+    CALL FadeInScreen               ;fade in for intermediate screens (except game over)
+;
     LD A, (ScreenTimer)             ;check if screen timer has expired
     OR A
     RET NZ                          ;if not, branch to leave
+    CALL FadeOutScreen              ;fade out for intermediate screens (except game over)
     CALL MoveAllSpritesOffscreen    ;otherwise reset sprites now
 
 ResetScreenTimer:
@@ -141,18 +151,18 @@ DisplayIntermediate:
 ;
     LD A, (OperMode)                ;check primary mode of operation
     OR A
-    JP Z, NoInter                   ;if in title screen mode, skip this
+    JR Z, NoInter                   ;if in title screen mode, skip this
     CP A, MODE_GAMEOVER             ;are we in game over mode?
-    JP Z, GameOverInter             ;if so, proceed to display game over screen
+    JR Z, GameOverInter             ;if so, proceed to display game over screen
     LD A, (AltEntranceControl)      ;otherwise check for mode of alternate entry
     OR A
-    JP NZ, NoInter                  ;and branch if found
+    JR NZ, NoInter                  ;and branch if found
     LD A, (AreaType)                ;check if we are on castle level
     CP A, $03                       ;and if so, branch (possibly residual)
-    JP Z, PlayerInter
+    JR Z, PlayerInter
     LD A, (DisableIntermediate)     ;if this flag is set, skip intermediate lives display
     OR A
-    JP NZ, NoInter                  ;and jump to specific task, otherwise
+    JR NZ, NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
     CALL DrawPlayer_Intermediate    ;put player in appropriate place for
     LD A, $01                       ;lives display, then output lives display to buffer
@@ -172,7 +182,7 @@ OutputInter:
     LD A, (CurrentPlayerGfx)
     OR A
     LD A, ASSET_EMBLEM_M
-    JP Z, +
+    JR Z, +
     INC A
 +:
     CALL AssetLoader
@@ -217,6 +227,7 @@ NoInter:
 AreaParserTaskControl:
     XOR A
     LD (DisableScreenFlag), A
+    CALL FadeOutScreen
 TaskLoop:
     CALL AreaParserTaskHandler      ;render column set of current area
     LD A, (AreaParserTaskNum)
@@ -244,7 +255,21 @@ SPRColorRotatePalettes:
     .db $00, $00, $00, $00, $28, $2B, $06, $00, $03, $3F, $0B, $00, $15, $3F, $2A, $00
 .ENDS
 
+.SECTION "Palette Table For Fades" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
+FadeTable:
+    .dw WaterPaletteData
+    .dw GroundPaletteData
+    .dw UndergroundPaletteData
+    .dw CastlePaletteData
+    ;
+    .dw GroundPaletteData
+    .dw DaySnowPaletteData
+    .dw NightSnowPaletteData
+    .dw CastlePaletteData
+.ENDS
+
 GetAreaPalette:
+;   for NES GFX, load AreaType's palette animation data
     LD A, (AreaType)
     ADD A, A
     ADD A, A
@@ -252,21 +277,33 @@ GetAreaPalette:
     ADD A, A
     LD HL, SPRColorRotatePalettes + $03
     addAToHL8_M
-    LD DE, SpritePaletteCopy + $03
+    LD DE, SpritePaletteCopy + $03  ;skip first 3 bytes as those are set later based on player
     LD BC, $0D
     LDIR
 ;
-    LD A, (AreaType)                ;select appropriate palette to load
+    CALL IncSubtask                 ;move onto next task
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR Z, +
+    LD A, (AreaType)                ;for NES GFX, select appropriate palette to load
     LD HL, AreaPalette              ;based on area type
     addAToHL8_M
     LD A, (HL)
-    LD HL, OptionBitflags
-    BIT OPTFLAG_GFX, (HL)
-    JP Z, +
-    ADD A, $15
-+:
     LD (VRAM_Buffer_AddrCtrl), A    ;store offset into buffer control
-    JP IncSubtask                   ;move onto next task
+    RET
++:
+    LD A, (AreaType)                ;else, load appropriate palette to fade buffer
+    ADD A, A
+    LD HL, FadeTable
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    LD DE, PaletteFadeBuffer
+    LD BC, $20
+    LDIR
+    RET
 
 ;-------------------------------------------------------------------------------------
 
@@ -297,17 +334,28 @@ PlayerColors:
 GetBackgroundColor:
     LD A, (BackgroundColorCtrl)     ;check background color control
     OR A
-    JP Z, NoBGColor                 ;if not set, increment task and fetch palette
+    JR Z, NoBGColor                 ;if not set, increment task and fetch palette
 ;
-    LD HL, BGColorCtrl_Addr         ;put appropriate palette into vram
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    LD A, (HL)
+    JR Z, +
+    LD HL, BGColorCtrl_Addr         ;for NES GFX, put appropriate palette into vram
+    addAToHL8_M
+    LD (VRAM_Buffer_AddrCtrl), A    ;note that if set to 5-7, $0301 will not be read
+    JR NoBGColor
++:
+    LD A, (BackgroundColorCtrl)     ;else, load appropriate palette into fade buffer
+    ADD A, A
+    LD HL, FadeTable
     addAToHL8_M
     LD A, (HL)
-    LD HL, OptionBitflags
-    BIT OPTFLAG_GFX, (HL)
-    JP Z, +
-    ADD A, $15
-+:
-    LD (VRAM_Buffer_AddrCtrl), A    ;note that if set to 5-7, $0301 will not be read
+    INC L
+    LD H, (HL)
+    LD L, A
+    LD DE, PaletteFadeBuffer
+    LD BC, $20
+    LDIR
 ;
 NoBGColor:
     LD HL, ScreenRoutineTask        ;increment to next subtask and plod on through
@@ -316,13 +364,16 @@ NoBGColor:
     LD HL, (VRAM_Buffer1_Ptr)
     LD A, (BackgroundColorCtrl)     ;if this value is four or greater, it will be set
     OR A
-    JP NZ, SetBGColor               ;therefore use it as offset to background color
+    JR NZ, SetBGColor               ;therefore use it as offset to background color
     LD A, (AreaType)                ;otherwise use area type bits from area offset as offset
 SetBGColor:
     LD DE, BackgroundColors
     addAToDE8_M
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, (DE)
-    LD (HL), $C0
+    JR Z, +
+    LD (HL), $C0                    ;for NES GFX, write BG color to VRAM_Buffer1
     INC L
     LD (HL), $00
     INC L
@@ -340,6 +391,9 @@ SetBGColor:
     INC L
     LD (HL), $00
     LD (VRAM_Buffer1_Ptr), HL
++:
+    LD (PaletteFadeBuffer), A       ;else, write BG color to fade buffer
+    LD (PaletteFadeBuffer + $10), A
     ; FALL THROUGH
 
 
@@ -357,19 +411,19 @@ GetPlayerColors:
     LD BC, $0000 | BANK_PLAYERGFX00 ; B = PALETTE, C = BANK
     LD A, (CurrentPlayerGfx)        ;check which player is on the screen
     OR A
-    JP Z, ChkFiery
+    JR Z, ChkFiery
     INC C                           ;load offset for luigi
     INC C
 ChkFiery:
     LD A, (PlayerStatus)            ;check player status
     CP A, $02
-    JP NZ, StartClrGet
+    JR NZ, StartClrGet
     INC B                           ;if fiery, load alternate offset for fiery player
     INC B
 StartClrGet:
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JP NZ, GetPlayerColors_NES
+    JR NZ, GetPlayerColors_NES
     LD A, (PlayerGfxBank)
     AND A, %11111101                ;remove old player bit
     OR A, C                         ;OR with new player bit
@@ -384,7 +438,7 @@ StartClrGet:
 GetPlayerColors_NES:
     LD DE, PlayerColors + $08 + $02 ;set default color to firey
     BIT 1, B
-    JP NZ, SavePlayerColors         ;jump if player is firey
+    JR NZ, SavePlayerColors         ;jump if player is firey
     LD E, <PlayerColors + $02       ;else use C as index into PlayerColors 
     LD A, C                         ;to get colors for either Mario or Luigi
     SUB A, BANK_PLAYERGFX00
@@ -422,29 +476,34 @@ WritePlayerClrStripeCmd:
 ;-------------------------------------------------------------------------------------
 
 GetAlternatePalette1:
+    CALL IncSubtask                     ;now onto the next task
     LD A, (AreaStyle)                   ;check for mushroom level style
     CP A, $01
-    JP NZ, IncSubtask
+    RET NZ                              ;exit if not found
 ;
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    LD A, VRAMTBL_MUSHROOMPAL           ;if found, load appropriate palette
-    JP Z, +
-    ADD A, $15  
-+:
+    JR Z, +
+    LD A, VRAMTBL_MUSHROOMPAL           ;for NES GFX, load appropriate palette via buffer control
     LD (VRAM_Buffer_AddrCtrl), A
-    JP IncSubtask                       ;now onto the next task
+    RET
++:
+    LD HL, MushroomPaletteData          ;else, load appropriate palette to fade buffer
+    LD DE, PaletteFadeBuffer + $05
+    LD BC, $06
+    LDIR
+    RET
 
 ;-------------------------------------------------------------------------------------
 
 DrawTitleScreen:
     LD A, (OperMode)                    ;are we in title screen mode?
     OR A
-    JP NZ, IncModeTask_B                ;if not, exit
+    JR NZ, IncModeTask_B                ;if not, exit
 ;
     LD A, (TitleLoadedFlag)             ;don't bother with loading tile data 
     OR A                                ;if after initial load on title screen
-    JP NZ, @SkipTileLoad
+    JR NZ, @SkipTileLoad
 ;   Load graphics for TitleScreen
     DI
     LD A, ASSET_TITLESCREEN
@@ -455,7 +514,7 @@ DrawTitleScreen:
     LD A, (CurrentPlayerGfx)
     OR A
     LD A, ASSET_EMBLEM_M
-    JP Z, +
+    JR Z, +
     INC A
 +:
     CALL AssetLoader
@@ -467,15 +526,15 @@ DrawTitleScreen:
     OTIR
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-    IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
+    IN A, (VDPCON_PORT)                 ;clear any pending VDP interrupts
     EI
 @SkipTileLoad:
 ;   Set Buffer control
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    LD A, VRAMTBL_TITLESCREEN           ;set buffer transfer control to $0300,
-    JP Z, +
-    ADD A, $15
+    LD A, VRAMTBL_TITLESCREEN           ;set buffer transfer control based on GFX mode
+    JR Z, +
+    LD A, VRAMTBL_TITLESCREEN_NES
 +:
     LD (VRAM_Buffer_AddrCtrl), A
     JP IncSubtask                       ;increment task and exit
@@ -485,7 +544,7 @@ DrawTitleScreen:
 ClearBuffersDrawIcon:
     LD A, (OperMode)                    ;check game mode
     OR A
-    JP NZ, IncModeTask_B                ;if not title screen mode, leave
+    JR NZ, IncModeTask_B                ;if not title screen mode, leave
 ;   !!! THIS IS TO CLEAR TITLE SCREEN DATA FROM LAST SCREEN ROUTINE !!!
 ;   !!! THIS IS PROBABLY NOT NEEDED !!!
 ;     XOR A                               ;otherwise, clear buffer space
@@ -516,9 +575,8 @@ IncModeTask_B:
     LD HL, OperMode_Task                ;move onto next mode
     INC (HL)
     RET
-    
 
-
+;-------------------------------------------------------------------------------------
 
 LoadLevelTileData:
 ;
@@ -548,7 +606,7 @@ LoadLevelTileData:
     ; LOAD CLOUD PLATFORM IF NEEDED
     LD A, (CloudTypeOverride)
     OR A
-    JP Z, +
+    JR Z, +
     LD A, ASSET_SPRCLOUD
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
@@ -561,7 +619,7 @@ LoadLevelTileData:
 +:
     LD A, (AreaType)
     OR A
-    JP Z, WaterAreaSetup
+    JR Z, WaterAreaSetup
     DEC A
     JP Z, OverWorldSetup
     DEC A
@@ -660,9 +718,9 @@ OverWorldSetup:
     ; DO DIFFERENT SETUP FOR SNOW LEVELS
     LD A, (BackgroundColorCtrl)
     CP A, $05
-    JP Z, SnowOverworldSetup
+    JR Z, SnowOverworldSetup
     CP A, $06
-    JP Z, SnowOverworldSetup
+    JR Z, SnowOverworldSetup
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -679,14 +737,14 @@ OverWorldSetup:
     LD A, (BackgroundScenery)           ; IF BACKGROUND DOESN'T HAVE GRASS, SKIP
     AND A, $03
     CP A, $02
-    JP NZ, TileLoadDone
+    JR NZ, TileLoadDone
     LD HL, AnimatedBGTileInits@Grass
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
-    JP TileLoadDone
+    JR TileLoadDone
 SnowOverworldSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
@@ -706,12 +764,12 @@ SnowOverworldSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
-    JP TileLoadDone
+    JR TileLoadDone
 UndergroundSetup:
     ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JP NZ, @ClearLaternArea
+    JR NZ, @ClearLaternArea
     LD A, ASSET_BGUNDERGROUND
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
@@ -729,7 +787,7 @@ UndergroundSetup:
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-    JP TileLoadDone
+    JR TileLoadDone
     ; FOR NES GFX, CLEAR OUT LATERN GFX AREA
 @ClearLaternArea:
     LD HL, $3D80 | VRAMWRITE
@@ -761,12 +819,12 @@ LoadEnemySprites:
     OR A
     LD DE, $0300
     SBC HL, DE
-    JP Z, LoadLakitu
+    JR Z, LoadLakitu
     ADD HL, DE
     OR A
     LD DE, $0500
     SBC HL, DE
-    JP Z, LoadLakitu
+    JR Z, LoadLakitu
     ADD HL, DE
     OR A
     LD DE, $0701
@@ -778,3 +836,202 @@ LoadLakitu:
     LD (MAPPER_SLOT2), A
     JP zx7_decompressVRAM
     
+;-------------------------------------------------------------------------------------
+
+FadeInScreen:
+;   EXIT IF DOING NES GFX
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    RET NZ
+;   EXIT IF SCREEN HAS ALREADY FADED IN
+    LD A, (PaletteFadeFlag)
+    DEC A
+    RET Z
+;   CLEAR ALL COLORS
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD B, $20
+    XOR A
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+;   TURN SCREEN ON
+    LD A, %11100000
+    OUT (VDPCON_PORT), A
+    LD A, $81
+    OUT (VDPCON_PORT), A
+;   BLUE FADE IN
+    LD DE, $0310
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;get final color's blue component
+    AND A, %00110000
+    CP A, E                 ;skip if it's less than current step
+    JR C, +
+    LD A, E                 ;else, put current step into A
++:
+    OUT (VDPDATA_PORT), A   ;write to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    LD A, E                 ;increment current step
+    ADD A, %00010000
+    LD E, A
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+;   GREEN FADE IN
+    LD DE, $0304
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;store final color's blue component in C
+    AND A, %00110000
+    LD C, A
+    LD A, (HL)              ;get final color's green component
+    AND A, %00001100
+    CP A, E                 ;skip if it's less than current step
+    JR C, +
+    LD A, E                 ;else, put current step into A
++:
+    OR A, C                 ;OR with modified final color
+    OUT (VDPDATA_PORT), A   ;write to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    LD A, E                 ;increment current step
+    ADD A, %00000100
+    LD E, A
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+;   RED FADE IN
+    LD DE, $0301
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;store final color's green and blue components in C
+    AND A, %00111100
+    LD C, A
+    LD A, (HL)              ;get final color's red component
+    AND A, %00000011
+    CP A, E                 ;skip if it's less than current step
+    JR C, +
+    LD A, E                 ;else, put current step into A
++:
+    OR A, C                 ;OR with modified final color
+    OUT (VDPDATA_PORT), A   ;write to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    INC E                   ;increment current step
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+    LD A, $01
+    LD (PaletteFadeFlag), A
+    RET
+
+
+
+FadeOutScreen:
+;   EXIT IF DOING NES GFX
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    RET NZ
+;   EXIT IF SCREEN HAS ALREADY BEEN FADED OUT
+    LD A, (PaletteFadeFlag)
+    CP A, $02
+    RET Z
+;   RED FADE OUT
+    LD DE, $0301
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;store final color without red component in C
+    AND A, %00111100
+    LD C, A
+    LD A, (HL)              ;get final color's red component and subtract step offset
+    AND A, %00000011
+    SUB A, E
+    JR NC, +                ;skip if no overflow occured
+    XOR A                   ;else, limit lower bound to 0
++:
+    OR A, C                 ;OR with modified final color
+    OUT (VDPDATA_PORT), A   ;send to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    INC E                   ;increment step offset
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+;   GREEN FADE OUT
+    LD DE, $0304
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;store final color without red and green components in C
+    AND A, %00110000
+    LD C, A
+    LD A, (HL)              ;get final color's green component and subtract step offset
+    AND A, %00001100
+    SUB A, E
+    JR NC, +                ;skip if no overflow occured
+    XOR A                   ;else, limit lower bound to 0
++:
+    OR A, C                 ;OR with modified final color
+    OUT (VDPDATA_PORT), A   ;send to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    LD A, E                 ;increment step offset
+    ADD A, %00000100
+    LD E, A
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+;   BLUE FADE OUT
+    LD DE, $0310
+--:
+    CALL WaitForNewScreen
+    LD HL, $0000 | CRAMWRITE
+    RST setVDPAddress
+    LD HL, PaletteFadeBuffer
+    LD B, $20
+-:
+    LD A, (HL)              ;remove final color's red and green components
+    AND A, %00110000
+    SUB A, E                ;subtract step offset
+    JR NC, +                ;skip if no overflow occured
+    XOR A                   ;else, limit lower bound to 0
++:
+    OUT (VDPDATA_PORT), A   ;send to VDP
+    INC L                   ;inner loop check for all colors within palette
+    DJNZ -
+    LD A, E                 ;increment step offset
+    ADD A, %00010000
+    LD E, A
+    DEC D                   ;outer loop check for all steps of color component
+    JR NZ, --
+    LD A, $02
+    LD (PaletteFadeFlag), A
+    RET
+
+WaitForNewScreen:
+    HALT
+    LD A, (VDPStatus)
+    OR A
+    JP P, WaitForNewScreen
+    RET

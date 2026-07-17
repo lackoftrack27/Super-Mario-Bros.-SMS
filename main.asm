@@ -117,6 +117,7 @@ VdpVector:
     PUSH AF
 ;   CHECK IF H-INT OCCURED
     IN A, (VDPCON_PORT)
+    LD (VDPStatus), A
     OR A
     JP M, NonMaskableInterrupt
     ; IF SO...
@@ -365,7 +366,7 @@ OptionUpdateSettings:
     JR NZ, +
     LD A, BANK_PLAYERGFX00
     LD (PlayerGfxBank), A
-    LD A, VRAMTBL_BOWSERPAL
+    LD A, VRAMTBL_OPTIONPAL
     LD (VRAM_Buffer_AddrCtrl), A
     LD A, $38
     LD (Player_Rel_YPos), A
@@ -377,7 +378,7 @@ OptionUpdateSettings:
 +:
     LD A, BANK_PLAYERGFX04
     LD (PlayerGfxBank), A
-    LD A, VRAMTBL_BOWSERPAL + $15
+    LD A, VRAMTBL_OPTIONPAL_NES
     LD (VRAM_Buffer_AddrCtrl), A
     LD A, $38 + $68
     LD (Player_Rel_YPos), A
@@ -614,18 +615,15 @@ RotPRandomBit:
 
 .SECTION "VRAM Action Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 VRAM_AddrTable:
-    .dw VRAM_Buffer1, WaterPaletteData, GroundPaletteData,
-    .dw UndergroundPaletteData, CastlePaletteData, TitleScreenData
-    .dw VRAM_Buffer2, VRAM_Buffer2, OptionsPaletteData                   ; Second VRAM_Buffer2 is never used?
-    .dw DaySnowPaletteData, NightSnowPaletteData, MushroomPaletteData
+    .dw VRAM_Buffer1, WaterPaletteData_NES, GroundPaletteData_NES,
+    .dw UndergroundPaletteData_NES, CastlePaletteData_NES, TitleScreenData
+    .dw VRAM_Buffer2, VRAM_Buffer2, OptionsPaletteData
+    .dw DaySnowPaletteData_NES, NightSnowPaletteData_NES, MushroomPaletteData_NES
     .dw MarioThanksMessage, LuigiThanksMessage, MushroomRetainerSaved
     .dw PrincessSaved1, PrincessSaved2, WorldSelectMessage1
     .dw WorldSelectMessage2, RetainerPaletteData, PrincessPaletteData
     ;
-    .dw VRAM_Buffer1, WaterPaletteData_NES, GroundPaletteData_NES
-    .dw UndergroundPaletteData_NES, CastlePaletteData_NES, TitleScreenData_NES
-    .dw VRAM_Buffer2, VRAM_Buffer2, OptionsPaletteData_NES
-    .dw DaySnowPaletteData_NES, NightSnowPaletteData_NES, MushroomPaletteData_NES 
+    .dw TitleScreenData_NES, OptionsPaletteData_NES
 .ENDS
 
 NonMaskableInterrupt:

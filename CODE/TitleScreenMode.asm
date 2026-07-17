@@ -27,6 +27,8 @@ InitializeGame:
 ;
     LD A, $18                       ;set demo timer
     LD (DemoTimer), A
+    LD A, $02
+    LD (PaletteFadeFlag), A
 ;
     CALL LoadAreaPointer
     JP InitializeArea
@@ -163,7 +165,7 @@ GameMenuRoutine:
     LD (OperMode_Task), A           ;screen output
     LD (Sprite0HitDetectFlag), A
     LD (DisableScreenFlag), A
-    RET
+    JP FadeOutScreen
 @ChkContinue:
     LD A, (DemoTimer)               ;if timer for demo has expired, reset modes
     OR A
@@ -198,7 +200,7 @@ GameMenuRoutine:
     LD BC, $0F
     LD (HL), $00
     LDIR
-    RET
+    JP FadeOutScreen
 @GoContinue:
 ;
     LD (WorldNumber), A             ;start both players at the first area

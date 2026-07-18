@@ -180,11 +180,7 @@ OutputInter:
     CALL zx7_decompressVRAM
     ; UPLOAD PLAYER EMBLEM
     LD A, (CurrentPlayerGfx)
-    OR A
-    LD A, ASSET_EMBLEM_M
-    JR Z, +
-    INC A
-+:
+    ADD A, ASSET_EMBLEM_M
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     EX DE, HL
@@ -512,11 +508,7 @@ DrawTitleScreen:
     CALL zx7_decompressVRAM
 ;   UPLOAD PLAYER EMBLEM
     LD A, (CurrentPlayerGfx)
-    OR A
-    LD A, ASSET_EMBLEM_M
-    JR Z, +
-    INC A
-+:
+    ADD A, ASSET_EMBLEM_M
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     EX DE, HL

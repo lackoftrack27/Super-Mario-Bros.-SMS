@@ -1698,7 +1698,7 @@ StreamAnimatedBGTiles:
 
 ;   ASSET BANK, DATA ADDRESS, VRAM ADDRESS
 
-.SECTION "Asset Table for All-Star GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8 RETURNORG
+.SECTION "Asset Table for All-Star GFX" BITWINDOW 8 RETURNORG
 
 AssetLoaderTable:
     .db :Tiles_BG_Comm
@@ -1754,7 +1754,7 @@ AssetLoaderTable:
 
 .ENDS
 
-.SECTION "Asset Table for NES GFX" BANK BANK_CODE SLOT 0 BITWINDOW 8 RETURNORG
+.SECTION "Asset Table for NES GFX" BITWINDOW 8 RETURNORG
 
 AssetLoaderTableNES:
     .db :Tiles_BG_Comm_NES
@@ -1886,7 +1886,9 @@ vdpInitData:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "OUTI Blocks" BANK BANK_SLOT2 SLOT 2 FORCE ORG $0000
+.BANK BANK_SLOT2 SLOT 2
+
+.SECTION "OUTI Blocks" FORCE ORG $0000
 
 ;   0x0000 - 0x0100
 OutiBlock128:
@@ -1939,71 +1941,48 @@ WriteVeriBlock_W:
 ; PALETTE DATA LAYOUT:
 ;     VDP ADDRESS, BYTE COUNT, DATA, TERMINATOR
 
-.SECTION "Water AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Water AreaType Palette Data" FREE
 WaterPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
     .db $00, $00, $22, $26, $27, $24, $28, $29, $2B, $25, $3E, $2F, $3A, $3F, $21, $2E
     .db $00, $00, $21, $27, $2B, $24, $2C, $26, $3B, $2F, $3A, $3F, $23, $22, $30, $28
-    .db $00
 .ENDS
 
-.SECTION "Ground AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Ground AreaType Palette Data" FREE
 GroundPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
     .db $00, $00, $01, $06, $0B, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $3A, $3E
     .db $00, $00, $01, $06, $0B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
-    .db $00
 .ENDS
 
-.SECTION "Underground AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Underground AreaType Palette Data" FREE
 UndergroundPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
-    .db $00, $00, $10, $24, $38, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $15, $3C;$3D
+    .db $00, $00, $10, $24, $38, $04, $08, $0C, $05, $0A, $2E, $0F, $2A, $3F, $15, $3C
     .db $00, $00, $10, $24, $38, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
-    .db $00
 .ENDS
 
-.SECTION "Castle AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Castle AreaType Palette Data" FREE
 CastlePaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
     .db $00, $00, $10, $15, $2A, $01, $06, $1B, $05, $0A, $2B, $0F, $02, $3F, $07, $2D
     .db $00, $00, $10, $15, $2A, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
-    .db $00
 .ENDS
 
-.SECTION "Day Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Day Snow AreaType Palette Data" FREE
 DaySnowPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
     .db $39, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
-    ;.db $39, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
     .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
-    .db $00
 .ENDS
 
-.SECTION "Night Snow AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Night Snow AreaType Palette Data" FREE
 NightSnowPaletteData:
-    .dw swapBytes($C000)
-    .db StripeCount($20)
     .db $00, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
-    ;.db $00, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
     .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
-    .db $00
 .ENDS
 
-.SECTION "Mushroom AreaType Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Mushroom AreaType Palette Data" FREE
 MushroomPaletteData:
-    .dw swapBytes($C005)
-    .db StripeCount($06)
     .db $01, $02, $03, $05, $0A, $2B
-    .db $00
 .ENDS
 
-; .SECTION "Bowser Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "Bowser Palette Data" FREE
 ; BowserPaletteData:
     ; .dw swapBytes($C010)
     ; .db StripeCount($10)
@@ -2011,7 +1990,7 @@ MushroomPaletteData:
     ; .db $00
 ; .ENDS
 
-.SECTION "Retainer Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Retainer Palette Data" FREE
 RetainerPaletteData:
     .dw swapBytes($C010)
     .db StripeCount($10)
@@ -2020,7 +1999,7 @@ RetainerPaletteData:
 .ENDS
 
 
-.SECTION "Princess Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Princess Palette Data" FREE
 PrincessPaletteData:
     .dw swapBytes($C010)
     .db StripeCount($10)
@@ -2028,7 +2007,7 @@ PrincessPaletteData:
     .db $00
 .ENDS
 
-.SECTION "Options Palette Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Options Palette Data" FREE
 OptionsPaletteData:
     .dw swapBytes($C010)
     .db StripeCount($10)
@@ -2038,7 +2017,7 @@ OptionsPaletteData:
 
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Water AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Water AreaType Palette Data (NES)" FREE
 WaterPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($20)
@@ -2047,7 +2026,7 @@ WaterPaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Ground AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Ground AreaType Palette Data (NES)" FREE
 GroundPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($20)
@@ -2056,7 +2035,7 @@ GroundPaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Underground AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Underground AreaType Palette Data (NES)" FREE
 UndergroundPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($20)
@@ -2065,7 +2044,7 @@ UndergroundPaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Castle AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Castle AreaType Palette Data (NES)" FREE
 CastlePaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($20)
@@ -2074,7 +2053,7 @@ CastlePaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Day Snow AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Day Snow AreaType Palette Data (NES)" FREE
 DaySnowPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($04)
@@ -2085,7 +2064,7 @@ DaySnowPaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Night Snow AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Night Snow AreaType Palette Data (NES)" FREE
 NightSnowPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($04)
@@ -2093,7 +2072,7 @@ NightSnowPaletteData_NES:
     .db $00
 .ENDS
 
-.SECTION "Mushroom AreaType Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Mushroom AreaType Palette Data (NES)" FREE
 MushroomPaletteData_NES:
     .dw swapBytes($C000)
     .db StripeCount($04)
@@ -2101,7 +2080,7 @@ MushroomPaletteData_NES:
     .db $00
 .ENDS
 
-; .SECTION "Bowser Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "Bowser Palette Data (NES)" FREE
 ; BowserPaletteData_NES:
     ; .dw swapBytes($C014)
     ; .db StripeCount($03)
@@ -2109,7 +2088,7 @@ MushroomPaletteData_NES:
     ; .db $00
 ; .ENDS
 
-.SECTION "Options Palette Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Options Palette Data (NES)" FREE
 OptionsPaletteData_NES:
     .dw swapBytes($C010)
     .db StripeCount($10)
@@ -2118,7 +2097,7 @@ OptionsPaletteData_NES:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "'Thank You Mario' MSG Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "'Thank You Mario' MSG Data" FREE
 MarioThanksMessage:
 ;"THANK YOU MARIO!"
     ; .db $25, $48, $10
@@ -2134,7 +2113,7 @@ MarioThanksMessage:
     .db $00
 .ENDS
 
-.SECTION "'Thank You Luigi' MSG Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "'Thank You Luigi' MSG Data" FREE
 LuigiThanksMessage:
 ;"THANK YOU LUIGI!"
     ; .db $25, $48, $10
@@ -2150,7 +2129,7 @@ LuigiThanksMessage:
     .db $00
 .ENDS
 
-.SECTION "Mushroom Retainer MSG Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Mushroom Retainer MSG Data" FREE
 MushroomRetainerSaved:
 ;"BUT OUR PRINCESS IS IN"
 ;     .db $25, $c5, $16
@@ -2177,7 +2156,7 @@ MushroomRetainerSaved:
     .db $00
 .ENDS
 
-.SECTION "Princess Saved MSG 1 Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Princess Saved MSG 1 Data" FREE
 PrincessSaved1:
 ;"YOUR QUEST IS OVER."
     ; .db $25, $a7, $13
@@ -2194,7 +2173,7 @@ PrincessSaved1:
     .db $00
 .ENDS
 
-.SECTION "Princess Saved MSG 2 Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Princess Saved MSG 2 Data" FREE
 PrincessSaved2:
 ;"WE PRESENT YOU A NEW QUEST."
     ; .db $25, $e3, $1b
@@ -2214,7 +2193,7 @@ PrincessSaved2:
     .db $00
 .ENDS
 
-.SECTION "World Select MSG 1 Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "World Select MSG 1 Data" FREE
 WorldSelectMessage1:
 ;"PUSH BUTTON B"
     ; .db $26, $4a, $0d
@@ -2229,7 +2208,7 @@ WorldSelectMessage1:
     .db $00
 .ENDS
 
-.SECTION "World Select MSG 2 Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "World Select MSG 2 Data" FREE
 WorldSelectMessage2:
 ;"TO SELECT A WORLD"
     ; .db $26, $88, $11
@@ -2245,7 +2224,7 @@ WorldSelectMessage2:
     .db $00
 .ENDS
 
-.SECTION "Title Screen TileMap Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Title Screen TileMap Data" FREE
 TitleScreenData:
 ;   ROW 0
     .dw swapBytes(xyToNameTbl_M(5, 1))
@@ -2327,7 +2306,7 @@ TitleScreenData:
     .db $00
 .ENDS
 
-.SECTION "Title Screen TileMap Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Title Screen TileMap Data (NES)" FREE
 TitleScreenData_NES:
 ;   ROW 0
     .dw swapBytes(xyToNameTbl_M(5, 1))
@@ -2406,7 +2385,7 @@ TitleScreenData_NES:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Top Status Bar Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Top Status Bar Stripe Data" FREE
 TopStatusBarLine:
 ;   0x00 - 0x1C
     .db @end-TopStatusBarLine - 1
@@ -2432,7 +2411,7 @@ TopStatusBarLine:
 ;   CROWN = $0D, LIFE = $0F
 ;   WORLD = $20, LEVEL = $24
 
-.SECTION "World & Lives Screen Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "World & Lives Screen Stripe Data" FREE
 WorldLivesDisplay:
 ;   0x1D - 
     .db @end-WorldLivesDisplay - 1
@@ -2451,7 +2430,7 @@ WorldLivesDisplay:
 @end:
 .ENDS
 
-; .SECTION "Two Player Timeup for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "Two Player Timeup for Mario Stripe Data" FREE
 ; TwoPlayerTimeUp:
 ;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
 ;     .db @end-TwoPlayerTimeUp - 1
@@ -2461,7 +2440,7 @@ WorldLivesDisplay:
 ; @end:
 ; .ENDS
 
-; .SECTION "Timeup Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "Timeup Stripe Data" FREE
 ; OnePlayerTimeUp:
 ;     ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
 ;     ;.db $ff
@@ -2472,12 +2451,12 @@ WorldLivesDisplay:
 ; @end:
 ; .ENDS
 
-; .SECTION "Two Player GameOver for Mario Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "Two Player GameOver for Mario Stripe Data" FREE
 ; TwoPlayerGameOver:
 ;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
 ; .ENDS
 
-; .SECTION "GameOver Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+; .SECTION "GameOver Stripe Data" FREE
 ; OnePlayerGameOver:
 ;     ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
 ;     ;.db $18, $1f, $0e, $1b
@@ -2487,7 +2466,7 @@ WorldLivesDisplay:
 ;     .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
 ; .ENDS
 
-.SECTION "GameOver Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "GameOver Stripe Data" FREE
 GameOverDisplay:
     ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
     ;.db $18, $1f, $0e, $1b
@@ -2502,7 +2481,7 @@ GameOverDisplay:
 @end:
 .ENDS
 
-.SECTION "Timeup Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Timeup Stripe Data" FREE
 TimeUpDisplay:
     ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
     ;.db $ff
@@ -2516,7 +2495,7 @@ TimeUpDisplay:
 @end:
 .ENDS
 
-.SECTION "WarpZone Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "WarpZone Stripe Data" FREE
 WarpZoneWelcome:
     ; .db $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
     ; .db $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
@@ -2551,19 +2530,19 @@ WarpZoneWelcome:
 .ENDS
 
 
-.SECTION "Mario Name Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Mario Name Stripe Data" FREE
 MarioName:
     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
     .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
 .ENDS
 
-.SECTION "Luigi Name Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Luigi Name Stripe Data" FREE
 LuigiName:
     ;.db $15, $1e, $12, $10, $12    ; "LUIGI", no address or length
     .dw BG_MACRO($0115), BG_MACRO($0116), BG_MACRO($0113), BG_MACRO($0117), BG_MACRO($0113)
 .ENDS
 
-.SECTION "WarpZone Numbers Stripe Data" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "WarpZone Numbers Stripe Data" FREE
 WarpZoneNumbers:
     ; .db $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
     ; .db $24, $05, $24, $00         ; zone, partly responsible for
@@ -2574,7 +2553,7 @@ WarpZoneNumbers:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Metatile Graphics Tables" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256
+.SECTION "Metatile Graphics Tables" FREE ALIGN $100
 
 ;   ----- METATILE GRAPHICS TABLES-----
 Palette0_MTiles:
@@ -2878,7 +2857,7 @@ Palette3_MTiles:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Player Emblem Tiles" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Player Emblem Tiles" FREE
 
 Tiles_Mario_Emblem:
     .db $38 $38 $00 $38 $10 $10 $6C $7C $82 $82 $7C $FE $AA $AA $54 $FE $BA $BA $44 $FE $38 $38 $44 $7C $38 $38 $00 $38 $00 $00 $00 $00
@@ -2892,7 +2871,7 @@ Tiles_Luigi_Emblem_NES:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Cloud Platform Tiles" BANK BANK_SLOT2 SLOT 2 FREE
+.SECTION "Cloud Platform Tiles" FREE
 
 Tiles_Cloud:
     .db $3C $3C $00 $3C $7C $7E $00 $7E $BE $FF $00 $FF $BE $FF $00 $FF $9E $FF $00 $FF $CC $FF $00 $FF $78 $7E $00 $7E $00 $3C $00 $3C

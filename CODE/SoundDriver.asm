@@ -220,6 +220,9 @@ SilenceAllSound:
 ;   MUTE ALL PSG CHANNELS (BUT DON'T CLEAR THEIR FLAGS)
     CALL SndStopAll@WritePSG
     ; FALL THROUGH
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_FM)
+    RET Z
 
 SndStopAllFM:
 ;   CLEAR ALL FM TRACK CONTROL FLAGS
@@ -969,9 +972,14 @@ SndApplyModulation:
 ;-----------------------------------------
 
 SndProcessQueueMusicFM:
+;   DO COMPLETE SILENCE IF REQUESTED
     CP A, SNDID_SILENCE
-    JP Z, SilenceAllSound
-;
+    JR NZ, +
+    XOR A
+    LD (SndHurryUpFlag), A
+    JP SilenceAllSound
+;   STORE SOUND ID
++:
     LD HL, MusicTrack0.SoundPlaying
     LD (HL), A
 ;   COPY GLOBAL TRACK DATA

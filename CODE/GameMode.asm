@@ -85,10 +85,9 @@ InitializeArea:
 @DoneInitArea:
     LD A, (TitleLoadedFlag)         ;don't silence music if past initial load on title screen
     OR A
-    JR NZ, +
-    LD A, SNDID_SILENCE
-    LD (MusicTrack0.SoundQueue), A
-+:
+    CALL Z, SilenceAllSound
+    ;LD A, SNDID_SILENCE
+    ;LD (MusicTrack0.SoundQueue), A
     XOR A                           ;disable screen output
     LD (DisableScreenFlag), A
     LD HL, OperMode_Task            ;increment one of the modes
@@ -103,6 +102,7 @@ InitializeArea:
 SecondaryGameSetup:
     LD A, $40
     LD (DisableScreenFlag), A           ;enable screen output
+    CALL FadeInScreen
     ; LD HL, VRAM_Buffer1_Offset          ;clear buffer at $0300-$03ff
     ; LD DE, VRAM_Buffer1_Offset + $01  ;   !!! THIS CLEARS WAY MORE STUFF THAN JUST THE VRAM BUFFERS !!!
     ; LD BC, $00FF

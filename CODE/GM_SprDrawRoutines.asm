@@ -22,44 +22,44 @@ DrawVine:
 ;
     DEC C
     LD B, $00
-    JP NZ, +
+    JR NZ, +
     LD B, $30
 +:
     LD A, (Enemy_Rel_YPos)
     ADD A, B
     SUB A, SMS_PIXELYOFFSET
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     INC L
     ADD A, $08
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     INC L
     ADD A, $08
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     INC L
     ADD A, $08
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     INC L
     ADD A, $08
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     INC L
     ADD A, $08
     CP A, $D0
-    JP Z, +
+    JR Z, +
     LD (HL), A
 +:
     LD L, E
@@ -96,7 +96,7 @@ DrawVine:
     LD L, E
 ;
     INC C
-    JP NZ, SkpVTop
+    JR NZ, SkpVTop
     LD (HL), $51
 ;
 SkpVTop:
@@ -108,7 +108,7 @@ ChkFTop:
     LD A, (VineStart_Y_Position)
     SUB A, (HL)
     CP A, $64
-    JP C, NextVSp
+    JR C, NextVSp
     LD (HL), YPOS_OFFSCREEN
 NextVSp:
     INC L
@@ -161,7 +161,7 @@ DrawHammer:
 ;
     LD A, (TimerControl)
     OR A
-    JP NZ, RenderH
+    JR NZ, RenderH
 ;
     LD L, <Misc_State
     LD A, (HL)
@@ -285,7 +285,7 @@ FlagpoleGfxHandler:
 ;
     LD A, (FlagpoleCollisionYPos)   ;get vertical coordinate at time of collision
     OR A
-    JP Z, ChkFlagOffscreen          ;if zero, branch ahead
+    JR Z, ChkFlagOffscreen          ;if zero, branch ahead
     INC E                           ;move sprite data offset by 3
     INC E
     INC E
@@ -381,11 +381,11 @@ DrawLargePlatform:
     LD A, (AreaType)
     CP A, $03
     LD A, YPOS_OFFSCREEN
-    JP Z, SetLast2Platform
+    JR Z, SetLast2Platform
     LD A, (SecondaryHardMode)
     OR A
     LD A, YPOS_OFFSCREEN
-    JP NZ, SetLast2Platform
+    JR NZ, SetLast2Platform
     LD A, B
 
 SetLast2Platform:
@@ -400,32 +400,32 @@ SetLast2Platform:
     LD C, A
     LD A, YPOS_OFFSCREEN
     SLA C
-    JP NC, SChk2
+    JR NC, SChk2
     LD (DE), A
 SChk2:
     INC E
     SLA C
-    JP NC, SChk3
+    JR NC, SChk3
     LD (DE), A
 SChk3:
     INC E
     SLA C
-    JP NC, SChk4
+    JR NC, SChk4
     LD (DE), A
 SChk4:
     INC E
     SLA C
-    JP NC, SChk5
+    JR NC, SChk5
     LD (DE), A
 SChk5:
     INC E
     SLA C
-    JP NC, SChk6
+    JR NC, SChk6
     LD (DE), A
 SChk6:
     INC E
     SLA C
-    JP NC, SLChk
+    JR NC, SLChk
     LD (DE), A
 SLChk:
     LD A, (Enemy_OffscrBits)
@@ -453,7 +453,7 @@ DrawFloateyNumber_Coin:
     LD L, <Misc_Y_Position
     LD A, (FrameCounter)            ;get frame counter
     RRCA                            ;divide by 2
-    JP C, NotRsNum                  ;branch if d0 not set to raise number every other frame
+    JR C, NotRsNum                  ;branch if d0 not set to raise number every other frame
     DEC (HL)                        ;otherwise, decrement vertical coordinate
 NotRsNum:
     LD A, (HL)                      ;get vertical coordinate
@@ -496,7 +496,7 @@ JCoinGfxHandler:
     LD L, <Misc_State
     LD A, (HL)                      ;get state of misc object
     CP A, $02                       ;if 2 or greater,
-    JP NC, DrawFloateyNumber_Coin   ;branch to draw floatey number
+    JR NC, DrawFloateyNumber_Coin   ;branch to draw floatey number
 ;
     LD L, <Misc_Y_Position
     LD A, (HL)                      ;store vertical coordinate as
@@ -872,21 +872,21 @@ CheckForGoomba:
     ;LD A, IYH                
     LD C, A
     CP A, OBJECTID_Goomba                   ;check value for goomba object
-    JP NZ, CheckForSpiny                    ;branch if not found
+    JR NZ, CheckForSpiny                    ;branch if not found
 ;
     LD L, <Enemy_State
     LD A, (HL)
     CP A, $02                               ;check for defeated state
-    JP C, GmbaAnim                          ;if not defeated, go ahead and animate
+    JR C, GmbaAnim                          ;if not defeated, go ahead and animate
     LD IXH, $04                             ;if defeated, write new value here
 GmbaAnim:
     AND A, %00100000                        ;check for d5 set in enemy object state
     LD HL, TimerControl
     OR A, (HL)                              ;or timer disable flag set
-    JP NZ, CheckForSpiny                    ;if either condition true, do not animate goomba
+    JR NZ, CheckForSpiny                    ;if either condition true, do not animate goomba
     LD A, (FrameCounter)
     AND A, %00001000                        ;check for every eighth frame
-    JP NZ, CheckForSpiny
+    JR NZ, CheckForSpiny
     LD A, %00000011
     XOR A, IXL                              ;invert bits to flip horizontally every eight frames
     LD IXL, A                               ;leave alone otherwise              
@@ -899,189 +899,181 @@ CheckForSpiny:
 ;
     LD C, IXH
 ;
-    LD A, L
+    LD A, L                                 ;check if value loaded is for spiny
     CP A, $24
-    JP NZ, CheckForLakitu
+    JR NZ, CheckForLakitu                   ;if not found, branch
 ;
-    LD A, C
+    LD A, C                                 ;if enemy state set to $05, do this,
     CP A, $05
-    JP NZ, CheckForHammerBro
+    JR NZ, CheckForHammerBro                ;otherwise branch
 ;
-    LD L, $30
-    LD IXL, $02
-    LD IXH, $05
+    LD L, $30                               ;set to spiny egg offset
+    ;LD IXL, $02                             ;set enemy direction to reverse sprites horizontally LD IXH, $05                             ;set enemy state
+    LD IX, $0502                            ;set enemy direction and state
     JP CheckForHammerBro
 
 CheckForLakitu:
-    CP A, $90
-    JP NZ, CheckUpsideDownShell
+    CP A, $90                               ;check value for lakitu's offset loaded
+    JR NZ, CheckUpsideDownShell             ;branch if not loaded
 ;
     LD A, IYL
-    AND A, %00100000
-    JP NZ, CheckDefeatedState
+    AND A, %00100000                        ;check for d5 set in enemy state
+    JP NZ, CheckDefeatedState               ;branch if set
 ;
     LD A, (FrenzyEnemyTimer)
-    CP A, $10
-    JP NC, CheckDefeatedState
+    CP A, $10                               ;check timer to see if we've reached a certain range
+    JP NC, CheckDefeatedState               ;branch if not
 ;
-    LD L, $96
-    JP CheckDefeatedState
+    LD L, $96                               ;if d6 not set and timer in range, load alt frame for lakitu
+    JP CheckDefeatedState                   ;skip this next part if we found lakitu but alt frame not needed
 
 CheckUpsideDownShell:
-    LD A, IYH
+    LD A, IYH                               ;check for enemy object => $04
     CP A, $04
-    JP NC, CheckRightSideUpShell
+    JR NC, CheckRightSideUpShell            ;branch if true
 ;
     LD A, C
     CP A, $02
-    JP C, CheckRightSideUpShell
+    JR C, CheckRightSideUpShell             ;branch if enemy state < $02
 ;
-    LD L, $7E
-    INC D
+    LD L, $7E                               ;set for upside-down buzzy beetle shell by default
+    INC D                                   ;increment vertical position by one pixel
     LD A, IYH
-    LD C, A
-    CP A, OBJECTID_BuzzyBeetle
-    JP Z, CheckRightSideUpShell
-    DEC D
-    LD L, $5A
-    OR A
-    JP Z, CheckRightSideUpShell
-    LD L, $EA
+    ;LD C, A
+    CP A, OBJECTID_BuzzyBeetle              ;check for buzzy beetle object
+    JR Z, CheckRightSideUpShell
+    DEC D                                   ;revert vertical position
+    LD L, $5A                               ;set for upside-down koopa shell by default (GREEN)
+    OR A                                    ;$00 = Green Koopa
+    JR Z, CheckRightSideUpShell
+    LD L, $EA                               ;set for upside-down koopa shell (RED)
 
 CheckRightSideUpShell:
-    LD A, IXH
-    CP A, $04
-    JP NZ, CheckForHammerBro
+    LD A, IXH                               ;check for value set here
+    CP A, $04                               ;if enemy state < $02, do not change to shell, if
+    JR NZ, CheckForHammerBro                ;enemy state => $02 but not = $04, leave shell upside-down
 ;
-    LD L, $72
-    INC D
+    LD L, $72                               ;set right-side up buzzy beetle shell by default
+    INC D                                   ;increment saved vertical position by one pixel
     LD A, IYH
     LD C, A
-    CP A, OBJECTID_BuzzyBeetle
-    JP Z, CheckForDefdGoomba
+    CP A, OBJECTID_BuzzyBeetle              ;check for buzzy beetle object
+    JR Z, CheckForDefdGoomba                ;branch if found
 ;
-    INC D
-    LD L, $66
+    INC D                                   ;and increment saved vertical position again
+    LD L, $66                               ;change to right-side up koopa shell if not found (GREEN)
     CP A, $01
-    JP NZ, +
-    LD L, $F6
-    JP CheckForDefdGoomba
-+:
+    JR Z, +                                 ;check if koopa isn't green
     CP A, OBJECTID_RedKoopa
-    JP NZ, +
-    LD L, $F6
-    JP CheckForDefdGoomba
+    JR Z, +
+    CP A, OBJECTID_RedParatroopa            ;check if paratroopa isn't red
+    JR NZ, CheckForDefdGoomba
 +:
-    CP A, OBJECTID_RedParatroopa
-    JP NZ, CheckForDefdGoomba
-    LD L, $F6
+    LD L, $F6                               ;else, change to right-side up koopa shell (RED)
 
 CheckForDefdGoomba:
-    LD A, C
+    LD A, C                                 ;check for goomba object (necessary if previously
     CP A, OBJECTID_Goomba
-    JP NZ, CheckForHammerBro
+    JR NZ, CheckForHammerBro                ;failed buzzy beetle object test)
 ;
-    LD L, $54
-    LD A, IYL
-    AND A, %00100000
-    JP NZ, CheckForHammerBro
+    LD L, $54                               ;load for regular goomba
+    LD A, IYL                               ;note that this only gets performed if enemy state => $02
+    AND A, %00100000                        ;check saved enemy state for d5 set
+    JR NZ, CheckForHammerBro                ;branch if set
 ;
-    LD L, $8A
-    DEC D
+    LD L, $8A                               ;load offset for defeated goomba
+    DEC D                                   ;set different value and decrement saved vertical position
 
 CheckForHammerBro:
-    LD A, (ObjectOffset + $01)
-    LD C, A
-;
-    LD A, IYH
+    LD A, IYH                               ;check for hammer bro object
     CP A, OBJECTID_HammerBro
-    JP NZ, CheckForBloober
+    JR NZ, CheckForBloober                  ;branch if not found
 ;
-    LD A, IYL
+    LD A, IYL                               ;branch if not in normal enemy state
     OR A
-    JP Z, CheckToAnimateEnemy
+    JR Z, CheckToAnimateEnemy
 ;
-    AND A, %00001000
-    JP Z, CheckDefeatedState
+    AND A, %00001000                        ;if d3 not set, branch further away
+    JR Z, CheckDefeatedState
 ;
-    LD L, $B4
+    LD L, $B4                               ;otherwise load offset for different frame
     JP CheckToAnimateEnemy
 
 CheckForBloober:
-    LD A, L
+    LD A, L                                 ;check for cheep-cheep offset loaded
     CP A, $48
-    JP Z, CheckToAnimateEnemy
+    JR Z, CheckToAnimateEnemy               ;branch if found
 ;
-    LD A, C
+    LD A, (ObjectOffset + $01)
     SUB A, $C1
     LD BC, EnemyIntervalTimer
     addAToBC8_M
     LD A, (BC)
     LD C, A
-    CP A, $05
-    JP NC, CheckDefeatedState
+    CP A, $05                               ;branch if some timer is above a certain point
+    JR NC, CheckDefeatedState
 ;
-    LD A, L
+    LD A, L                                 ;check for bloober offset loaded
     CP A, $3C
-    JP NZ, CheckToAnimateEnemy
+    JR NZ, CheckToAnimateEnemy              ;branch if not found this time
 ;
     LD A, C
-    CP A, $01
-    JP Z, CheckDefeatedState
+    DEC A                                   ;branch if timer is set to certain point
+    JR Z, CheckDefeatedState
 ;
-    INC D
+    INC D                                   ;increment saved vertical coordinate three pixels
     INC D
     INC D
     JP CheckAnimationStop
 
 CheckToAnimateEnemy:
-    LD A, IYH
+    LD A, IYH                               ;check for specific enemy objects
     CP A, OBJECTID_Goomba
-    JP Z, CheckDefeatedState
+    JR Z, CheckDefeatedState                ;branch if goomba
     CP A, $08
-    JP Z, CheckDefeatedState
+    JR Z, CheckDefeatedState                ;branch if bullet bill (note both variants use $08 here)
     CP A, $18
-    JP NC, CheckDefeatedState
+    JR NC, CheckDefeatedState               ;branch if => $18
 
 CheckForSecondFrame:
-    LD A, (FrameCounter)
-    AND A, $08
-    JP NZ, CheckDefeatedState
+    LD A, (FrameCounter)                    ;load frame counter
+    AND A, $08                              ;mask it
+    JR NZ, CheckDefeatedState               ;branch if timing is off
 
 CheckAnimationStop:
     LD A, (TimerControl)
     LD C, A
-    LD A, IYL
-    AND A, %10100000
+    LD A, IYL                               ;check saved enemy state
+    AND A, %10100000                        ;for d7 or d5, or check for timers stopped
     OR A, C
-    JP NZ, CheckDefeatedState
+    JR NZ, CheckDefeatedState               ;if either condition true, branch
 ;
-    LD A, $06
-    addAToHL8_M
+    LD A, $06                               ;add $06 to current enemy offset
+    addAToHL8_M                             ;to animate various enemy objects
 
 CheckDefeatedState:
-    LD A, IYL
-    AND A, %00100000
-    JP Z, DrawEnemyObject
+    LD A, IYL                               ;check saved enemy state
+    AND A, %00100000                        ;for d5 set
+    JR Z, DrawEnemyObject                   ;branch if not set
 ;
-    LD A, IYH
-    CP A, $04
-    JP C, DrawEnemyObject
+    LD A, IYH                               ;check for saved enemy object => $04
+    CP A, $04                               ;branch if less
+    JR C, DrawEnemyObject
 ;
     ;LD A, $01
     ;LD (VerticalFlipFlag), A
-    LD IXH, $00
+    LD IXH, $00                             ;init saved value here
 
 DrawEnemyObject:
-    LD B, D
+    LD B, D                                 ;put vertical pos into B
 
-    LD A, (Temp_Bytes + $05)
+    LD A, (Temp_Bytes + $05)                ;put horizontal pos into C
     LD C, A
 
-    LD D, >Sprite_Y_Position
-    LD H, >EnemyGraphicsTable
+    LD D, >Sprite_Y_Position                ;set up SAT pointer
+    LD H, >EnemyGraphicsTable               ;choose appropriate table based on enemy direction
     DEC IXL
-    JP Z, +
+    JR Z, +
     LD H, >EnemyGraphicsTable_HFlip
 ;
 +:
@@ -1090,6 +1082,7 @@ DrawEnemyObject:
     ;CALL DrawSpriteObject
     LD IXL, E
     LD A, B
+    DrawSpriteObject_YPos                   ;draw six tiles of data
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
@@ -1102,61 +1095,61 @@ DrawEnemyObject:
     ; FALL THROUGH
 
 SprObjectOffscrChk:
-    LD D, >Sprite_Y_Position
-    LD HL, (ObjectOffset)
-    LD A, (Enemy_OffscrBits)
+    LD D, >Sprite_Y_Position                ;set up SAT pointer
+    LD HL, (ObjectOffset)                   ;get enemy buffer offset
+    LD A, (Enemy_OffscrBits)                ;check offscreen information
     LD C, A
-    SRL C   ; 24
+    SRL C                                   ;shift three times to the right
+    SRL C                                   ;which puts d2 into carry
     SRL C
-    SRL C
-    LD A, $01
+    LD A, $01                               ;if carry, move right column sprites offscreen
     CALL C, MoveESprColOffscreen
 ;
-    SRL C   ; 8
-    LD A, $00
+    SRL C                                   ;move d3 to carry
+    LD A, $00                               ;if carry, move left column sprites offscreen
     CALL C, MoveESprColOffscreen
 ;
-    SRL C   ; 16
+    SRL C                                   ;move d5 to carry this time
     SRL C
-    LD A, $04
+    LD A, $04                               ;if carry, move third row of sprites offscreen
     CALL C, MoveESprRowOffscreen
 ;
-    SRL C   ; 8
+    SRL C                                   ;move d6 into carry
     LD A, $02
-    CALL C, MoveESprRowOffscreen
+    CALL C, MoveESprRowOffscreen            ;if carry, move second and third rows offscreen
 ;
-    SRL C   ; 8
+    SRL C                                   ;move d7 into carry
     RET NC
-    XOR A
+    XOR A                                   ;move all sprites offscreen
     CALL MoveESprRowOffscreen
 ;
-    LD L, <Enemy_ID
+    LD L, <Enemy_ID                         ;check enemy identifier for podoboo
     LD A, (HL)
     CP A, OBJECTID_Podoboo
-    RET Z
-    LD L, <Enemy_Y_HighPos
+    RET Z                                   ;skip this part if found, we do not want to erase podoboo!
+    LD L, <Enemy_Y_HighPos                  ;check high byte of vertical position
     LD A, (HL)
-    CP A, $02
+    CP A, $02                               ;if not yet past the bottom of the screen, branch
     RET NZ
     JP EraseEnemyObject
 
 MoveESprRowOffscreen:
-    LD L, <Enemy_SprDataOffset
+    LD L, <Enemy_SprDataOffset              ;add A to enemy object OAM data offset
     ADD A, (HL)
     LD E, A
 ;
-    LD A, YPOS_OFFSCREEN
+    LD A, YPOS_OFFSCREEN                    ;move first row of sprites offscreen
     LD (DE), A
     INC E
     LD (DE), A
     RET
 
 MoveESprColOffscreen:
-    LD L, <Enemy_SprDataOffset
+    LD L, <Enemy_SprDataOffset              ;add A to enemy object OAM data offset
     ADD A, (HL)
     LD E, A
 ;
-    LD A, YPOS_OFFSCREEN
+    LD A, YPOS_OFFSCREEN                    ;move first, second, and third row sprites in column offscreen
     LD (DE), A
     INC E
     INC E
@@ -1181,7 +1174,7 @@ PodobooGfxHandler:
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
     CP A, $D0
-    JP NZ, +
+    JR NZ, +
     INC A
 +:
     ; ---
@@ -1212,7 +1205,7 @@ RetainerGfxHandler:
     LD A, (WorldNumber)
     CP A, WORLD8
     LD HL, RetainerTilesRight + $05
-    JP NZ, +
+    JR NZ, +
     LD HL, PrincessTilesRight + $05
 +:
     CALL NTObjectDrawSide
@@ -1224,7 +1217,7 @@ RetainerGfxHandler:
     LD A, (WorldNumber)
     CP A, WORLD8
     LD HL, RetainerTilesLeft + $05
-    JP NZ, +
+    JR NZ, +
     LD HL, PrincessTilesLeft + $05
 +:
     JP NTObjectDrawSide
@@ -1417,11 +1410,11 @@ DrawBlock:
     LD L, <Block_Metatile
     LD A, (HL)
     LD HL, DefaultBlockObjTiles
-    JP NZ, +
+    JR NZ, +
     LD L, <DefaultBlockObjTiles + $04
 +:
     CP A, MT_EMPTYBLK
-    JP NZ, +
+    JR NZ, +
     LD L, <DefaultBlockObjTiles + $08
 ;
 +:
@@ -1434,7 +1427,7 @@ DrawBlock:
     LD A, (Block_OffscrBits)
     PUSH AF
     AND A, %00000100
-    JP Z, PullOfsB
+    JR Z, PullOfsB
     LD A, YPOS_OFFSCREEN
     INC E
     LD (DE), A
@@ -2265,20 +2258,20 @@ CntPl:
 ;
     LD A, (PlayerChangeSizeFlag)        ;if grow/shrink flag set
     OR A
-    JP NZ, DoChangeSize                 ;then branch to some other code
+    JR NZ, DoChangeSize                 ;then branch to some other code
 ;
-    LD A, (OptionBitflags)
-    AND A, bitValue(OPTFLAG_GFX)
-    JP Z, FindPlayerAction
+    LD A, (OptionBitflags)              ;if on all-stars gfx mode
+    AND A, bitValue(OPTFLAG_GFX)        ;skip lower body swim tile changes
+    JR Z, FindPlayerAction
 ;
     ; All this is for lower body swim tile changes
     LD A, (SwimmingFlag)                ;if swimming flag set, branch to
     OR A
-    JP Z, FindPlayerAction              ;different part, do not return
+    JR Z, FindPlayerAction              ;different part, do not return
 ;
     LD A, (Player_State)                ;if player status normal,
     OR A
-    JP Z, FindPlayerAction              ;branch and do not return
+    JR Z, FindPlayerAction              ;branch and do not return
 ;
     CALL FindPlayerAction               ;otherwise jump and return
     LD A, (FrameCounter)
@@ -2288,7 +2281,7 @@ CntPl:
     LD HL, (PlayerGfxOffset)
     LD A, (PlayerSize)
     OR A
-    JP Z, BigKTS
+    JR Z, BigKTS
     LD A, L
     CP A, <PlayerGraphicsTable + $A8
     RET Z
@@ -2353,21 +2346,21 @@ PlayerGfxProcessing:
     LD HL, FireballThrowingTimer
     LD A, (HL)
     OR A
-    JP Z, PlayerOffscreenChk            ;if fireball throw timer not set, skip to the end
+    JR Z, PlayerOffscreenChk            ;if fireball throw timer not set, skip to the end
 ;
     LD A, (PlayerAnimTimer)             ;get animation frame timer
     CP A, (HL)                          ;compare to fireball throw timer
     LD (HL), $00                        ;initialize fireball throw timer
-    JP NC, PlayerOffscreenChk           ;if animation frame timer => fireball throw timer skip to end
+    JR NC, PlayerOffscreenChk           ;if animation frame timer => fireball throw timer skip to end
     LD (HL), A                          ;otherwise store animation timer into fireball throw timer
 
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JP Z, +
+    JR Z, +
     LD A, (Player_X_Speed)
     LD HL, Left_Right_Buttons
     OR A, (HL)
-    JP Z, +
+    JR Z, +
     LD HL, (PlayerGfxOffset)
     LD A, $B8
     DEC H
@@ -2480,16 +2473,16 @@ DrawPlayerLoop:
 ProcessPlayerAction:
     LD A, (Player_State)                ;get player's state
     OR A
-    JP Z, ProcOnGroundActs              ;if not jumping, branch here
+    JR Z, ProcOnGroundActs              ;if not jumping, branch here
     DEC A
-    JP Z, ActionSwimmingChk             ;if swimming, branch here
+    JR Z, ActionSwimmingChk             ;if swimming, branch here
     DEC A
-    JP Z, ActionFalling                 ;if falling, branch here
+    JR Z, ActionFalling                 ;if falling, branch here
 ActionClimbing:
     LD L, <PlayerGraphicsTable@bigClimb ;load offset for climbing
     LD A, (Player_Y_Speed)              ;check player's vertical speed
     OR A
-    JP Z, NonAnimatedActs               ;if no speed, branch, use offset as-is
+    JR Z, NonAnimatedActs               ;if no speed, branch, use offset as-is
     CALL GetGfxOffsetAdder              ;otherwise get offset for graphics table
     LD A, $02                           ;load upper extent for frame control for climbing
     JP AnimationControl                 ;jump to get offset and animate player object
@@ -2498,14 +2491,14 @@ ProcOnGroundActs:
     LD L, <PlayerGraphicsTable@bigCrouch;load offset for crouching
     LD A, (CrouchingFlag)               ;get crouching flag
     OR A
-    JP NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
+    JR NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
 ;
     LD L, <PlayerGraphicsTable@bigStand ;load offset for standing
     LD A, (Player_X_Speed)              ;check player's horizontal speed
     LD B, A
     LD A, (Left_Right_Buttons)          ;and left/right controller bits
     OR A, B
-    JP Z, NonAnimatedActs               ;if no speed or buttons pressed, use standing offset
+    JR Z, NonAnimatedActs               ;if no speed or buttons pressed, use standing offset
 ;
     LD A, (Player_XSpeedAbsolute)       ;load walking/running speed
     
@@ -2515,13 +2508,13 @@ ProcOnGroundActs:
     CP A, $0A                           ;PAL diff: Faster speed cutoff to accomodate FPS difference
     .ENDIF
 
-    JP C, ActionWalkRun                 ;if less than a certain amount, branch, too slow to skid
+    JR C, ActionWalkRun                 ;if less than a certain amount, branch, too slow to skid
 ;
     LD A, (Player_MovingDir)            ;otherwise check to see if moving direction
     LD B, A
     LD A, (PlayerFacingDir)             ;and facing direction are the same
     AND A, B
-    JP NZ, ActionWalkRun                ;if moving direction = facing direction, branch, don't skid
+    JR NZ, ActionWalkRun                ;if moving direction = facing direction, branch, don't skid
 ;
     LD L, <PlayerGraphicsTable@bigSkid  ;else, load offset for skiding
 
@@ -2544,12 +2537,12 @@ ActionWalkRun:
 ActionSwimmingChk:
     LD A, (SwimmingFlag)                
     OR A
-    JP NZ, ActionSwimming               ;if swimming flag set, branch elsewhere
+    JR NZ, ActionSwimming               ;if swimming flag set, branch elsewhere
 ;
     LD L, <PlayerGraphicsTable@bigCrouch;load offset for crouching
     LD A, (CrouchingFlag)               ;get crouching flag
     OR A
-    JP NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
+    JR NZ, NonAnimatedActs              ;if set, branch to get offset for graphics table
 ;
     LD L, <PlayerGraphicsTable@bigJump  ;otherwise load offset for jumping
     JP NonAnimatedActs                  ;go to get offset to graphics table
@@ -2562,7 +2555,7 @@ ActionSwimming:
     LD B, A
     LD A, (PlayerAnimCtrl)
     OR A, B                             ;and animation frame control
-    JP NZ, FourFrameExtent              ;if any one of these set, branch ahead
+    JR NZ, FourFrameExtent              ;if any one of these set, branch ahead
 ;
     LD A, (A_B_Buttons)
     OR A                                ;check for A button pressed
@@ -2590,7 +2583,7 @@ AnimationControl:
     LD A, (PlayerAnimCtrl)
     INC A                               ;add one to animation frame control
     CP A, B                             ;compare to upper extent
-    JP C, SetAnimC                      ;if frame control + 1 < upper extent, use as next
+    JR C, SetAnimC                      ;if frame control + 1 < upper extent, use as next
     XOR A                               ;otherwise initialize frame control
 SetAnimC:
     LD (PlayerAnimCtrl), A              ;store as new animation frame control
@@ -2624,12 +2617,12 @@ HandleChangeSize:
     LD C, A
     LD A, (FrameCounter)
     AND A, %00000011                    ;get frame counter and execute this code every
-    JP NZ, GorSLog                      ;fourth frame, otherwise branch ahead
+    JR NZ, GorSLog                      ;fourth frame, otherwise branch ahead
 ;
     INC C                               ;increment frame control
     LD A, C                             ;check for preset upper extent
     CP A, $0A
-    JP C, CSzNext                       ;if not there yet, skip ahead to use
+    JR C, CSzNext                       ;if not there yet, skip ahead to use
 ;
     XOR A                               ;otherwise initialize both grow/shrink flag
     LD (PlayerChangeSizeFlag), A        ;and animation frame control
@@ -2640,7 +2633,7 @@ GorSLog:
     LD A, (PlayerSize)                  ;get player's size
     OR A
     LD A, C
-    JP NZ, ShrinkPlayer                 ;if player small, skip ahead to next part
+    JR NZ, ShrinkPlayer                 ;if player small, skip ahead to next part
 ;
     LD HL, ChangeSizeOffsetAdder        ;get offset adder based on frame control as offset
     addAToHL8_M

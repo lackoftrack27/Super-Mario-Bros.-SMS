@@ -694,7 +694,7 @@ CreateSpiny:
     LD L, <Enemy_Y_Speed                ;set vertical speed to move upwards
     LD (HL), $FD
     LD L, <Enemy_Flag                   ;enable enemy object by setting flag
-    LD (HL), $01
+    LD (HL), A
     LD L, <Enemy_State                  ;put spiny in egg state and leave
     LD (HL), $05
     RET
@@ -1146,7 +1146,7 @@ SpawnFromMouth:
     LD BC, FlameYPosData                ;use as offset
     addAToBC8_M                         ;get value here using bits as offset
     LD A, (BC)
-    LD L, <Enemy_Y_Position             ;compare value to flame's current vertical position
+    LD L, E                             ;compare value to flame's current vertical position (Enemy_Y_Position)
     CP A, (HL)
     LD A, $FF                           ;load default offset
     JR C, SetMF                         ;if less, do not increment offset

@@ -197,8 +197,8 @@ GameMenuRoutine:
     ;LD BC, $0017
     LD HL, PlayerScoreDisplay
     LD DE, PlayerScoreDisplay + $01
-    LD BC, $0F
-    LD (HL), $00
+    LD BC, $000F
+    LD (HL), B
     LDIR
     JP FadeOutScreen
 @GoContinue:

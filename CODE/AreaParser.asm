@@ -1597,8 +1597,8 @@ IntroPipe:
 ;
     LD HL, MetatileBuffer               ;blank everything above the vertical pipe part
     LD DE, MetatileBuffer + $01         ;all the way to the top of the screen
-    LD BC, $06                          ;because otherwise it will look like exit pipe
-    LD (HL), $00
+    LD BC, $0006                        ;because otherwise it will look like exit pipe
+    LD (HL), B
     LDIR
 ;
     ;LD A, C
@@ -1778,7 +1778,6 @@ DrawPipe_1:
     LD A, (HL)                          ;draw the appropriate pipe with the Y we loaded earlier
     LD (DE), A                          ;render the top of the pipe
     INC B
-    INC E
     INC HL
     INC HL
     LD A, (HL)                          ;render the rest of the pipe
@@ -1958,8 +1957,7 @@ AxeObj:
     ; LD (VRAM_Buffer_AddrCtrl), A
 
 ChainObj:
-    LD C, IXL                           ;get value loaded earlier from decoder                 
-    LD A, C
+    LD A, IXL                           ;get value loaded earlier from decoder
     LD DE, C_ObjectRow
     addAToDE8_M
     LD A, (DE)                          ;get appropriate row and metatile for object
@@ -2069,7 +2067,6 @@ BulletBillCannon:
     JP M, SetupCannon
     LD (HL), MT_BBILL_TOP               ;if not, render middle part
     INC B
-    INC L
     DEC C                               ;done yet?
     JP M, SetupCannon
     LD A, MT_BBILL_BOT                  ;if not, render bottom until length expires
@@ -2178,8 +2175,7 @@ Hidden1UpBlock:
     JP BrickWithItem                    ;jump to code shared with unbreakable bricks
 
 QuestionBlock:
-    LD A, IXL                           ;get value saved from area parser routine
-    LD C, A                             ;save to Y
+    LD C, IXL                           ;get value saved from area parser routine
     JP DrawQBlk                         ;go to render it
 
 BrickWithCoins:
@@ -2187,9 +2183,7 @@ BrickWithCoins:
     LD (BrickCoinTimerFlag), A
 
 BrickWithItem:
-    LD A, IXL                           ;get value saved from area parser routine
-    LD C, A                             ;save to Y
-    LD IXH, C
+    LD IXH, IXL                         ;get value saved from area parser routine
     LD A, (AreaType)                    ;check level type for ground level
     DEC A
     LD A, $00                           ;load default adder for bricks with lines
@@ -2450,7 +2444,6 @@ DrawMTLoop:
     INC L
     LD A, (HL)
     LD (DE), A
-    INC L
     ;
     DEC IXH
     JP NZ, DrawMTLoop                   ;if not there yet, loop back

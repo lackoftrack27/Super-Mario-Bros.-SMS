@@ -1113,7 +1113,7 @@ InitializeMemoryExceptSND:
     LD HL, $DE00
     LD DE, $DE01
     LD BC, InitGameOffset - $DE01
-    LD (HL), $00
+    LD (HL), L
     LDIR
 ;   RAM BANK $00-$15
     LD H, $C0
@@ -1125,7 +1125,7 @@ InitializeMemoryExceptSND:
     LD L, $00
     LD E, $01
     LD BC, $003F
-    LD (HL), $00
+    LD (HL), L
     LDIR
     INC H
     EXX
@@ -1408,7 +1408,7 @@ DigitPLoop:
 ;   Y - RAM OFFSET INTO DisplayDigits (DE)
 DigitsMathRoutine:
     LD A, (OperMode)
-    CP A, MODE_TITLESCREEN
+    OR A
     JP Z, EraseDMods
 ;
     LD HL, DigitModifier_05

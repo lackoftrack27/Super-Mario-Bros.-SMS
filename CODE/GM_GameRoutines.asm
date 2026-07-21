@@ -751,7 +751,7 @@ DBlockSte:
     LD DE, (Temp_Bytes + $06)       ;get low byte of block buffer address used in same routine
     LD (HL), E                      ;save as offset here to be used later
 ;
-    LD A, IXL
+    ;LD A, IXL
     addAToDE_M
 
     LD A, (PlayerSize)              ;set carry if player is small

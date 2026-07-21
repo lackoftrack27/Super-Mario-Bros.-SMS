@@ -166,8 +166,8 @@ DrawHammer:
     LD L, <Misc_State
     LD A, (HL)
     AND A, %01111111
-    CP A, $01
-    JP NZ, RenderH
+    DEC A
+    JR NZ, RenderH
 ;
     LD A, (FrameCounter)
     AND A, %00001100
@@ -1084,8 +1084,10 @@ DrawEnemyObject:
     LD A, B
     DrawSpriteObject_YPos                   ;draw six tiles of data
     DrawSpriteObject_YPos
-    DrawSpriteObject_YPos
-    DrawSpriteObject_YPos
+    ;DrawSpriteObject_YPos
+    LD (DE), A
+    INC E
+    LD (DE), A
     LD E, IXL
     SLA E
     SET 7, E
@@ -2456,7 +2458,10 @@ DrawPlayerLoop:
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
-    DrawSpriteObject_YPos
+    ;DrawSpriteObject_YPos
+    LD (DE), A
+    INC E
+    LD (DE), A
     LD E, IXL
     SLA E
     SET 7, E

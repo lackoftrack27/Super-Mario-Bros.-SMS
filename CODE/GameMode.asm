@@ -24,8 +24,8 @@ InitializeArea:
 ;
     LD HL, Timers                   ;clear out memory between
     LD DE, Timers + $01             ;$0780 and $07a1
-    LD BC, $22 - $01
-    LD (HL), $00
+    LD BC, $0022 - $01
+    LD (HL), B
     LDIR
 ;
 +:
@@ -112,7 +112,7 @@ SecondaryGameSetup:
     LD (VRAM_Buffer1_Ptr), HL
     LD DE, VRAM_Buffer1 + $01
     LD BC, _sizeof_VRAM_Buffer1 - 1
-    LD (HL), $00
+    LD (HL), B
     LDIR    
     LD HL, VRAM_Buffer2
     LD DE, VRAM_Buffer2 + $01
@@ -297,8 +297,8 @@ CheckScrollEight:
     LD (RenderColumnFlag), A
     ;
     LD HL, ColumnWrite_Ptr + $01            ;update pointer on where to read the column data from
-    INC (HL)
-    LD A, (HL)
+    ADD A, (HL)
+    LD (HL), A
     CP A, >ColumnBuffer_0F + $01            ;ensure pointer doesn't exceed boundaries
     RET NZ
     LD (HL), >ColumnBuffer
@@ -531,12 +531,12 @@ ScrollScreen:
     LD (HL), A                              ;save as new value here
 ;
     LD A, C
-    LD HL, ScrollEight
+    INC L                                   ;LD HL, ScrollEight
     ADD A, (HL)
     LD (HL), A
 ;
     LD A, C
-    LD HL, ScreenLeft_X_Pos
+    LD L, <ScreenLeft_X_Pos
     ADD A, (HL)                             ;add to left side coordinate
     LD (HL), A                              ;save as new left side coordinate
 ;
@@ -813,7 +813,7 @@ PosBubl:
     INC B                           ;get pseudorandom bit, use as offset
     DEC B
     JR Z, +
-    LD A, $20                       ;BubbleTimerData[1]
+    RRCA                            ;BubbleTimerData[1]
 +:
     LD (AirBubbleTimer), A          ;set air bubble timer
 MoveBubl:
@@ -828,8 +828,8 @@ MoveBubl:
     LD (HL), A                      ;save dummy variable
 ;
     LD L, <Bubble_Y_Position
-    LD A, (HL)
-    SBC A, $00                      ;subtract borrow from airbubble's vertical coordinate
+    SBC A, A
+    ADD A, (HL)                     ;subtract borrow from airbubble's vertical coordinate
     CP A, $20                       ;if below the status bar,
     JR NC, Y_Bubl                   ;branch to go ahead and use to move air bubble upwards
     LD A, YPOS_OFFSCREEN_LOGICAL    ;otherwise set offscreen coordinate
@@ -957,8 +957,8 @@ BulletBillHandler:
     JR NZ, ChkDSte                  ;if bullet bill's state set, branch to check defeated state
 ;
     LD A, (Enemy_OffscrBits)        ;otherwise load offscreen bits
-    AND A, %00001100                ;mask out bits
-    CP A, %00001100                 ;check to see if all bits are set
+    CPL                             ;mask out bits
+    AND A, %00001100                ;check to see if all bits are set
     JP Z, EraseEnemyObject          ;if so, branch to kill this object
 ;
     LD C, $01                       ;set to move right by default
@@ -1289,8 +1289,8 @@ EnemiesAndLoopsCore:
     JP NZ, RunEnemyObjectsCore      ;if data isn't zero, jump to run enemy subroutines
 ChkAreaTsk:
     LD A, (AreaParserTaskNum)       ;check number of tasks to perform
+    INC A
     AND A, $07
-    CP A, $07
     RET Z                           ;if at a specific task, jump and leave
     JP ProcLoopCommand              ;otherwise, jump to process loop command/load enemies
 ChkBowserF:
@@ -2036,7 +2036,7 @@ HammerBroJumpCode:
     LD L, <Enemy_State                      ;get hammer bro's enemy state
     LD A, (HL)
     AND A, %00000111                        ;mask out all but 3 LSB
-    CP A, $01                               ;check for d0 set (for jumping)
+    DEC A                                   ;check for d0 set (for jumping)
     JR Z, MoveHammerBroXDir                 ;if set, branch ahead to moving code
 ;
     LD A, H 
@@ -2368,7 +2368,7 @@ MoveWithXMCntrs:
     LD A, (HL)                              ;counter to two's compliment
     NEG
     LD (HL), A
-    LD C, $02                               ;load alternate value here
+    INC C                                   ;load alternate value here
 ;
 XMRight:
     LD L, <Enemy_MovingDir                  ;store as moving direction
@@ -2420,7 +2420,7 @@ MoveBloober:
     LD A, (Player_MovingDir)                ;load player's moving direction in C
     LD C, A
     LD A, H                                 ;check to see if on second or fourth slot (1 or 3)
-    SUB A, $C1
+    DEC A
     RRCA
     JR C, SBMDir                            ;if so, do an unconditional branch to set
     LD C, $02                               ;set left moving direction by default
@@ -2627,7 +2627,7 @@ MoveSwimmingCheepCheep:
     LD A, (HL)                              ;add carry to it plus enemy state to slowly move it downwards
     ADC A, B
     LD (HL), A                              ;save as new vertical coordinate
-    LD L, <Enemy_Y_HighPos                  ;add carry to page location and
+    INC L ;LD L, <Enemy_Y_HighPos           ;add carry to page location and
     LD A, (HL)
     ADC A, $00
     JP ChkSwimYPos                          ;jump to end of movement code
@@ -2641,7 +2641,7 @@ CCSwimUpwards:
     LD A, (HL)                              ;subtract borrow to it plus enemy state to slowly move it upwards
     SBC A, B
     LD (HL), A                              ;save as new vertical coordinate
-    LD L, <Enemy_Y_HighPos                  ;subtract borrow from page location
+    INC L ;LD L, <Enemy_Y_HighPos           ;subtract borrow from page location
     LD A, (HL)
     SBC A, $00
     ; FALL THROUGH
@@ -2938,7 +2938,6 @@ FirebarCollision:
     LD A, (Player_Y_HighPos)                    ;if player's vertical high byte offscreen,
     DEC A
     RET NZ                                      ;skip all of this
-    LD A, (Player_Y_Position)                   ;get player's vertical position
     LD A, (PlayerSize)                          ;get player's size
     OR A
     JR NZ, AdjSm                                ;if player small, branch to alter variables
@@ -3100,11 +3099,11 @@ SetLSpd:
     LD C, $01                                   ;set moving direction to right by default
     LD L, <LakituMoveDirection
     LD A, (HL)
-    AND A, $01                                  ;get LSB of moving direction
+    AND A, C                                    ;get LSB of moving direction (C == $01)
     JR NZ, SetLMov                              ;if set, branch to the end to use moving direction
     LD L, <LakituMoveSpeed                      ;get two's compliment of moving speed
-    LD A, (HL)
-    NEG
+    XOR A
+    SUB A, (HL)
     LD (HL), A                                  ;store as new moving speed
     INC C                                       ;increment moving direction to left
 SetLMov:
@@ -4244,8 +4243,8 @@ ChkPlayerNearPipe:
 
 ReversePlantSpeed:
     LD L, <PiranhaPlant_Y_Speed             ;get vertical speed
-    LD A, (HL)
-    NEG                                     ;change to two's compliment
+    XOR A
+    SUB A, (HL)                             ;change to two's compliment
     LD (HL), A                              ;save as new vertical speed
     LD L, <PiranhaPlant_MoveFlag            ;increment to set movement flag
     INC (HL)
@@ -5316,7 +5315,8 @@ WriteBlockMetatile:
 UseBOffset:
     LD DE, (VRAM_Buffer1_Ptr)       ;get vram buffer offset
     LD A, C                         ;put Y in A
-    JP PutBlockMetatile             ;get appropriate block data and write to vram buffer
+    ;JP PutBlockMetatile             ;get appropriate block data and write to vram buffer
+    ; FALL THROUGH
 
 ;   A - Index into BlockGfxData
 ;   HL - Block_Buffer Ptr
@@ -5361,7 +5361,6 @@ PutBlockMetatile:
 ;   NAMETABLE ROW LOW BYTE + COLUMN
     LD A, B
     ADD A, L
-    LD L, A
 ;   MOVE TO BC
     LD L, C
     LD C, A
@@ -5420,7 +5419,6 @@ PutBlockMetatile_RHalf:
 ;   NAMETABLE ROW LOW BYTE + COLUMN
     LD A, B
     ADD A, L
-    LD L, A
 ;   MOVE TO BC
     LD L, C
     LD C, A
@@ -5946,8 +5944,8 @@ ImposeGravity_A1:
     LD (HL), C                      ;keep vertical speed within maximum value
 ;
 +:
-    LD A, C                         ;get two's compliment of maximum speed
-    NEG
+    XOR A                           ;get two's compliment of maximum speed
+    SUB A, C
     LD C, A
 ;
     LD L, <SprObject_Y_MoveForce
@@ -5956,8 +5954,8 @@ ImposeGravity_A1:
     LD (HL), A                      ;thus it effectively undoes add we did earlier
 ;
     LD L, <SprObject_Y_Speed
-    LD A, (HL)
-    SBC A, $00                      ;subtract borrow from vertical speed and store
+    SBC A, A
+    ADD A, (HL)                     ;subtract borrow from vertical speed and store
     LD (HL), A
 ;
     CP A, C                         ;compare vertical speed to two's compliment
@@ -6242,8 +6240,8 @@ PlayerHammerCollision:
     LD (HL), $01                    ;otherwise set collision flag now
 ;
     LD L, <Misc_X_Speed             ;get two's compliment of
-    LD A, (HL)                      ;hammer's horizontal speed
-    NEG
+    XOR A                           ;hammer's horizontal speed
+    SUB A, (HL)
     LD (HL), A                      ;set to send hammer flying the opposite direction
 ;
     LD A, (StarInvincibleTimer)     ;if star mario invincibility timer set,
@@ -6489,7 +6487,7 @@ ChkETmrs:
 ;
     LD L, <Enemy_MovingDir          ;if enemy moving towards the right,
     LD A, (HL)
-    CP A, $01
+    DEC A
     CALL Z, EnemyTurnAround         ;turn the enemy around
     ; FALL THROUGH
 
@@ -6671,7 +6669,7 @@ SBnce:
 ChkEnemyFaceRight:
     LD L, <Enemy_MovingDir          ;check to see if enemy is moving to the right
     LD A, (HL)
-    CP A, $01
+    DEC A
     CALL NZ, EnemyTurnAround        ;if not, turn the enemy around, if necessary
     JP InjurePlayer                 ;go back to hurt player
 
@@ -7776,7 +7774,7 @@ ImpedePlayerMove:
     JP NXSpd                            ;and jump to affect movement
 RImpd:
     LD B, $02                           ;return $02 to B
-    CP A, $01                           ;if player moving to the right,
+    DEC A ;CP A, $01                    ;if player moving to the right,
     JP P, ExIPM                         ;branch to invert bit and leave
     INC C                               ;otherwise load C with value to be used here
 NXSpd:

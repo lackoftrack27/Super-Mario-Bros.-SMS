@@ -2287,7 +2287,7 @@ Mus_GameOver_FM:
 @ch0:
     smpsFMVoice $07
     .db nG2, $05, nRst, $0D, nE2, $05, nRst, $0D, nC2, $0A, nRst, $02, nF2, $15, nRst, $03
-    .db nCs2, $21, nRst, $03, nC2, ;$4F
+    .db nCs2, $21, nRst, $03, nC2;, $4F
     smpsNoAtk
     .db $2A
     smpsJump    Mus_GameOver_FM@chAllFadeOut
@@ -2298,7 +2298,7 @@ Mus_GameOver_FM:
 @ch1Jump1:
     .db nC5, $05, nRst, $0D, nG4, $05, nRst, $0D, nE4, $0A, nRst, $02, nA4, $07, nRst, $01
     .db nB4, $07, nRst, $01, nA4, $07, nRst, $01, nGs4, $0A, nRst, $02, nBb4, $0A, nRst, $02
-    .db nGs4, $0A, nRst, $02, nG4, ;$4F
+    .db nGs4, $0A, nRst, $02, nG4;, $4F
     smpsNoAtk
     .db $2A
     smpsJump    Mus_GameOver_FM@chAllFadeOut
@@ -2308,7 +2308,7 @@ Mus_GameOver_FM:
     smpsFMVoice $07
     .db nG4, $05, nRst, $0D, nE4, $05, nRst, $0D, nC4, $0A, nRst, $02, nC4, $07, nRst, $01
     .db nC4, $07, nRst, $01, nC4, $07, nRst, $01, nC4, $0A, nRst, $02, nC4, $0A, nRst, $02
-    .db nC4, $0A, nRst, $02, nC4, ;$4F
+    .db nC4, $0A, nRst, $02, nC4;, $4F
     smpsNoAtk
     .db $2A
     smpsJump    Mus_GameOver_FM@chAllFadeOut
@@ -2317,7 +2317,7 @@ Mus_GameOver_FM:
 @ch3:
     smpsFMVoice $07
     .db nE4, $05, nRst, $0D, nC4, $05, nRst, $0D, nG3, $0A, nRst, $02, nE4, $15, nRst, $03
-    .db nEb4, $21, nRst, $03, nE4, $05, nRst, $01, nD4, $05, nRst, $01, nE4, ;$43
+    .db nEb4, $21, nRst, $03, nE4, $05, nRst, $01, nD4, $05, nRst, $01, nE4;, $43
     smpsNoAtk
     .db $1E
     smpsJump    Mus_GameOver_FM@chAllFadeOut

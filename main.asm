@@ -31,7 +31,7 @@
 
 ;-------------------------------------------------------------------------------------
 ;   BOOT VECTOR
-.ORGA $0000
+.ORG $0000
 BootVector:
     DI                      ; DISABLE INTURRUPTS
     IM 1
@@ -112,7 +112,7 @@ JumpEngine:
 
 ;-------------------------------------------------------------------------------------
 ;   VDP VECTOR
-.ORGA $0038
+.ORG $0038
 VdpVector:
     PUSH AF
 ;   CHECK IF H-INT OCCURED
@@ -136,7 +136,7 @@ VdpVector:
 
 ;-------------------------------------------------------------------------------------
 ;   PAUSE BUTTON VECTOR
-.ORGA $0066
+.ORG $0066
 PauseBtnVector:
     PUSH AF                     ; SAVE AF
     LD A, bitValue(SMS_BTN_START)
@@ -615,7 +615,7 @@ RotPRandomBit:
 
 .SECTION "VRAM Action Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 VRAM_AddrTable:
-    .dw VRAM_Buffer1, WaterPaletteData_NES, GroundPaletteData_NES,
+    .dw VRAM_Buffer1, WaterPaletteData_NES, GroundPaletteData_NES
     .dw UndergroundPaletteData_NES, CastlePaletteData_NES, TitleScreenData
     .dw VRAM_Buffer2, VRAM_Buffer2, OptionsPaletteData
     .dw DaySnowPaletteData_NES, NightSnowPaletteData_NES, MushroomPaletteData_NES
@@ -1059,7 +1059,7 @@ StoreMusicDirect:
 InitializeNameTables:
     LD HL, VRAM_ADR_NAMETBL | VRAMWRITE
     CALL setVDPAddress
-    LD BC, lobyte(NAMETABLE_SIZE) * $100 + hibyte(NAMETABLE_SIZE)
+    LD BC, <NAMETABLE_SIZE * $100 + >NAMETABLE_SIZE
     XOR A                               ;clear name table with blank tile
 @writeLoop:
     OUT (VDPDATA_PORT), A
@@ -1893,7 +1893,7 @@ vdpInitData:
 ;   0x0000 - 0x0100
 OutiBlock128:
 WriteHoriBlock:
-.REPT $80
+.REPEAT $80
     OUTI
 .ENDR
     RET
@@ -1924,7 +1924,7 @@ WriteHoriBlock:
 ;     RET
     
 WriteVeriBlock_W:
-.REPT $17           ; 11 (8 + 3) bytes per iteration
+.REPEAT $17         ; 11 (8 + 3) bytes per iteration
     EXX
     OUT (C), L      ; WRITE VDP ADDRESS
     OUT (C), H
@@ -3495,7 +3495,8 @@ GrassFrame0:
 ; Tile index $005
 .db $E0 $00 $E0 $00 $70 $E0 $70 $80 $FC $C0 $FC $00 $DA $8C $DA $04 $34 $D8 $F4 $08 $78 $B0 $F8 $00 $E8 $70 $F8 $00 $10 $E0 $F0 $00
 ; padding
-.dsb $40, $00
+.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
 ; ----------
 GrassFrame1:
@@ -3512,7 +3513,8 @@ GrassFrame1:
 ; Tile index $00B
 .db $80 $00 $80 $00 $38 $00 $38 $00 $CE $38 $CE $30 $7C $E0 $7C $80 $FE $9C $FE $00 $FF $72 $FF $00 $72 $E0 $F2 $00 $90 $E0 $F0 $00
 ; padding
-.dsb $40, $00
+.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
 ; ----------
 GrassFrame2:

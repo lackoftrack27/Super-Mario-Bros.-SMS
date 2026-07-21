@@ -110,14 +110,110 @@
 ;   NOTE DEFS (TONE)
 .ENUM $80
     nRst    DB
-    nC0     DB nCs0   DB nD0   DB nEb0  DB nE0   DB nF0   DB nFs0  DB nG0   DB nGs0  DB nA0    DB nBb0   DB nB0    DB   ; 0 (C2)
-    nC1     DB nCs1   DB nD1   DB nEb1  DB nE1   DB nF1   DB nFs1  DB nG1   DB nGs1  DB nA1    DB nBb1   DB nB1    DB   ; 1 (C3)
-    nC2     DB nCs2   DB nD2   DB nEb2  DB nE2   DB nF2   DB nFs2  DB nG2   DB nGs2  DB nA2    DB nBb2   DB nB2    DB   ; 2 (C4)
-    nC3     DB nCs3   DB nD3   DB nEb3  DB nE3   DB nF3   DB nFs3  DB nG3   DB nGs3  DB nA3    DB nBb3   DB nB3    DB   ; 3 (C5)
-    nC4     DB nCs4   DB nD4   DB nEb4  DB nE4   DB nF4   DB nFs4  DB nG4   DB nGs4  DB nA4    DB nBb4   DB nB4    DB   ; 4 (C6)
-    nC5     DB nCs5   DB nD5   DB nEb5  DB nE5   DB nF5   DB nFs5  DB nG5   DB nGs5  DB nA5    DB nBb5   DB nB5    DB   ; 5 (C7)
-    nC6     DB nCs6   DB nD6   DB nEb6  DB nE6   DB nF6   DB nFs6  DB nG6   DB nGs6  DB nA6    DB nBb6   DB nB6    DB   ; 6 (C8)
-    nC7     DB nCs7   DB nD7   DB nEb7  DB nE7   DB nF7   DB nFs7  DB nG7   DB nGs7  DB nA7    DB nBb7   DB nB7    DB   ; 7 (C9)
+    ; C2
+    nC0     DB 
+    nCs0    DB 
+    nD0     DB 
+    nEb0    DB 
+    nE0     DB 
+    nF0     DB 
+    nFs0    DB 
+    nG0     DB 
+    nGs0    DB 
+    nA0     DB 
+    nBb0    DB 
+    nB0     DB
+    ; C3
+    nC1     DB 
+    nCs1    DB 
+    nD1     DB 
+    nEb1    DB 
+    nE1     DB 
+    nF1     DB 
+    nFs1    DB 
+    nG1     DB 
+    nGs1    DB 
+    nA1     DB 
+    nBb1    DB 
+    nB1     DB
+    ; C4
+    nC2     DB 
+    nCs2    DB 
+    nD2     DB 
+    nEb2    DB 
+    nE2     DB 
+    nF2     DB 
+    nFs2    DB 
+    nG2     DB 
+    nGs2    DB 
+    nA2     DB 
+    nBb2    DB 
+    nB2     DB
+    ; C5
+    nC3     DB 
+    nCs3    DB 
+    nD3     DB 
+    nEb3    DB 
+    nE3     DB 
+    nF3     DB 
+    nFs3    DB 
+    nG3     DB 
+    nGs3    DB 
+    nA3     DB 
+    nBb3    DB 
+    nB3     DB
+    ; C6
+    nC4     DB 
+    nCs4    DB 
+    nD4     DB 
+    nEb4    DB 
+    nE4     DB 
+    nF4     DB 
+    nFs4    DB 
+    nG4     DB 
+    nGs4    DB 
+    nA4     DB 
+    nBb4    DB 
+    nB4     DB
+    ; C7
+    nC5     DB 
+    nCs5    DB 
+    nD5     DB 
+    nEb5    DB 
+    nE5     DB 
+    nF5     DB 
+    nFs5    DB 
+    nG5     DB 
+    nGs5    DB 
+    nA5     DB 
+    nBb5    DB 
+    nB5     DB
+    ; C8
+    nC6     DB 
+    nCs6    DB 
+    nD6     DB 
+    nEb6    DB 
+    nE6     DB 
+    nF6     DB 
+    nFs6    DB 
+    nG6     DB 
+    nGs6    DB 
+    nA6     DB 
+    nBb6    DB 
+    nB6     DB
+    ; C9
+    nC7     DB 
+    nCs7    DB 
+    nD7     DB 
+    nEb7    DB 
+    nE7     DB 
+    nF7     DB 
+    nFs7    DB 
+    nG7     DB 
+    nGs7    DB 
+    nA7     DB 
+    nBb7    DB 
+    nB7     DB
 .ENDE
 
 ;   NOTE DEFS (NOISE)
@@ -201,14 +297,14 @@
 
 .SECTION "SFX Data - 1UP" FREE
 SFX_1UP:
-    smpsChanHeader  SFX_1UP + 6,            $00 $00 $00 $03
+    smpsChanHeader  SFX_1UP + 6,            $00, $00, $00, $03
     .db nE4, $08, nG4, nE5, nC5, nD5, nG5
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Score Tick" FREE
 SFX_Beep:
-    smpsChanHeader  SFX_Beep + 6,           $00 $03 $00 $00
+    smpsChanHeader  SFX_Beep + 6,           $00, $03, $00, $00
     .db nB3, $04 ;$05
     smpsChangeVol $03
     .db $01
@@ -218,7 +314,7 @@ SFX_Beep:
 
 .SECTION "SFX Data - Bump" FREE
 SFX_Bump:
-    smpsChanHeader  SFX_Bump + 6,           $00 $00 $00 $00
+    smpsChanHeader  SFX_Bump + 6,           $00, $00, $00, $00
     smpsModSetup    $00, $01, $3B, $FF
     .db nG1, $04
     smpsNoAtk
@@ -229,7 +325,7 @@ SFX_Bump:
 
 .SECTION "SFX Data - Cannon, Fireworks" FREE
 SFX_Cannon:
-    smpsChanHeader  SFX_Cannon + 6,         $00 $00 $00 $00
+    smpsChanHeader  SFX_Cannon + 6,         $00, $00, $00, $00
     smpsModSetup    $00, $01, $1D, $FF
     .db nD1, $08
     smpsModSetup    $00, $01, $2E, $FF
@@ -239,7 +335,7 @@ SFX_Cannon:
 
 .SECTION "SFX Data - Coin" FREE
 SFX_Coin:
-    smpsChanHeader  SFX_Coin + 6,           $00 $00 $00 $02
+    smpsChanHeader  SFX_Coin + 6,           $00, $00, $00, $02
     .db nB3, $05
     .db nE4, $2B
     smpsStop
@@ -247,14 +343,14 @@ SFX_Coin:
 
 .SECTION "SFX Data - Fireball" FREE
 SFX_Fireball:
-    smpsChanHeader  SFX_Fireball + 6,       $00 $00 $00 $00
+    smpsChanHeader  SFX_Fireball + 6,       $00, $00, $00, $00
     .db nG1, $01, nG2, nG3, nG4
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Flagpole" FREE
 SFX_Flagpole:
-    smpsChanHeader  SFX_Flagpole + 6,       $00 $02 $00 $00
+    smpsChanHeader  SFX_Flagpole + 6,       $00, $02, $00, $00
     smpsModSetup    $00, $02, $F3, $FF
     .db nA1, $41
     smpsStop
@@ -262,14 +358,14 @@ SFX_Flagpole:
 
 .SECTION "SFX Data - Flame" FREE
 SFX_Flame:
-    smpsChanHeader  SFX_Flame + 6,          $00 $00 $00 $05
+    smpsChanHeader  SFX_Flame + 6,          $00, $00, $00, $05
     .db nLow, $3F
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Item Reveal" FREE
 SFX_Item:
-    smpsChanHeader  SFX_Item + 6,           $00 $01 $00 $00
+    smpsChanHeader  SFX_Item + 6,           $00, $01, $00, $00
     .db nC2, $03, nG2, $02, nGs2
     .db nCs2, $04, nGs2, $02, nA2
     .db nD2, $04, nA2, $02, nBb2
@@ -279,7 +375,7 @@ SFX_Item:
 
 .SECTION "SFX Data - Big Jump" FREE
 SFX_JumpBig:
-    smpsChanHeader  SFX_JumpBig + 6,        $00 $00 $00 $06
+    smpsChanHeader  SFX_JumpBig + 6,        $00, $00, $00, $06
     smpsModSetup    $00, $01, $02, $FF
     .db nD2, $03
     smpsNoAtk
@@ -293,7 +389,7 @@ SFX_JumpBig:
 
 .SECTION "SFX Data - Small Jump" FREE
 SFX_JumpSml:
-    smpsChanHeader  SFX_JumpSml + 6,        $00 $00 $00 $06
+    smpsChanHeader  SFX_JumpSml + 6,        $00, $00, $00, $06
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03
     smpsNoAtk
@@ -307,7 +403,7 @@ SFX_JumpSml:
 
 .SECTION "SFX Data - Kick" FREE
 SFX_Kick:
-    smpsChanHeader  SFX_Kick + 6,           $00 $00 $00 $00
+    smpsChanHeader  SFX_Kick + 6,           $00, $00, $00, $00
     .db nBb2, $01
     .db nRst, $05
     .db nF3, $01
@@ -316,7 +412,7 @@ SFX_Kick:
 
 .SECTION "SFX Data - Pause" FREE
 SFX_Pause:
-    smpsChanHeader  SFX_Pause + 6,          $00 $00 $00 $01
+    smpsChanHeader  SFX_Pause + 6,          $00, $00, $00, $01
     .db nE4, $06, nC4, nE4
     .db nC4, $12
     smpsStop
@@ -324,7 +420,7 @@ SFX_Pause:
 
 .SECTION "SFX Data - Pipe" FREE
 SFX_Pipe:
-    smpsChanHeader  SFX_Pipe + 6,           $00 $02 $00 $00
+    smpsChanHeader  SFX_Pipe + 6,           $00, $02, $00, $00
     .db nRst, $03
     .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1
     .db nRst, $06
@@ -336,7 +432,7 @@ SFX_Pipe:
 
 .SECTION "SFX Data - Powerup" FREE
 SFX_Powerup:
-    smpsChanHeader  SFX_Powerup + 6,        $00 $01 $00 $00
+    smpsChanHeader  SFX_Powerup + 6,        $00, $01, $00, $00
     .db nC3, $02, nG2, nC3, nF3, nG3, nC4, nG3
     .db nGs2, nC3, nEb3, nGs3, nEb3, nGs3, nC4, nEb4, nGs4, nEb4
     .db nBb2, nD3, nF3, nBb3, nF3, nBb3, nD4, nF4, nBb4, nF4
@@ -345,7 +441,7 @@ SFX_Powerup:
 
 .SECTION "SFX Data - Brick Shatter" FREE
 SFX_Shatter:
-    smpsChanHeader  SFX_Shatter + 6,        $00 $00 $00 $00
+    smpsChanHeader  SFX_Shatter + 6,        $00, $00, $00, $00
     .db nRst, $01, nLow, nRst, nHi, nLow, nRst
     smpsChangeVol   $01
     .db nHi, nRst, nLow, nRst, nHi, nRst
@@ -360,7 +456,7 @@ SFX_Shatter:
 
 .SECTION "SFX Data - Swim, Stomp" FREE
 SFX_Swim:
-    smpsChanHeader  SFX_Swim + 6,           $00 $00 $00 $04
+    smpsChanHeader  SFX_Swim + 6,           $00, $00, $00, $04
     smpsModSetup    $01, $01, $F7, $FF
     .db nA2, $05
     .db nRst, $03
@@ -370,7 +466,7 @@ SFX_Swim:
 
 .SECTION "SFX Data - Vine" FREE
 SFX_Vine:
-    smpsChanHeader  SFX_Vine + 6,           $00 $01 $00 $00
+    smpsChanHeader  SFX_Vine + 6,           $00, $01, $00, $00
     .db nC2, $03, nG2, $02, nGs2
     .db nCs2, $04, nGs2, $02, nA2
     .db nD2, $04, nA2, $02, nBb2
@@ -384,7 +480,7 @@ SFX_Vine:
 
 .SECTION "SFX Data - Bowser Fall" FREE
 SFX_BowserFall:
-    smpsChanHeader  SFX_BowserFall + $06,   $00 $00 $00 $00
+    smpsChanHeader  SFX_BowserFall + $06,   $00, $00, $00, $00
     smpsModSetup    $00, $02, $17, $FF
     .db nD2, $37
     smpsStop
@@ -394,14 +490,14 @@ SFX_BowserFall:
 
 .SECTION "SFX Data - Powerup (P1)" FREE
 SFX_Powerup_P1:
-    smpsChanHeader  SFX_Powerup + 6,        $00 $02 $00 $00
-    smpsChanHeader  SFX_Powerup + 6,        $0C $05 $00 $00
+    smpsChanHeader  SFX_Powerup + 6,        $00, $02, $00, $00
+    smpsChanHeader  SFX_Powerup + 6,        $0C, $05, $00, $00
 .ENDS
 
 .SECTION "SFX Data - Big Jump (P1)" FREE
 SFX_JumpBig_P1:
-    smpsChanHeader  SFX_JumpBig + 6,        $00 $01 $00 $06
-    smpsChanHeader  @Layer2,                $0C $0F $00 $06
+    smpsChanHeader  SFX_JumpBig + 6,        $00, $01, $00, $06
+    smpsChanHeader  @Layer2,                $0C, $0F, $00, $06
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nD2, $03
@@ -417,8 +513,8 @@ SFX_JumpBig_P1:
 
 .SECTION "SFX Data - Small Jump (P1)" FREE
 SFX_JumpSml_P1:
-    smpsChanHeader  SFX_JumpSml + 6,        $00 $01 $00 $06
-    smpsChanHeader  @Layer2,                $0C $0F $00 $06
+    smpsChanHeader  SFX_JumpSml + 6,        $00, $01, $00, $06
+    smpsChanHeader  @Layer2,                $0C, $0F, $00, $06
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03

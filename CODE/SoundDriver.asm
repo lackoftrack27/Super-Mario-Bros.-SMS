@@ -2125,7 +2125,7 @@ FMVolEnv02:
 
 .SECTION "FMVolEnv03" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 FMVolEnv03:
-    .db $00, $00, $00, $00, $00, //$00, $00, $00, $00, 
+    .db $00, $00, $00, $00, $00 ; $00, $00, $00, $00, 
     .db $03, $06, $09, $0C, $0F, $80
 .ENDS
 

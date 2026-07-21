@@ -8785,18 +8785,18 @@ BlockBufferCollision_A1:
 .SECTION "Block Buffer LUT" BANK BANK_SLOT2 SLOT 2 FREE ALIGN 256 RETURNORG
 BlockBufferLUT:
     .DEFINE lbyte <Block_Buffer_1
-    .REPT $10
+    .REPEAT $10
     .db lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte
     .REDEFINE lbyte lbyte+1
     .ENDR
 
     .REDEFINE lbyte <Block_Buffer_2
-    .REPT $10
+    .REPEAT $10
     .db lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte, lbyte
     .REDEFINE lbyte lbyte+1
     .ENDR
 
-    .UNDEFINE lbyte
+    ;.UNDEFINE lbyte
 .ENDS
 
     ; BLOCK BUFFER DATA LAYOUT:

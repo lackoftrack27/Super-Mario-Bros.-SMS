@@ -578,13 +578,14 @@ ChkHoleX:
     RET M                               ;if less, branch to leave
     DEC B                               ;otherwise decrement flag in X
     JP M, CloudExit                     ;if flag was clear, branch to set modes and other values
-    ;LD A, (EventMusicBuffer)            ;check to see if music is still playing
-    ;OR A
-    ;RET NZ                              ;branch to leave if so
     LD A, (MusicTrack0.SoundPlaying)
-    CP A, SNDID_DEATH
-    RET Z
-
+    OR A
+    JR Z, +                             ;case 1: continue if no music
+    CP A, SNDID_HURRYUP                 ;case 2: continue if below event snd ids
+    JR C, +
+    CP A, SNDID_SILENCE + $01           ;case 3: continue if above event snd ids
+    RET C
++:
     LD A, $06                           ;otherwise set to run lose life routine
     LD (GameEngineSubroutine), A        ;on next frame
     RET

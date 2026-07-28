@@ -4198,10 +4198,14 @@ DelayToAreaEnd:
     OR A
     RET NZ                                  ;not yet expired, branch to leave
 ;
-    LD A, (MusicTrack0.SoundPlaying)        ;if event music buffer empty,
-    CP A, SNDID_LEVELDONE
-    JR NZ, IncrementSFTask2                 ;branch to increment task
-    RET
+    LD A, (MusicTrack0.SoundPlaying)
+    OR A
+    JR Z, IncrementSFTask2                  ;case 1: branch if no music
+    CP A, SNDID_HURRYUP                     ;case 2: branch if below event snd ids
+    JR C, IncrementSFTask2
+    CP A, SNDID_SILENCE + $01               ;case 3: branch if above event snd ids
+    JR NC, IncrementSFTask2
+    RET                                     ;otherwise leave
 
 ;--------------------------------
 ;$00(C) - used to store horizontal difference between player and piranha plant
@@ -6530,7 +6534,7 @@ SetPRout:
 KillPlayer:
     LD (Player_X_Speed), A          ;halt player's horizontal movement by initializing speed
 ;
-    LD A, (OperMode)
+    LD A, (OperMode)                ;only play death music if game isn't in demo mode
     OR A
     JR Z, +
     LD A, SNDID_DEATH               ;set event music queue to death music

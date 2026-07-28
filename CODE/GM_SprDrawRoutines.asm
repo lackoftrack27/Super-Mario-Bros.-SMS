@@ -908,7 +908,6 @@ CheckForSpiny:
     JR NZ, CheckForHammerBro                ;otherwise branch
 ;
     LD L, $30                               ;set to spiny egg offset
-    ;LD IXL, $02                             ;set enemy direction to reverse sprites horizontally LD IXH, $05                             ;set enemy state
     LD IX, $0502                            ;set enemy direction and state
     JP CheckForHammerBro
 
@@ -1077,15 +1076,11 @@ DrawEnemyObject:
     LD H, >EnemyGraphicsTable_HFlip
 ;
 +:
-    ;CALL DrawSpriteObject
-    ;CALL DrawSpriteObject
-    ;CALL DrawSpriteObject
     LD IXL, E
     LD A, B
     DrawSpriteObject_YPos                   ;draw six tiles of data
     DrawSpriteObject_YPos
-    ;DrawSpriteObject_YPos
-    LD (DE), A
+    LD (DE), A                              ;DrawSpriteObject_YPos
     INC E
     LD (DE), A
     LD E, IXL
@@ -1093,7 +1088,15 @@ DrawEnemyObject:
     SET 7, E
     DrawSpriteObject_XT
     DrawSpriteObject_XT
-    DrawSpriteObject_XT
+    LD A, C                                 ;DrawSpriteObject_XT
+    LD (DE), A
+    INC E
+    LDI
+    INC BC
+    ADD A, $08
+    LD (DE), A
+    INC E
+    LDI
     ; FALL THROUGH
 
 SprObjectOffscrChk:
@@ -1122,7 +1125,7 @@ SprObjectOffscrChk:
 ;
     SRL C                                   ;move d7 into carry
     RET NC
-    XOR A                                   ;move all sprites offscreen
+    XOR A                                   ;if carry, move all sprites offscreen
     CALL MoveESprRowOffscreen
 ;
     LD L, <Enemy_ID                         ;check enemy identifier for podoboo
@@ -2458,8 +2461,7 @@ DrawPlayerLoop:
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
     DrawSpriteObject_YPos
-    ;DrawSpriteObject_YPos
-    LD (DE), A
+    LD (DE), A                          ;DrawSpriteObject_YPos
     INC E
     LD (DE), A
     LD E, IXL
@@ -2468,12 +2470,16 @@ DrawPlayerLoop:
     DrawSpriteObject_XT
     DrawSpriteObject_XT
     DrawSpriteObject_XT
-    DrawSpriteObject_XT
+    LD A, C                             ;DrawSpriteObject_XT
+    LD (DE), A
+    INC E
+    LDI
+    INC BC
+    ADD A, $08
+    LD (DE), A
+    INC E
+    LDI
     RET
-    ;CALL DrawSpriteObject               ;draw sprite row 1
-    ;CALL DrawSpriteObject               ;draw sprite row 2
-    ;CALL DrawSpriteObject               ;draw sprite row 3
-    ;JP DrawSpriteObject                 ;draw sprite row 4
 
 ProcessPlayerAction:
     LD A, (Player_State)                ;get player's state

@@ -138,8 +138,8 @@ BackSceneryData:
 
 .SECTION "BG Scenery Data - Water (2-2/7-2)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 @Water00:
-    .db $6A, $6B, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D, $6C, $6D
-    .db $6C, $6D, $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6E, $6F, $70, $71, $6C, $6D
+    .db $6A, $6B, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $71, $6C, $6D, $6C, $6D, $6C, $6D
+    .db $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D
     .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $72, $73, $74, $75, $76, $77
 .ENDS
 

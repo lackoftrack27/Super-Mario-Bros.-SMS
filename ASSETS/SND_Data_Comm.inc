@@ -433,7 +433,7 @@ SFX_Pipe:
 .SECTION "SFX Data - Powerup" FREE
 SFX_Powerup:
     smpsChanHeader  SFX_Powerup + 6,        $00, $01, $00, $00
-    .db nC3, $02, nG2, nC3, nF3, nG3, nC4, nG3
+    .db nC3, $02, nG2, nC3, nE3, nG3, nC4, nG3
     .db nGs2, nC3, nEb3, nGs3, nEb3, nGs3, nC4, nEb4, nGs4, nEb4
     .db nBb2, nD3, nF3, nBb3, nF3, nBb3, nD4, nF4, nBb4, nF4
     smpsStop

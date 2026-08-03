@@ -1723,19 +1723,19 @@ AssetLoaderTable:
     .dw Tiles_BG_Overworld, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
     .db :Tiles_BG_Snow
-    .dw Tiles_BG_Snow, $3300 | VRAMWRITE ;$3680 | VRAMWRITE
+    .dw Tiles_BG_Snow, $3300 | VRAMWRITE
     ;
     .db :Tiles_BG_Underground
-    .dw Tiles_BG_Underground, $3A80 | VRAMWRITE
+    .dw Tiles_BG_Underground, $3680 | VRAMWRITE
     ;
     .db :Tiles_BG_Castle
     .dw Tiles_BG_Castle, $2F20 | VRAMWRITE
     ;
     .db :Tiles_BG_Water
-    .dw Tiles_BG_Water, VRAM_ADR_BG_LVL | VRAMWRITE ;$3300 | VRAMWRITE
+    .dw Tiles_BG_Water, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
     .db :Tiles_BG_WaterCastle
-    .dw Tiles_BG_WaterCastle, VRAM_ADR_BG_LVL | VRAMWRITE ;$3680 | VRAMWRITE
+    .dw Tiles_BG_WaterCastle, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
     .db :Tiles_SPR_Enemies
     .dw Tiles_SPR_Enemies, $0820 | VRAMWRITE
@@ -2583,10 +2583,10 @@ Palette0_MTiles:
     .dw BG_MACRO($0183), BG_MACRO($0184), BG_MACRO($0185), BG_MACRO($0186)  ; short top
     .dw BG_MACRO($0189), BG_MACRO($0184), BG_MACRO($018A), BG_MACRO($0186)  ; tall top, bottom half
     ; Latern (NEW)
-    .dw BLANKTILE, BLANKTILE, BG_MACRO($01B8), BG_MACRO($01B4)              ; top left
-    .dw BG_MACRO($01B9), BG_MACRO($01B6), BLANKTILE, BLANKTILE              ; top right
-    .dw BLANKTILE, BLANKTILE, BG_MACRO($01B5), BLANKTILE                    ; bottom left
-    .dw BG_MACRO($01B7), BLANKTILE, BLANKTILE, BLANKTILE                    ; bottom right
+    .dw $01C3, $01C4, $01F0, $01EC                                          ; LATERN LT
+    .dw $01F1, $01EE, $07C4, $01C6                                          ; LATERN RT
+    .dw $05C3, MT_BLANK, $01ED, $01C5                                       ; LATERN LB
+    .dw $01EF, MT_BLANK, $03C4, $01C7                                       ; LATERN RB
     ; --- METATILES WITH COLLISION START HERE ---
     ; Vertical Pipe
     .dw BG_MACRO($1160), BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163)  ; warp pipe end left, points up
@@ -2698,6 +2698,7 @@ Palette1_MTiles:
     ; Hidden blocks
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with Coins
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with 1-UP
+    .dw $01B4, $01B5, $01B6, $01B7                                          ; with Coins (underground)
     ; Solid blocks
     .dw BG_MACRO($01A0), BG_MACRO($01A1), BG_MACRO($01A2), BG_MACRO($01A3)  ; 3D block
     .dw BG_MACRO($11A0), BG_MACRO($11A1), BG_MACRO($11A2), BG_MACRO($11A3)  ; 3D block PRIORITY (for pipes)
@@ -2830,6 +2831,12 @@ Palette3_MTiles:
     .dw $01E7, $01DC, $015D, $01DD
     .dw $01DE, $01DF, $01E0, $01E1
     .dw $01E2, $0197, $0196, $01E2
+    ; Background for underground levels
+    .dw $01B4, $01B5, $01B6, $01B7
+    .dw $01B8, $01B9, $01BA, $03B6
+    .dw $01BB, MT_BLANK, $01B6, $01BC
+    .dw $01BD, $01BE, $03B6, $01BF
+    .dw $01C0, $01B6, $01C1, $01C2
     ; --- METATILES WITH COLLISION START HERE ---
     ; Question Blocks
     .dw BG_MACRO($01A9), BG_MACRO($01AA), BG_MACRO($01AB), BG_MACRO($01AC)  ; with coin
@@ -2906,7 +2913,7 @@ Tiles_BG_Overworld:
     .INCBIN "BG_Overworld.zx7"
 .ENDS
 
-.SECTION "BG Underground Tiles" BANK BANK_AREAENEMY SLOT 2 FREE
+.SECTION "BG Underground Tiles" BANK BANK_PLAYERGFX05 SLOT 2 FREE
 
 Tiles_BG_Underground:
     .INCBIN "BG_Underground.zx7"

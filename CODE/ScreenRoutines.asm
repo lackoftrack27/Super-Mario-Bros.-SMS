@@ -729,7 +729,7 @@ OverWorldSetup:
     LD A, (BackgroundScenery)           ; IF BACKGROUND DOESN'T HAVE GRASS, SKIP
     AND A, $03
     CP A, $02
-    JR NZ, TileLoadDone
+    JP NZ, TileLoadDone
     LD HL, AnimatedBGTileInits@Grass
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
@@ -780,11 +780,21 @@ UndergroundSetup:
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     JR TileLoadDone
-    ; FOR NES GFX, CLEAR OUT LATERN GFX AREA
+    ; FOR NES GFX, CLEAR OUT BG GFX DATA
 @ClearLaternArea:
+    LD HL, $3680 | VRAMWRITE
+    RST setVDPAddress
+    LD BC, $0004
+    XOR A
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+    DEC C
+    JP NZ, -
+    ; FOR NES GFX, CLEAR OUT LATERN GFX AREA
     LD HL, $3D80 | VRAMWRITE
     RST setVDPAddress
-    LD B, $C0
+    LD B, $20 * $06
     XOR A
 -:
     OUT (VDPDATA_PORT), A

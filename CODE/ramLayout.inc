@@ -911,6 +911,7 @@
 
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 1E" SLOT 33
+    MainUndergndLvlFlag:            dsb $01
     BonusAreaFlag:                  dsb $01
     RetainerDrawnFlag:              dsb $01
     PauseButtonFlag:                dsb $01

@@ -110,9 +110,9 @@ BackSceneryData:
     ; .db $00, $00, $00, $00, $00, $00, $4D, $4E, $00, $00, $00, $00, $00, $00, $00, $00
     ; .db $00, $00, $00, $00, $00, $00, $4D, $4E, $00, $00, $00, $00, $00, $00, $00, $00
     ; .db $00, $00, $00, $00, $00, $00, $00, $1D, $1E, $00, $00, $00, $00, $00, $00, $00
-    .db $00, $00, $00, $00, $00, $00, $8E, $8F, $00, $00, $00, $00, $00, $00, $00, $00
-    .db $00, $00, $00, $00, $00, $00, $8E, $8F, $00, $00, $00, $00, $00, $00, $00, $00
-    .db $00, $00, $00, $00, $00, $00, $00, $90, $91, $00, $00, $00, $00, $00, $00, $00
+    .db $8E, $8F, $90, $91, $92, $93, $94, $95, $8E, $8F, $90, $91, $92, $93, $96, $97
+    .db $8E, $8F, $90, $91, $92, $93, $94, $95, $8E, $8F, $90, $91, $92, $93, $96, $97
+    .db $8E, $8F, $90, $91, $92, $93, $96, $98, $99, $8F, $90, $91, $92, $93, $96, $97
 .ENDS
 
 .SECTION "BG Scenery Data - CloudsNight" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -2176,7 +2176,15 @@ Hidden1UpBlock:
 
 QuestionBlock:
     LD C, IXL                           ;get value saved from area parser routine
-    JP DrawQBlk                         ;go to render it
+    ;JP DrawQBlk                         ;go to render it
+    LD A, (MainUndergndLvlFlag)         ;skip next check if level isn't main underground one (1-2/4-2)
+    OR A
+    JR Z, DrawQBlk
+    LD A, C                             ;skip if qblk type isn't hidden coin
+    CP A, $02
+    JR NZ, DrawQBlk
+    LD A, MT_HIDDENBLK_COIN_UGND        ;else, use special metatile to hide the hidden block
+    JP DrawQBlkHiddenUgnd
 
 BrickWithCoins:
     XOR A                               ;initialize multi-coin timer flag
@@ -2197,6 +2205,7 @@ DrawQBlk:
     LD DE, BrickQBlockMetatiles
     addAToDE8_M
     LD A, (DE)                          ;get appropriate metatile for brick (question block
+DrawQBlkHiddenUgnd:
     PUSH AF                             ;if branched to here from question block routine)
     CALL GetLrgObjAttrib                ;get row from location byte
     JP DrawRow                          ;now render the object
@@ -2621,7 +2630,7 @@ GetAreaDataAddrs:
 ;
     LD A, (TitleLoadedFlag)         ;skip copying level data to RAM
     OR A                            ;if past initial load on title screen
-    JR NZ, +
+    JR NZ, @SkipRAMCopy
 ;
     LD DE, AreaDataBank
     LD BC, $0100
@@ -2633,7 +2642,17 @@ GetAreaDataAddrs:
 ;   Restore bank
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
+;   set flag for main underground levels so blank blocks are replaced with bg
+    LD A, (AreaPointer)
+    AND A, $7F
+    CP A, $40
+    JR Z, +
+    CP A, $41
+    JR NZ, @ChkBonusArea
++:
+    LD (MainUndergndLvlFlag), A
 ;   set bonus area flag for underground coin room (FM only)
+@ChkBonusArea:
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
     RET Z
@@ -2644,7 +2663,7 @@ GetAreaDataAddrs:
     LD (BonusAreaFlag), A
     RET
 
-+:
+@SkipRAMCopy:
     POP HL
 ;   Restore bank
     LD A, BANK_SLOT2

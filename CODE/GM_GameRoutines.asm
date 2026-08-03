@@ -904,6 +904,7 @@ BlockCode:
     .dw StarBlock
     .dw CoinBlock
     .dw ExtraLifeMushBlock
+    .dw CoinBlock
 
 ;--------------------------------
 
@@ -936,13 +937,17 @@ BrickQBlockMetatiles:
     ;these two sets are functionally identical, but look different
     .db MT_SBRICK_PUP, MT_SBRICK_VINE, MT_SBRICK_STAR, MT_SBRICK_COIN, MT_SBRICK_1UP
     .db MT_BRICK_PUP, MT_BRICK_VINE, MT_BRICK_STAR, MT_BRICK_COIN, MT_BRICK_1UP
+    ;
+    .db MT_HIDDENBLK_COIN_UGND
 .ENDS
 
 ;   INPUT:  A - METATILE
 ;   OUTPUT: Z - BLOCK FOUND, NZ - BLOCK NOT FOUND
 BlockBumpedChk:
-    LD DE, BrickQBlockMetatiles + $0D   ;start at end of metatile data
-    LD BC, $000E
+    ;LD DE, BrickQBlockMetatiles + $0D   ;start at end of metatile data
+    ;LD BC, $000E
+    LD DE, BrickQBlockMetatiles + $0E   ;start at end of metatile data
+    LD BC, $000F
     EX DE, HL
     CPDR                                ;check to see if metatile matches any in table data
     EX DE, HL

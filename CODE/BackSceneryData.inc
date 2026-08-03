@@ -154,6 +154,14 @@ BackSceneryColumnPtrs:
     .dw BGColumn8F
     .dw BGColumn90
     .dw BGColumn91
+    .dw BGColumn92
+    .dw BGColumn93
+    .dw BGColumn94
+    .dw BGColumn95
+    .dw BGColumn96
+    .dw BGColumn97
+    .dw BGColumn98
+    .dw BGColumn99
 .ENDS
 
 .SECTION "BG Scenery Column Data" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
@@ -890,18 +898,170 @@ BGColumn8D:
 ;   ---
 
 BGColumn8E:
-    .db $04, MT_LATERN_LT
-    .db $85, MT_LATERN_LB
+    .db $00, MT_UGND00
+    .db $01, MT_UGND01
+    .db $02, MT_UGND02
+    .db $03, MT_UGND03
+    .db $04, MT_UGND04
+    .db $05, MT_UGND00
+    .db $06, MT_UGND03
+    .db $07, MT_UGND02
+    .db $08, MT_UGND04
+    .db $09, MT_UGND00
+    .db $0A, MT_UGND01
+    .db $8B, MT_UGND02
 
 BGColumn8F:
-    .db $04, MT_LATERN_RT
-    .db $85, MT_LATERN_RB
+    .db $00, MT_UGND04
+    .db $01, MT_UGND03
+    .db $02, MT_UGND01
+    .db $03, MT_UGND00
+    .db $04, MT_UGND02
+    .db $05, MT_UGND03
+    .db $06, MT_UGND04
+    .db $07, MT_UGND00
+    .db $08, MT_UGND01
+    .db $09, MT_UGND02
+    .db $0A, MT_UGND03
+    .db $8B, MT_UGND04
 
 BGColumn90:
-    .db $01, MT_LATERN_LT
-    .db $82, MT_LATERN_LB
+    .db $00, MT_UGND03
+    .db $01, MT_UGND02
+    .db $02, MT_UGND04
+    .db $03, MT_UGND02
+    .db $04, MT_UGND01
+    .db $05, MT_UGND00
+    .db $06, MT_UGND02
+    .db $07, MT_UGND04
+    .db $08, MT_UGND03
+    .db $09, MT_UGND01
+    .db $0A, MT_UGND00
+    .db $8B, MT_UGND02
 
 BGColumn91:
+    .db $00, MT_UGND01
+    .db $01, MT_UGND04
+    .db $02, MT_UGND03
+    .db $03, MT_UGND00
+    .db $04, MT_UGND03
+    .db $05, MT_UGND01
+    .db $06, MT_UGND00
+    .db $07, MT_UGND03
+    .db $08, MT_UGND01
+    .db $09, MT_UGND04
+    .db $0A, MT_UGND02
+    .db $8B, MT_UGND03
+
+BGColumn92:
+    .db $00, MT_UGND02
+    .db $01, MT_UGND01
+    .db $02, MT_UGND00
+    .db $03, MT_UGND04
+    .db $04, MT_UGND02
+    .db $05, MT_UGND03
+    .db $06, MT_UGND00
+    .db $07, MT_UGND04
+    .db $08, MT_UGND03
+    .db $09, MT_UGND02
+    .db $0A, MT_UGND01
+    .db $8B, MT_UGND00
+
+BGColumn93:
+    .db $00, MT_UGND04
+    .db $01, MT_UGND03
+    .db $02, MT_UGND02
+    .db $03, MT_UGND01
+    .db $04, MT_UGND00
+    .db $05, MT_UGND04
+    .db $06, MT_UGND03
+    .db $07, MT_UGND02
+    .db $08, MT_UGND00
+    .db $09, MT_UGND01
+    .db $0A, MT_UGND03
+    .db $8B, MT_UGND04
+
+BGColumn94:
+    .db $00, MT_UGND02
+    .db $01, MT_UGND00
+    .db $02, MT_UGND01
+    .db $03, MT_UGND03
+    .db $04, MT_LATERN_LT  ; LATERN_LT
+    .db $05, MT_LATERN_LB  ; LATERN_LB
+    .db $06, MT_UGND00
+    .db $07, MT_UGND01
+    .db $08, MT_UGND02
+    .db $09, MT_UGND04
+    .db $0A, MT_UGND02
+    .db $8B, MT_UGND03
+
+BGColumn95:
+    .db $00, MT_UGND03
+    .db $01, MT_UGND02
+    .db $02, MT_UGND04
+    .db $03, MT_UGND01
+    .db $04, MT_LATERN_RT  ; LATERN_RT
+    .db $05, MT_LATERN_RB  ; LATERN_RB
+    .db $06, MT_UGND01
+    .db $07, MT_UGND03
+    .db $08, MT_UGND00
+    .db $09, MT_UGND03
+    .db $0A, MT_UGND04
+    .db $8B, MT_UGND01
+
+BGColumn96:
+    .db $00, MT_UGND02
+    .db $01, MT_UGND00
+    .db $02, MT_UGND01
+    .db $03, MT_UGND03
+    .db $04, MT_UGND04
+    .db $05, MT_UGND02
+    .db $06, MT_UGND00
+    .db $07, MT_UGND01
+    .db $08, MT_UGND02
+    .db $09, MT_UGND04
+    .db $0A, MT_UGND02
+    .db $8B, MT_UGND03
+
+BGColumn97:
+    .db $00, MT_UGND03
+    .db $01, MT_UGND02
+    .db $02, MT_UGND04
+    .db $03, MT_UGND01
+    .db $04, MT_UGND03
+    .db $05, MT_UGND00
+    .db $06, MT_UGND01
+    .db $07, MT_UGND03
+    .db $08, MT_UGND00
+    .db $09, MT_UGND03
+    .db $0A, MT_UGND04
+    .db $8B, MT_UGND01
+
+BGColumn98:
+    .db $00, MT_UGND03
+    .db $01, MT_LATERN_LT
+    .db $02, MT_LATERN_LB
+    .db $03, MT_UGND01
+    .db $04, MT_UGND03
+    .db $05, MT_UGND00
+    .db $06, MT_UGND01
+    .db $07, MT_UGND03
+    .db $08, MT_UGND00
+    .db $09, MT_UGND03
+    .db $0A, MT_UGND04
+    .db $8B, MT_UGND01
+
+BGColumn99:
+    .db $00, MT_UGND00
     .db $01, MT_LATERN_RT
-    .db $82, MT_LATERN_RB
+    .db $02, MT_LATERN_RB
+    .db $03, MT_UGND03
+    .db $04, MT_UGND04
+    .db $05, MT_UGND00
+    .db $06, MT_UGND03
+    .db $07, MT_UGND02
+    .db $08, MT_UGND04
+    .db $09, MT_UGND00
+    .db $0A, MT_UGND01
+    .db $8B, MT_UGND02
 .ENDS

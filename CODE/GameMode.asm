@@ -5283,7 +5283,11 @@ BlockGfxData:
     .dw BG_MACRO($11A5), BG_MACRO($11A7), BG_MACRO($11A6), BG_MACRO($11A8)  ; EMPTY BLOCK MT (PRIORITY)
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; BLANK MT
     .dw $01E7, $01E7, $01E7, $01E7                                          ; WATER MT
-    ;.dw BG_MACRO($01A5), BG_MACRO($01A7), BG_MACRO($01A6), BG_MACRO($01A8)  ; EMPTY BLOCK MT (NO PRI)
+    ;
+    .dw $01B4, $01B6, $01B5, $01B7
+    .dw $01B8, $01BA, $01B9, $03B6
+    .dw $01BB, $01B6, MT_BLANK, $01BC
+    .dw $01BD, $03B6, $01BE, $01BF
 .ENDS
 
 RemoveCoin_Axe:
@@ -5304,7 +5308,17 @@ DestroyBlockMetatile:
 WriteBlockMetatile:
     LD C, $03                       ;load offset for blank metatile
     OR A                            ;check contents of A for blank metatile
-    JR Z, UseBOffset                ;branch if found (unconditional if branched from DestroyBlockMetatile)
+    ;JR Z, UseBOffset                ;branch if found (unconditional if branched from DestroyBlockMetatile)
+    JR NZ, +
+    LD A, (MainUndergndLvlFlag)     ;skip if level isn't 1-2 or 4-2
+    OR A
+    JR Z, UseBOffset
+    LD A, (PseudoRandomBitReg)      ;get random number to use as index into underground bg tiles
+    AND A, %00000011
+    ADD A, $05
+    LD C, A
+    JR UseBOffset
++:
     LD C, $00                       ;load offset for brick metatile w/ line
     CP A, MT_SBRICK_COIN
     JR Z, UseBOffset                ;use offset if metatile is brick with coins (w/ line)
@@ -7656,6 +7670,8 @@ ChkInvisibleMTiles:
     CP A, MT_HIDDENBLK_COIN             ;check for hidden coin block
     RET Z                               ;branch to leave if found
     CP A, MT_HIDDENBLK_1UP              ;check for hidden 1-up block
+    RET Z
+    CP A, MT_HIDDENBLK_COIN_UGND
     RET                                 ;leave with zero flag set if either found
 
 ;--------------------------------
@@ -8267,6 +8283,8 @@ ChkForNonSolids:
     CP A, MT_HIDDENBLK_COIN         ;hidden coin block?
     RET Z
     CP A, MT_HIDDENBLK_1UP          ;hidden 1-up block?
+    RET Z
+    CP A, MT_HIDDENBLK_COIN_UGND
     RET
     
 ;-------------------------------------------------------------------------------------

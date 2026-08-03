@@ -334,15 +334,15 @@ GetBackgroundColor:
 ;
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    LD A, (HL)
+    LD A, (BackgroundColorCtrl)
     JR Z, +
     LD HL, BGColorCtrl_Addr         ;for NES GFX, put appropriate palette into vram
     addAToHL8_M
+    LD A, (HL)
     LD (VRAM_Buffer_AddrCtrl), A    ;note that if set to 5-7, $0301 will not be read
     JR NoBGColor
 +:
-    LD A, (BackgroundColorCtrl)     ;else, load appropriate palette into fade buffer
-    ADD A, A
+    ADD A, A                        ;else, load appropriate palette into fade buffer
     LD HL, FadeTable
     addAToHL8_M
     LD A, (HL)

@@ -506,13 +506,10 @@ SndProcessQueueSFX:
     LD (HL), A      ; Detune
     INC L
     LD (HL), $01    ; Duration
-;   INCREMENT VOLUME BY 1 IF DOING FM MUSIC
+;   SET UP 2ND LAYER IF DOING LAYERED SFX IN FM MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
     JP Z, +
-    LD L, <SFXTrack0.Volume
-    INC (HL)
-;   SET UP 2ND LAYER IF DOING LAYERED SFX IN FM MODE
     LD L, <SFXTrack0.SoundPlaying
     LD A, (HL)
     CP A, SNDID_JUMPBIG_01

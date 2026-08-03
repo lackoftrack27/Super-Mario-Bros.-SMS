@@ -263,7 +263,7 @@
     SNDID_FLAME     DB
     SNDID_PAUSE     DB      ; ON PSG CHANNEL 1
 ;
-    SNDID_WATER         DB  ; $94, $13
+    SNDID_WATER         DB  ; $94, $14
     SNDID_OVERWORLD     DB
     SNDID_UNDERGROUND   DB
     SNDID_CASTLE        DB
@@ -271,7 +271,7 @@
     SNDID_PIPEINTRO     DB
     SNDID_INVINCIBLE    DB
 ;
-    SNDID_HURRYUP       DB
+    SNDID_HURRYUP       DB  ; $9B
     SNDID_LEVELDONE     DB
     SNDID_WORLDDONE     DB
     SNDID_GAMEDONE      DB
@@ -279,7 +279,7 @@
     SNDID_DEATH         DB
     SNDID_SILENCE       DB
 ;
-    SNDID_BOWSER_FM     DB
+    SNDID_BOWSER_FM     DB  ; $A2
     SNDID_BOWSERFINAL_FM    DB
     SNDID_TITLE_FM      DB
     SNDID_FMDUPS        DSB $0E
@@ -491,7 +491,7 @@ SFX_BowserFall:
 .SECTION "SFX Data - Powerup (P1)" FREE
 SFX_Powerup_P1:
     smpsChanHeader  SFX_Powerup + 6,        $00, $02, $00, $00
-    smpsChanHeader  SFX_Powerup + 6,        $0C, $05, $00, $00
+    smpsChanHeader  SFX_Powerup + 6,        $0C, $04, $00, $00
 .ENDS
 
 .SECTION "SFX Data - Big Jump (P1)" FREE
@@ -501,7 +501,7 @@ SFX_JumpBig_P1:
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nD2, $03
-    smpsChangeVol   $F5
+    smpsChangeVol   $F4
     smpsNoAtk
     smpsModSetup    $00, $04, $03, $FF
     .db $05
@@ -518,7 +518,7 @@ SFX_JumpSml_P1:
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03
-    smpsChangeVol   $F5
+    smpsChangeVol   $F4
     smpsNoAtk
     smpsModSetup    $00, $04, $01, $FF
     .db $05

@@ -2099,12 +2099,7 @@ OptionsPaletteData_NES:
 ;-------------------------------------------------------------------------------------
 .SECTION "'Thank You Mario' MSG Data" FREE
 MarioThanksMessage:
-;"THANK YOU MARIO!"
-    ; .db $25, $48, $10
-    ; .db $1d, $11, $0a, $17, $14, $24
-    ; .db $22, $18, $1e, $24
-    ; .db $16, $0a, $1b, $12, $18, $2b
-    ; .db $00
+;   "THANK YOU MARIO!"
     .dw swapBytes(xyToNameTbl_M(8, 7))
     .db StripeCount($20)
     .dw $01F9, $0179, $01FA, $01FE, $017A, $0000
@@ -2115,12 +2110,7 @@ MarioThanksMessage:
 
 .SECTION "'Thank You Luigi' MSG Data" FREE
 LuigiThanksMessage:
-;"THANK YOU LUIGI!"
-    ; .db $25, $48, $10
-    ; .db $1d, $11, $0a, $17, $14, $24
-    ; .db $22, $18, $1e, $24
-    ; .db $15, $1e, $12, $10, $12, $2b
-    ; .db $00
+;   "THANK YOU LUIGI!"
     .dw swapBytes(xyToNameTbl_M(8, 7))
     .db StripeCount($20)
     .dw $01F9, $0179, $01FA, $01FE, $017A, $0000
@@ -2131,16 +2121,7 @@ LuigiThanksMessage:
 
 .SECTION "Mushroom Retainer MSG Data" FREE
 MushroomRetainerSaved:
-;"BUT OUR PRINCESS IS IN"
-;     .db $25, $c5, $16
-;     .db $0b, $1e, $1d, $24, $18, $1e, $1b, $24
-;     .db $19, $1b, $12, $17, $0c, $0e, $1c, $1c, $24
-;     .db $12, $1c, $24, $12, $17
-; ;"ANOTHER CASTLE!"
-;     .db $26, $05, $0f
-;     .db $0a, $17, $18, $1d, $11, $0e, $1b, $24
-;     .db $0c, $0a, $1c, $1d, $15, $0e, $2b, $00
-;"BUT OUR PRINCESS IS IN"
+;   "BUT OUR PRINCESS IS IN"
     .dw swapBytes(xyToNameTbl_M(5, 11))
     .db StripeCount($2C)
     .dw $017E, $017C, $01F9, $0000
@@ -2148,7 +2129,7 @@ MushroomRetainerSaved:
     .dw $01FC, $01FB, $017D, $01FE, $01F6, $01F4, $017F, $017F, $0000
     .dw $017D, $017F, $0000
     .dw $017D, $01FE
-;"ANOTHER CASTLE!"
+;   "ANOTHER CASTLE!"
     .dw swapBytes(xyToNameTbl_M(5, 13))
     .db StripeCount($1E)
     .dw $01FA, $01FE, $01F7, $01F9, $0179, $01F4, $01FB, $0000
@@ -2158,12 +2139,7 @@ MushroomRetainerSaved:
 
 .SECTION "Princess Saved MSG 1 Data" FREE
 PrincessSaved1:
-;"YOUR QUEST IS OVER."
-    ; .db $25, $a7, $13
-    ; .db $22, $18, $1e, $1b, $24
-    ; .db $1a, $1e, $0e, $1c, $1d, $24
-    ; .db $12, $1c, $24, $18, $1f, $0e, $1b, $af
-    ; .db $00
+;   "YOUR QUEST IS OVER."
     .dw swapBytes(xyToNameTbl_M(7, 10))
     .db StripeCount($26)
     .dw $017B, $01F7, $017C, $01FB, $0000
@@ -2175,13 +2151,7 @@ PrincessSaved1:
 
 .SECTION "Princess Saved MSG 2 Data" FREE
 PrincessSaved2:
-;"WE PRESENT YOU A NEW QUEST."
-    ; .db $25, $e3, $1b
-    ; .db $20, $0e, $24
-    ; .db $19, $1b, $0e, $1c, $0e, $17, $1d, $24
-    ; .db $22, $18, $1e, $24, $0a, $24, $17, $0e, $20, $24
-    ; .db $1a, $1e, $0e, $1c, $1d, $af
-    ; .db $00
+;   "WE PRESENT YOU A NEW QUEST."
     .dw swapBytes(xyToNameTbl_M(3, 12))
     .db StripeCount($36)
     .dw $0142, $01F4, $0000
@@ -2195,11 +2165,7 @@ PrincessSaved2:
 
 .SECTION "World Select MSG 1 Data" FREE
 WorldSelectMessage1:
-;"PUSH BUTTON B"
-    ; .db $26, $4a, $0d
-    ; .db $19, $1e, $1c, $11, $24
-    ; .db $0b, $1e, $1d, $1d, $18, $17, $24, $0b
-    ; .db $00
+;   "PUSH BUTTON 2"
     .dw swapBytes(xyToNameTbl_M(10, 15))
     .db StripeCount($1A)
     .dw $01FC, $017C, $017F, $0179, $0000
@@ -2210,11 +2176,7 @@ WorldSelectMessage1:
 
 .SECTION "World Select MSG 2 Data" FREE
 WorldSelectMessage2:
-;"TO SELECT A WORLD"
-    ; .db $26, $88, $11
-    ; .db $1d, $18, $24, $1c, $0e, $15, $0e, $0c, $1d, $24
-    ; .db $0a, $24, $20, $18, $1b, $15, $0d
-    ; .db $00
+;   "TO SELECT A WORLD"
     .dw swapBytes(xyToNameTbl_M(8, 17))
     .db StripeCount($22)
     .dw $01F9, $01F7, $0000
@@ -2430,51 +2392,14 @@ WorldLivesDisplay:
 @end:
 .ENDS
 
-; .SECTION "Two Player Timeup for Mario Stripe Data" FREE
-; TwoPlayerTimeUp:
-;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
-;     .db @end-TwoPlayerTimeUp - 1
-;     .dw swapBytes(xyToNameTbl_M(13, 11))
-;     .db $05 << $01
-;     .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
-; @end:
-; .ENDS
-
-; .SECTION "Timeup Stripe Data" FREE
-; OnePlayerTimeUp:
-;     ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
-;     ;.db $ff
-;     .db @end-OnePlayerTimeUp - 1
-;     .dw swapBytes(xyToNameTbl_M(12, 13))
-;     .db $07 << $01
-;     .dw BG_MACRO($011A), BG_MACRO($0113), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0116), BG_MACRO($011B)
-; @end:
-; .ENDS
-
-; .SECTION "Two Player GameOver for Mario Stripe Data" FREE
-; TwoPlayerGameOver:
-;     ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
-; .ENDS
-
-; .SECTION "GameOver Stripe Data" FREE
-; OnePlayerGameOver:
-;     ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
-;     ;.db $18, $1f, $0e, $1b
-;     ;.db $ff
-;     .dw swapBytes(xyToNameTbl_M(11, 13))
-;     .db $09 << $01
-;     .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
-; .ENDS
-
 .SECTION "GameOver Stripe Data" FREE
 GameOverDisplay:
-    ;.db $22, $0b, $09, $10, $0a, $16, $0e, $24 ; "GAME OVER"
-    ;.db $18, $1f, $0e, $1b
-    ;.db $ff
     .db @end-GameOverDisplay - 1
+;   placeholder for player's name
     .dw swapBytes(xyToNameTbl_M(13, 11))
     .db StripeCount($0A)
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
+;   "GAME OVER"
     .dw swapBytes(xyToNameTbl_M(11, 13))
     .db StripeCount($12)
     .dw BG_MACRO($0117), BG_MACRO($0111), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0114), BG_MACRO($0119), BG_MACRO($0118), BG_MACRO($0112)
@@ -2483,12 +2408,12 @@ GameOverDisplay:
 
 .SECTION "Timeup Stripe Data" FREE
 TimeUpDisplay:
-    ;.db $22, $0c, $07, $1d, $12, $16, $0e, $24, $1e, $19 ; "TIME UP"
-    ;.db $ff
     .db @end-TimeUpDisplay - 1
+;   placeholder for player's name
     .dw swapBytes(xyToNameTbl_M(13, 11))
     .db StripeCount($0A)
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
+;   "TIME UP"
     .dw swapBytes(xyToNameTbl_M(12, 13))
     .db StripeCount($0E)
     .dw BG_MACRO($011A), BG_MACRO($0113), BG_MACRO($0110), BG_MACRO($0118), BLANKTILE, BG_MACRO($0116), BG_MACRO($011B)
@@ -2497,15 +2422,6 @@ TimeUpDisplay:
 
 .SECTION "WarpZone Stripe Data" FREE
 WarpZoneWelcome:
-    ; .db $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
-    ; .db $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
-    ; .db $24, $23, $18, $17, $0e, $2b
-    ; .db $26, $25, $01, $24         ; placeholder for left pipe
-    ; .db $26, $2d, $01, $24         ; placeholder for middle pipe
-    ; .db $26, $35, $01, $24         ; placeholder for right pipe
-    ; .db $27, $d9, $46, $aa         ; attribute data
-    ; .db $27, $e1, $45, $aa
-    ; .db $ff
     .db @end-WarpZoneWelcome - 1
     ; "WELCOME TO WARP ZONE!"
     .dw swapBytes(xyToNameTbl_M(04, 09))
@@ -2517,36 +2433,36 @@ WarpZoneWelcome:
     ; placeholder for left pipe
     .dw swapBytes(xyToNameTbl_M(05, 14))
     .db StripeCount($02)
-    .dw $0000   ; $30
+    .dw BLANKTILE   ; $30
     ; placeholder for middle pipe
     .dw swapBytes(xyToNameTbl_M(13, 14))
     .db StripeCount($02)
-    .dw $0000   ; $35
+    .dw BLANKTILE   ; $35
     ; placeholder for right pipe
     .dw swapBytes(xyToNameTbl_M(21, 14))
     .db StripeCount($02)
-    .dw $0000   ; $3A
+    .dw BLANKTILE   ; $3A
 @end:
 .ENDS
 
 
 .SECTION "Mario Name Stripe Data" FREE
 MarioName:
-    ;.db $21, $cd, $05, $16, $0a, $1b, $12, $18 ; "MARIO"
+;   "MARIO", no address or length
     .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0114)
 .ENDS
 
 .SECTION "Luigi Name Stripe Data" FREE
 LuigiName:
-    ;.db $15, $1e, $12, $10, $12    ; "LUIGI", no address or length
+;   "LUIGI", no address or length
     .dw BG_MACRO($0115), BG_MACRO($0116), BG_MACRO($0113), BG_MACRO($0117), BG_MACRO($0113)
 .ENDS
 
 .SECTION "WarpZone Numbers Stripe Data" FREE
 WarpZoneNumbers:
-    ; .db $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
-    ; .db $24, $05, $24, $00         ; zone, partly responsible for
-    ; .db $08, $07, $06, $00         ; the minus world
+;   warp zone numbers, note spaces on middle
+;   zone, partly responsible for
+;   the minus world
     .dw BG_MACRO($0104), BG_MACRO($0103), BG_MACRO($0102), $0000
     .dw BLANKTILE, BG_MACRO($0105), BLANKTILE, $0000
     .dw BG_MACRO($0108), BG_MACRO($0107), BG_MACRO($0106), $0000

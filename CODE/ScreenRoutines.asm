@@ -313,8 +313,6 @@ BGColorCtrl_Addr:
 BackgroundColors:
     .db $39, $39, $00, $00  ; Backdrop colors for Area Type (Water, Overworld, Underground, Castle)
     .db $00, $39, $00, $00  ; Backdrop colors for color control override
-    ;.db $22, $22, $0f, $0f ;used by area type if bg color ctrl not set
-    ;.db $0f, $22, $0f, $0f ;used by background color control if set
 .ENDS
 
 .SECTION "PlayerColors (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -322,9 +320,6 @@ PlayerColors:
     .db $03, $0B, $06, $00       ;mario's colors
     .db $3F, $0B, $08, $00       ;luigi's colors
     .db $1F, $0B, $03, $00       ;fiery (used by both)
-    ;.db $22, $16, $27, $18 ;mario's colors
-    ;.db $22, $30, $27, $19 ;luigi's colors
-    ;.db $22, $37, $27, $16 ;fiery (used by both)
 .ENDS
 
 GetBackgroundColor:

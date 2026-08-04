@@ -7082,7 +7082,8 @@ PlatformSideCollisions:
     LD HL, BoundingBox_UL_XPos          ;get difference by subtracting player's left edge
     LD E, <BoundingBox_DR_XPos          ;from platform's right edge
     LD A, (DE)
-    SUB A, (HL)
+    SCF                                 ;6502 code does 'clc' here instead of usual 'sec'
+    SBC A, (HL)
     CP A, $09                           ;if difference not close enough, skip subroutine
     JR NC, NoSideC                      ;and instead branch to leave (no collision)
 SideC:

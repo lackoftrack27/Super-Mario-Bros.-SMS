@@ -5493,6 +5493,13 @@ PutBlockMetatile_RHalf:
 CoinBlock:
     CALL FindEmptyMiscSlot              ;set offset for empty or last misc object buffer slot
 ;
+    RR L                                ;use L as carry
+    LD L, <Block_Y_Position             ;get vertical coordinate of block object
+    LD E, L
+    LD A, (HL)
+    SBC A, $10                          ;subtract 16-ish pixels (6502 code doesn't do 'sec' beforehand so we need to track carry)
+    LD (DE), A                          ;store as vertical coordinate of misc object
+;
     LD L, <Block_PageLoc                ;get page location of block object
     LD E, L                             ;store as page location of misc object
     LD A, (HL)
@@ -5503,12 +5510,6 @@ CoinBlock:
     LD A, (HL)
     ADD A, $05                          ;add 5 pixels
     LD (DE), A                          ;store as horizontal coordinate of misc object
-;
-    LD L, <Block_Y_Position             ;get vertical coordinate of block object
-    LD E, L
-    LD A, (HL)
-    SUB A, $10                          ;subtract 16 pixels
-    LD (DE), A                          ;store as vertical coordinate of misc object
     JP JCoinC                           ;jump to rest of code as applies to this misc object
 
 SetupJumpCoin:
@@ -5555,22 +5556,24 @@ JCoinC:
     RET
 
 FindEmptyMiscSlot:
+    LD L, $01                           ;use L as carry, set it for now (inverted from 6502)
     LD C, $03
     LD DE, Misc_State_08                ;start at end of misc objects buffer
 FMiscLoop:
     LD A, (DE)                          ;get misc object state
     OR A
     RET Z                               ;branch if none found to use current offset
+    LD L, $00                           ;clear carry for later (inverted from 6502)
     DEC D                               ;decrement offset
     DEC C                               ;do this for three slots
     JP NZ, FMiscLoop                    ;do this until all slots are checked
-    LD D, >Misc_State + $08             ;if no empty slots found, use last slot
+    LD D, >Misc_State_08                ;if no empty slots found, use last slot
     RET
 
 ;-------------------------------------------------------------------------------------
 
 MiscObjectsCore:
-    LD H, >Misc_State + $08             ;set at end of misc object buffer
+    LD H, >Misc_State_08                ;set at end of misc object buffer
 MiscLoop:
     LD (ObjectOffset), HL               ;store misc object offset here
     LD L, <Misc_State                   ;check misc object state

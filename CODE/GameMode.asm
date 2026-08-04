@@ -4950,13 +4950,13 @@ FloateyPart:
     LD A, (HL)                              ;get vertical coordinate for
     CP A, $18                               ;floatey number, if coordinate in the
     JR C, SetupNumSpr                       ;status bar, branch
-    DEC (HL)                                ;otherwise subtract one and store as new                             
+    DEC (HL)                                ;otherwise subtract one and store as new
 SetupNumSpr:
     LD E, C
     LD D, >Sprite_Y_Position
     LD A, (HL)                              ;get vertical coordinate
-    SUB A, $08 + SMS_PIXELYOFFSET           ;subtract eight and dump into the
-    LD (DE), A                              ;left and right sprite's Y coordinates
+    SBC A, $08 + SMS_PIXELYOFFSET           ;subtract eight and dump into the
+    LD (DE), A                              ;left and right sprite's Y coordinates (6502 code does 'sbc' without 'sec' beforehand)
     INC E
     LD (DE), A
     DEC E

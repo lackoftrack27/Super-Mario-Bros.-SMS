@@ -1315,10 +1315,11 @@ AreaFrenzy:
     addAToHL8_M
     LD A, (HL)
     LD HL, Enemy_ID_05
-    LD B, $06
+    LD B, $05
 FreCompLoop:
     DEC H                               ;check regular slots of enemy object buffer
-    DJNZ ExitAFrenzy                    ;if all slots checked and enemy object not found, branch to store
+    DEC B
+    JP M, ExitAFrenzy                   ;if all slots checked and enemy object not found, branch to store
     CP A, (HL)                          ;check for enemy object in buffer versus frenzy object
     JP NZ, FreCompLoop
     XOR A                               ;if enemy object already present, nullify queue and leave

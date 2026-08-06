@@ -3,6 +3,7 @@
 ;level 1-4/6-4
 L_CastleArea1:
     .db $9b, $07
+    .db $F3
 
     .db $0D, $50 ;$05, $32
     .db $0D, $51 ;$06, $33
@@ -103,7 +104,7 @@ L_CastleArea1:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $55 ; right floor wall @ Y07
 
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
     
@@ -113,12 +114,13 @@ L_CastleArea1:
 ;level 4-4
 L_CastleArea2:
     .db $5b, $07
+    .db $F3
 
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
     .db $0D, $52;$07, $34
     
-    .db $5e, $0a
+    .db $5e, $1A;$0a
 
     .db $5D, $4E ; ceiling tile @ Y02
 
@@ -131,18 +133,18 @@ L_CastleArea2:
     .db $a8, $64
     .db $AD, $59 ; right floor wall @ Y08
     
-    .db $ce, $06
+    .db $ce, $16 ;$06
 
     .db $DD, $57 ; left floor wall @ Y08
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
     
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
 
     .db $0d, $01    ; LOOPBACK 1: $12, $20
-    .db $1e, $02 ;.db $1e, $0e
+    .db $1e, $12 ;$02 ;.db $1e, $0e
 
     .db $24, $35 ; horizontal blocks to hide improper floor
     .db $25, $35
@@ -164,7 +166,8 @@ L_CastleArea2:
     .db $44, $63
     .db $54, $63
     
-    .db $5e, $02, $64, $35
+    .db $5e, $12 ;$02
+    .db $64, $35
     .db $88, $72
     
     ;.db $be, $02 ;.db $be, $0e
@@ -193,7 +196,7 @@ L_CastleArea2:
     .db $17, $39
     
     ;.db $ae, $02
-    .db $ce, $08
+    .db $ce, $18 ;$08
     .db $cd, $4b
     
     .db $DD, $60 ; left floor @ Y0A
@@ -204,17 +207,19 @@ L_CastleArea2:
     .db $FD, $59 ; right floor wall @ Y08
     .db $FD, $4E ; ceiling tile @ Y02
     
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
     
     .db $0d, $05    ; LOOPBACK 2: $36, $70
     
-    .db $68, $31, $7e, $0a
+    .db $68, $31
+    .db $7e, $1A ;$0a
 
     .db $7D, $63 ; right floor wall @ Y0B
 
-    .db $96, $31, $a9, $63, $a8, $33, $d5, $30, $ee, $02
+    .db $96, $31, $a9, $63, $a8, $33, $d5, $30
+    .db $ee, $12 ;$02
     .db $e6, $62, $f4, $61
     
     .db $FD, $64 ; left floor wall @ Y0B
@@ -231,12 +236,13 @@ L_CastleArea2:
 
     ; --- NEW PAGE ---
     
-    .db $03, $e4, $0e, $03
+    .db $03, $e4, $0e, $13 ;$03
 
     .db $1D, $4D ; ceiling tile @ Y01
     .db $2D, $4D ; ceiling tile @ Y01
 
-    .db $2e, $01, $7e, $06
+    .db $2e, $11 ;$01
+    .db $7e, $16 ;$06
 
     .db $8D, $4C ; ceiling tile @ Y00
     .db $8D, $60 ; left floor @ Y0A
@@ -245,17 +251,21 @@ L_CastleArea2:
     .db $BD, $62 ; right floor @ Y0A
     .db $BD, $59 ; right floor wall @ Y08
     
-    .db $be, $02, $de, $06
+    .db $be, $12 ;$02
+    .db $de, $16 ;$06
     
     .db $ED, $60 ; left floor @ Y0A
     .db $ED, $57 ; left floor wall @ Y08
     .db $FD, $59 ; right floor wall @ Y08
     
-    .db $fe, $0a
+    .db $fe, $1A ;$0a
 
     ; --- NEW PAGE ---
 
-    .db $0d, $c4, $cd, $43, $ce, $09, $de, $0b, $dd, $42
+    .db $0d, $c4, $cd, $43
+    .db $ce, $19 ;$09
+    .db $de, $1B ;$0b
+    .db $dd, $42
 
     .db $DD, $53 ; left floor wall @ Y07
     .db $ED, $4E ; ceiling tile @ Y02
@@ -264,7 +274,7 @@ L_CastleArea2:
     .db $FD, $55 ; right floor wall @ Y07
 
 
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
     
@@ -274,6 +284,7 @@ L_CastleArea2:
 ;level 2-4/5-4
 L_CastleArea3:
     .db $9b, $07
+    .db $F3
 
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
@@ -394,7 +405,7 @@ L_CastleArea3:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $55 ; right floor wall @ Y07
     
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
 
@@ -405,6 +416,7 @@ L_CastleArea3:
 ;level 3-4
 L_CastleArea4:
     .db $9b, $07
+    .db $F3
 
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
@@ -557,7 +569,7 @@ L_CastleArea4:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $55 ; right floor wall @ Y07
     
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
     
@@ -567,6 +579,7 @@ L_CastleArea4:
 ;level 7-4
 L_CastleArea5:
     .db $5b, $07
+    .db $F3
 
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
@@ -575,12 +588,12 @@ L_CastleArea5:
     .db $FD, $59 ; right floor wall @ Y08
     .db $FD, $4E ; ceiling tile @ Y02
     
-    .db $fe, $0a
+    .db $fe, $1A ;$0a
 
     ; --- NEW PAGE ---
     
-    .db $ae, $86
-    .db $be, $07
+    .db $ae, $96 ;$86
+    .db $be, $17 ;$07
 
     .db $BD, $57 ; left floor wall @ Y08
     .db $CD, $4E ; ceiling tile @ Y02
@@ -588,7 +601,7 @@ L_CastleArea5:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
     
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
     
@@ -638,25 +651,28 @@ L_CastleArea5:
     ;.db $7e, $82
     
     .db $84, $62
-    .db $94, $61, $a4, $31, $bd, $4b, $ce, $06
+    .db $94, $61, $a4, $31, $bd, $4b
+    .db $ce, $16 ;$06
     
     .db $DD, $60 ; left floor @ Y0A
     .db $DD, $57 ; left floor wall @ Y08
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
 
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
 
     .db $0d, $06    ; LOOPBACK 3,4,5: $32, $60
     
-    .db $34, $31, $3e, $0a
+    .db $34, $31
+    .db $3e, $1A ;$0a
 
     .db $3D, $63 ; right floor wall @ Y0B
     
     .db $64, $32, $75, $0a
-    .db $7b, $61, $a4, $33, $ae, $02
+    .db $7b, $61, $a4, $33
+    .db $ae, $12 ;$02
 
     .db $BD, $64 ; left floor wall @ Y0B
     
@@ -676,71 +692,77 @@ L_CastleArea5:
 
     .db $44, $b2, $58, $32, $94, $63, $a4, $3e, $ba, $30
 
-    .db $c9, $61, $ce, $06, $dd, $4b
+    .db $c9, $61
+    .db $ce, $16 ;$06
+    .db $dd, $4b
     
     .db $DD, $60 ; left floor @ Y0A
     .db $DD, $57 ; left floor wall @ Y08
 
     ; --- NEW PAGE ---
 
-    .db $ce, $86, $dd, $4b
-    .db $fe, $02
+    .db $ce, $96 ;$86
+    .db $dd, $4b
+    .db $fe, $12 ;$02
 
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
 
     ; --- NEW PAGE ---
     
-    .db $2e, $86
+    .db $2e, $96 ;$86
 
     .db $3D, $60 ; left floor @ Y0A
     .db $3D, $57 ; left floor wall @ Y08
     
-    .db $5e, $02
+    .db $5e, $12 ;$02
 
     .db $5D, $62 ; right floor @ Y0A
     .db $5D, $59 ; right floor wall @ Y08
     
-    .db $7e, $06
+    .db $7e, $16 ;$06
 
     .db $8D, $60 ; left floor @ Y0A
     .db $8D, $57 ; left floor wall @ Y08
     
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
 
     ; --- NEW PAGE ---
 
-    .db $1e, $86
+    .db $1e, $96 ;$86
 
     .db $2D, $60 ; left floor @ Y0A
     .db $2D, $57 ; left floor wall @ Y08
     .db $3D, $62 ; right floor @ Y0A
     .db $3D, $59 ; right floor wall @ Y08
     
-    .db $3e, $02, $5e, $06
+    .db $3e, $12 ;$02
+    .db $5e, $16 ;$06
 
     .db $6D, $60 ; left floor @ Y0A
     .db $6D, $57 ; left floor wall @ Y08
     
-    .db $7e, $02
+    .db $7e, $12 ;$02
 
     .db $7D, $62 ; right floor @ Y0A
     .db $7D, $59 ; right floor wall @ Y08
     
-    .db $9e, $06
+    .db $9e, $16 ;$06
 
     .db $AD, $60 ; left floor @ Y0A
     .db $AD, $57 ; left floor wall @ Y08
     .db $FD, $59 ; right floor wall @ Y08
 
-    .db $fe, $0a
+    .db $fe, $1A ;$0a
 
     ; --- NEW PAGE ---
 
-    .db $0d, $c4, $cd, $43, $ce, $09, $de, $0b
+    .db $0d, $c4, $cd, $43
+    .db $ce, $19 ;$09
+    .db $de, $1B ;$0b
     .db $dd, $42
 
     .db $DD, $53 ; left floor wall @ Y07
@@ -749,7 +771,7 @@ L_CastleArea5:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $55 ; right floor wall @ Y07
     
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
     
@@ -760,6 +782,7 @@ L_CastleArea5:
 ;level 8-4
 L_CastleArea6:
     .db $5b, $06
+    .db $F3
 
     .db $0D, $50;$05, $32
     .db $0D, $51;$06, $33
@@ -767,7 +790,8 @@ L_CastleArea6:
 
     .db $5D, $59 ; right floor wall @ Y08
     
-    .db $5e, $0a, $ae, $02
+    .db $5e, $1A ;$0a
+    .db $ae, $12 ;$02
 
     .db $BD, $64 ; left floor wall @ Y0B
 
@@ -791,18 +815,18 @@ L_CastleArea6:
 
     .db $5D, $64 ; left floor wall @ Y0B
 
-    .db $de, $06
+    .db $de, $16 ;$06
 
     .db $ED, $60 ; left floor @ Y0A
     .db $ED, $57 ; left floor wall @ Y08
 
     ; --- NEW PAGE ---
     
-    .db $1e, $8a
+    .db $1e, $9A ;$8a
 
     .db $1D, $59 ; right floor wall @ Y08
     
-    .db $ae, $06
+    .db $ae, $16 ;$06
     
     .db $BD, $57 ; left floor wall @ Y08
     
@@ -823,11 +847,11 @@ L_CastleArea6:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
     
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
     
-    .db $fe, $82
+    .db $fe, $92 ;$82
 
     ; --- NEW PAGE ---
     
@@ -855,11 +879,12 @@ L_CastleArea6:
     .db $6D, $64 ; left floor wall @ Y0B
     .db $DD, $63 ; right floor wall @ Y0B
     
-    .db $e8, $74, $fe, $0a
+    .db $e8, $74
+    .db $fe, $1A ;$0a
 
     ; --- NEW PAGE ---
 
-    .db $2e, $82
+    .db $2e, $92 ;$82
 
     .db $3D, $64 ; left floor wall @ Y0B
     
@@ -868,7 +893,7 @@ L_CastleArea6:
     ; --- NEW PAGE ---
     
     .db $0d, $0b
-    .db $fe, $02
+    .db $fe, $12 ;$02
 
     ; --- NEW PAGE ---
     
@@ -880,7 +905,7 @@ L_CastleArea6:
 
     .db $5D, $64 ; left floor wall @ Y0B
     
-    .db $5e, $06
+    .db $5e, $16 ;$06
 
     .db $6D, $60 ; left floor @ Y0A
     .db $6D, $57 ; left floor wall @ Y08 
@@ -899,7 +924,9 @@ L_CastleArea6:
     .db $6D, $57 ; left floor wall @ Y08 
     .db $BD, $59 ; right floor wall @ Y08
     
-    .db $be, $0a, $dd, $48, $fe, $06
+    .db $be, $1A ;$0a
+    .db $dd, $48
+    .db $fe, $16 ;$06
 
     ; --- NEW PAGE ---
 
@@ -915,7 +942,7 @@ L_CastleArea6:
 
     ; --- NEW PAGE ---
 
-    .db $fe, $82
+    .db $fe, $92 ;$82
 
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $59 ; right floor wall @ Y08
@@ -935,23 +962,25 @@ L_CastleArea6:
 
     ; --- NEW PAGE ---
 
-    .db $4e, $8a
+    .db $4e, $9A ;$8a
 
     .db $4D, $63 ; right floor wall @ Y0B
     
-    .db $9e, $07
+    .db $9e, $17 ;$07
 
     .db $AD, $4E ; ceiling tile @ Y02
     .db $AD, $57 ; left floor wall @ Y08
     .db $FD, $4E ; ceiling tile @ Y02
     .db $FD, $59 ; right floor wall @ Y08
     
-    .db $fe, $0a
+    .db $fe, $1A ;$0a
 
     ; --- NEW PAGE ---
     
     .db $0d, $c4, $cd, $43
-    .db $ce, $09, $de, $0b, $dd, $42
+    .db $ce, $19 ;$09
+    .db $de, $1B ;$0b
+    .db $dd, $42
 
     .db $DD, $53 ; left floor wall @ Y07
     .db $ED, $4E ; ceiling tile @ Y02
@@ -959,7 +988,7 @@ L_CastleArea6:
     .db $FD, $62 ; right floor @ Y0A
     .db $FD, $55 ; right floor wall @ Y07
     
-    .db $fe, $02
+    .db $fe, $32 ;$02
 
     ; --- NEW PAGE ---
     

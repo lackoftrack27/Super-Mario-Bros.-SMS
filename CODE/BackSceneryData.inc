@@ -162,6 +162,14 @@ BackSceneryColumnPtrs:
     .dw BGColumn97
     .dw BGColumn98
     .dw BGColumn99
+;   CASTLE
+    .dw BGColumn9A
+    .dw BGColumn9B
+    .dw BGColumn9C
+    .dw BGColumn9D
+    .dw BGColumn9E
+    .dw BGColumn9F
+    .dw BGColumnA0
 .ENDS
 
 .SECTION "BG Scenery Column Data" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
@@ -1064,4 +1072,104 @@ BGColumn99:
     .db $09, MT_UGND00
     .db $0A, MT_UGND01
     .db $8B, MT_UGND02
+
+;   ---
+
+BGColumn9A:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_01
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
+
+BGColumn9B:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_02
+    .db $05, MT_BGCASTLE_03
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_01
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
+
+BGColumn9C:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_02
+    .db $09, MT_BGCASTLE_04
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
+
+BGColumn9D:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_02
+    .db $04, MT_BGCASTLE_03
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_01
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
+
+BGColumn9E:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_05
+    .db $0A, MT_BGCASTLE_04
+    .db $8B, MT_BGCASTLE_01
+
+BGColumn9F:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_02
+    .db $06, MT_BGCASTLE_03
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_01
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
+
+BGColumnA0:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_02
+    .db $03, MT_BGCASTLE_03
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_01
+    .db $0A, MT_BGCASTLE_01
+    .db $8B, MT_BGCASTLE_01
 .ENDS

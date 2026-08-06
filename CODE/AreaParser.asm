@@ -70,6 +70,12 @@ BSceneDataOffsets:
     .dw BackSceneryData@Water00
     .dw BackSceneryData@Water01
     .dw BackSceneryData@WaterCastle
+    .dw $0000
+    ; BANK 3
+    .dw BackSceneryData@Castle00
+    .dw BackSceneryData@Castle01
+    .dw $0000
+    .dw BackSceneryData@Blank
 .ENDS
 
 .SECTION "BG Scenery Data - Clouds" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -155,6 +161,30 @@ BackSceneryData:
     .db $78, $79, $7A, $7B, $78, $79, $7C, $7D, $7E, $7F, $80, $81, $7E, $7F, $80, $81
     .db $82, $83, $80, $81, $84, $85, $86, $7B, $78, $79, $7C, $7D, $82, $83, $80, $87
     .db $88, $89, $8A, $8B, $8C, $8D, $80, $81, $84, $85, $86, $7B, $78, $79, $7A, $7B
+.ENDS
+
+.SECTION "BG Scenery Data - Castle (Non Maze)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Castle00:
+    .db $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9B, $9A, $9A, $9A, $9A, $9C, $9A
+    .db $9A, $9A, $9A, $9A, $9A, $9D, $9A, $9C, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A
+    .db $9A, $9A, $9E, $9A, $9A, $9F, $9A, $9A, $9A, $9A, $9A, $9A, $9B, $9A, $9A, $9A
+.ENDS
+
+.SECTION "BG Scenery Data - Castle (Maze)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Castle01:
+    .db $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9F, $9A, $9A, $9A, $9A, $9A, $9E, $9A
+    .db $9A, $9A, $9A, $9A, $9A, $A0, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A
+    .db $9A, $9A, $9F, $9A, $9A, $9E, $9A, $9A, $9A, $9A, $9A, $9A, $A0, $9A, $9A, $9A
+.ENDS
+
+.SECTION "BG Scenery Data - Blank" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+@Blank:
+    ;.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    ;.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    ;.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A
+    .db $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A
+    .db $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A, $9A
 .ENDS
 
 ;.SECTION "BG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -997,7 +1027,7 @@ CastleStairsMain:
     LD (HL), MT_CASTLESTAIRS_END
     INC L
     LD A, (HL)
-    OR A
+    CP A, MT_BGCASTLE_00 ;OR A
     JR NZ, RenderUnderStairs
     LD (HL), MT_CASTLESTAIRS_ENDL
     INC L
@@ -1005,7 +1035,7 @@ CastleStairsMain:
 ;
 NotLastStair:
     LD A, (HL)
-    OR A
+    CP A, MT_BGCASTLE_00 ;OR A
     JR NZ, RenderUnderStairs
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
@@ -1025,7 +1055,7 @@ RenderUnderStairs:
     LD B, $03
 -:
     LD A, (HL)
-    OR A
+    CP A, MT_BGCASTLE_00 ;OR A
     JR NZ, +
     LD (HL), C
 +:
@@ -2178,14 +2208,19 @@ Hidden1UpBlock:
 QuestionBlock:
     LD C, IXL                           ;get value saved from area parser routine
     ;JP DrawQBlk                         ;go to render it
-    LD A, (MainUndergndLvlFlag)         ;skip next check if level isn't main underground one (1-2/4-2)
-    OR A
-    JR Z, DrawQBlk
     LD A, C                             ;skip if qblk type isn't hidden coin
     CP A, $02
     JR NZ, DrawQBlk
-    LD A, MT_HIDDENBLK_COIN_UGND        ;else, use special metatile to hide the hidden block
-    JP DrawQBlkHiddenUgnd
+    ;
+    LD A, (AreaType)                    ;draw bg metatile for castle, if in that area
+    CP A, $03
+    LD A, MT_HIDDENBLK_COIN_CASTLE
+    JR Z, DrawQBlkHiddenSpecial
+    LD A, (MainUndergndLvlFlag)         ;draw bg metatile for underground, if in that area
+    OR A
+    LD A, MT_HIDDENBLK_COIN_UGND
+    JR NZ, DrawQBlkHiddenSpecial
+    JR DrawQBlk                         ;else, do regular process
 
 BrickWithCoins:
     XOR A                               ;initialize multi-coin timer flag
@@ -2206,7 +2241,7 @@ DrawQBlk:
     LD DE, BrickQBlockMetatiles
     addAToDE8_M
     LD A, (DE)                          ;get appropriate metatile for brick (question block
-DrawQBlkHiddenUgnd:
+DrawQBlkHiddenSpecial:
     PUSH AF                             ;if branched to here from question block routine)
     CALL GetLrgObjAttrib                ;get row from location byte
     JP DrawRow                          ;now render the object
@@ -2257,10 +2292,23 @@ StrWOffset:
     RET
     
 NoWhirlP:
+    LD A, (AreaType)                    ;skip if not in castle area
+    CP A, $03
+    JR NZ, +
+    LD HL, MetatileBuffer + $08         ;else, manually fill buffer with castle bg tiles
+    LD (HL), MT_BGCASTLE_00
+    INC L
+    LD (HL), MT_BGCASTLE_01
+    INC L
+    LD (HL), MT_BGCASTLE_01
+    INC L
+    LD (HL), MT_BGCASTLE_01
+    RET
     ;LD A, (AreaType)                    ;get appropriate metatile, then
     ;LD HL, HoleMetatiles
     ;addAToHL8_M
     ;LD A, (HL)                          ;render the hole proper
++:
     LD A, MT_BLANK
     LD BC, $080F                        ;start at ninth row and go to bottom, run RenderUnderPart
     ; FALL THROUGH

@@ -340,7 +340,7 @@ AnimatedBGTileInits:
     .db $03, $08, $03, $08
 @Lava:
     .dw $3D80 | VRAMWRITE
-    .db StripeCount($04 * $20)
+    .db $00;.db StripeCount($04 * $20)
     .dw LavaFrame0
     .db $08, $10, $08, $10
 @QBlock:
@@ -3261,7 +3261,7 @@ RemoveBridge:
     LD C, (HL)
     INC L
     LD B, (HL)
-    LD HL, BlockGfxData + $18                   ;set offset for tile data for sub to draw blank metatile
+    LD HL, BlockGfxData + $48 ;$18                   ;set offset for tile data for sub to draw blank metatile
     CALL RemBridge                              ;do sub here to remove bowser's bridge metatiles
 ;
     LD HL, (ObjectOffset)                       ;get enemy offset
@@ -5288,6 +5288,8 @@ BlockGfxData:
     .dw $01B8, $01BA, $01B9, $03B6
     .dw $01BB, $01B6, MT_BLANK, $01BC
     .dw $01BD, $03B6, $01BE, $01BF
+    ;
+    .dw $0164, $0165, $0165, $0164
 .ENDS
 
 RemoveCoin_Axe:
@@ -5309,16 +5311,22 @@ WriteBlockMetatile:
     LD C, $03                       ;load offset for blank metatile
     OR A                            ;check contents of A for blank metatile
     ;JR Z, UseBOffset                ;branch if found (unconditional if branched from DestroyBlockMetatile)
-    JR NZ, +
+    JR NZ, ++
     LD A, (MainUndergndLvlFlag)     ;skip if level isn't 1-2 or 4-2
     OR A
-    JR Z, UseBOffset
+    JR NZ, +
+    LD A, (AreaType)
+    CP A, $03
+    JR NZ, UseBOffset
+    LD C, $09
+    JR UseBOffset
++:
     LD A, (PseudoRandomBitReg)      ;get random number to use as index into underground bg tiles
     AND A, %00000011
     ADD A, $05
     LD C, A
     JR UseBOffset
-+:
+++:
     LD C, $00                       ;load offset for brick metatile w/ line
     CP A, MT_SBRICK_COIN
     JR Z, UseBOffset                ;use offset if metatile is brick with coins (w/ line)
@@ -7544,6 +7552,16 @@ HandleAxeMetatile:
     LD (OperMode), A                    ;set primary mode to autoctrl mode
     LD A, $18
     LD (Player_X_Speed), A              ;set horizontal speed and continue to erase axe metatile
+    XOR A                               ;load blank metatile
+    LD (DE), A                          ;store to remove old contents from block buffer
+    LD HL, (Temp_Bytes + $06)           ;(SMS)put block buffer addr into HL for PutBlockMetatile
+    ;
+    LD DE, (VRAM_Buffer1_Ptr)
+    XOR A
+    LD (VRAM_Buffer_AddrCtrl), A        ;set vram address controller to VRAM_Buffer1                        ;otherwise load offset for blank metatile used in water
+    LD A, $09                           ;blue brick background
+    JP PutBlockMetatile                 ;do a sub to write blank metatile to vram buffer
+
 ErACM:
     XOR A                               ;load blank metatile
     LD (DE), A                          ;store to remove old contents from block buffer
@@ -7676,6 +7694,8 @@ ChkInvisibleMTiles:
     CP A, MT_HIDDENBLK_1UP              ;check for hidden 1-up block
     RET Z
     CP A, MT_HIDDENBLK_COIN_UGND
+    RET Z
+    CP A, MT_HIDDENBLK_COIN_CASTLE
     RET                                 ;leave with zero flag set if either found
 
 ;--------------------------------
@@ -8289,6 +8309,8 @@ ChkForNonSolids:
     CP A, MT_HIDDENBLK_1UP          ;hidden 1-up block?
     RET Z
     CP A, MT_HIDDENBLK_COIN_UGND
+    RET Z
+    CP A, MT_HIDDENBLK_COIN_CASTLE
     RET
     
 ;-------------------------------------------------------------------------------------

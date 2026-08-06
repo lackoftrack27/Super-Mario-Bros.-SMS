@@ -615,16 +615,18 @@ CastleSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
-        ; LAVA FOR SLOT 1
-    LD HL, AnimatedBGTileInits@Lava
+        ; SLOT 1 'QUESTION BLOCK'
+    LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue1 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-        ; SLOT 2 'QUESTION BLOCK' (4 TILE)
-    LD HL, AnimatedBGTileInits@QBlock
+        ; LAVA + FLAME FOR SLOT 2 (6 TILE)
+    LD HL, AnimatedBGTileInits@Lava
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
+    LD A, $01
+    LD (BGTileQueue2GrassFlag), A
     ; UNIQUE TILES FOR CASTLE AREA
     LD A, ASSET_BGCASTLE
     CALL AssetLoader
@@ -640,7 +642,26 @@ CastleSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
-    ; RETAINER/PRINCESS SPRITE
+    ; CLEAR BACKGOUND TILES IN NES MODE
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JP Z, TileLoadDone
+    LD HL, $2C80 | VRAMWRITE
+    RST setVDPAddress
+    XOR A
+    LD BC, $0002
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+    DEC C
+    JP NZ, -
+    LD HL, $3E00 | VRAMWRITE
+    RST setVDPAddress
+    XOR A
+    LD B, $40
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
     JP TileLoadDone
 WaterAreaSetup:
     ; ANIMATED TILES

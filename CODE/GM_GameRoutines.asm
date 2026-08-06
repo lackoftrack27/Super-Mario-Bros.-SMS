@@ -904,7 +904,8 @@ BlockCode:
     .dw StarBlock
     .dw CoinBlock
     .dw ExtraLifeMushBlock
-    .dw CoinBlock
+    .dw CoinBlock                   ;NEW hidden coin block for underground
+    .dw CoinBlock                   ;NEW hidden coin block for castle
 
 ;--------------------------------
 
@@ -938,7 +939,7 @@ BrickQBlockMetatiles:
     .db MT_SBRICK_PUP, MT_SBRICK_VINE, MT_SBRICK_STAR, MT_SBRICK_COIN, MT_SBRICK_1UP
     .db MT_BRICK_PUP, MT_BRICK_VINE, MT_BRICK_STAR, MT_BRICK_COIN, MT_BRICK_1UP
     ;
-    .db MT_HIDDENBLK_COIN_UGND
+    .db MT_HIDDENBLK_COIN_UGND, MT_HIDDENBLK_COIN_CASTLE
 .ENDS
 
 ;   INPUT:  A - METATILE
@@ -946,8 +947,8 @@ BrickQBlockMetatiles:
 BlockBumpedChk:
     ;LD DE, BrickQBlockMetatiles + $0D   ;start at end of metatile data
     ;LD BC, $000E
-    LD DE, BrickQBlockMetatiles + $0E   ;start at end of metatile data
-    LD BC, $000F
+    LD DE, BrickQBlockMetatiles + $0F   ;start at end of metatile data
+    LD BC, $0010
     EX DE, HL
     CPDR                                ;check to see if metatile matches any in table data
     EX DE, HL

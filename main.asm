@@ -1961,7 +1961,7 @@ UndergroundPaletteData:
 
 .SECTION "Castle AreaType Palette Data" FREE
 CastlePaletteData:
-    .db $00, $00, $10, $15, $2A, $01, $06, $1B, $05, $0A, $2B, $0F, $02, $3F, $07, $03 ;$2D
+    .db $00, $00, $10, $15, $2A, $01, $06, $1B, $05, $0A, $2B, $0F, $02, $3F, $07, $03
     .db $00, $00, $10, $15, $2A, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
 .ENDS
 

@@ -1911,7 +1911,7 @@ SpeedUpTempoTableFM:
     .db TempoFunc($8B), TempoFunc($8B), TempoFunc($6A)
     .db TempoFunc($AD), TempoFunc($7A), TempoFunc($48), $00
     ;
-    .db TempoFunc($66), TempoFunc($66), $00
+    .db TempoFunc($66), TempoFunc($66), TempoFunc($6A)
 .ENDS
 
 ;--------------------------------

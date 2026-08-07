@@ -914,23 +914,23 @@ Mus_Overworld_FM:
 @ch4LoopPoint:
     .db nRst, $1F, $7F, $7F, $7F, $7F, $7F, $7F, $7F, $7F, $69
     ;
-    smpsCall    Mus_Overworld_FM@ch4Call1
+    smpsCall    Mus_Overworld_FM@ch4Call1   ; Vol: $02
     ;
     .db nRst, $7F, $7F, $7F, $63
     ;
     smpsChangeVol $03
-    smpsCall    Mus_Overworld_FM@ch4Call2
+    smpsCall    Mus_Overworld_FM@ch4Call2   ; Vol: $05
     smpsChangeVol $FB
-    smpsCall    Mus_Overworld_FM@ch4Call2
+    smpsCall    Mus_Overworld_FM@ch4Call2   ; Vol: $05
     ;
     smpsChangeVol $F8
-    smpsCall    Mus_Overworld_FM@ch4Call1
+    smpsCall    Mus_Overworld_FM@ch4Call1   ; Vol: $02
     ;
     .db nRst, $60
     ;
     smpsChangeVol $03
-    smpsCall    Mus_Overworld_FM@ch4Call2
-    smpsChangeVol $F7
+    smpsCall    Mus_Overworld_FM@ch4Call2   ; Vol: $05
+    smpsChangeVol $F8
     smpsJump    Mus_Overworld_FM@ch4LoopPoint
 ;   CHANNEL 4 SUBROUTINES
 @ch4Call1:

@@ -910,13 +910,17 @@ Mus_Overworld_FM:
 ;   --- CHANNEL 4 DATA ---
 @ch4:
     smpsDetune $01
-    .db nRst, $60
+    ;.db nRst, $60
+    smpsCall    Mus_Overworld_FM@ch4Call5
 @ch4LoopPoint:
     .db nRst, $1F, $7F, $7F, $7F, $7F, $7F, $7F, $7F, $7F, $69
     ;
     smpsCall    Mus_Overworld_FM@ch4Call1   ; Vol: $02
     ;
-    .db nRst, $7F, $7F, $7F, $63
+    ;.db nRst, $7F, $7F, $7F, $63
+
+    smpsCall    Mus_Overworld_FM@ch4Call5
+    .db nRst, $03, $7F, $7F, $7F
     ;
     smpsChangeVol $03
     smpsCall    Mus_Overworld_FM@ch4Call2   ; Vol: $05
@@ -926,7 +930,8 @@ Mus_Overworld_FM:
     smpsChangeVol $F8
     smpsCall    Mus_Overworld_FM@ch4Call1   ; Vol: $02
     ;
-    .db nRst, $60
+    ;.db nRst, $60
+    smpsCall    Mus_Overworld_FM@ch4Call5
     ;
     smpsChangeVol $03
     smpsCall    Mus_Overworld_FM@ch4Call2   ; Vol: $05
@@ -1012,6 +1017,31 @@ Mus_Overworld_FM:
     smpsChangeVol $05
     .db nB4, $04, nRst, $02
     smpsChangeVol $FB
+    smpsRet
+
+@ch4Call5:
+    ;.db nRst, $60
+    .db nRst, $48
+    smpsChangeVol   $02                     ; Vol: $04
+    smpsFMVoice     $00
+    smpsVolEnv      $00
+    smpsPatchEnv    $0F
+    smpsModSetup    $00, $01, $E4, $FF
+    .db nD2,        $04
+    smpsModOff
+    .db nRst,       $14
+    smpsChangeVol   $FE                     ; Vol: $02
+    ; .db nRst, $48
+    ; smpsDetune $02
+    ; smpsChangeVol $01                       ; Vol: $03
+    ; smpsVolEnv  $03
+    ; smpsPatchEnv    $13
+    ; smpsModSetup    $00, $02, $E8, $FF
+    ; .db nC3, $08
+    ; smpsModOff
+    ; .db nRst, $10
+    ; smpsChangeVol $FF                       ; Vol: $02
+    ; smpsDetune $01
     smpsRet
 
 ;   --- CHANNEL 5 DATA ---
@@ -1827,7 +1857,7 @@ Mus_PipeIntro_FM:
     smpsChanHeader  Mus_PipeIntro_FM@ch1,  $00, $01, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch2,  $00, $02, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch3,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsChanHeader  Mus_PipeIntro_FM@ch4,  $00, $02, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch5,  $00, $01, $00, $00
     smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch7,  $00, $01, $00, $00
@@ -1842,6 +1872,7 @@ Mus_PipeIntro_FM:
     smpsStop
 
 @ch2:
+    smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsDetune  $01
     smpsCall    Mus_Overworld_FM@ch2Call1
     .db nG1, $0C, nRst
@@ -1849,6 +1880,11 @@ Mus_PipeIntro_FM:
 
 @ch3:
     smpsCall    Mus_Overworld_FM@ch3Call5
+    smpsStop
+
+@ch4:
+    smpsDetune $01
+    smpsCall    Mus_Overworld_FM@ch4Call5
     smpsStop
 
 @ch5:

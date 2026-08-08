@@ -4419,6 +4419,23 @@ DoOtherPlatform:
     LD HL, (ObjectOffset)                       ;get enemy object offset
     ; FALL THROUGH
 
+    ; $00
+    ; $01
+    ; $03
+    ; $07
+    ; $0F
+    ; $1F - TOO OFFSCREEN RIGHT
+    ; $3F - TOO OFFSCREEN RIGHT
+    ; $7F - TOO OFFSCREEN RIGHT
+    ; $80
+    ; $C0
+    ; $E0 - TOO OFFSCREEN LEFT
+    ; $F0 - TOO OFFSCREEN LEFT
+    ; $F8 - TOO OFFSCREEN LEFT
+    ; $FC - TOO OFFSCREEN LEFT
+    ; $FE - TOO OFFSCREEN LEFT
+    ; $FF - TOO OFFSCREEN LEFT
+
 DrawEraseRope:
     LD L, <Enemy_Y_MoveForce                    ;check to see if current platform is
     LD A, (HL)                                  ;moving at all
@@ -4429,9 +4446,14 @@ DrawEraseRope:
     ;CPX $20
     ;BCS ExitRp
     CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
-    CP A, $C0                                   ;check if rope is offscreen (NOTE: 1 pixel off)
+    CP A, $E0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
     LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset
     JR NC, SkipRope1                            ;don't draw rope if it's offscreen
+    CP A, $80
+    JR NC, +
+    CP A, $1F ;$3F                              ;check if rope is offscreen on the right
+    JR NC, SkipRope1
++:
     LD L, <Enemy_Y_Position                     ;check if rope is vertically onscreen
     LD A, (HL)
     CP A, $D0
@@ -4484,8 +4506,13 @@ SkipRope1:
     PUSH DE                                     ;preserve VRAM_Buffer1_Ptr
     CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
     POP DE                                      ;get back VRAM_Buffer1_Ptr
-    CP A, $C0                                   ;check if rope is offscreen (NOTE: 1 pixel off)
+    CP A, $E0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
     JR NC, SkipRope2                            ;don't draw rope if it's offscreen
+    CP A, $80
+    JR NC, +
+    CP A, $1F ;$3F                              ;check if rope is offscreen on the right
+    JR NC, SkipRope2
++:
     LD L, <Enemy_Y_Position                     ;check if rope is vertically onscreen
     LD A, (HL)
     CP A, $D0

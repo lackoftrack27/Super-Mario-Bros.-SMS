@@ -413,10 +413,13 @@ RendFore:
     LD HL, ForeSceneryData
     addAToHL8_M
 ;
-    LD A, (AreaType)
+    LD A, (OptionBitflags)          ; skip if doing NES GFX
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, +
+    LD A, (AreaType)                ; skip if not in castle area
     CP A, $03
     JR NZ, +
-    LD HL, ForeSceneryData@OverLava
+    LD HL, ForeSceneryData@OverLava ; use lava foreground instead of water
 +:
 ;   Copy foreground scenery data to metatile buffer
     LD DE, MetatileBuffer
@@ -1833,12 +1836,16 @@ EmptyChkLoop:
 
 Hole_Water:
     CALL ChkLrgObjLength                ;get low nybble and save as length
-    LD A, (AreaType)
-    CP A, $03
-    LD A, MT_WATER_TOP                  ;render waves
+    LD B, MT_WATER_TOP                  ;render waves (assume water)
+    LD A, (OptionBitflags)              ;skip if doing NES GFX
+    AND A, bitValue(OPTFLAG_GFX)
     JR NZ, +
-    LD A, MT_LAVA_TOP
+    LD A, (AreaType)                    ;skip if not in castle area
+    CP A, $03
+    JR NZ, +
+    LD B, MT_LAVA_TOP                   ;else, render lava waves instead
 +:
+    LD A, B
     LD (MetatileBuffer+10), A
     LD BC, $0B01                        ;now render the water underneath
     INC A

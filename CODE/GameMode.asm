@@ -4428,7 +4428,7 @@ DoOtherPlatform:
     ; $3F - TOO OFFSCREEN RIGHT
     ; $7F - TOO OFFSCREEN RIGHT
     ; $80
-    ; $C0
+    ; $C0 - TOO OFFSCREEN LEFT
     ; $E0 - TOO OFFSCREEN LEFT
     ; $F0 - TOO OFFSCREEN LEFT
     ; $F8 - TOO OFFSCREEN LEFT
@@ -4446,7 +4446,7 @@ DrawEraseRope:
     ;CPX $20
     ;BCS ExitRp
     CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
-    CP A, $E0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
+    CP A, $C0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
     LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset
     JR NC, SkipRope1                            ;don't draw rope if it's offscreen
     CP A, $80
@@ -4506,7 +4506,7 @@ SkipRope1:
     PUSH DE                                     ;preserve VRAM_Buffer1_Ptr
     CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
     POP DE                                      ;get back VRAM_Buffer1_Ptr
-    CP A, $E0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
+    CP A, $C0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
     JR NC, SkipRope2                            ;don't draw rope if it's offscreen
     CP A, $80
     JR NC, +

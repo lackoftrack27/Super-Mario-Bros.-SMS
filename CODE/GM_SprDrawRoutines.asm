@@ -1528,6 +1528,7 @@ DrawBrickChunks:
     LD C, A
     LD A, IXL
     SUB A, C
+    CCF                             ;carry inversion for z80
     ADC A, IXL
     ADC A, $06
     INC E
@@ -1542,6 +1543,7 @@ DrawBrickChunks:
     LD C, A
     LD A, IXL
     SUB A, C
+    CCF                             ;carry inversion for z80
     ADC A, IXL
     ADC A, $06
     INC E

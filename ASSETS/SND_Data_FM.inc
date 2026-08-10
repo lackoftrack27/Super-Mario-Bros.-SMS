@@ -3715,13 +3715,17 @@ Mus_FinalBowser_FM:
     smpsPatchEnv    $0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
-    .db nRst, $36, nFs2, $06
-    smpsChangeVol $FF
+    .db nRst, $36
+    
+    smpsChangeVol $02   ; $05, $07
+    .db nFs2, $06
+    smpsChangeVol $FF   ; $04, $06
     .db $06
-    smpsChangeVol $FE
+    smpsChangeVol $FE   ; $02, $04
     .db $06, $03, $03, nRst, nFs2, nRst, nFs2, nEb2, $03, $03
 
-    smpsChangeVol $FF
+    ;smpsChangeVol $FF   ; $01
+    smpsChangeVol $FD   ; $01
 @ch8LoopPoint:
     smpsCall    Mus_FinalBowser_FM@ch8Call1
     smpsCall    Mus_FinalBowser_FM@ch8Call1

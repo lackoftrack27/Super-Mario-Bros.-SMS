@@ -2087,11 +2087,11 @@ FMVolumeEnvTable:
     .dw FMVolEnv04  ; CLOSED HIHAT
     .dw FMVolEnv05  ; OPEN HIHAT
     .dw FMVolEnv06  ; FADE IN (CASTLE)
-    .dw FMVolEnv07  ;
-    .dw FMVolEnv08  ; PIANO
-    .dw FMVolEnv09  ; BOWSER FADE IN
-    .dw FMVolEnv0A  ; BOWSER FADE OUT
-    .dw FMVolEnv0B  ; CASTLE 3 DUR
+    .dw FMVolEnv07  ; PIANO (CLOUD)
+    .dw FMVolEnv08  ; PIANO 2 (CLOUD)
+    .dw FMVolEnv09  ; FADE IN (BOWSER)
+    .dw FMVolEnv0A  ; FADE OUT (BOWSER)
+    .dw FMVolEnv0B  ; NOTE FILL (CASTLE)
 .ENDS
 
 .SECTION "FMVolEnv01" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
@@ -2155,7 +2155,13 @@ FMVolEnv08:
 .SECTION "FMVolEnv09" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 FMVolEnv09:
     .db $04, $04, $04, $04, $04, $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $01
-    .db $01, $01, $01, $01, $00, $80
+    ;.db $01, $01, $01, $01, $00, $80
+
+    .db $01, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .db $00, $00, $00, $00, $00, $00, $00, $00, $01, $80
 .ENDS
 
 .SECTION "FMVolEnv0A" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
@@ -2174,7 +2180,7 @@ FMVolEnv0B:
 .SECTION "Custom Instrument Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
 FMInstrumentTable:
     .db $0F, $08, $00, $07, $F1, $F7, $1F, $FF  ; SNARE
-    .db $06, $04, $1E, $0F, $F9, $F8, $FF, $FF  ; CONGA
+    .db $06, $04, $1E, $0F, $F9, $F8, $FF, $FF  ; BONGO
     .db $01, $00, $40, $18, $F8, $F0, $26, $05  ; TIMPANI
     .db $37, $34, $28, $05, $F1, $F2, $85, $65  ; GLOCKENSPIEL (CASTLE, ENDING)
     .db $37, $34, $28, $05, $F1, $A2, $85, $65  ; GLOCKENSPIEL (WATER)

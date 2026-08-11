@@ -23,7 +23,7 @@
 
 ;-------------------------------------------------------------------------------------
 ;   SDSC TAG AND SMS HEADER
-.SDSCTAG 0.12, sdscName, sdscDesc, sdscAuth
+.SDSCTAG 0.99, sdscName, sdscDesc, sdscAuth
 
 ;-------------------------------------------------------------------------------------
 ;   SET BANK
@@ -2068,10 +2068,10 @@ TitleScreenData:
     .db $07
 
 
-;   "V0.12"
+;   "V0.99"
     .dw swapBytes(xyToNameTbl_M(22, 13))
     .db StripeCount($0A)
-    .dw $08B7, BG_MACRO($0100), $08B8, BG_MACRO($0101), BG_MACRO($0102)
+    .dw $08B7, BG_MACRO($0100), $08B8, BG_MACRO($0109), BG_MACRO($0109)
 ;   TERMINATOR
     .db $00
 .ENDS
@@ -2146,10 +2146,10 @@ TitleScreenData_NES:
     .dw BG_MACRO($0100)
 
 
-;   "V0.12"
+;   "V0.99"
     .dw swapBytes(xyToNameTbl_M(22, 13))
     .db StripeCount($0A)
-    .dw $00B7, BG_MACRO($0100), $00B8, BG_MACRO($0101), BG_MACRO($0102)
+    .dw $00B7, BG_MACRO($0100), $00B8, BG_MACRO($0109), BG_MACRO($0109)
 ;   TERMINATOR
     .db $00
 .ENDS

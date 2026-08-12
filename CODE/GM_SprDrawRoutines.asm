@@ -10,68 +10,48 @@
 ; .ENDS
 
 DrawVine:
-    LD C, A
-    LD HL, VineObjOffset
+;   GET OBJECT ADDRESS
+    LD C, A                                 ;save offset here
+    LD HL, VineObjOffset                    ;get vine object
     ADD A, H
     LD H, A
     LD H, (HL)
-    LD L, <Enemy_SprDataOffset
+;   GET OBJECT'S S.A.T. ADDRESS
+    LD L, <Enemy_SprDataOffset              ;get vine's sprite data offset
     LD L, (HL)
-    LD E, L
+    LD E, L                                 ;copy in E for later
     LD H, >Sprite_Y_Position
-;
-    DEC C
+;   Y POSITION
+    DEC C                                   ;add $30 to YPOS if offset is 1 (grow second vine)
     LD B, $00
     JR NZ, +
     LD B, $30
 +:
     LD A, (Enemy_Rel_YPos)
     ADD A, B
-    SUB A, SMS_PIXELYOFFSET
+    SUB A, SMS_PIXELYOFFSET                 ;subtract vertical res difference
+    CP A, $D0                               ;skip if at sprite terminator
+    JR Z, +
+    LD (HL), A                              ;store for sprite data's YPOS
+    .REPEAT $05
++:
+    INC L                                   ;do this 5 more times...
+    ADD A, $08                              ;add successive YPOS offset
     CP A, $D0
     JR Z, +
     LD (HL), A
+    .ENDR
 +:
-    INC L
-    ADD A, $08
-    CP A, $D0
-    JR Z, +
-    LD (HL), A
-+:
-    INC L
-    ADD A, $08
-    CP A, $D0
-    JR Z, +
-    LD (HL), A
-+:
-    INC L
-    ADD A, $08
-    CP A, $D0
-    JR Z, +
-    LD (HL), A
-+:
-    INC L
-    ADD A, $08
-    CP A, $D0
-    JR Z, +
-    LD (HL), A
-+:
-    INC L
-    ADD A, $08
-    CP A, $D0
-    JR Z, +
-    LD (HL), A
-+:
-    LD L, E
-;
-    SLA L
+    LD L, E                                 ;get back unmodified sprite data offset
+;   X POSITION & TILE
+    SLA L                                   ;get x position address by doubling and setting bit 7
     SET 7, L
-    LD A, (Enemy_Rel_XPos)
+    LD A, (Enemy_Rel_XPos)                  ;store x position and tile of all 6 sprites...
     LD B, A
     ADD A, $06
     LD (HL), B
     INC L
-    LD E, L
+    LD E, L                                 ;copy 1st tile address in E for later
     LD (HL), $4F
     INC L
     LD (HL), A
@@ -93,26 +73,25 @@ DrawVine:
     LD (HL), A
     INC L
     LD (HL), $50
-    LD L, E
-;
-    INC C
-    JR NZ, SkpVTop
+    LD L, E                                 ;get 1st sprite's tile address
+    INC C                                   ;if offset is 0 (on first vine), make top sprite be the vine 'end' 
+    JR NZ, SkpVTop                          ;else, skip
     LD (HL), $51
-;
+;   OFFSCREEN CHECK
 SkpVTop:
-    DEC L
+    DEC L                                   ;reset sprite address to be 1st YPos
     RES 7, L
     SRL L
     LD B, $06
 ChkFTop:
-    LD A, (VineStart_Y_Position)
-    SUB A, (HL)
-    CP A, $64
-    JR C, NextVSp
-    LD (HL), YPOS_OFFSCREEN
+    LD A, (VineStart_Y_Position)            ;get original starting vertical coordinate
+    SUB A, (HL)                             ;subtract top-most sprite's Y coordinate
+    CP A, $64                               ;if two coordinates are less than 100/$64 pixels
+    JR C, NextVSp                           ;apart, skip this to leave sprite alone
+    LD (HL), YPOS_OFFSCREEN                 ;otherwise move sprite offscreen
 NextVSp:
-    INC L
-    DJNZ ChkFTop
+    INC L                                   ;move offset to next OAM data
+    DJNZ ChkFTop                            ;do this until all sprites are checked
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -137,6 +116,7 @@ NextVSp:
 ; SecondSprTilenum:
 ;     .db $81, $83, $80, $82
 
+;        Y0,  Y1,  X0,  T0,  X1,  T1, PAD, PAD 
 HammerSpriteData:
     .db $00, $08, $04, $CA, $00, $CB, $00, $00    ; FIRST (DOWN)
     .db $04, $00, $00, $CC, $08, $CD, $00, $00    ; SECOND (LEFT)
@@ -149,37 +129,37 @@ HammerSpriteData:
 
 DrawHammer:
     LD BC, HammerSpriteData
-;
-    LD D, H
+;   GET OBJECT'S S.A.T. ADDRESS
+    LD D, H                                 ;get misc object OAM data offset
     INC D
-    INC D                           ; Misc_SprDataOffset
+    INC D                                   ;Misc_SprDataOffset
     LD E, <SprDataOffset
     LD A, (DE)
-    LD IXL, A
+    LD IXL, A                               ;save S.A.T. address in IXL for later
     LD E, A
-    LD D, >Sprite_Y_Position
-;
-    LD A, (TimerControl)
+    LD D, >Sprite_Y_Position                ;DE: S.A.T. ADDRESS for 1st sprite's Ypos
+;   CALCULATE HAMMER FRAME
+    LD A, (TimerControl)                    ;if master timer control set, skip this part
     OR A
     JR NZ, RenderH
-;
-    LD L, <Misc_State
+    ;
+    LD L, <Misc_State                       ;otherwise get hammer's state
     LD A, (HL)
-    AND A, %01111111
-    DEC A
-    JR NZ, RenderH
-;
-    LD A, (FrameCounter)
-    AND A, %00001100
+    AND A, %01111111                        ;mask out d7
+    DEC A                                   ;check to see if set to 1 yet
+    JR NZ, RenderH                          ;if so, branch
+    ;
+    LD A, (FrameCounter)                    ;get frame counter
+    AND A, %00001100                        ;use d3-d2 to determine hammer frame (changes every four frames)
     ADD A, A
     ADD A, C
     LD C, A
-;
+;   Y POSITION
 RenderH:
-    LD L, C
+    LD L, C                                 ;move hammer frame data ptr to HL
     LD H, B
     ;
-    LD A, (Misc_Rel_YPos)
+    LD A, (Misc_Rel_YPos)                   ;subtract y offset to adjust for SMS
     SUB A, SMS_PIXELYOFFSET
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
@@ -187,36 +167,36 @@ RenderH:
     RET Z
     ; ---
 
-    ADD A, (HL)
-    LD (DE), A
+    ADD A, (HL)                             ;add Ypos offsets from frame data to object's Ypos
+    LD (DE), A                              ;and write to S.A.T.
     INC E
     INC L
     ADD A, (HL)
     LD (DE), A
     DEC E
     INC L
-    ;
-    SLA E
+;   X POSITION & TILE
+    SLA E                                   ;set S.A.T. address for 1st sprite's Xpos
     SET 7, E
     LD A, (Misc_Rel_XPos)
+    ADD A, (HL)                             ;add Xpos offsets from frame data to object's Xpos
+    LD (DE), A                              ;and write to S.A.T.
+    INC E
+    INC L
+    LDI                                     ;also write frame's tiles
     ADD A, (HL)
     LD (DE), A
     INC E
     INC L
     LDI
-    ADD A, (HL)
-    LD (DE), A
-    INC E
-    INC L
-    LDI
-;
-    LD HL, (ObjectOffset)
-    LD A, (Misc_OffscrBits)
+;   OFFSCREEN CHECK
+    LD HL, (ObjectOffset)                   ;get misc object offset
+    LD A, (Misc_OffscrBits)                 ;check offscreen bits
     AND A, %11111100
-    RET Z
-    LD L, <Misc_State
+    RET Z                                   ;if all bits clear, leave object alone
+    LD L, <Misc_State                       ;otherwise nullify misc object state
     LD (HL), $00
-    LD E, IXL
+    LD E, IXL                               ;and move hammer sprites offscreen
     LD D, >Sprite_Y_Position
     LD A, YPOS_OFFSCREEN
     LD (DE), A
@@ -241,10 +221,11 @@ FlagpoleScoreNumTiles:
 .ENDS
 
 FlagpoleGfxHandler:
+;   GET OBJECT'S S.A.T ADDRESS
     LD L, <SprDataOffset            ;get sprite data offset for flagpole flag
     LD E, (HL)
     LD D, >Sprite_Y_Position
-;
+;   Y POSITION
     LD L, <Enemy_Y_Position
     LD A, (HL)                      ;get vertical coordinate
     SUB A, SMS_PIXELYOFFSET
@@ -254,7 +235,7 @@ FlagpoleGfxHandler:
     ADD A, $08                      ;add eight pixels
     INC E
     LD (DE), A                      ;and store into third sprite
-;
+;   X POSITION & TILE
     LD L, <SprDataOffset
     LD E, (HL)                      ;get sprite data offset for flagpole flag
     SLA E
@@ -306,14 +287,10 @@ ChkFlagOffscreen:
     LD D, >Sprite_Y_Position
     LD A, YPOS_OFFSCREEN
     LD (DE), A
+    .REPEAT $04
     INC E
     LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
+    .ENDR
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -321,130 +298,104 @@ ChkFlagOffscreen:
 DrawLargePlatform:
     LD D, >Sprite_Data
 ;   X POSITION & TILE
-    LD L, <Enemy_SprDataOffset
+    LD L, <Enemy_SprDataOffset      ;get S.A.T. address for 1st sprite's Xpos
     LD E, (HL)
     SLA E
     SET 7, E
-    LD B, $52                   ;cloud and lift share the same tile index
-    LD A, (Enemy_Rel_XPos)
+    ;
+    LD B, $52                       ;cloud and lift share the same tile index
+    LD A, (Enemy_Rel_XPos)          ;write Xpos and tile for all 6 sprites...
     EX DE, HL
     LD (HL), A
     INC L
     LD (HL), B
+.REPEAT $05
     INC L
     ADD A, $08
     LD (HL), A
     INC L
     LD (HL), B
-    INC L
-    ADD A, $08
-    LD (HL), A
-    INC L
-    LD (HL), B
-    INC L
-    ADD A, $08
-    LD (HL), A
-    INC L
-    LD (HL), B
-    INC L
-    ADD A, $08
-    LD (HL), A
-    INC L
-    LD (HL), B
-    INC L
-    ADD A, $08
-    LD (HL), A
-    INC L
-    LD (HL), B
+.ENDR
     EX DE, HL
 ;   Y POSITION
-    LD L, <Enemy_SprDataOffset
+    LD L, <Enemy_SprDataOffset      ;get S.A.T. address for 1st sprite's Ypos
     LD E, (HL)
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    SUB A, SMS_PIXELYOFFSET
+    SUB A, SMS_PIXELYOFFSET         ;subtract y offset to adjust for SMS
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
     CP A, $D0
     RET Z
     ; ---
-
-    LD (DE), A
+    .REPEAT $04
+    LD (DE), A                      ;dump into first four sprites as Y coordinate
     INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD B, A
-    LD A, (AreaType)
+    .ENDR
+    ;
+    LD B, A                         ;save coord in B for later
+    LD A, (AreaType)                ;check for castle-type level
     CP A, $03
-    LD A, YPOS_OFFSCREEN
-    JR Z, SetLast2Platform
-    LD A, (SecondaryHardMode)
+    LD A, YPOS_OFFSCREEN            ;load offscreen coordinate if flag set or castle-type level
+    JR Z, SetLast2Platform          
+    LD A, (SecondaryHardMode)       ;check for secondary hard mode flag set
     OR A
     LD A, YPOS_OFFSCREEN
-    JR NZ, SetLast2Platform
-    LD A, B
+    JR NZ, SetLast2Platform         ;branch if not set elsewhere
+    LD A, B                         ;get back Ypos
 
 SetLast2Platform:
-    LD (DE), A
+    LD (DE), A                      ;make last two sprites either offscreen or same as the rest
     INC E
     LD (DE), A
 ;   OFFSCREEN CHECK
-    CALL GetXOffscreenBits
-    LD D, >Sprite_Data
+    CALL GetXOffscreenBits          ;get offscreen bits again
+    LD D, >Sprite_Data              ;get S.A.T. address for 1st sprite's Ypos
     LD L, <Enemy_SprDataOffset
     LD E, (HL)
     LD C, A
     LD A, YPOS_OFFSCREEN
-    SLA C
+    SLA C                           ;rotate d7 into carry
     JR NC, SChk2
-    LD (DE), A
+    LD (DE), A                      ;if d7 was set, move first sprite offscreen
 SChk2:
     INC E
-    SLA C
+    SLA C                           ;rotate d6 into carry
     JR NC, SChk3
-    LD (DE), A
+    LD (DE), A                      ;if d6 was set, move second sprite offscreen
 SChk3:
     INC E
-    SLA C
+    SLA C                           ;rotate d5 into carry
     JR NC, SChk4
-    LD (DE), A
+    LD (DE), A                      ;if d5 was set, move third sprite offscreen
 SChk4:
     INC E
-    SLA C
+    SLA C                           ;rotate d4 into carry
     JR NC, SChk5
-    LD (DE), A
+    LD (DE), A                      ;if d4 was set, move fourth sprite offscreen
 SChk5:
     INC E
-    SLA C
+    SLA C                           ;rotate d3 into carry
     JR NC, SChk6
-    LD (DE), A
+    LD (DE), A                      ;if d3 was set, move fifth sprite offscreen
 SChk6:
     INC E
-    SLA C
+    SLA C                           ;rotate d2 into carry
     JR NC, SLChk
-    LD (DE), A
+    LD (DE), A                      ;if d2 was set, move sixth sprite offscreen
 SLChk:
-    LD A, (Enemy_OffscrBits)
+    LD A, (Enemy_OffscrBits)        ;check d7 of offscreen bits
     ADD A, A
-    RET NC
-    LD L, <Enemy_SprDataOffset
+    RET NC                          ;and if d7 is not set, skip
+    ;
+    LD L, <Enemy_SprDataOffset      ;otherwise move all sprites offscreen
     LD E, (HL)
     LD A, YPOS_OFFSCREEN
     LD (DE), A
+    .REPEAT $05
     INC E
     LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
+    .ENDR
     RET
 
 ;-------------------------------------------------------------------------------------
@@ -484,6 +435,7 @@ JumpingCoinTiles:
 .ENDS
 
 JCoinGfxHandler:
+;   GET S.A.T. ADDRESS
     LD D, H
     INC D
     INC D                           ;Misc_SprDataOffset
@@ -497,7 +449,7 @@ JCoinGfxHandler:
     LD A, (HL)                      ;get state of misc object
     CP A, $02                       ;if 2 or greater,
     JR NC, DrawFloateyNumber_Coin   ;branch to draw floatey number
-;
+;   YPOS
     LD L, <Misc_Y_Position
     LD A, (HL)                      ;store vertical coordinate as
     SUB A, SMS_PIXELYOFFSET
@@ -505,7 +457,7 @@ JCoinGfxHandler:
     ADD A, $08                      ;add eight pixels
     INC E
     LD (DE), A                      ;store as Y coordinate for second sprite
-;
+;   XPOS
     DEC E                           ;(SMS)
     SLA E
     SET 7, E
@@ -514,13 +466,13 @@ JCoinGfxHandler:
     INC E
     INC E
     LD (DE), A                      ;store as X coordinate for first and second sprites
-;
+;   SPRITE FRAME CALC
     LD A, (FrameCounter)            ;get frame counter
     RRCA                            ;divide by 2 to alter every other frame
     AND A, %00000011                ;mask out d2-d1
     LD BC, JumpingCoinTiles         ;use as graphical offset
     addAToBC8_M
-;
+    ;
     DEC E
     LD A, (BC)                      ;load tile number
     LD (DE), A                      ;write to first sprite
@@ -551,30 +503,33 @@ PowerUpGfxTable:
 .ENDS
 
 DrawPowerUp:
-    LD HL, (Enemy_Y_Position_05)                ;don't display powerup if it is below visible screen
-    LD DE, $01D8                                ;to avoid sprite terminator
+;   OFFSCREEN CHECK
+    LD HL, (Enemy_Y_Position_05)            ;don't display powerup if it is below visible screen
+    LD DE, $01D8                            ;to avoid sprite terminator
     OR A
     SBC HL, DE
     JP NC, SprObjectOffscrChk
-;
-    LD A, (Enemy_SprDataOffset_05)
+;   GET OBJECT'S S.A.T. ADDRESS
+    LD A, (Enemy_SprDataOffset_05)          ;get power-up's sprite data offset
     LD E, A
     LD D, >Sprite_Y_Position
-;
-    LD A, (Enemy_Rel_YPos)
-    ADD A, $08 - SMS_PIXELYOFFSET
-    LD B, A
-    LD A, (Enemy_Rel_XPos)
-    LD C, A
-;
-    LD A, (PowerUpType)
+;   X/YPOS REG SETUP
+    LD A, (Enemy_Rel_YPos)                  ;get relative vertical coordinate
+    ADD A, $08 - SMS_PIXELYOFFSET           ;add eight pixels (-SMS offset)
+    LD B, A                                 ;store result here
+    LD A, (Enemy_Rel_XPos)                  ;get relative horizontal coordinate
+    LD C, A                                 ;store here
+;   TILE SETUP
+    LD A, (PowerUpType)                     ;get power-up type
     ADD A, A
     ADD A, A
     LD HL, PowerUpGfxTable
     addAToHL8_M
-    CALL DrawSpriteObject
-    CALL DrawSpriteObject
-    JP SprObjectOffscrChk
+;   WRITE TO S.A.T.
+    CALL DrawSpriteObject                   ;draw first row of our power-up object
+    CALL DrawSpriteObject                   ;draw second row of our power-up object
+;   OBJECT OFFSCREEN CHECK
+    JP SprObjectOffscrChk                   ;jump to check to see if power-up is offscreen at all, then leave
     
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used in DrawEnemyObjRow to hold sprite tile numbers
@@ -1165,16 +1120,16 @@ MoveESprColOffscreen:
     RET
 
 PodobooGfxHandler:
-;   VERTICAL FLIP ADJUST
-    LD L, <Enemy_Y_Speed
+;   TILE FRAME SETUP
+    LD L, <Enemy_Y_Speed                    ;use v-flipped tiles if y speed is positive
     LD A, (HL)
     OR A
     LD HL, PodobooTiles
     JP M, +
     LD L, <PodobooTiles + $04
-;   DRAW SPRITE
+;   X/YPOS REG SETUP
 +:
-    LD A, D
+    LD A, D                                 ;add 8 to vertical coordinate (podoboo is only 16px tall)
     ADD A, $08
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
@@ -1183,26 +1138,39 @@ PodobooGfxHandler:
     INC A
 +:
     ; ---
-    LD B, A
+    LD B, A                                 ;store vertical coord in B
 
-    LD A, (Temp_Bytes + $05)
+    LD A, (Temp_Bytes + $05)                ;store horizontal coord in C
     LD C, A
+;   WRITE TO S.A.T.
     LD D, >Sprite_Y_Position
     INC E
     INC E
-    CALL DrawSpriteObject
-    CALL DrawSpriteObject
+    CALL DrawSpriteObject                   ;draw row 0
+    CALL DrawSpriteObject                   ;draw row 1
+;   OBJECT OFFSCREEN CHECK
     JP SprObjectOffscrChk
 
+.SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+PodobooTiles:
+    .db $43, $44, $45, $46  ; FRAME 0
+    .db $47, $48, $49, $4A  ; FRAME 0 VFLIP
+.ENDS
+
+;   --- NAMETABLE OBJECT DRAW ROUTINES ---
+
 RetainerGfxHandler:
+;   EXIT IF RETAINER/PRINCESS HAS ALREADY BEEN DRAWN
     LD A, (RetainerDrawnFlag)
     OR A
     RET NZ
+;   SET FLAG TO SIGNAL THAT IT HAS BEEN DRAWN
     INC A
     LD (RetainerDrawnFlag), A
-;
+;   CALCULATE WHERE IT SHOULD BE DRAWN
     CALL CalculateNTAddr
-;
+;   WRITE TILE DATA TO VRAM BUFFER
+    ; RIGHT SIDE
     INC L
     INC L
     PUSH HL
@@ -1215,7 +1183,7 @@ RetainerGfxHandler:
 +:
     CALL NTObjectDrawSide
     POP HL
-;
+    ; LEFT SIDE
     DEC L
     DEC L
     CALL StripeBufferSetup
@@ -1228,15 +1196,17 @@ RetainerGfxHandler:
     JP NTObjectDrawSide
 
 JumpspringGfxHandler:
+;   EXIT IF JUMPSPRING FRAME HASN'T CHANGE
     LD A, (JumpspringAnimCtrl_Old)
     LD B, A
     LD A, (JumpspringAnimCtrl)
     CP A, B
     RET Z
     LD (JumpspringAnimCtrl_Old), A
-;
+;   CALCULATE WHERE IT SHOULD BE DRAWN
     CALL CalculateNTAddr
-;
+;   WRITE TILE DATA TO VRAM_BUFFER
+    ; RIGHT SIDE
     INC L
     INC L
     PUSH HL
@@ -1249,7 +1219,7 @@ JumpspringGfxHandler:
     addAToHL8_M
     CALL NTObjectDrawSide
     POP HL
-;
+    ; LEFT SIDE
     LD A, (Enemy_OffscrBits)
     BIT 3, A
     RET NZ
@@ -1264,80 +1234,84 @@ JumpspringGfxHandler:
     addAToHL8_M
     ; FALL THROUGH
 
+;   --- NAMETABLE DRAW HELPER ROUTINES ---
+
 NTObjectDrawSide:
+    LDD                                     ;store tile 2's tile data
     LDD
+    DEC E                                   ;skip its NT address and count as it's already been written...
+    DEC E
+    DEC E
+    LDD                                     ;store tile 1's tile data
     LDD
+    DEC E                                   ;skip its NT address and count as it's already been written...
     DEC E
     DEC E
-    DEC E
-    LDD
-    LDD
-    DEC E
-    DEC E
-    DEC E
-    LDD
+    LDD                                     ;store tile 0's tile data
     LDD
     RET
 
 CalculateNTAddr:
     LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     LD A, (HL)
-    SUB A, SMS_PIXELYOFFSET
-    AND A, $F8
+    SUB A, SMS_PIXELYOFFSET                 ;subtract SMS Y offset
+    AND A, $F8                              ;round down to closest tile (multiple of 8)
     LD L, A
-    LD H, $0C
+    LD H, (>VRAMWRITE | >VRAM_ADR_NAMETBL) >> $03 ;$0C
+    ADD HL, HL                              ;left shift by 3 (d12-d6 determine row)
     ADD HL, HL
     ADD HL, HL
-    ADD HL, HL
-    LD A, (ScreenLeft_X_Pos)
-    LD B, A
+    ;
+    LD A, (ScreenLeft_X_Pos)                ;add left-edge of screen to enemy object horizontal position
+    LD B, A                                 ;to get real x coordinate
     LD A, (Enemy_Rel_XPos)
     ADD A, B
-    AND A, $F8
+    AND A, $F8                              ;round down to closest tile (multiple of 8)
+    RRCA                                    ;right shift by 2 (d5-d0 determine column)
     RRCA
-    RRCA
-    OR A, L
+    OR A, L                                 ;combine with row to get final result
     LD L, A
     RET
 
 StripeBufferSetup:
-    LD DE, (VRAM_Buffer1_Ptr)
-    EX DE, HL
+    LD DE, (VRAM_Buffer1_Ptr)               ;get VRAM_Buffer1's ptr
+    EX DE, HL                               ;DE: NT address, HL: *VRAM_Buffer1_Ptr
 ;
-    LD (HL), D
+    LD (HL), D                              ;store tile 0's NT address and count
     INC L
     LD (HL), E
     INC L
     LD (HL), StripeCount($02)
-    INC L
+    INC L                                   ;skip actual tile data for now...
     INC L
     INC L
 ;
-    LD A, $40
+    LD A, $40                               ;store tile 1's NT address and count
     addAToDE_M
     LD (HL), D
     INC L
     LD (HL), E
     INC L
     LD (HL), StripeCount($02)
-    INC L
+    INC L                                   ;skip actual tile data for now...
     INC L
     INC L
 ;
-    LD A, $40
+    LD A, $40                               ;store tile 2's NT address and count
     addAToDE_M
     LD (HL), D
     INC L
     LD (HL), E
     INC L
     LD (HL), StripeCount($02)
+    INC L                                   ;skip actual tile data for now...
     INC L
     INC L
-    INC L
-    LD (HL), $00
-    LD (VRAM_Buffer1_Ptr), HL
+;
+    LD (HL), $00                            ;store terminator
+    LD (VRAM_Buffer1_Ptr), HL               ;update buffer ptr
     DEC L
-    EX DE, HL
+    EX DE, HL                               ;DE: *VRAM_Buffer1_Ptr, HL: NT address
     RET
 
 .SECTION "Jumpspring Frames" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -1354,12 +1328,6 @@ JumpspringFramesRight:
     .dw $0000, $0000, $0B5D, $0000
     .dw $0000, $0B5C, $0F5C, $0000
     .dw $0B5A, $0B5B, $0F5A, $0000
-.ENDS
-
-.SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-PodobooTiles:
-    .db $43, $44, $45, $46  ; FRAME 0
-    .db $47, $48, $49, $4A  ; FRAME 0 VFLIP
 .ENDS
 
 .SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -1392,61 +1360,62 @@ DefaultBlockObjTiles:
 .ENDS
 
 DrawBlock:
+;   X/YPOS REG STEUP
     LD A, (Block_Rel_YPos)          ;get relative vertical coordinate of block object
     SUB A, SMS_PIXELYOFFSET
     LD B, A                         ;store here
-;
     LD A, (Block_Rel_XPos)          ;get relative horizontal coordinate of block object
     LD C, A                         ;store here
-;
+;   GET OBJECT'S S.A.T. ADDRESS
     LD D, H
     DEC D                           ;Block_SprDataOffset
     
     LD E, <SprDataOffset            ;get sprite data offset
     LD A, (DE)
-    LD IYL, A
+    LD IYL, A                       ;copy to IYL for later
     LD E, A
 
     LD D, >Sprite_Y_Position
-    PUSH HL
-;
-    LD A, (AreaType)
+    PUSH HL                         ;save object offset to stack
+;   TILE SETUP
+    LD A, (AreaType)                ;if areatype is overworld, use brick with line
     DEC A
     LD L, <Block_Metatile
     LD A, (HL)
-    LD HL, DefaultBlockObjTiles
+    LD HL, DefaultBlockObjTiles     ;assume brick with no line
     JR NZ, +
     LD L, <DefaultBlockObjTiles + $04
 +:
-    CP A, MT_EMPTYBLK
+    CP A, MT_EMPTYBLK               ;also check for empty block
     JR NZ, +
-    LD L, <DefaultBlockObjTiles + $08
-;
+    LD L, <DefaultBlockObjTiles + $08   ;if so, draw that
+;   SEND TO S.A.T.
 +:
     CALL DrawSpriteObject
     CALL DrawSpriteObject
-    POP HL
-;
-    LD D, >Sprite_Y_Position
+    POP HL                          ;get back object offset
+;   OFFSCREEN CHECK
+    LD D, >Sprite_Y_Position        ;reset S.A.T. address to 1st sprite's Ypos
     LD E, IYL
-    LD A, (Block_OffscrBits)
-    PUSH AF
-    AND A, %00000100
-    JR Z, PullOfsB
-    LD A, YPOS_OFFSCREEN
-    INC E
+    ; RIGHT SIDE
+    LD A, (Block_OffscrBits)        ;get offscreen bits for block object
+    PUSH AF                         ;save to stack
+    AND A, %00000100                ;check to see if d2 in offscreen bits are set
+    JR Z, PullOfsB                  ;if not set, branch, otherwise move sprites offscreen
+    LD A, YPOS_OFFSCREEN            ;move offscreen two OAMs
+    INC E                           ;on the right side
     LD (DE), A
     INC E
     INC E
     LD (DE), A
+    ; LEFT SIDE
 PullOfsB:
-    POP AF
-    AND A, %00001000
-    RET Z
-
-    LD E, IYL
-    LD A, YPOS_OFFSCREEN
-    LD (DE), A
+    POP AF                          ;pull offscreen bits from stack
+    AND A, %00001000                ;check to see if d3 in offscreen bits are set
+    RET Z                           ;if not set, branch, otherwise move sprites offscreen
+    LD E, IYL                       ;reset S.A.T. address to 1st sprite's Ypos
+    LD A, YPOS_OFFSCREEN            ;move offscreen two OAMs
+    LD (DE), A                      ;on the left side
     INC E
     INC E
     LD (DE), A
@@ -1458,14 +1427,14 @@ PullOfsB:
 DrawBrickChunks:
 ;   CALCULATE SPRDATAOFFSET
     LD D, H
-    DEC D                           ;Block_SprDataOffset
+    DEC D                                   ;Block_SprDataOffset
     LD E, <SprDataOffset
     LD A, (DE)
     LD E, A
-    LD D, >Sprite_Y_Position
+    LD D, >Sprite_Y_Position                ;get OAM data offset
     LD IXH, A
 ;   STORE Y POSITIONS
-    LD A, (Block_Rel_YPos)
+    LD A, (Block_Rel_YPos)                  ;get first block object's relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
     
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
@@ -1475,10 +1444,10 @@ DrawBrickChunks:
 +:
     ; ---
 
-    LD (DE), A
+    LD (DE), A                              ;dump current Y coordinate into two sprites
     INC E
     LD (DE), A
-    LD A, (Block_Rel_YPos_01)
+    LD A, (Block_Rel_YPos_01)               ;get second block object's relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
@@ -1488,7 +1457,7 @@ DrawBrickChunks:
 +:
     ; ---
 
-    INC E
+    INC E                                   ;dump into Y coordinates of third and fourth sprites
     LD (DE), A
     INC E
     LD (DE), A
@@ -1497,12 +1466,12 @@ DrawBrickChunks:
     SLA E
     SET 7, E
     INC E
-    LD A, (FrameCounter)
+    LD A, (FrameCounter)                    ;use frame counter to determine brick tile
     RRCA
     RRCA
     AND A, $03
     ADD A, $3C
-    LD (DE), A
+    LD (DE), A                              ;dump tile number into all four sprites
     INC E
     INC E
     LD (DE), A
@@ -1513,77 +1482,77 @@ DrawBrickChunks:
     INC E
     LD (DE), A 
 ;   STORE X POSITIONS
+    ; 1ST BLOCK OBJ
     LD E, IXH
     SLA E
     SET 7, E
-    LD A, (Block_Rel_XPos)
-    LD (DE), A
+    LD A, (Block_Rel_XPos)                  ;get first block object's relative horizontal coordinate
+    LD (DE), A                              ;save into X coordinate of first sprite
     LD A, (ScreenLeft_X_Pos)
     LD C, A
-    LD L, <Block_Orig_XPos
+    LD L, <Block_Orig_XPos                  ;get original horizontal coordinate
     LD A, (HL)
-    SUB A, C
-    LD IXL, A
+    SUB A, C                                ;subtract coordinate of left side from original coordinate
+    LD IXL, A                               ;store result as relative horizontal coordinate of original
     LD A, (DE)
     LD C, A
-    LD A, IXL
+    LD A, IXL                               ;get difference of relative positions of original - current
     SUB A, C
-    CCF                             ;carry inversion for z80
-    ADC A, IXL
-    ADC A, $06
+    CCF                                     ;carry inversion for z80
+    ADC A, IXL                              ;add original relative position to result
+    ADC A, $06                              ;plus 6 pixels to position second brick chunk correctly
     INC E
     INC E
-    LD (DE), A
-;
-    LD A, (Block_Rel_XPos_01)
+    LD (DE), A                              ;save into X coordinate of second sprite
+    ; 2ND BLOCK OBJ
+    LD A, (Block_Rel_XPos_01)               ;get second block object's relative horizontal coordinate
     INC E
     INC E
-    LD (DE), A
-;
+    LD (DE), A                              ;save into X coordinate of third sprite
     LD C, A
-    LD A, IXL
-    SUB A, C
-    CCF                             ;carry inversion for z80
-    ADC A, IXL
-    ADC A, $06
+    LD A, IXL                               ;use original relative horizontal position
+    SUB A, C                                ;get difference of relative positions of original - current
+    CCF                                     ;carry inversion for z80
+    ADC A, IXL                              ;add original relative position to result
+    ADC A, $06                              ;plus 6 pixels to position fourth brick chunk correctly
     INC E
     INC E
-    LD (DE), A
+    LD (DE), A                              ;save into X coordinate of fourth sprite
 ;   OFFSCREEN CHECK (YPOS?)
     LD E, IXH
-    LD A, (Block_OffscrBits)
-    AND A, %00001000
-    JP Z, +
-    LD A, YPOS_OFFSCREEN
-    LD (DE), A  ; 0
+    LD A, (Block_OffscrBits)                ;get offscreen bits for block object
+    AND A, %00001000                        ;check to see if d3 in offscreen bits are set
+    JP Z, +                                 ;if not set, branch, otherwise move sprites offscreen
+    LD A, YPOS_OFFSCREEN                    ;move offscreen two OAMs
+    LD (DE), A                              ;on the left side               
     INC E
     INC E
-    LD (DE), A  ; 8
+    LD (DE), A
 +:
     LD E, IXH
-    LD A, (Block_OffscrBits)
-    ADD A, A
-    JP NC, ChnkOfs
-    LD A, YPOS_OFFSCREEN
+    LD A, (Block_OffscrBits)                ;get offscreen bits again
+    ADD A, A                                ;shift d7 into carry
+    JP NC, ChnkOfs                          ;if d7 not set, branch to last part
+    LD A, YPOS_OFFSCREEN                    ;otherwise move top sprites offscreen
     LD (DE), A
     INC E
     LD (DE), A
 ;   OFFSCREEN CHECK (XPOS?)
 ChnkOfs:
-    LD A, IXL
+    LD A, IXL                               ;if relative position on left side of screen,
     OR A
-    RET P
+    RET P                                   ;go ahead and leave
     LD E, IXH
     SLA E
     SET 7, E
-    LD A, (DE)
+    LD A, (DE)                              ;otherwise compare left-side X coordinate...
     INC E
     INC E
     EX DE, HL
-    CP A, (HL)
+    CP A, (HL)                              ;to right-side X coordinate
     EX DE, HL
-    RET C
-    LD E, IXH
+    RET C                                   ;branch to leave if less
+    LD E, IXH                               ;otherwise move right half of sprites offscreen
     LD A, YPOS_OFFSCREEN
     INC E
     LD (DE), A
@@ -1595,6 +1564,7 @@ ChnkOfs:
 ;-------------------------------------------------------------------------------------
 
 DrawFireball:
+;   GET OBJECT'S S.A.T. ADDRESS
     LD A, H
     ADD A, >FBall_SprDataOffset - >Fireball_State
     LD D, A
@@ -1602,8 +1572,8 @@ DrawFireball:
     LD A, (DE)
     LD E, A
     LD D, >Sprite_Y_Position
-;
-    LD A, (Fireball_Rel_YPos)
+;   Y POSITION
+    LD A, (Fireball_Rel_YPos)               ;get relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
@@ -1613,19 +1583,19 @@ DrawFireball:
 +:
     ; ---
 
-    LD (DE), A
-;
+    LD (DE), A                              ;store as sprite Y coordinate
+;   X POSITION
     SLA E
     SET 7, E
-    LD A, (Fireball_Rel_XPos)
-    LD (DE), A
-
+    LD A, (Fireball_Rel_XPos)               ;get relative horizontal coordinate
+    LD (DE), A                              ;store as sprite X coordinate, then do shared code
+;   TILE
 ;DrawFirebar:
     INC E
-    LD A, (FrameCounter)
+    LD A, (FrameCounter)                    ;get frame counter
+    RRCA                                    ;divide by four
     RRCA
-    RRCA
-    AND A, $03
+    AND A, $03                              ;use d3-d2 to determine fireball sprite
     ADD A, $21
     LD (DE), A
     RET
@@ -1639,51 +1609,51 @@ ExplosionTiles:
 .ENDS
 
 DrawExplosion_Fireball:
+;   GET OBJECT'S S.A.T. ADDRESS
     LD A, H
     ADD A, >Alt_SprDataOffset - >Fireball_State
     LD D, A
     LD E, <SprDataOffset
     LD A, (DE)
     LD IXL, A
-;
-    LD L, <Fireball_State
+;   GET TILE FRAME
+    LD L, <Fireball_State                   ;load fireball state
     LD A, (HL)
-    INC (HL)
-    RRCA
-    AND A, %00000111
-    CP A, $03
-    JP C, DrawExplosion_Fireworks@SkipSprOffset
-    LD (HL), $00
+    INC (HL)                                ;increment state for next frame
+    RRCA                                    ;divide by 2
+    AND A, %00000111                        ;mask out all but d2-d0
+    CP A, $03                               ;check to see if time to kill fireball
+    JP C, DrawExplosion_Fireworks@SkipSprOffset ; if not, draw explosion
+    LD (HL), $00                            ;else, KILL IT
     RET
 
 DrawExplosion_Fireworks:
     LD IXL, E
 @SkipSprOffset:
-    LD DE, ExplosionTiles
-    addAToDE8_M
+    LD DE, ExplosionTiles                   ;use whatever's in A for offset
+    addAToDE8_M                             ;get tile number using offset
     LD A, (DE)
-;
+;   STORE 1ST TILE
     LD D, >Sprite_Y_Position
     LD E, IXL
-;
-    SLA E
+    SLA E           
     SET 7, E
-    INC E
+    INC E                                   ;dump 1st tile number
     LD (DE), A
-;
-    CP A, $25
-    JP NZ, +
-;
     ;
+    CP A, $25                               ;jump if doing a multi-sprite explosion (not frame 0)
+    JP NZ, @MultiSprExplode
+;   SINGLE SPRITE EXPLOSION
+    ; XPOS
     DEC E
-    LD A, (Fireball_Rel_XPos)
+    LD A, (Fireball_Rel_XPos)               ;store relative horizontal coordinate
     LD (DE), A
-    ;
+    ; YPOS
     LD E, IXL
-    LD A, (Fireball_Rel_YPos)
+    LD A, (Fireball_Rel_YPos)               ;store relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
     LD (DE), A
-    LD A, YPOS_OFFSCREEN
+    LD A, YPOS_OFFSCREEN                    ;move unused sprites offscreen
     INC E
     LD (DE), A
     INC E
@@ -1691,43 +1661,49 @@ DrawExplosion_Fireworks:
     INC E
     LD (DE), A
     RET
-+:
-    EX DE, HL
-    LD C, A
-    LD A, (Fireball_Rel_XPos)
-    SUB A, $04 
-    DEC L
+;   MULTI SPRITE EXPLOSION
+@MultiSprExplode:
+    ; XPOS/TILE
+    EX DE, HL                               ;DE: N/A, HL: S.A.T. address
+    LD C, A                                 ;move tile ID to C
+    LD A, (Fireball_Rel_XPos)               ;get relative horizontal coordinate
+    SUB A, $04                              ;subtract four pixels horizontally
+    DEC L                                   ;for first sprite
     LD (HL), A
     INC L
+        ; SPRITE 1
     INC L
-    ADD A, $08
+    ADD A, $08                              ;add 8 for second sprite
+    LD (HL), A
+    INC L
+    INC C                                   ;increment tile ID for each sprite
+    LD (HL), C
+        ; SPRITE 2
+    INC L
+    SUB A, $08                              ;reset Xpos offset for third sprite
     LD (HL), A
     INC L
     INC C
     LD (HL), C
+        ; SPRITE 3
     INC L
-    SUB A, $08
+    ADD A, $08                              ;add 8 for fourth sprite
     LD (HL), A
     INC L
     INC C
     LD (HL), C
-    INC L
-    ADD A, $08
-    LD (HL), A
-    INC L
-    INC C
-    LD (HL), C
-    EX DE, HL
-;
+
+    EX DE, HL                               ;DE: S.A.T. address, HL: N/A
+    ; YPOS
     LD E, IXL
-    LD A, (Fireball_Rel_YPos)
-    SUB A, $04 + SMS_PIXELYOFFSET
-    LD (DE), A
+    LD A, (Fireball_Rel_YPos)               ;get relative vertical coordinate
+    SUB A, $04 + SMS_PIXELYOFFSET           ;subtract four pixels vertically
+    LD (DE), A                              ;for first and second sprites
     INC E
     LD (DE), A
-    ADD A, $08
+    ADD A, $08                              ;add eight pixels vertically
     INC E
-    LD (DE), A
+    LD (DE), A                              ;for third and fourth sprites
     INC E
     LD (DE), A
     RET
@@ -1736,45 +1712,46 @@ DrawExplosion_Fireworks:
 
 DrawSmallPlatform:
 ;   X POSITION & TILE
-    LD L, <Enemy_SprDataOffset
+    LD L, <Enemy_SprDataOffset              ;get OAM data offset
     LD E, (HL)
     LD D, >Sprite_Y_Position
     SLA E
     SET 7, E
-    LD A, (Enemy_Rel_XPos)
-    LD B, $52
+    ;
+    LD A, (Enemy_Rel_XPos)                  ;get relative horizontal coordinate
+    LD B, $52                               ;B = tile ID
     EX DE, HL
     ; TILE 0
-    LD (HL), A
+    LD (HL), A                              ;first sprite = Xpos
     INC L
     LD (HL), B
     INC L
     ; TILE 1
     ADD A, $08
-    LD (HL), A
+    LD (HL), A                              ;second sprite = Xpos+8
     INC L
     LD (HL), B
     INC L
     ; TILE 2
     ADD A, $08
-    LD (HL), A
+    LD (HL), A                              ;third sprite = Xpos+16
     INC L
     LD (HL), B
     INC L
     ; TILE 3
-    SUB A, $10
+    SUB A, $10                              ;fourth sprite = Xpos
     LD (HL), A
     INC L
     LD (HL), B
     INC L
     ; TILE 4
-    ADD A, $08
+    ADD A, $08                              ;fifth sprite = Xpos+8
     LD (HL), A
     INC L
     LD (HL), B
     INC L
     ; TILE 5
-    ADD A, $08
+    ADD A, $08                              ;sixth sprite = Xpos+16
     LD (HL), A
     INC L
     LD (HL), B
@@ -1783,16 +1760,16 @@ DrawSmallPlatform:
     ; FIRST 3
     LD L, <Enemy_SprDataOffset
     LD E, (HL)
-    LD L, <Enemy_Y_Position
+    LD L, <Enemy_Y_Position                 ;get vertical coordinate
     LD A, (HL)
-    CP A, $D8
+    CP A, $D8                               ;move offscreen if below visible screen
     JP NC, +
-    CP A, $20
-    JP NC, TopSP
+    CP A, $20                               ;if vertical coordinate below status bar,
+    JP NC, TopSP                            ;do not mess with it
 +:
-    LD A, (YPOS_OFFSCREEN + SMS_PIXELYOFFSET) & 0xFF
+    LD A, (YPOS_OFFSCREEN + SMS_PIXELYOFFSET) & 0xFF    ;otherwise move first three sprites offscreen
 TopSP:
-    SUB A, SMS_PIXELYOFFSET
+    SUB A, SMS_PIXELYOFFSET                 ;dump vertical coordinate into Y coordinates
     LD (DE), A
     INC E
     LD (DE), A
@@ -1802,67 +1779,55 @@ TopSP:
     ; SECOND 3
     LD L, <Enemy_Y_Position
     LD A, (HL)
-    ADD A, $80
-    CP A, $D8
+    ADD A, $80                              ;add 128 pixels
+    CP A, $D8                               ;move offscreen if below visible screen
     JP NC, +
-    CP A, $20
-    JP NC, BotSP
+    CP A, $20                               ;if below status bar (taking wrap into account)
+    JP NC, BotSP                            ;then do not change altered coordinate
 +:
-    LD A, (YPOS_OFFSCREEN + SMS_PIXELYOFFSET) & 0xFF
+    LD A, (YPOS_OFFSCREEN + SMS_PIXELYOFFSET) & 0xFF    ;otherwise move last three sprites offscreen
 BotSP:
-    SUB A, SMS_PIXELYOFFSET
+    SUB A, SMS_PIXELYOFFSET                 ;dump vertical coordinate + 128 pixels
     LD (DE), A
     INC E
     LD (DE), A
     INC E
     LD (DE), A
 ;   OFFSCREEN CHECK
-    ; 1ST THREE
     LD L, <Enemy_SprDataOffset
     LD E, (HL)
     INC E
-    INC E
-    LD A, (Enemy_OffscrBits)
+    INC E                                   ;DE: SprDataOffset + $02
+    LD H, D
+    LD L, E
+    INC L
+    INC L
+    INC L                                   ;HL: SprDataOffset + $05
+    LD A, (Enemy_OffscrBits)                ;get offscreen bits
     LD C, A
     LD A, YPOS_OFFSCREEN
+    SRL C                                   ;check d1
     SRL C
-    SRL C
-    JP NC, +
-    LD (DE), A
+    JR NC, +
+    LD (DE), A                              ;if d1 was set, move third and
+    LD (HL), A                              ;sixth sprites offscreen
 +:
     DEC E
-    SRL C
-    JP NC, +
-    LD (DE), A
+    DEC L
+    SRL C                                   ;check d2
+    JR NC, +
+    LD (DE), A                              ;if d2 was set, move second and
+    LD (HL), A                              ;fifth sprites offscreen
 +:
     DEC E
-    SRL C
-    JP NC, +
-    LD (DE), A
-+:
-    ; 2ND THREE
-    LD A, $05
-    ADD A, E
-    LD E, A
-    LD A, (Enemy_OffscrBits)
-    LD C, A
-    LD A, YPOS_OFFSCREEN
-    SRL C
-    SRL C
-    JP NC, +
-    LD (DE), A
-+:
-    DEC E
-    SRL C
-    JP NC, +
-    LD (DE), A
-+:
-    DEC E
-    SRL C
-    RET NC
-    LD (DE), A
+    DEC L
+    SRL C                                   ;check d3
+    JR NC, ExSPl
+    LD (DE), A                              ;if d3 was set, move first and
+    LD (HL), A                              ;fourth sprites offscreen
+ExSPl:
+    LD HL, (ObjectOffset)                   ;get enemy object offset and leave
     RET
-
 
 ;-------------------------------------------------------------------------------------
 

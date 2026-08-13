@@ -327,12 +327,12 @@ AnimatedBGTileInits:
     .dw $3CA0 | VRAMWRITE
     .db StripeCount($02 * $20)
     .dw WaterA1Frame0
-    .db $08, $10, $08, $10
+    .db $08, $08, $08, $08
 @WaterA0:
     .dw $3CA0 | VRAMWRITE
     .db StripeCount($02 * $20)
     .dw WaterA0Frame0
-    .db $08, $10, $08, $10
+    .db $08, $08, $08, $08
 @WaterCoin:
     .dw $3D00 | VRAMWRITE
     .db StripeCount($04 * $20)
@@ -342,7 +342,7 @@ AnimatedBGTileInits:
     .dw $3D80 | VRAMWRITE
     .db $00;.db StripeCount($04 * $20)
     .dw LavaFrame0
-    .db $08, $10, $08, $10
+    .db $08, $08, $08, $08
 @QBlock:
     .dw $3C20 | VRAMWRITE
     .db StripeCount($04 * $20)

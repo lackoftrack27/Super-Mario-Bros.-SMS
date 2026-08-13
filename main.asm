@@ -2462,6 +2462,7 @@ Palette2_MTiles:
     ; Water
     .dw $01E5, $01E7, $01E6, $01E7                                          ; waves
     .dw $01E7, $01E7, $01E7, $01E7                                          ; body
+    .dw $11E5, $01E7, $11E6, $01E7                                          ; waves (PRIORITY)
     ; Lava
     .dw $11EC, $11ED, $11EE, $11EF                                          ; waves
     .dw $1176, $1176, $1176, $1176                                          ; body

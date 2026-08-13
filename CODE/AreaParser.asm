@@ -237,10 +237,6 @@ ForeSceneryData:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
     .db MT_BLANK, MT_BLANK
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_WATER_TOP;, MT_WATER 
-@OverLava:
-    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
-    .db MT_BLANK, MT_BLANK
-    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_LAVA_TOP 
 .ENDS
 
 
@@ -412,15 +408,6 @@ RendFore:
     ADD A, B
     LD HL, ForeSceneryData
     addAToHL8_M
-;
-    LD A, (OptionBitflags)          ; skip if doing NES GFX
-    AND A, bitValue(OPTFLAG_GFX)
-    JR NZ, +
-    LD A, (AreaType)                ; skip if not in castle area
-    CP A, $03
-    JR NZ, +
-    LD HL, ForeSceneryData@OverLava ; use lava foreground instead of water
-+:
 ;   Copy foreground scenery data to metatile buffer
     LD DE, MetatileBuffer
     LD B, $0C
@@ -433,6 +420,23 @@ NoFore:
     INC HL
     INC E
     DJNZ SceLoop2                   ;store up to end of metatile buffer
+    ; ADDITIONAL FOREGROUND PROCESS
+    LD A, (OptionBitflags)          ;skip if in NES GFX mode
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, RendTerr
+    LD A, (MetatileBuffer)          ;replace water waves with priority ones
+    CP A, MT_WATER_TOP              ;if doing water foreground
+    JR NZ, +
+    ADD A, $02
+    LD (MetatileBuffer), A
+    JR RendTerr
++:
+    LD A, (AreaType)                ;skip if not in castle area
+    CP A, $03
+    JR NZ, RendTerr
+    LD A, MT_LAVA_TOP               ;replace lava waves with priority ones
+    LD (MetatileBuffer + $0B), A
+
 ;   FLOOR TERRAIN
 RendTerr:
     LD A, (CurrentColumnPos)        ;set flag for castle ceiling tile

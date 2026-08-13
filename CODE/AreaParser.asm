@@ -427,7 +427,7 @@ NoFore:
     LD A, (MetatileBuffer)          ;replace water waves with priority ones
     CP A, MT_WATER_TOP              ;if doing water foreground
     JR NZ, +
-    ADD A, $02
+    LD A, MT_WATER_TOP_PRI
     LD (MetatileBuffer), A
     JR RendTerr
 +:
@@ -1904,7 +1904,13 @@ EndBridge:
 RenderBridge:
     INC B
     LD C, $00                           ;now render the bridge itself
+    
+    LD A, (OptionBitflags)              ;render bridge with priority in All-Stars GFX mode
+    AND A, bitValue(OPTFLAG_GFX)
     LD A, MT_BRIDGE
+    JP Z, RenderUnderPart
+    LD (HL), MT_RAIL_NES                ;else, render with no priority
+    LD A, MT_BRIDGE_NES
     JP RenderUnderPart
 
 ;--------------------------------

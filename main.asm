@@ -2297,9 +2297,10 @@ Palette0_MTiles:
     .dw BG_MACRO($0112), BG_MACRO($0112), BG_MACRO($0112), BG_MACRO($0112)  ; middle bottom
     ;.dw
     ; Bridge guardrail
-    .dw BLANKTILE, $015F, BLANKTILE, $015F                                  ; middle
-    .dw BLANKTILE, $015E, BLANKTILE, $015F                                  ; left
-    .dw BLANKTILE, $015F, BLANKTILE, $0160                                  ; right
+    .dw BLANKTILE, $115F, BLANKTILE, $115F                                  ; middle
+    .dw BLANKTILE, $115E, BLANKTILE, $115F                                  ; left
+    .dw BLANKTILE, $115F, BLANKTILE, $1160                                  ; right
+    .dw BLANKTILE, $015F, BLANKTILE, $0160                                  ; NES
     ; Chain
     .dw $0164, $0194, $0194, $0164 ;$00, $0194, $0194, $00
     ; Trees
@@ -2430,7 +2431,8 @@ Palette1_MTiles:
     .dw $01D8, $01D9, $01DA, $01DB                                          ; white wall (castle levels)
     .dw $11D8, $11D9, $11DA, $11DB                                          ; white wall (castle levels) PRI
     ; Bridge
-    .dw BG_MACRO($017E), BLANKTILE, BG_MACRO($017E), BLANKTILE
+    .dw BG_MACRO($117E), BLANKTILE, BG_MACRO($117E), BLANKTILE              ; PRIORITY
+    .dw BG_MACRO($017E), BLANKTILE, BG_MACRO($017E), BLANKTILE              ; NES
     ; Bullet Bill
     .dw BG_MACRO($114B), BG_MACRO($114C), BG_MACRO($115C), BG_MACRO($114D)  ; barrel
     .dw BG_MACRO($014E), BG_MACRO($014F), BG_MACRO($0150), BG_MACRO($0151)  ; top

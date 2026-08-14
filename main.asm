@@ -186,6 +186,23 @@ Start:
     LD A, $01
 +:
     LD (FMDetectedFlag), A
+;   MD CONTROLLER CHECK
+    XOR A
+    LD (MDControllerFlag), A
+    ; SET PORT 1'S TH TO HIGH OUTPUT
+    LD A, ~(bitValue(P1_TH_DIR))
+    OUT (IO_CONTROL), A
+    ; SET PORT 1'S TH TO LOW OUTPUT
+    LD A, ~(bitValue(P1_TH_LVL) | bitValue(P1_TH_DIR))
+    OUT (IO_CONTROL), A
+    ; GET INPUTS (A, START)
+    IN A, CONTROLPORT1
+    CPL
+    ; DON'T SET FLAG IF MD CONTROLLER ISN'T PLUGGED IN
+    AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
+    CP A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
+    JR NZ, ResetStart
+    LD (MDControllerFlag), A
 ResetStart:
 ;   TURN OFF SCREEN (AND DISABLE VDP INTS)
     CALL turnOffScreen
@@ -616,6 +633,10 @@ PauseBtnChk:
     XOR A
     LD (PauseButtonFlag), A
 ;   MD CONTROLLER PAUSE CHECK
+    ; EXIT IF MD CONTROLLER ISN'T CONNECTED
+    LD A, (MDControllerFlag)
+    OR A
+    RET Z
     LD HL, MDControllerBits
     ; SET PORT 1'S TH TO LOW OUTPUT
     LD A, ~(bitValue(P1_TH_LVL) | bitValue(P1_TH_DIR))
@@ -624,15 +645,14 @@ PauseBtnChk:
     IN A, CONTROLPORT1
     CPL
     LD (HL), A
-    LD C, A
-    ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN
+    ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN (MAYBE IT GOT UNPLUGGED SOMEHOW)
     AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
     CP A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
     RET NZ
-    ; DEBOUNCE INPUTS AND SET START BUTTON IF NEWLY PRESSED
+    ; GET JUST-PRESSED INPUTS AND SET START BUTTON IF NEWLY PRESSED
     LD B, (HL)
     LD A, (MDControllerBitsOld)
-    XOR A, (HL)
+    CPL
     AND A, (HL)
     LD (HL), A
     LD HL, SavedJoypad1Bits
@@ -643,12 +663,11 @@ PauseBtnChk:
     LD A, B
     LD (MDControllerBitsOld), A
     ; DO SOFT RESET IF (START + A + B + C) IS PRESSED
-    LD A, C
-    AND A, bitValue(P1_BTN_2) | bitValue(P1_BTN_1)      ; no debounce on START + A
+    AND A, bitValue(P1_BTN_2) | bitValue(P1_BTN_1)
     CP A, bitValue(P1_BTN_2) | bitValue(P1_BTN_1)
     RET NZ
     LD A, (SavedJoypad1Bits)
-    AND A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)    ; no debounce on B + C
+    AND A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
     CP A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
     RET NZ
     RST ResetVector

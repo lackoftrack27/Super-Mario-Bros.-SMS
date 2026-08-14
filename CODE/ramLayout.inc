@@ -1140,6 +1140,7 @@
 ;
     MDControllerBits:               dsb $01
     MDControllerBitsOld:            dsb $01
+    MDControllerFlag:               dsb $01
 ;
     SndTempoTimeout:                dsb $01
     SndCurrentTempo:                dsb $01

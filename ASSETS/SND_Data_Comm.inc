@@ -330,6 +330,23 @@ SFX_Cannon:
     .db nD1, $08
     smpsModSetup    $00, $01, $2E, $FF
     .db nD2, $0D
+    ; .db nD1, $01
+    ; .db nCs1
+    ; .db nC1
+    ; .db nB0
+    ; .db nBb0
+    ; .db nC0, $03  ; FREQ LIMIT
+
+    ; .db nD2, $01
+    ; .db nC2
+    ; .db nBb1
+    ; .db nGs1
+    ; .db nFs1
+    ; .db nE1
+    ; .db nD1
+    ; .db nC1
+    ; .db nBb0
+    ; .db nC0, $03  ; FREQ LIMIT
     smpsStop
 .ENDS
 
@@ -344,15 +361,115 @@ SFX_Coin:
 .SECTION "SFX Data - Fireball" FREE
 SFX_Fireball:
     smpsChanHeader  SFX_Fireball + 6,       $00, $00, $00, $00
-    .db nG1, $01, nG2, nG3, nG4
+    .db nG1, $01 ;, nG2, nG3, nG4
+
+    .db nG2
+    smpsDetune      $FF
+    .db nG3
+    smpsDetune      $00
+    .db nG4
+    smpsDetune      $FF
+    .db nG5
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Flagpole" FREE
 SFX_Flagpole:
     smpsChanHeader  SFX_Flagpole + 6,       $00, $02, $00, $00
+    ;smpsModSetup    $00, $02, $F3, $FF
+    ;.db nA1, $41
+
+    smpsDetune      $FB
+    smpsModSetup    $00, $02, $E4, $FF
+    .db nA1, $08
+    smpsNoAtk
+    smpsDetune      $F7
+    smpsModSetup    $00, $02, $EA, $FF
+    .db $08
+    smpsNoAtk
+    smpsDetune      $F5
+    smpsModSetup    $00, $02, $EF, $FF
+    .db $08
+    smpsNoAtk
+    smpsDetune      $F3
     smpsModSetup    $00, $02, $F3, $FF
-    .db nA1, $41
+    .db $08
+    smpsNoAtk
+    smpsDetune      $F1
+    smpsModSetup    $00, $02, $F6, $FF
+    .db $08
+    smpsNoAtk
+    smpsModSetup    $00, $02, $F8, $FF
+    .db $08
+    smpsNoAtk
+    smpsModSetup    $00, $02, $FA, $FF
+    .db $08
+    smpsNoAtk
+    smpsModSetup    $00, $02, $FB, $FF
+    .db $08
+    ; .db nA1, $02
+    ; smpsDetune      $fd
+    ; .db nBb1
+    ; smpsDetune      $fa
+    ; .db nB1
+    ; smpsDetune      $f7
+    ; .db nC2
+    ; smpsDetune      $f4
+    ; .db nCs2
+    ; smpsDetune      $f2
+    ; .db nD2
+    ; smpsDetune      $f0
+    ; .db nEb2
+    ; smpsDetune      $ef
+    ; .db nE2
+    ; smpsDetune      $ff
+    ; .db nFs2
+    ; smpsDetune      $fd
+    ; .db nG2
+    ; smpsDetune      $fb
+    ; .db nGs2
+    ; smpsDetune      $f9
+    ; .db nA2
+    ; smpsDetune      $f7
+    ; .db nBb2
+    ; smpsDetune      $f6
+    ; .db nB2
+    ; smpsDetune      $00
+    ; .db nCs3
+    ; smpsDetune      $ff
+    ; .db nD3
+    ; smpsDetune      $fd
+    ; .db nEb3
+    ; smpsDetune      $fb
+    ; .db nE3
+    ; smpsDetune      $fa
+    ; .db nF3
+    ; smpsDetune      $f9
+    ; .db nFs3
+    ; smpsDetune      $00
+    ; .db nGs3
+    ; smpsDetune      $ff
+    ; .db nA3
+    ; smpsDetune      $fe
+    ; .db nBb3
+    ; smpsDetune      $fd
+    ; .db nB3
+    ; smpsDetune      $fc
+    ; .db nC4
+    ; smpsDetune      $fb
+    ; .db nCs4
+    ; smpsDetune      $00
+    ; .db nEb4
+    ; smpsDetune      $ff
+    ; .db nE4
+    ; smpsDetune      $fe
+    ; .db nF4
+    ; smpsDetune      $fd
+    ; .db nFs4
+    ; smpsDetune      $fd
+    ; .db nG4
+    ; smpsDetune      $ff
+    ; .db nA4
     smpsStop
 .ENDS
 
@@ -422,11 +539,11 @@ SFX_Pause:
 SFX_Pipe:
     smpsChanHeader  SFX_Pipe + 6,           $00, $02, $00, $00
     .db nRst, $03
-    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1
-    .db nRst, $06
-    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1
-    .db nRst, $06
-    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1
+    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1, nBb0
+    .db nRst, $05
+    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1, nBb0
+    .db nRst, $05
+    .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1, nBb0
     smpsStop
 .ENDS
 

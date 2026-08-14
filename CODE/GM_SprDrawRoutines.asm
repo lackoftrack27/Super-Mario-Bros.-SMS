@@ -1168,6 +1168,7 @@ RetainerGfxHandler:
     INC A
     LD (RetainerDrawnFlag), A
 ;   CALCULATE WHERE IT SHOULD BE DRAWN
+    LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     CALL CalculateNTAddr
 ;   WRITE TILE DATA TO VRAM BUFFER
     ; RIGHT SIDE
@@ -1204,6 +1205,7 @@ JumpspringGfxHandler:
     RET Z
     LD (JumpspringAnimCtrl_Old), A
 ;   CALCULATE WHERE IT SHOULD BE DRAWN
+    LD L, <Jumpspring_FixedYPos             ;get fixed y position of jumpspring
     CALL CalculateNTAddr
 ;   WRITE TILE DATA TO VRAM_BUFFER
     ; RIGHT SIDE
@@ -1252,7 +1254,7 @@ NTObjectDrawSide:
     RET
 
 CalculateNTAddr:
-    LD L, <Enemy_Y_Position                 ;get enemy object vertical position
+    ;LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     LD A, (HL)
     SUB A, SMS_PIXELYOFFSET                 ;subtract SMS Y offset
     AND A, $F8                              ;round down to closest tile (multiple of 8)

@@ -1614,10 +1614,10 @@ RunPUSubs:
 
 ;--------------------------------
 
-; .SECTION "Jumpspring_Y_PosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
-; Jumpspring_Y_PosData:
-;     .db $08, $10, $08, $00
-; .ENDS
+.SECTION "Jumpspring_Y_PosData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8
+Jumpspring_Y_PosData:
+    .db $08, $10, $08, $00
+.ENDS
 
 JumpspringHandler:
     CALL GetEnemyOffscreenBits              ;get offscreen information
@@ -1641,6 +1641,15 @@ DownJSpr:
     SUB A, $02                              ;move player's vertical position up two pixels
 PosJSpr:
     LD (Player_Y_Position), A
+;
+    LD A, C                                 ;THIS IS [R]EDUNDANT, but done for posterity
+    LD DE, Jumpspring_Y_PosData
+    addAToDE8_M
+    LD A, (DE)
+    LD L, <Jumpspring_FixedYPos             ;[R]get permanent vertical position
+    ADD A, (HL)                             ;[R]add value using frame control as offset
+    LD L, <Enemy_Y_Position                 ;[R]store as new vertical position
+    LD (HL), A
 ;
     LD A, C                                 ;check frame control offset (second frame is $00)
     CP A, $01
@@ -1681,14 +1690,18 @@ DrawJSpr:
     LD A, (Enemy_OffscrBits)
     BIT 2, A
     CALL Z, JumpspringGfxHandler            ;draw jumpspring if right side is onscreen
+
     LD HL, (ObjectOffset)
     CALL OffscreenBoundsCheck               ;check to see if we need to kill it
+
     LD A, (JumpspringAnimCtrl)              ;if frame control at zero, don't bother
     OR A
     RET Z                                   ;trying to animate it, just leave
+    
     LD A, (JumpspringTimer)                 ;if jumpspring timer not expired yet, leave
     OR A
     RET NZ
+    
     LD A, $04                               ;otherwise initialize jumpspring timer
     LD (JumpspringTimer), A
     LD A, (JumpspringAnimCtrl)              ;increment frame control to animate jumpspring

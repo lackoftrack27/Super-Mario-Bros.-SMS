@@ -2185,7 +2185,8 @@ Jumpspring:
 
     LD A, $FF
     LD (JumpspringAnimCtrl_Old), A
-    LD (HL), $01                        ;set flag for enemy object buffer
+    
+    LD (HL), $01                        ;set flag for enemy object buffer (Enemy_Flag)
     LD L, <Enemy_ID
     LD (HL), OBJECTID_JumpspringObject  ;write jumpspring object to enemy object buffer
     CALL GetAreaObjXPosition            ;get horizontal coordinate for jumpspring

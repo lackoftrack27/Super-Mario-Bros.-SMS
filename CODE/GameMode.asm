@@ -8435,12 +8435,22 @@ BoundBoxCtrlData:
 GetFireballBoundBox:
     LD DE, Fireball_Rel_YPos                ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;get bounding box coordinates
+    LD D, H                                 ;copy object page to D for its bounding box page
     JP CheckRightScreenBBox                 ;jump to handle any offscreen coordinates
 
 GetMiscBoundBox:
     LD DE, Misc_Rel_YPos                    ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;get bounding box coordinates
-    JP CheckRightScreenBBox                 ;jump to handle any offscreen coordinates
+    LD D, H                                 ;copy object page to D for its bounding box page
+
+    LD A, H                                 ;recreate NES bug,
+    SUB A, $04                              ;BoundingBox array and SprObject_Position arrays don't have the same indices
+    LD H, A                                 ;causes MiscObj0-3 to use Block positions, and MiscObj4-8 to use MiscObj0-4's
+
+    CALL CheckRightScreenBBox               ;jump to handle any offscreen coordinates
+    LD HL, (ObjectOffset)                   ;get object offset and leave
+    RET
+
 
 SmallPlatformBoundBox:
     LD BC, $0804                            ;store two bitmasks
@@ -8460,7 +8470,6 @@ GetMaskedOffScrBits:
 ;
     LD A, (ScreenLeft_PageLoc)              ;subtract borrow from current page location
     LD E, A
-    ;LD L, <Enemy_PageLoc                    ;of left side
     DEC L                                   ;<Enemy_PageLoc
     LD A, (HL)                              ;of left side
     SBC A, E
@@ -8480,6 +8489,7 @@ CMBits:
 SetupEOffsetFBBox:
     LD DE, Enemy_Rel_YPos                   ;set offset for relative coordinates
     CALL BoundingBoxCore                    ;do a sub to get the coordinates of the bounding box
+    LD D, H                                 ;copy object page to D for its bounding box page 
     JP CheckRightScreenBBox                 ;jump to handle offscreen coordinates of bounding box
 
 LargePlatformBoundBox:
@@ -8542,6 +8552,8 @@ BoundingBoxCore:
     LD (HL), A
     RET
 
+;   H - OBJECT PAGE
+;   D - OBJECT BOUNDING BOX PAGE (ONLY DIFFERENT FOR MISC OBJECTS)
 ;   BC - SCREENLEFT_XPOS_ADJ/SCREENLEFT_PAGELOC_ADJ
 CheckRightScreenBBox:
     LD A, (ScreenLeft_X_Pos)                ;add 128 pixels to left side of screen
@@ -8560,39 +8572,39 @@ CheckRightScreenBBox:
     SBC A, C                                ;subtract from middle page location
     JR C, CheckLeftScreenBBox               ;if object is on the left side of the screen, branch
 ;
-    LD L, <BoundingBox_DR_XPos              ;check right-side edge of bounding box for offscreen
-    LD A, (HL)
+    LD E, <BoundingBox_DR_XPos              ;check right-side edge of bounding box for offscreen
+    LD A, (DE)
     OR A
     RET M                                   ;coordinates, branch if still on the screen
-    LD L, <BoundingBox_UL_XPos              ;check left-side edge of bounding box for offscreen
-    LD A, (HL)
+    LD E, <BoundingBox_UL_XPos              ;check left-side edge of bounding box for offscreen
+    LD A, (DE)
     OR A
     LD A, $FF                               ;load offscreen value here to use on one or both horizontal sides
     JP M, SORte
-    LD (HL), A                              ;store offscreen value for left side
+    LD (DE), A                              ;store offscreen value for left side
 SORte:
-    LD L, <BoundingBox_DR_XPos              ;store offscreen value for right side
-    LD (HL), A
+    LD E, <BoundingBox_DR_XPos              ;store offscreen value for right side
+    LD (DE), A
     RET
 
 CheckLeftScreenBBox:
-    LD L, <BoundingBox_UL_XPos              ;check left-side edge of bounding box for offscreen
-    LD A, (HL)
+    LD E, <BoundingBox_UL_XPos              ;check left-side edge of bounding box for offscreen
+    LD A, (DE)
     OR A
     RET P                                   ;coordinates, and branch if still on the screen
 ;
     CP A, $A0                               ;check to see if left-side edge is in the middle of the
     RET C                                   ;screen or really offscreen, and branch if still on
 ;
-    LD L, <BoundingBox_DR_XPos              ;check right-side edge of bounding box for offscreen
-    LD A, (HL)
+    LD E, <BoundingBox_DR_XPos              ;check right-side edge of bounding box for offscreen
+    LD A, (DE)
     OR A
     LD A, $00
     JP P, SOLft                             ;coordinates, branch if still onscreen
-    LD (HL), A                              ;store offscreen value for right side
+    LD (DE), A                              ;store offscreen value for right side
 SOLft:
-    LD L, <BoundingBox_UL_XPos              ;store offscreen value for left side
-    LD (HL), A
+    LD E, <BoundingBox_UL_XPos              ;store offscreen value for left side
+    LD (DE), A
     RET
 
 ;-------------------------------------------------------------------------------------

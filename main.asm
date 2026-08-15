@@ -2285,7 +2285,7 @@ LuigiName:
     .dw BG_MACRO($0115), BG_MACRO($0116), BG_MACRO($0113), BG_MACRO($0117), BG_MACRO($0113)
 .ENDS
 
-.SECTION "WarpZone Numbers Stripe Data" FREE
+.SECTION "WarpZone Numbers Stripe Data" FREE BITWINDOW 8
 WarpZoneNumbers:
 ;   warp zone numbers, note spaces on middle
 ;   zone, partly responsible for

@@ -1157,15 +1157,15 @@ LivesBCDTable:
 StatusBarData:
     .dw swapBytes(xyToNameTbl_M(16, 20))    ; top score display on title screen
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(3, 0))      ; player score
+    .dw swapBytes(xyToNameTbl_M(4, 0))      ; player score
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(3, 0))      ; 2nd player score
+    .dw swapBytes(xyToNameTbl_M(4, 0))      ; 2nd player score
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(14, 0))     ; coin tally
+    .dw swapBytes(xyToNameTbl_M(15, 0))     ; coin tally
     .db StripeCount($04), $02
-    .dw swapBytes(xyToNameTbl_M(14, 0))     ; 2nd coin tally
+    .dw swapBytes(xyToNameTbl_M(15, 0))     ; 2nd coin tally
     .db StripeCount($04), $02
-    .dw swapBytes(xyToNameTbl_M(27, 0))     ; game timer
+    .dw swapBytes(xyToNameTbl_M(26, 0))     ; game timer
     .db StripeCount($06), $03
 .ENDS
 
@@ -2178,8 +2178,8 @@ TitleScreenData_NES:
 TopStatusBarLine:
 ;   0x00 - 0x1C
     .db @end-TopStatusBarLine - 1
-    ; MARIO ICON
-    .dw swapBytes(xyToNameTbl_M(1, 0))
+    ; PLAYER ICON
+    .dw swapBytes(xyToNameTbl_M(2, 0))
     .db StripeCount($02)
     .dw BG_MACRO($090F)
     ; 'W'
@@ -2187,11 +2187,11 @@ TopStatusBarLine:
     .db StripeCount($02)
     .dw BG_MACRO($010A)
     ; CLOCK ICON
-    .dw swapBytes(xyToNameTbl_M(26, 0))
+    .dw swapBytes(xyToNameTbl_M(25, 0))
     .db StripeCount($02)
     .dw BG_MACRO($010E)
     ; '0  [COIN]x' 
-    .dw swapBytes(xyToNameTbl_M(9, 0))
+    .dw swapBytes(xyToNameTbl_M(10, 0))
     .db StripeCount($0A)
     .dw BG_MACRO($0100), BLANKTILE, BLANKTILE, BG_MACRO($090D), BG_MACRO($010C)
 @end:

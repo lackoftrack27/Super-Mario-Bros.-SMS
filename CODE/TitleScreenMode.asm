@@ -77,7 +77,7 @@ GameMenuRoutine:
     LD B, A                         ;save copy in B
     CP A, bitValue(SMS_BTN_1)       
     JP Z, @ChkContinue              ;if either start or A + start, execute here
-    CP A, bitValue(SMS_BTN_LEFT) | bitValue(SMS_BTN_1)  ;check to see if A + start was pressed [Button 1 + Left for SMS]
+    CP A, bitValue(SMS_BTN_2) | bitValue(SMS_BTN_1)  ;check to see if A + start was pressed [Button 1 + 2 for SMS]
     JP Z, @ChkContinue              ;if either start or A + start, execute here
 @ChkSelect:
     CP A, bitValue(SMS_BTN_UP)      ;check to see if the select button was pressed [Up/Down for SMS]
@@ -171,7 +171,7 @@ GameMenuRoutine:
     OR A
     JR Z, @ResetTitle
     LD A, B
-    BIT SMS_BTN_LEFT, A             ;check to see if A button was also pushed
+    BIT SMS_BTN_2, A                ;check to see if button 2 was also pushed
     JR Z, @StartWorld1              ;if not, don't load continue function's world number
     LD A, (ContinueWorld)           ;load previously saved world number for secret
     CALL @GoContinue                ;continue function when pressing A + start

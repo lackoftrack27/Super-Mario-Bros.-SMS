@@ -192,9 +192,9 @@ PlayerEndWorld:
 ;
 @EndChkBButton:
     LD A, (SavedJoypad1Bits)
-    LD HL, SavedJoypad2Bits         ;check to see if B button was pressed on
+    LD HL, SavedJoypad2Bits         ;check to see if B button (BTN 2) was pressed on
     OR A, (HL)                      ;either controller
-    AND A, bitValue(SMS_BTN_1)
+    AND A, bitValue(SMS_BTN_2)
     RET Z                           ;branch to leave if not
     LD A, $01                       ;otherwise set world selection flag
     LD (WorldSelectEnableFlag), A

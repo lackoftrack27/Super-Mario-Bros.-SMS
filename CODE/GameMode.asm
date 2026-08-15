@@ -5675,7 +5675,7 @@ JCoinRun:
 RunJCSubs:
     RelativeMiscPosition_M              ;get relative coordinates
     GetMiscOffscreenBits_M              ;get offscreen information
-    ;CALL GetMiscBoundBox
+    CALL GetMiscBoundBox                ;get bounding box coordinates (why?)
     CALL JCoinGfxHandler                ;draw the coin or floatey number
 
 MiscLoopBack:

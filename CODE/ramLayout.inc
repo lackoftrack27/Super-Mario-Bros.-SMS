@@ -547,8 +547,6 @@
     ColumnBuffer_07:                dsb $30 ; VDP ADDRESS + 23 WORDS
 .ENDS
 
-;.DEFINE Alt_SprDataOffset           Block_SprDataOffset
-
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 09" SLOT 12
     .                               dsb $14 ; UNUSED
@@ -845,7 +843,7 @@
     .                               dsb $03 ; UNUSED
     ; $2D
     Misc_SprDataOffset_06:          dsb $01 ; [$17] *
-    ;
+    ; $2E
     VRAM_Buffer2_Ptr:               dsb $02
     VRAM_Buffer2:                   dsb $C1 ; (23 * 2) * 4 + 3 == $BB
     ; (VDP ADDRESS + 23 WORDS) * 4 + TERMINATOR
@@ -870,9 +868,48 @@
     .                               dsb $03 ; UNUSED
     ; $2D
     Misc_SprDataOffset_07:          dsb $01 ; [$17] *
-    ; $2E
-    ;MetaTileBuffer_EXOffset:        dsb $01
-    ;MetaTileBuffer_EX:              dsb $60 ; $0C * $08
+.ENDS
+
+;-------------------------------------------------------------------------------------
+.RAMSECTION "RAM Page 17" SLOT 26
+    .                               dsb $1C ; UNUSED
+    ; $1C
+    .                               dsb $01 ; UNUSED
+    Bubble_PageLoc_01:              dsb $01
+    Bubble_X_Position_01:           dsb $01
+    .                               dsb $01 ; UNUSED
+    Bubble_Y_Position_01:           dsb $01
+    Bubble_Y_HighPos_01:            dsb $01
+    .                               dsb $01 ; UNUSED
+    Bubble_YMF_Dummy_01:            dsb $01
+    .                               dsb $01 ; UNUSED
+    .                               dsb $01 ; UNUSED
+    .                               dsb $04 ; UNUSED
+    ; $2A
+    .                               dsb $03 ; UNUSED
+    ; $2D
+    Misc_SprDataOffset_08:          dsb $01 ; [$17] *
+.ENDS
+
+;-------------------------------------------------------------------------------------
+.RAMSECTION "RAM Page 18" SLOT 27
+    .                               dsb $1C ; UNUSED
+    ; $1C
+    .                               dsb $01 ; UNUSED
+    Bubble_PageLoc_02:              dsb $01
+    Bubble_X_Position_02:           dsb $01
+    .                               dsb $01 ; UNUSED
+    Bubble_Y_Position_02:           dsb $01
+    Bubble_Y_HighPos_02:            dsb $01
+    .                               dsb $01 ; UNUSED
+    Bubble_YMF_Dummy_02:            dsb $01
+    .                               dsb $01 ; UNUSED
+    .                               dsb $01 ; UNUSED
+    .                               dsb $04 ; UNUSED
+    ; $2A
+    .                               dsb $03 ; UNUSED
+    ; $2D
+    .                               dsb $01 ; UNUSED
 .ENDS
 
 ;   --- END OF 2D ARRAY MEM LAYOUT ---
@@ -901,8 +938,7 @@
 ;-------------------------------------------------------------------------------------
 .RAMSECTION "RAM Page 1D" SLOT 32
     Sprite_Y_Position:              dsb $40
-    ;VRAM_Buffer2:                   dsb $40 ;only uses $30 bytes (23 * 2) + 2
-    .                               dsb $40
+    .                               dsb $40 ;UNUSED
     Sprite_X_Position:              dsb $80 ;actually holds X Pos & Tile ID
 .ENDS
 

@@ -2738,16 +2738,14 @@ GetAreaDataAddrs:
     RET
 
 
-.SECTION "World Offsets into AreaAddrOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+.SECTION "Area and Enemy Offsets & Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   ----- GAME LEVEL POINTERS -----
 WorldAddrOffsets:
     .dw World1Areas, World2Areas
     .dw World3Areas, World4Areas
     .dw World5Areas, World6Areas
     .dw World7Areas, World8Areas
-.ENDS
 
-.SECTION "Level Offsets into Area/Enemy DataAddr and HOffsets" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaAddrOffsets:
 ;   D6,D5 ARE AREA TYPE
 ;   D4,D3,D2,D1,D0 ARE INDEX OF AREATYPE LIST
@@ -2759,7 +2757,6 @@ World5Areas: .db $2a, $31, $26, $62
 World6Areas: .db $2e, $23, $2d, $60
 World7Areas: .db $33, $29, $01, $27, $64
 World8Areas: .db $30, $32, $21, $65
-.ENDS
 
 ;bonus area data offsets, included here for comparison purposes
 ;underground bonus area  - c2
@@ -2769,13 +2766,10 @@ World8Areas: .db $30, $32, $21, $65
 ;water area (8-4)        - 02
 ;warp zone area (4-2)    - 2f
 
-.SECTION "AreaType Offsets into EnemyDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   STARTING INDEXES OF AREATYPES (WATER, OVERWORLD, UNDERGROUND, CASTLE)
 EnemyAddrHOffsets:
     .db $1f, $06, $1c, $00
-.ENDS
 
-.SECTION "Enemy Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 EnemyDataAddr:
     .dw E_CastleArea1, E_CastleArea2, E_CastleArea3, E_CastleArea4, E_CastleArea5, E_CastleArea6
     .dw E_GroundArea1, E_GroundArea2, E_GroundArea3, E_GroundArea4, E_GroundArea5, E_GroundArea6
@@ -2783,15 +2777,11 @@ EnemyDataAddr:
     .dw E_GroundArea13, E_GroundArea14, E_GroundArea15, E_GroundArea16, E_GroundArea17, E_GroundArea18
     .dw E_GroundArea19, E_GroundArea20, E_GroundArea21, E_GroundArea22, E_UndergroundArea1
     .dw E_UndergroundArea2, E_UndergroundArea3, E_WaterArea1, E_WaterArea2, E_WaterArea3
-.ENDS
 
-.SECTION "AreaType Offsets into AreaDataAddr" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   STARTING INDEXES OF AREATYPES (WATER, OVERWORLD, UNDERGROUND, CASTLE)
 AreaDataHOffsets:
     .db $00, $03, $19, $1c
-.ENDS
 
-.SECTION "Area Data Pointers" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 AreaDataAddr:
     .dw L_WaterArea1, L_WaterArea2, L_WaterArea3, L_GroundArea1, L_GroundArea2, L_GroundArea3
     .dw L_GroundArea4, L_GroundArea5, L_GroundArea6, L_GroundArea7, L_GroundArea8, L_GroundArea9

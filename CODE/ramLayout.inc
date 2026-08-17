@@ -1200,5 +1200,4 @@
     BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
 ;
     EnemyGFXBank:                   dsb $01
-    W8CastleLastRoomFlag:           dsb $01
 .ENDS

@@ -577,7 +577,6 @@ LoadLevelTileData:
     ; CLEAR GRASS FLAG (BGTileQueue2 will do 4 tiles)
     XOR A
     LD (BGTileQueue2GrassFlag), A
-    LD (W8CastleLastRoomFlag), A        ;also reset enemy GFX related flag
     ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -688,9 +687,6 @@ WaterAreaSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
-    ; SET ENEMY GFX RELATED FLAG (NEXT ROOM WILL BE FINAL)
-    LD A, $01
-    LD (W8CastleLastRoomFlag), A
     JP TileLoadDone
 OverWorldSetup:
     LD A, (OptionBitflags)
@@ -799,10 +795,13 @@ TileLoadDone:
 
 LoadEnemySprites: 
     LD BC, EnemyVRAMLayout00        ;skip area lookup if in final room in W8-4
-    LD A, (W8CastleLastRoomFlag)
-    OR A
-    JR NZ, @SkipAreaLookup
-;
+    LD A, (AreaPointer)
+    CP A, $65
+    JR NZ, +
+    LD A, (CurrentPageLoc)
+    CP A, $10
+    JR NC, @SkipAreaLookup
++:
     LD A, (AreaPointer)             ;use 2 MSB for Y
     CALL GetAreaType
     LD B, A

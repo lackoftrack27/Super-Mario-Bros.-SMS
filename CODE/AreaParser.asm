@@ -2599,6 +2599,7 @@ GetAreaDataAddrs:
     addAToHL8_M
     LD A, (AreaAddrsLOffset)        ;load base value with 2 altered MSB,
     ADD A, (HL)                     ;then add base value to 5 LSB, result becomes offset for level data
+    LD (EnemyVRAMMapOffset), A      ;save to use later when loading enemy VRAM map
     ADD A, A
     LD HL, EnemyDataAddr            ;use offset to load pointer
     addAToHL8_M

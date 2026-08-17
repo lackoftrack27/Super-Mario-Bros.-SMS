@@ -1200,4 +1200,5 @@
     BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
 ;
     EnemyGFXBank:                   dsb $01
+    EnemyVRAMMapOffset:             dsb $01
 .ENDS

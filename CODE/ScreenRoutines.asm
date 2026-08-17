@@ -802,16 +802,7 @@ LoadEnemySprites:
     CP A, $10
     JR NC, @SkipAreaLookup
 +:
-    LD A, (AreaPointer)             ;use 2 MSB for Y
-    CALL GetAreaType
-    LD B, A
-    LD A, (AreaPointer)             ;mask out all but 5 LSB
-    AND A, %00011111
-    LD A, B                         ;use area type as offset
-    LD HL, EnemyAddrHOffsets
-    addAToHL8_M
-    LD A, (AreaAddrsLOffset)        ;load base value with 2 altered MSB,
-    ADD A, (HL)                     ;then add base value to 5 LSB, result becomes offset for level data
+    LD A, (EnemyVRAMMapOffset)
     LD BC, EnemyVRAMMaps
     addAToBC8_M
     LD A, (BC)

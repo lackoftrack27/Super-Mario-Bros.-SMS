@@ -566,7 +566,6 @@ IncModeTask_B:
 ;-------------------------------------------------------------------------------------
 
 LoadLevelTileData:
-;
     LD A, (TitleLoadedFlag)             ;don't bother loading tile data
     OR A                                ;if after initial load on title screen
     RET NZ
@@ -578,6 +577,7 @@ LoadLevelTileData:
     ; CLEAR GRASS FLAG (BGTileQueue2 will do 4 tiles)
     XOR A
     LD (BGTileQueue2GrassFlag), A
+    LD (W8CastleLastRoomFlag), A        ;also reset enemy GFX related flag
     ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -629,16 +629,6 @@ CastleSetup:
     LD (BGTileQueue2GrassFlag), A
     ; UNIQUE TILES FOR CASTLE AREA
     LD A, ASSET_BGCASTLE
-    CALL AssetLoader
-    LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
-    ; PODOBOO & FLAME SPRITE
-    LD A, ASSET_SPRPODOBOO
-    CALL AssetLoader
-    LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
-    ; BOWSER SPRITES
-    LD A, ASSET_SPRBOWSER
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
@@ -698,6 +688,9 @@ WaterAreaSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
+    ; SET ENEMY GFX RELATED FLAG (NEXT ROOM WILL BE FINAL)
+    LD A, $01
+    LD (W8CastleLastRoomFlag), A
     JP TileLoadDone
 OverWorldSetup:
     LD A, (OptionBitflags)
@@ -802,38 +795,276 @@ TileLoadDone:
     EI
     RET
 
+;-------------------------------------------------------------------------------------
 
-LoadEnemySprites:
-;   LOAD BASE ENEMY SPRITE SHEET
-    LD A, ASSET_SPRENEMY
-    CALL AssetLoader
+LoadEnemySprites: 
+    LD BC, EnemyVRAMLayout00        ;skip area lookup if in final room in W8-4
+    LD A, (W8CastleLastRoomFlag)
+    OR A
+    JR NZ, @SkipAreaLookup
+;
+    LD A, (AreaPointer)             ;use 2 MSB for Y
+    CALL GetAreaType
+    LD B, A
+    LD A, (AreaPointer)             ;mask out all but 5 LSB
+    AND A, %00011111
+    LD A, B                         ;use area type as offset
+    LD HL, EnemyAddrHOffsets
+    addAToHL8_M
+    LD A, (AreaAddrsLOffset)        ;load base value with 2 altered MSB,
+    ADD A, (HL)                     ;then add base value to 5 LSB, result becomes offset for level data
+    LD BC, EnemyVRAMMaps
+    addAToBC8_M
+    LD A, (BC)
+    LD C, A
+@SkipAreaLookup:
+    LD A, (BC)                      ;1st value: table bank
+    LD (EnemyGFXBank), A
+    INC C
+@ProcessLayout:
+    LD HL, EnemyAssetTable          ;use either SMS or NES GFX Table
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR Z, +
+    LD L, <EnemyAssetTable@NES
++:
+    LD A, (BC)                      ;get VRAMID
+    LD E, A                         ;multiply by 3
+    ADD A, A
+    ADD A, E
+    addAToHL8_M                     ;use as offset into asset table
+    LD A, (HL)                      ;1st value, bank for asset
     LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
-;   LOAD LAKITU ON CERTAIN LEVELS (4-1,6-1,8-2)
-    LD A, (WorldNumber)
-    LD H, A
-    LD A, (LevelNumber)
+    INC L                           ;dereference asset ptr
+    LD A, (HL)
+    INC L
+    LD H, (HL)
     LD L, A
+    INC C                           ;get VRAM address
+    LD A, (BC)
+    LD E, A
+    INC C
+    LD A, (BC)
+    LD D, A
+    PUSH BC                         ;save VRAMLayout_XX ptr
+    CALL zx7_decompressVRAM         ;decompress asset into VRAM
+    POP BC                          ;restore VRAMLayout_XX ptr
+    INC C                           ;check next VRAMID
+    LD A, (BC)
     OR A
-    LD DE, $0300
-    SBC HL, DE
-    JR Z, LoadLakitu
-    ADD HL, DE
-    OR A
-    LD DE, $0500
-    SBC HL, DE
-    JR Z, LoadLakitu
-    ADD HL, DE
-    OR A
-    LD DE, $0701
-    SBC HL, DE
-    RET NZ
-LoadLakitu:
-    LD A, ASSET_SPRLAKITU
-    CALL AssetLoader
-    LD (MAPPER_SLOT2), A
-    JP zx7_decompressVRAM
-    
+    JP P, @ProcessLayout            ;continue until terminator is hit ($FF)
+    RET
+
+.ENUMID $00
+.ENUMID VRAMID_ENEMYSET00
+.ENUMID VRAMID_ENEMYSET01
+.ENUMID VRAMID_RKOOPA
+.ENUMID VRAMID_HAMMERBRO
+.ENUMID VRAMID_BULLET
+.ENUMID VRAMID_RCHEEP
+.ENUMID VRAMID_PODOBOO
+.ENUMID VRAMID_PIRANHA
+.ENUMID VRAMID_LAKITU
+.ENUMID VRAMID_BOWSER
+.ENUMID VRAMID_ENEMYSET02
+
+.SECTION "Enemy Asset Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+EnemyAssetTable:
+    .db :Tiles_SPR_EnemySet00
+    .dw Tiles_SPR_EnemySet00; $4C
+
+    .db :Tiles_SPR_EnemySet01
+    .dw Tiles_SPR_EnemySet01; $1C
+
+    .db :Tiles_SPR_RKoopa
+    .dw Tiles_SPR_RKoopa    ; $28
+
+    .db :Tiles_SPR_HammerBro
+    .dw Tiles_SPR_HammerBro ; $22
+
+    .db :Tiles_SPR_Bullet
+    .dw Tiles_SPR_Bullet    ; $0C
+
+    .db :Tiles_SPR_RCheep
+    .dw Tiles_SPR_RCheep    ; $10
+
+    .db :Tiles_SPR_Podoboo
+    .dw Tiles_SPR_Podoboo   ; $1C
+
+    .db :Tiles_SPR_Piranha
+    .dw Tiles_SPR_Piranha   ; $0A
+
+    .db :Tiles_SPR_Lakitu
+    .dw Tiles_SPR_Lakitu    ; $2E
+
+    .db :Tiles_SPR_Bowser
+    .dw Tiles_SPR_Bowser    ; $4B
+
+    .db :Tiles_SPR_EnemySet02   ;$3E
+    .dw Tiles_SPR_EnemySet02
+@NES:
+    .db :Tiles_SPR_EnemySet00_NES
+    .dw Tiles_SPR_EnemySet00_NES
+
+    .db :Tiles_SPR_EnemySet01_NES
+    .dw Tiles_SPR_EnemySet01_NES
+
+    .db :Tiles_SPR_RKoopa_NES
+    .dw Tiles_SPR_RKoopa_NES
+
+    .db :Tiles_SPR_HammerBro_NES
+    .dw Tiles_SPR_HammerBro_NES
+
+    .db :Tiles_SPR_Bullet_NES
+    .dw Tiles_SPR_Bullet_NES
+
+    .db :Tiles_SPR_RCheep_NES
+    .dw Tiles_SPR_RCheep_NES
+
+    .db :Tiles_SPR_Podoboo_NES
+    .dw Tiles_SPR_Podoboo_NES
+
+    .db :Tiles_SPR_Piranha_NES
+    .dw Tiles_SPR_Piranha_NES
+
+    .db :Tiles_SPR_Lakitu_NES
+    .dw Tiles_SPR_Lakitu_NES
+
+    .db :Tiles_SPR_Bowser_NES
+    .dw Tiles_SPR_Bowser_NES
+
+    .db :Tiles_SPR_EnemySet02_NES
+    .dw Tiles_SPR_EnemySet02_NES
+.ENDS
+
+.SECTION "Enemy VRAM Maps" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+EnemyVRAMMaps:
+;   CASTLE
+    .db <EnemyVRAMLayout00
+    .db <EnemyVRAMLayout00
+    .db <EnemyVRAMLayout00
+    .db <EnemyVRAMLayout00
+    .db <EnemyVRAMLayout00
+    .db <EnemyVRAMLayout02
+;   GROUND
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout02
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout03
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01  ; n/a
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01  ; n/a
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout02
+    .db <EnemyVRAMLayout01  ; n/a
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout02
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01  ; n/a
+    .db <EnemyVRAMLayout01
+;   UNDERGROUND
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01
+    .db <EnemyVRAMLayout01  ; n/a
+;   WATER
+    .db <EnemyVRAMLayout03
+    .db <EnemyVRAMLayout03
+    .db <EnemyVRAMLayout03
+
+;   C_01, C_02, C_03, C_04, C_05, C_06B
+EnemyVRAMLayout00:
+    ; ASSET LIST
+    .db $00
+
+    .db VRAMID_PODOBOO      ; $52 - $6D
+    .dw $52 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_PIRANHA      ; $6E - $77
+    .dw $6E * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_ENEMYSET02   ; $78 - $B5
+    .dw $78 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_BOWSER       ; $B6 - $FA
+    .dw $B6 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db $FF
+
+;   G_01, G_02, G_04, G_05, G_06, G_07, G_09, G_11
+;   G_13, G_14, G_17, G_18, G_20, G_22, U_01, U_02
+EnemyVRAMLayout01:
+    ; ASSET LIST
+    .db $04
+
+    .db VRAMID_ENEMYSET00   ; $52 - $9D
+    .dw $52 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_PIRANHA      ; $9E - $A7
+    .dw $9E * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_BULLET       ; $A8 - $B3
+    .dw $A8 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_RKOOPA       ; $B4 - $DB
+    .dw $B4 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_HAMMERBRO    ; $DC - $FD
+    .dw $DC * SMS_TILE_SIZE | VRAMWRITE
+
+    .db $FF
+
+;   G_03, G_15, G_19, C_06A
+EnemyVRAMLayout02:
+    ; ASSET LIST
+    .db $08
+
+    .db VRAMID_ENEMYSET00   ; $52 - $9D
+    .dw $52 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_PIRANHA      ; $9E - $A7
+    .dw $9E * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_BULLET       ; $A8 - $B3
+    .dw $A8 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_RCHEEP       ; $B4 - $C3
+    .dw $B4 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_LAKITU       ; $C4 - $F1
+    .dw $C4 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db $FF
+
+;   G_08, W_01, W_02, W_03
+EnemyVRAMLayout03:
+    ; ASSET LIST
+    .db $0C
+
+    .db VRAMID_ENEMYSET00   ; $52 - $9D
+    .dw $52 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_PIRANHA      ; $9E - $A7
+    .dw $9E * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_RKOOPA       ; $A8 - $CF
+    .dw $A8 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_RCHEEP       ; $D0 - $DF
+    .dw $D0 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db VRAMID_ENEMYSET01   ; $E0 - $FB
+    .dw $E0 * SMS_TILE_SIZE | VRAMWRITE
+
+    .db $FF
+.ENDS
+
 ;-------------------------------------------------------------------------------------
 
 FadeInScreen:

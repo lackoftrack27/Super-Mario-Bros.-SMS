@@ -1564,20 +1564,8 @@ AssetLoaderTable:
     .db :Tiles_BG_WaterCastle
     .dw Tiles_BG_WaterCastle, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
-    .db :Tiles_SPR_Enemies
-    .dw Tiles_SPR_Enemies, $0820 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Lakitu
-    .dw Tiles_SPR_Lakitu, $1260 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Podoboo
-    .dw Tiles_SPR_Podoboo, $0860 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Bowser
-    .dw Tiles_SPR_Bowser, $1260 | VRAMWRITE
-    ;
     .db :Tiles_Cloud
-    .dw Tiles_Cloud, $0A40 | VRAMWRITE
+    .dw Tiles_Cloud, $0A20 | VRAMWRITE
 
 .ENDS
 
@@ -1619,18 +1607,6 @@ AssetLoaderTableNES:
     ;
     .db :Tiles_BG_WaterCastle_NES
     .dw Tiles_BG_WaterCastle_NES, $3680 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Enemies_NES
-    .dw Tiles_SPR_Enemies_NES, $0820 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Lakitu_NES
-    .dw Tiles_SPR_Lakitu_NES, $1260 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Podoboo_NES
-    .dw Tiles_SPR_Podoboo_NES, $0860 | VRAMWRITE
-    ;
-    .db :Tiles_SPR_Bowser_NES
-    .dw Tiles_SPR_Bowser_NES, $1260 | VRAMWRITE
     ;
     .db :Tiles_Cloud_NES
     .dw Tiles_Cloud_NES, $0A40 | VRAMWRITE
@@ -2679,29 +2655,65 @@ Tiles_SPR_Comm:
     .INCBIN "SPR_Comm.zx7"
 .ENDS
 
-.SECTION "Base Enemy Sprite Tiles" BANK BANK_AREAENEMY SLOT 2 FREE
+;-------
+.INCDIR "ASSETS/ENEMYGFX"
 
-Tiles_SPR_Enemies:
-    .INCBIN "SPR_Enemies.zx7"
+.SECTION "Enemy Sprite Tiles - Goomba/Beetle/GKoopa" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet00:
+    .INCBIN "SPR_EnemySet00.zx7"
 .ENDS
 
-.SECTION "Lakitu Enemy Sprite Tiles" BANK BANK_AREAENEMY SLOT 2 FREE
+.SECTION "Enemy Sprite Tiles - GCheep/Blooper" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet01:
+    .INCBIN "SPR_EnemySet01.zx7"
+.ENDS
 
+.SECTION "Enemy Sprite Tiles - Bowser" SUPERFREE SLOT 2
+Tiles_SPR_Bowser:
+    .INCBIN "SPR_Bowser.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles - Bullet" SUPERFREE SLOT 2
+Tiles_SPR_Bullet:
+    .INCBIN "SPR_Bullet.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles - HammerBro/Various Death Sprites" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet02:
+    .INCBIN "SPR_EnemySet02.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles - HammerBro" SUPERFREE SLOT 2
+Tiles_SPR_HammerBro:
+    .INCBIN "SPR_HammerBro.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles - Lakitu" SUPERFREE SLOT 2
 Tiles_SPR_Lakitu:
     .INCBIN "SPR_Lakitu.zx7"
 .ENDS
 
-.SECTION "Podoboo Enemy Sprite Tiles" BANK BANK_PLAYERGFX05 SLOT 2 FREE
+.SECTION "Enemy Sprite Tiles - Piranha" SUPERFREE SLOT 2
+Tiles_SPR_Piranha:
+    .INCBIN "SPR_Piranha.zx7"
+.ENDS
 
+.SECTION "Enemy Sprite Tiles - Podoboo" SUPERFREE SLOT 2
 Tiles_SPR_Podoboo:
     .INCBIN "SPR_Podoboo.zx7"
 .ENDS
 
-.SECTION "Bowser Enemy Sprite Tiles" BANK BANK_PLAYERGFX05 SLOT 2 FREE
-
-Tiles_SPR_Bowser:
-    .INCBIN "SPR_Bowser.zx7"
+.SECTION "Enemy Sprite Tiles - RCheep" SUPERFREE SLOT 2
+Tiles_SPR_RCheep:
+    .INCBIN "SPR_RCheep.zx7"
 .ENDS
+
+.SECTION "Enemy Sprite Tiles - RKoopa" SUPERFREE SLOT 2
+Tiles_SPR_RKoopa:
+    .INCBIN "SPR_RKoopa.zx7"
+.ENDS
+
+;-------
 
 .INCDIR "ASSETS/NES"
 ;   COMPRESSED TILE DATA (NES)
@@ -2754,29 +2766,65 @@ Tiles_SPR_Comm_NES:
     .INCBIN "SPR_Comm.zx7"
 .ENDS
 
-.SECTION "Base Enemy Sprite Tiles (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FREE
+;-------
+.INCDIR "ASSETS/NES/ENEMYGFX"
 
-Tiles_SPR_Enemies_NES:
-    .INCBIN "SPR_Enemies.zx7"
+.SECTION "Enemy Sprite Tiles (NES) - Goomba/Beetle/GKoopa" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet00_NES:
+    .INCBIN "SPR_EnemySet00.zx7"
 .ENDS
 
-.SECTION "Lakitu Enemy Sprite Tiles (NES)" BANK BANK_PLAYERGFX05 SLOT 2 FREE
+.SECTION "Enemy Sprite Tiles (NES) - GCheep/Blooper" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet01_NES:
+    .INCBIN "SPR_EnemySet01.zx7"
+.ENDS
 
+.SECTION "Enemy Sprite Tiles (NES) - Bowser" SUPERFREE SLOT 2
+Tiles_SPR_Bowser_NES:
+    .INCBIN "SPR_Bowser.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles (NES) - Bullet" SUPERFREE SLOT 2
+Tiles_SPR_Bullet_NES:
+    .INCBIN "SPR_Bullet.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles (NES) - HammerBro/Various Death Sprites" SUPERFREE SLOT 2
+Tiles_SPR_EnemySet02_NES:
+    .INCBIN "SPR_EnemySet02.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles (NES) - HammerBro" SUPERFREE SLOT 2
+Tiles_SPR_HammerBro_NES:
+    .INCBIN "SPR_HammerBro.zx7"
+.ENDS
+
+.SECTION "Enemy Sprite Tiles (NES) - Lakitu" SUPERFREE SLOT 2
 Tiles_SPR_Lakitu_NES:
     .INCBIN "SPR_Lakitu.zx7"
 .ENDS
 
-.SECTION "Podoboo Enemy Sprite Tiles (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FREE
+.SECTION "Enemy Sprite Tiles (NES) - Piranha" SUPERFREE SLOT 2
+Tiles_SPR_Piranha_NES:
+    .INCBIN "SPR_Piranha.zx7"
+.ENDS
 
+.SECTION "Enemy Sprite Tiles (NES) - Podoboo" SUPERFREE SLOT 2
 Tiles_SPR_Podoboo_NES:
     .INCBIN "SPR_Podoboo.zx7"
 .ENDS
 
-.SECTION "Bowser Enemy Sprite Tiles (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FREE
-
-Tiles_SPR_Bowser_NES:
-    .INCBIN "SPR_Bowser.zx7"
+.SECTION "Enemy Sprite Tiles (NES) - RCheep" SUPERFREE SLOT 2
+Tiles_SPR_RCheep_NES:
+    .INCBIN "SPR_RCheep.zx7"
 .ENDS
+
+.SECTION "Enemy Sprite Tiles (NES) - RKoopa" SUPERFREE SLOT 2
+Tiles_SPR_RKoopa_NES:
+    .INCBIN "SPR_RKoopa.zx7"
+.ENDS
+
+;-------
 
 .INCDIR "ASSETS"
 

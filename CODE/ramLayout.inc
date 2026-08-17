@@ -1198,4 +1198,7 @@
     BGTileQueue0                    INSTANCEOF _AnimatedBGTileQueue
     BGTileQueue1                    INSTANCEOF _AnimatedBGTileQueue
     BGTileQueue2                    INSTANCEOF _AnimatedBGTileQueue
+;
+    EnemyGFXBank:                   dsb $01
+    W8CastleLastRoomFlag:           dsb $01
 .ENDS

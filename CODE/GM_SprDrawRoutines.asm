@@ -9,6 +9,17 @@
 ;     .db $00, $30
 ; .ENDS
 
+.DEFINE VINE_TILE00 $47
+.DEFINE VINE_TILE01 $48
+.DEFINE VINE_TILE02 $49
+
+.DEFINE FLAG_TILE00 $45
+.DEFINE FLAG_TILE01 $46
+
+.DEFINE LIFT_TILE   $51
+
+.DEFINE BUBBLE_TILE $4A
+
 DrawVine:
 ;   GET OBJECT ADDRESS
     LD C, A                                 ;save offset here
@@ -52,31 +63,31 @@ DrawVine:
     LD (HL), B
     INC L
     LD E, L                                 ;copy 1st tile address in E for later
-    LD (HL), $4F
+    LD (HL), VINE_TILE00
     INC L
     LD (HL), A
     INC L
-    LD (HL), $50
+    LD (HL), VINE_TILE01
     INC L
     LD (HL), B
     INC L
-    LD (HL), $4F
+    LD (HL), VINE_TILE00
     INC L
     LD (HL), A
     INC L
-    LD (HL), $50
+    LD (HL), VINE_TILE01
     INC L
     LD (HL), B
     INC L
-    LD (HL), $4F
+    LD (HL), VINE_TILE00
     INC L
     LD (HL), A
     INC L
-    LD (HL), $50
+    LD (HL), VINE_TILE01
     LD L, E                                 ;get 1st sprite's tile address
     INC C                                   ;if offset is 0 (on first vine), make top sprite be the vine 'end' 
     JR NZ, SkpVTop                          ;else, skip
-    LD (HL), $51
+    LD (HL), VINE_TILE02
 ;   OFFSCREEN CHECK
 SkpVTop:
     DEC L                                   ;reset sprite address to be 1st YPos
@@ -118,17 +129,27 @@ NextVSp:
 
 ;        Y0,  Y1,  X0,  T0,  X1,  T1, PAD, PAD 
 HammerSpriteData:
-    .db $00, $08, $04, $CA, $00, $CB, $00, $00    ; FIRST (DOWN)
-    .db $04, $00, $00, $CC, $08, $CD, $00, $00    ; SECOND (LEFT)
-    .db $00, $08, $04, $CB, $00, $CE, $00, $00    ; THIRD (UP)
-    .db $04, $00, $00, $CD, $08, $CF, $00, $00    ; FOURTH (RIGHT)
+    .db $00, $08, $04, $4B, $00, $4C, $00, $00    ; FIRST (DOWN)
+    .db $04, $00, $00, $4D, $08, $4E, $00, $00    ; SECOND (LEFT)
+    .db $00, $08, $04, $4C, $00, $4F, $00, $00    ; THIRD (UP)
+    .db $04, $00, $00, $4E, $08, $50, $00, $00    ; FOURTH (RIGHT)
+@Castle:
+    .db $00, $08, $04, $68, $00, $69, $00, $00    ; FIRST (DOWN)
+    .db $04, $00, $00, $6A, $08, $6B, $00, $00    ; SECOND (LEFT)
+    .db $00, $08, $04, $69, $00, $6C, $00, $00    ; THIRD (UP)
+    .db $04, $00, $00, $6B, $08, $6D, $00, $00    ; FOURTH (RIGHT)
 
 ; HammerSprAttrib:
 ;     .db $03, $03, $c3, $c3
 .ENDS
 
 DrawHammer:
-    LD BC, HammerSpriteData
+    LD BC, HammerSpriteData                 ;use different set of hammmer sprites
+    LD A, (AreaType)                        ;in castle area to get around Bowser's weird palette
+    CP A, $03
+    JR NZ, +
+    LD C, <HammerSpriteData@Castle
++:
 ;   GET OBJECT'S S.A.T. ADDRESS
     LD D, H                                 ;get misc object OAM data offset
     INC D
@@ -244,16 +265,16 @@ FlagpoleGfxHandler:
     LD A, (Enemy_Rel_XPos)          ;get relative horizontal coordinate
     LD (HL), A                      ;store as X coordinate for first sprite
     INC L
-    LD (HL), $4E                    ;put triangle shaped tile into first
+    LD (HL), FLAG_TILE01            ;put triangle shaped tile into first
     ADD A, $08                      ;add eight pixels and store
     INC L
     LD (HL), A                      ;as X coordinate for second sprite
     INC L
-    LD (HL), $4D                    ;put skull tile into second sprite
+    LD (HL), FLAG_TILE00            ;put skull tile into second sprite
     INC L
     LD (HL), A                      ;as X coordinate for third sprite
     INC L
-    LD (HL), $4E                    ;put triangle shaped tile into third
+    LD (HL), FLAG_TILE01            ;put triangle shaped tile into third
     EX DE, HL
 ;
     LD E, (HL)                      ;get sprite data offset for flagpole flag
@@ -303,7 +324,7 @@ DrawLargePlatform:
     SLA E
     SET 7, E
     ;
-    LD B, $52                       ;cloud and lift share the same tile index
+    LD B, LIFT_TILE                 ;cloud and lift share the same tile index
     LD A, (Enemy_Rel_XPos)          ;write Xpos and tile for all 6 sprites...
     EX DE, HL
     LD (HL), A
@@ -543,188 +564,654 @@ DrawPowerUp:
 ;$ed($0A, IYL) - used to hold enemy state from buffer 
 ;$ef($0B, IYH) - used to hold enemy code used in gfx handler (may or may not resemble Enemy_ID values)
 
-.SECTION "EnemyGraphicsTable" BANK BANK_SLOT2 SLOT 2 ALIGN $100 RETURNORG
+.SECTION "EnemyGraphicsTable" BANK BANK_ENEMYTBL SLOT 2 FORCE ORG $0000
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
-EnemyGraphicsTable:
-    .db $00, $00, $EC, $ED, $EE, $EF  ;buzzy beetle frame 1
-    .db $00, $00, $F0, $F1, $F2, $F3  ;             frame 2
-    ; ---
-    .db $00, $5B, $5C, $5D, $5E, $5F  ;koopa troopa frame 1
-    .db $00, $60, $61, $62, $63, $64  ;             frame 2
-    ; ---
-    .db $65, $5B, $66, $5D, $5E, $5F  ;koopa paratroopa frame 1
-    .db $67, $60, $68, $62, $63, $64  ;                 frame 2
-    ; ---
-    .db $00, $00, $A3, $A4, $A5, $A6  ;spiny frame 1
-    .db $00, $00, $A7, $A8, $A9, $AA  ;      frame 2
-    ; ---
-    .db $00, $00, $9B, $9C, $9D, $9E  ;spiny's egg frame 1  [X, $30]
-    .db $00, $00, $9F, $A0, $A1, $A2  ;            frame 2  [X]
-    ; ---
-    .db $00, $00, $9F, $A0, $A1, $A2  ;bloober frame 1
-    .db $9F, $A0, $A3, $A4, $A5, $A6  ;        frame 2
-    ; ---
-    .db $00, $00, $93, $94, $95, $96  ;cheep-cheep frame 1
-    .db $00, $00, $97, $94, $98, $96  ;cheep-cheep frame 2
-    ; ---
-    .db $00, $00, $53, $54, $55, $56  ;goomba
-    ; ---
-    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (upside-down)
-    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
-    ; ---
-    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (rightsideup)
-    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
-    ; ---
-    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
-    ; ---
-    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
-    ; ---
-    .db $00, $00, $00, $00, $57, $58  ;defeated goomba      [X, $8A]
-    ; ---
-    .db $93, $94, $95, $96, $97, $98  ;lakitu frame 1
-    .db $00, $00, $99, $9A, $97, $98  ;       frame 2
-    ; ---
-    .db $00, $00, $87, $88, $89, $8A  ;cheep-cheep frame 1 (red)
-    .db $00, $00, $8B, $88, $8C, $8A  ;            frame 2 (red)
-    ; ---
-    .db $D0, $D1, $D2, $D3, $D4, $D5  ;hammer bro frame 1
-    .db $D0, $D1, $D6, $D7, $D8, $D9  ;           frame 2
-    .db $DA, $DB, $DC, $DD, $D4, $D5  ;           frame 3
-    .db $DA, $DB, $DC, $DD, $D8, $D9  ;           frame 4
-    ; ---
-    .db $7D, $7E, $7F, $80, $81, $82  ;piranha plant frame 1
-    .db $83, $84, $85, $86, $81, $82  ;              frame 2
-    ; ---
-    .db $00, $41, $A8, $A9, $AA, $AB  ;koopa troopa frame 1 (red) ($CC)
-    .db $00, $42, $AC, $AD, $AE, $AF  ;             frame 2 (red)
-    ; ---
-    .db $43, $41, $B0, $A9, $AA, $AB  ;koopa paratroopa frame 1 (red) ($D8)
-    .db $44, $42, $B1, $AD, $AE, $AF  ;                 frame 2 (red)
-    ; ---
-    .db $00, $00, $C2, $C3, $C4, $C5  ;bullet bill
-    ; ---
-    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (upside-down) (red) ($EA)
-    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
-    ; ---
-    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (rightsideup) ($F6)
-    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
+EnemyGraphicsTable_Arr0:
+@Beetle:
+    .db $00, $00, $00, $00, $00, $00  ;buzzy beetle frame 1     [$0000]
+    .db $00, $00, $00, $00, $00, $00  ;             frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@GKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa troopa frame 1     [$0018]
+    .db $00, $00, $00, $00, $00, $00  ;             frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@GPKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa paratroopa frame 1 [$0030]
+    .db $00, $00, $00, $00, $00, $00  ;                 frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $A8, $A9, $AA, $AB  ;spiny death frame
+@Spiny:
+    .db $00, $00, $A8, $A9, $AA, $AB  ;spiny frame 1            [$004E]
+    .db $00, $00, $00, $00, $00, $00  ;      frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@SpinyEgg:
+    .db $00, $00, $00, $00, $00, $00  ;spiny's egg frame 1      [$0066]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $9A, $9B, $9C, $9D  ;blooper death frame
+@Blooper:
+    .db $00, $00, $9A, $9B, $9C, $9D  ;bloober frame 1          [$0084]
+    .db $00, $00, $00, $00, $00, $00  ;        frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@GCheep:
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 1      [$00A2]
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@RCheep:
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 1 (red)[$00C0]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $9E, $9F, $A0, $A1  ;goomba death frame
+@Goomba:
+    .db $00, $00, $9E, $9F, $A0, $A1  ;goomba                   [$00DE]
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+
+    .db $00, $00, $AC, $AD, $AE, $AF  ;death frame
+@GKoopaUSD:
+    .db $00, $00, $AC, $AD, $AE, $AF  ;koopa shell frame 1 (upside-down) [$00F6]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2
+    .db $00, $00, $AC, $AD, $AE, $AF  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $AC, $AD, $AE, $AF  ;death frame
+@GKoopaRSU:
+    .db $00, $00, $AC, $AD, $AE, $AF  ;koopa shell frame 1 (rightsideup) [$0114]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2
+    .db $00, $00, $AC, $AD, $AE, $AF  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $B0, $B1, $B2, $B3  ;death frame
+@BeetleRSU:
+    .db $00, $00, $B0, $B1, $B2, $B3 ;buzzy beetle shell frame 1 (rightsideup) [$0132]
+    .db $00, $00, $00, $00, $00, $00  ;                   frame 2
+    .db $00, $00, $B0, $B1, $B2, $B3  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $B0, $B1, $B2, $B3  ;death frame
+@BeetleUSD:
+    .db $00, $00, $B0, $B1, $B2, $B3  ;buzzy beetle shell frame 1 (upside-down) [$0150]
+    .db $00, $00, $00, $00, $00, $00  ;                   frame 2
+    .db $00, $00, $B0, $B1, $B2, $B3  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@GoombaDefeat:
+    .db $00, $00, $00, $00, $00, $00  ;defeated goomba          [$0168]
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+
+    .db $A2, $A3, $A4, $A5, $A6, $A7  ;lakitu death frame
+@Lakitu:
+    .db $A2, $A3, $A4, $A5, $A6, $A7  ;lakitu frame 1           [$0180]
+@LakituAlt:
+    .db $00, $00, $00, $00, $00, $00  ;       frame 2           [$0186]
+    .db $A2, $A3, $A4, $A5, $A6, $A7  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $94, $95, $96, $97, $98, $99  ;hammer bro death frame
+@HammerBro:
+    .db $78, $79, $7A, $7B, $7C, $7D  ;hammer bro frame 1       [$019E]
+    .db $78, $79, $7E, $7F, $80, $81  ;           frame 2
+    .db $86, $87, $88, $89, $8A, $8B  ;frame 1 Hflip
+    .db $86, $87, $8C, $8D, $8E, $8F  ;frame 2 Hflip
+
+    .db $94, $95, $96, $97, $98, $99  ;hammer bro death frame
+@HammerBro_Alt:
+    .db $82, $83, $84, $85, $7C, $7D  ;           frame 3       [$01BC]
+    .db $82, $83, $84, $85, $80, $81  ;           frame 4
+    .db $90, $91, $92, $93, $8A, $8B  ;frame 3 Hflip
+    .db $90, $91, $92, $93, $8E, $8F  ;frame 4 Hflip
+
+@Piranha:
+    .db $6E, $6F, $70, $71, $72, $73  ;piranha plant frame 1    [$01D4]
+    .db $74, $75, $76, $77, $72, $73  ;              frame 2
+    .db $6E, $6F, $70, $71, $72, $73  ;frame 1 Hflip
+    .db $74, $75, $76, $77, $72, $73  ;frame 2 Hflip
+
+@RKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa troopa frame 1 (red)[$01EC]
+    .db $00, $00, $00, $00, $00, $00  ;             frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@RPKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa paratroopa frame 1 (red) [$0204]
+    .db $00, $00, $00, $00, $00, $00  ;                 frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@Bullet:
+    .db $00, $00, $00, $00, $00, $00  ;bullet bill              [$021C]
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@RKoopaUSD:
+    .db $00, $00, $00, $00, $00, $00  ;koopa shell frame 1 (upside-down) (red) [$0234]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@RKoopaRSU:
+    .db $00, $00, $00, $00, $00, $00  ;koopa shell frame 1 (rightsideup) [$0252]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
 .ENDS
 
-.SECTION "EnemyGraphicsTable_HFlip" BANK BANK_SLOT2 SLOT 2 ALIGN $100 RETURNORG
+;---------------------------------
+
+.SECTION "EnemyGraphicsTable_01" BANK BANK_ENEMYTBL SLOT 2 FORCE ORG $0400
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
-EnemyGraphicsTable_HFlip:
-    .db $00, $00, $F8, $F9, $FA, $FB  ;buzzy beetle frame 1
-    .db $00, $00, $FC, $FD, $FE, $FF  ;             frame 2
-    ; ---
-    .db $6F, $00, $70, $71, $72, $73  ;koopa troopa frame 1
-    .db $74, $00, $75, $76, $77, $78  ;             frame 2
-    ; ---
-    .db $6F, $79, $70, $7A, $72, $73  ;koopa paratroopa frame 1
-    .db $74, $7B, $75, $7C, $77, $78  ;                 frame 2
-    ; ---
-    .db $00, $00, $AF, $B0, $B1, $B2  ;spiny frame 1
-    .db $00, $00, $B3, $B4, $B5, $B6  ;      frame 2
-    ; ---
-    .db $00, $00, $9B, $9C, $9D, $9E  ;spiny's egg frame 1  [X, $30]
-    .db $00, $00, $9F, $A0, $A1, $A2  ;            frame 2  [X]
-    ; ---
-    .db $00, $00, $9F, $A0, $A1, $A2  ;bloober frame 1
-    .db $9F, $A0, $A3, $A4, $A5, $A6  ;        frame 2
-    ; ---
-    .db $00, $00, $99, $9A, $9B, $9C  ;cheep-cheep frame 1
-    .db $00, $00, $99, $9D, $9B, $9E  ;cheep-cheep frame 2
-    ; ---
-    .db $00, $00, $53, $54, $59, $5A  ;goomba
-    ; ---
-    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (upside-down)
-    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
-    ; ---
-    .db $00, $00, $69, $6A, $6B, $6C  ;koopa shell frame 1 (rightsideup)
-    .db $00, $00, $69, $6A, $6D, $6E  ;            frame 2
-    ; ---
-    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (rightsideup)
-    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
-    ; ---
-    .db $00, $00, $F4, $F5, $F6, $F7  ;buzzy beetle shell frame 1 (upside-down)
-    .db $00, $00, $F4, $F5, $F6, $F7  ;                   frame 2
-    ; ---
-    .db $00, $00, $00, $00, $57, $58  ;defeated goomba       [X, $8A]
-    ; ---
-    .db $AB, $AC, $AD, $AE, $97, $98  ;lakitu frame 1
-    .db $00, $00, $99, $9A, $97, $98  ;       frame 2
-    ; ---
-    .db $00, $00, $8D, $8E, $8F, $90  ;cheep-cheep frame 1 (red)
-    .db $00, $00, $8D, $91, $8F, $92  ;            frame 2 (red)
-    ; ---
-    .db $DE, $DF, $E0, $E1, $E2, $E3  ;hammer bro frame 1
-    .db $DE, $DF, $E4, $E5, $E6, $E7  ;           frame 2
-    .db $E8, $E9, $EA, $EB, $E2, $E3  ;           frame 3
-    .db $E8, $E9, $EA, $EB, $E6, $E7  ;           frame 4
-    ; ---
-    .db $7D, $7E, $7F, $80, $81, $82  ;piranha plant frame 1
-    .db $83, $84, $85, $86, $81, $82  ;              frame 2
-    ; ---
-    .db $45, $00, $B8, $B9, $BA, $BB  ;koopa troopa frame 1 (red)
-    .db $46, $00, $BC, $BD, $BE, $BF  ;             frame 2 (red)
-    ; ---
-    .db $45, $47, $B8, $C0, $BA, $BB  ;koopa paratroopa frame 1 (red)
-    .db $46, $48, $BC, $C1, $BE, $BF  ;                 frame 2 (red)
-    ; ---
-    .db $00, $00, $C6, $C7, $C8, $C9  ;bullet bill
-    ; ---
-    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (upside-down) (red) ($EA)
-    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
-    ; ---
-    .db $00, $00, $B2, $B3, $B4, $B5  ;koopa shell frame 1 (rightsideup) ($F6)
-    .db $00, $00, $B2, $B3, $B6, $B7  ;            frame 2 (red)
+EnemyGraphicsTable_Arr1:
+@Beetle:
+    .db $00, $00, $5E, $5F, $60, $61  ;buzzy beetle frame 1
+    .db $00, $00, $62, $63, $64, $65  ;             frame 2
+    .db $00, $00, $66, $67, $68, $69  ;frame 1 Hflip
+    .db $00, $00, $6A, $6B, $6C, $6D  ;frame 2 Hflip
+
+@GKoopa:
+    .db $00, $76, $77, $78, $79, $7A  ;koopa troopa frame 1
+    .db $00, $7B, $7C, $7D, $7E, $7F  ;             frame 2
+    .db $84, $00, $85, $86, $87, $88  ;frame 1 Hflip
+    .db $89, $00, $8A, $8B, $8C, $8D  ;frame 2 Hflip
+
+@GPKoopa:
+    .db $80, $76, $81, $78, $79, $7A  ;koopa paratroopa frame 1
+    .db $82, $7B, $83, $7D, $7E, $7F  ;                 frame 2
+    .db $84, $8E, $85, $8F, $87, $88  ;frame 1 Hflip
+    .db $89, $90, $8A, $91, $8C, $8D  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@Spiny:
+    .db $00, $00, $00, $00, $00, $00  ;spiny frame 1
+    .db $00, $00, $00, $00, $00, $00  ;      frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@SpinyEgg:
+    .db $00, $00, $00, $00, $00, $00  ;spiny's egg frame 1  [X, $30]
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2  [X]
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@Blooper:
+    .db $00, $00, $00, $00, $00, $00  ;bloober frame 1
+    .db $00, $00, $00, $00, $00, $00  ;        frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@GCheep:
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 1
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@RCheep:
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 1 (red)
+    .db $00, $00, $00, $00, $00, $00  ;            frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $5A, $5B, $5C, $5D  ;death frame
+@Goomba:
+    .db $00, $00, $52, $53, $54, $55  ;goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $52, $53, $56, $57  ;frame 1 Hflip
+
+    .db $00, $00, $92, $93, $94, $95  ;death frame (USD)
+@GKoopaUSD:
+    .db $00, $00, $98, $99, $9A, $9B  ;koopa shell frame 1 (upside-down)
+    .db $00, $00, $9C, $9D, $9A, $9B  ;            frame 2
+    .db $00, $00, $98, $99, $9A, $9B  ;frame 1 Hflip
+    .db $00, $00, $9C, $9D, $9A, $9B  ;frame 2 Hflip
+
+    .db $00, $00, $98, $99, $9A, $9B  ;death frame
+@GKoopaRSU:
+    .db $00, $00, $92, $93, $94, $95  ;shell frame 1 (upside-down)
+    .db $00, $00, $92, $93, $96, $97  ;      frame 2
+    .db $00, $00, $92, $93, $94, $95  ;frame 1 Hflip
+    .db $00, $00, $92, $93, $96, $97  ;frame 2 Hflip
+
+    .db $00, $00, $72, $73, $74, $75  ;death frame
+@BeetleRSU:
+    .db $00, $00, $6E, $6F, $70, $71  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $6E, $6F, $70, $71  ;                   frame 2
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 1 Hflip
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 2 Hflip
+
+    .db $00, $00, $6E, $6F, $70, $71  ;death frame
+@BeetleUSD:
+    .db $00, $00, $72, $73, $74, $75  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $72, $73, $74, $75  ;                   frame 2
+    .db $00, $00, $72, $73, $74, $75  ;frame 1 Hflip
+    .db $00, $00, $72, $73, $74, $75  ;frame 2 Hflip
+
+@GoombaDefeat:
+    .db $00, $00, $00, $00, $58, $59  ;defeated goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $58, $59  ;frame 1 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@Lakitu:
+    .db $00, $00, $00, $00, $00, $00  ;lakitu frame 1
+@LakituAlt:
+    .db $00, $00, $00, $00, $00, $00  ;       frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $F8, $F9, $FA, $FB, $FC, $FD  ;death frame
+@HammerBro:
+    .db $DC, $DD, $DE, $DF, $E0, $E1  ;hammer bro frame 1
+    .db $DC, $DD, $E2, $E3, $E4, $E5  ;           frame 2
+    .db $EA, $EB, $EC, $ED, $EE, $EF  ;frame 1 Hflip
+    .db $EA, $EB, $F0, $F1, $F2, $F3  ;frame 2 Hflip
+
+    .db $F8, $F9, $FA, $FB, $FC, $FD  ;death frame
+@HammerBro_Alt:
+    .db $E6, $E7, $E8, $E9, $E0, $E1  ;           frame 3
+    .db $E6, $E7, $E8, $E9, $E4, $E5  ;           frame 4
+    .db $F4, $F5, $F6, $F7, $EE, $EF  ;frame 3 Hflip
+    .db $F4, $F5, $F6, $F7, $F2, $F3  ;frame 4 Hflip
+
+@Piranha:
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;piranha plant frame 1
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;              frame 2
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;frame 1 Hflip
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;frame 2 Hflip
+
+@RKoopa:
+    .db $00, $B4, $B5, $B6, $B7, $B8  ;koopa troopa frame 1 (red)
+    .db $00, $B9, $BA, $BB, $BC, $BD  ;             frame 2 (red)
+    .db $C2, $00, $C3, $C4, $C5, $C6  ;frame 1 Hflip
+    .db $C7, $00, $C8, $C9, $CA, $CB  ;frame 2 Hflip
+
+@RPKoopa:
+    .db $BE, $B4, $BF, $B6, $B7, $B8  ;koopa paratroopa frame 1 (red)
+    .db $C0, $B9, $C1, $BB, $BC, $BD  ;                 frame 2 (red)
+    .db $C2, $CC, $C3, $CD, $C5, $C6  ;frame 1 Hflip
+    .db $C7, $CE, $C8, $CF, $CA, $CB  ;frame 2 Hflip
+
+@Bullet:
+    .db $00, $00, $A8, $A9, $AA, $AB  ;bullet bill
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $AC, $AD, $AE, $AF  ;frame 1 Hflip
+
+    .db $00, $00, $D0, $D1, $D2, $D3  ;death frame (USD)
+@RKoopaUSD:
+    .db $00, $00, $D6, $D7, $D8, $D9  ;shell frame 1 (upside-down) (red)
+    .db $00, $00, $DA, $DB, $D8, $D9  ;      frame 2 (red)
+    .db $00, $00, $D6, $D7, $D8, $D9  ;frame 1 Hflip
+    .db $00, $00, $DA, $DB, $D8, $D9  ;frame 2 Hflip
+
+    .db $00, $00, $D6, $D7, $D8, $D9  ;death frame (RSU)
+@RKoopaRSU:
+    .db $00, $00, $D0, $D1, $D2, $D3  ;shell frame 1 (rightsideup) (red)
+    .db $00, $00, $D0, $D1, $D4, $D5  ;      frame 2 (red)
+    .db $00, $00, $D0, $D1, $D2, $D3  ;frame 1 Hflip
+    .db $00, $00, $D0, $D1, $D4, $D5  ;frame 2 Hflip
+.ENDS
+
+;---------------------------------
+
+.SECTION "EnemyGraphicsTable_02" BANK BANK_ENEMYTBL SLOT 2 FORCE ORG $0800
+;tiles arranged in top left, right, middle left, right, bottom left, right order
+EnemyGraphicsTable_Arr2:
+@Beetle:
+    .db $00, $00, $5E, $5F, $60, $61  ;buzzy beetle frame 1
+    .db $00, $00, $62, $63, $64, $65  ;             frame 2
+    .db $00, $00, $66, $67, $68, $69  ;frame 1 Hflip
+    .db $00, $00, $6A, $6B, $6C, $6D  ;frame 2 Hflip
+
+@GKoopa:
+    .db $00, $76, $77, $78, $79, $7A  ;koopa troopa frame 1
+    .db $00, $7B, $7C, $7D, $7E, $7F  ;             frame 2
+    .db $84, $00, $85, $86, $87, $88  ;frame 1 Hflip
+    .db $89, $00, $8A, $8B, $8C, $8D  ;frame 2 Hflip
+
+@GPKoopa:
+    .db $80, $76, $81, $78, $79, $7A  ;koopa paratroopa frame 1
+    .db $82, $7B, $83, $7D, $7E, $7F  ;                 frame 2
+    .db $84, $8E, $85, $8F, $87, $88  ;frame 1 Hflip
+    .db $89, $90, $8A, $91, $8C, $8D  ;frame 2 Hflip
+
+    .db $00, $00, $EE, $EF, $F0, $F1  ;spiny death frame
+@Spiny:
+    .db $00, $00, $D4, $D5, $D6, $D7  ;spiny frame 1
+    .db $00, $00, $D8, $D9, $DA, $DB  ;      frame 2
+    .db $00, $00, $E0, $E1, $E2, $E3  ;spiny frame 1 Hflip
+    .db $00, $00, $E4, $E5, $E6, $E7  ;spiny frame 2 Hflip
+
+@SpinyEgg:
+    .db $00, $00, $CC, $CD, $CE, $CF  ;spiny egg frame 1
+    .db $00, $00, $D0, $D1, $D2, $D3  ;          frame 2
+    .db $00, $00, $CC, $CD, $CE, $CF  ;egg frame 1 Hflip
+    .db $00, $00, $D0, $D1, $D2, $D3  ;egg frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@Blooper:
+    .db $00, $00, $00, $00, $00, $00  ;bloober frame 1
+    .db $00, $00, $00, $00, $00, $00  ;        frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@GCheep:
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 1
+    .db $00, $00, $00, $00, $00, $00  ;cheep-cheep frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $C0, $C1, $C2, $C3  ;death frame
+@RCheep:
+    .db $00, $00, $B4, $B5, $B6, $B7  ;cheep-cheep frame 1 (red)
+    .db $00, $00, $B8, $B5, $B9, $B7  ;cheep-cheep frame 2 (red)
+    .db $00, $00, $BA, $BB, $BC, $BD  ;frame 1 Hflip
+    .db $00, $00, $BA, $BE, $BC, $BF  ;frame 2 Hflip
+
+    .db $00, $00, $5A, $5B, $5C, $5D  ;death frame
+@Goomba:
+    .db $00, $00, $52, $53, $54, $55  ;goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $52, $53, $56, $57  ;frame 1 Hflip
+
+    .db $00, $00, $92, $93, $94, $95  ;death frame (USD)
+@GKoopaUSD:
+    .db $00, $00, $98, $99, $9A, $9B  ;koopa shell frame 1 (upside-down)
+    .db $00, $00, $9C, $9D, $9A, $9B  ;            frame 2
+    .db $00, $00, $98, $99, $9A, $9B  ;frame 1 Hflip
+    .db $00, $00, $9C, $9D, $9A, $9B  ;frame 2 Hflip
+
+    .db $00, $00, $98, $99, $9A, $9B  ;death frame
+@GKoopaRSU:
+    .db $00, $00, $92, $93, $94, $95  ;shell frame 1 (upside-down)
+    .db $00, $00, $92, $93, $96, $97  ;      frame 2
+    .db $00, $00, $92, $93, $94, $95  ;frame 1 Hflip
+    .db $00, $00, $92, $93, $96, $97  ;frame 2 Hflip
+
+    .db $00, $00, $72, $73, $74, $75  ;death frame
+@BeetleRSU:
+    .db $00, $00, $6E, $6F, $70, $71  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $6E, $6F, $70, $71  ;                   frame 2
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 1 Hflip
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 2 Hflip
+
+    .db $00, $00, $6E, $6F, $70, $71  ;death frame
+@BeetleUSD:
+    .db $00, $00, $72, $73, $74, $75  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $72, $73, $74, $75  ;                   frame 2
+    .db $00, $00, $72, $73, $74, $75  ;frame 1 Hflip
+    .db $00, $00, $72, $73, $74, $75  ;frame 2 Hflip
+
+@GoombaDefeat:
+    .db $00, $00, $00, $00, $58, $59  ;defeated goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $58, $59  ;frame 1 Hflip
+
+    .db $E8, $E9, $EA, $EB, $EC, $ED  ;death frame
+@Lakitu:
+    .db $C4, $C5, $C6, $C7, $C8, $C9  ;lakitu frame 1
+@LakituAlt:
+    .db $00, $00, $CA, $CB, $C8, $C9  ;       frame 2
+    .db $DC, $DD, $DE, $DF, $C8, $C9  ;frame 1 Hflip
+    .db $00, $00, $CA, $CB, $C8, $C9  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@HammerBro:
+    .db $00, $00, $00, $00, $00, $00  ;hammer bro frame 1
+    .db $00, $00, $00, $00, $00, $00  ;           frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@HammerBro_Alt:
+    .db $00, $00, $00, $00, $00, $00  ;           frame 3
+    .db $00, $00, $00, $00, $00, $00  ;           frame 4
+    .db $00, $00, $00, $00, $00, $00  ;frame 3 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 4 Hflip
+
+@Piranha:
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;piranha plant frame 1
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;              frame 2
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;frame 1 Hflip
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;frame 2 Hflip
+
+@RKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa troopa frame 1 (red)
+    .db $00, $00, $00, $00, $00, $00  ;             frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@RPKoopa:
+    .db $00, $00, $00, $00, $00, $00  ;koopa paratroopa frame 1 (red)
+    .db $00, $00, $00, $00, $00, $00  ;                 frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+@Bullet:
+    .db $00, $00, $A8, $A9, $AA, $AB  ;bullet bill
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $AC, $AD, $AE, $AF  ;frame 1 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame (USD)
+@RKoopaUSD:
+    .db $00, $00, $00, $00, $00, $00  ;shell frame 1 (upside-down) (red)
+    .db $00, $00, $00, $00, $00, $00  ;      frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame (RSU)
+@RKoopaRSU:
+    .db $00, $00, $00, $00, $00, $00  ;shell frame 1 (rightsideup) (red)
+    .db $00, $00, $00, $00, $00, $00  ;      frame 2 (red)
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+.ENDS
+
+;---------------------------------
+
+.SECTION "EnemyGraphicsTable_03" BANK BANK_ENEMYTBL SLOT 2 FORCE ORG $0C00
+;tiles arranged in top left, right, middle left, right, bottom left, right order
+EnemyGraphicsTable_Arr3:
+@Beetle:
+    .db $00, $00, $5E, $5F, $60, $61  ;buzzy beetle frame 1
+    .db $00, $00, $62, $63, $64, $65  ;             frame 2
+    .db $00, $00, $66, $67, $68, $69  ;frame 1 Hflip
+    .db $00, $00, $6A, $6B, $6C, $6D  ;frame 2 Hflip
+
+@GKoopa:
+    .db $00, $76, $77, $78, $79, $7A  ;koopa troopa frame 1
+    .db $00, $7B, $7C, $7D, $7E, $7F  ;             frame 2
+    .db $84, $00, $85, $86, $87, $88  ;frame 1 Hflip
+    .db $89, $00, $8A, $8B, $8C, $8D  ;frame 2 Hflip
+
+@GPKoopa:
+    .db $80, $76, $81, $78, $79, $7A  ;koopa paratroopa frame 1
+    .db $82, $7B, $83, $7D, $7E, $7F  ;                 frame 2
+    .db $84, $8E, $85, $8F, $87, $88  ;frame 1 Hflip
+    .db $89, $90, $8A, $91, $8C, $8D  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;spiny death frame
+@Spiny:
+    .db $00, $00, $00, $00, $00, $00  ;spiny frame 1
+    .db $00, $00, $00, $00, $00, $00  ;      frame 2
+    .db $00, $00, $00, $00, $00, $00  ;spiny frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;spiny frame 2 Hflip
+
+@SpinyEgg:
+    .db $00, $00, $00, $00, $00, $00  ;spiny egg frame 1
+    .db $00, $00, $00, $00, $00, $00  ;          frame 2
+    .db $00, $00, $00, $00, $00, $00  ;egg frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;egg frame 2 Hflip
+
+    .db $00, $00, $F8, $F9, $FA, $FB  ;death frame
+@Blooper:
+    .db $00, $00, $F0, $F1, $F2, $F3  ;blooper frame 1
+    .db $F0, $F1, $F4, $F5, $F6, $F7  ;        frame 2
+    .db $00, $00, $F0, $F1, $F2, $F3  ;frame 1 Hflip
+    .db $F0, $F1, $F4, $F5, $F6, $F7  ;frame 2 Hflip
+
+    .db $00, $00, $EC, $ED, $EE, $EF  ;death frame
+@GCheep:
+    .db $00, $00, $E0, $E1, $E2, $E3  ;cheep-cheep frame 1 (green)
+    .db $00, $00, $E4, $E1, $E5, $E3  ;cheep-cheep frame 2 (green)
+    .db $00, $00, $E6, $E7, $E8, $E9  ;frame 1 Hflip
+    .db $00, $00, $E6, $EA, $E8, $EB  ;frame 2 Hflip
+
+    .db $00, $00, $DC, $DD, $DE, $DF  ;death frame
+@RCheep:
+    .db $00, $00, $D0, $D1, $D2, $D3  ;cheep-cheep frame 1 (red)
+    .db $00, $00, $D4, $D1, $D5, $D3  ;cheep-cheep frame 2 (red)
+    .db $00, $00, $D6, $D7, $D8, $D9  ;frame 1 Hflip
+    .db $00, $00, $D6, $DA, $D8, $DB  ;frame 2 Hflip
+
+    .db $00, $00, $5A, $5B, $5C, $5D  ;death frame
+@Goomba:
+    .db $00, $00, $52, $53, $54, $55  ;goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $52, $53, $56, $57  ;frame 1 Hflip
+
+    .db $00, $00, $92, $93, $94, $95  ;death frame (USD)
+@GKoopaUSD:
+    .db $00, $00, $98, $99, $9A, $9B  ;shell frame 1 (upside-down)
+    .db $00, $00, $9C, $9D, $9A, $9B  ;      frame 2
+    .db $00, $00, $98, $99, $9A, $9B  ;frame 1 Hflip
+    .db $00, $00, $9C, $9D, $9A, $9B  ;frame 2 Hflip
+
+    .db $00, $00, $98, $99, $9A, $9B  ;death frame (RSU)
+@GKoopaRSU:
+    .db $00, $00, $92, $93, $94, $95  ;shell frame 1 (rightsideup)
+    .db $00, $00, $92, $93, $96, $97  ;      frame 2
+    .db $00, $00, $92, $93, $94, $95  ;frame 1 Hflip
+    .db $00, $00, $92, $93, $96, $97  ;frame 2 Hflip
+
+    .db $00, $00, $72, $73, $74, $75  ;death frame
+@BeetleRSU:
+    .db $00, $00, $6E, $6F, $70, $71  ;buzzy beetle shell frame 1 (rightsideup)
+    .db $00, $00, $6E, $6F, $70, $71  ;                   frame 2
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 1 Hflip
+    .db $00, $00, $6E, $6F, $70, $71  ;frame 2 Hflip
+
+    .db $00, $00, $6E, $6F, $70, $71  ;death frame
+@BeetleUSD:
+    .db $00, $00, $72, $73, $74, $75  ;buzzy beetle shell frame 1 (upside-down)
+    .db $00, $00, $72, $73, $74, $75  ;                   frame 2
+    .db $00, $00, $72, $73, $74, $75  ;frame 1 Hflip
+    .db $00, $00, $72, $73, $74, $75  ;frame 2 Hflip
+
+@GoombaDefeat:
+    .db $00, $00, $00, $00, $58, $59  ;defeated goomba
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $58, $59  ;frame 1 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@Lakitu:
+    .db $00, $00, $00, $00, $00, $00  ;lakitu frame 1
+@LakituAlt:
+    .db $00, $00, $00, $00, $00, $00  ;       frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@HammerBro:
+    .db $00, $00, $00, $00, $00, $00  ;hammer bro frame 1
+    .db $00, $00, $00, $00, $00, $00  ;           frame 2
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 2 Hflip
+
+    .db $00, $00, $00, $00, $00, $00  ;death frame
+@HammerBro_Alt:
+    .db $00, $00, $00, $00, $00, $00  ;           frame 3
+    .db $00, $00, $00, $00, $00, $00  ;           frame 4
+    .db $00, $00, $00, $00, $00, $00  ;frame 3 Hflip
+    .db $00, $00, $00, $00, $00, $00  ;frame 4 Hflip
+
+@Piranha:
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;piranha plant frame 1
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;              frame 2
+    .db $9E, $9F, $A0, $A1, $A2, $A3  ;frame 1 Hflip
+    .db $A4, $A5, $A6, $A7, $A2, $A3  ;frame 2 Hflip
+
+@RKoopa:
+    .db $00, $A8, $A9, $AA, $AB, $AC  ;koopa troopa frame 1 (red)
+    .db $00, $AD, $AE, $AF, $B0, $B1  ;             frame 2 (red)
+    .db $B6, $00, $B7, $B8, $B9, $BA  ;frame 1 Hflip
+    .db $BB, $00, $BC, $BD, $BE, $BF  ;frame 2 Hflip
+
+@RPKoopa:
+    .db $B2, $A8, $B3, $AA, $AB, $AC  ;koopa paratroopa frame 1 (red)
+    .db $B4, $AD, $B5, $AF, $B0, $B1  ;                 frame 2 (red)
+    .db $B6, $C0, $B7, $C1, $B9, $BA  ;frame 1 Hflip
+    .db $BB, $C2, $BC, $C3, $BE, $BF  ;frame 2 Hflip
+
+@Bullet:
+    .db $00, $00, $00, $00, $00, $00  ;bullet bill
+    .db $00, $00, $00, $00, $00, $00  ;padding
+    .db $00, $00, $00, $00, $00, $00  ;frame 1 Hflip
+
+    .db $00, $00, $C4, $C5, $C6, $C7  ;death frame (USD)
+@RKoopaUSD:
+    .db $00, $00, $CA, $CB, $CC, $CD  ;shell frame 1 (upside-down) (red)
+    .db $00, $00, $CE, $CF, $CC, $CD  ;      frame 2 (red)
+    .db $00, $00, $CA, $CB, $CC, $CD  ;frame 1 Hflip
+    .db $00, $00, $CE, $CF, $CC, $CD  ;frame 2 Hflip
+
+    .db $00, $00, $CA, $CB, $CC, $CD  ;death frame (RSU)
+@RKoopaRSU:
+    .db $00, $00, $C4, $C5, $C6, $C7  ;shell frame 1 (rightsideup) (red)
+    .db $00, $00, $C4, $C5, $C8, $C9  ;      frame 2 (red)
+    .db $00, $00, $C4, $C5, $C6, $C7  ;frame 1 Hflip
+    .db $00, $00, $C4, $C5, $C8, $C9  ;frame 2 Hflip
 .ENDS
 
 .SECTION "EnemyGfxTableOffsets" BANK BANK_SLOT2 SLOT 2 BITWINDOW 8 RETURNORG
 EnemyGfxTableOffsets:
-    .db $0c, $CC, $00, $CC, $0C, $a8, $54, $3c  ; $00 - $07
-    .db $E4, $18, $48, $9C, $FF, $c0, $18, $D8  ; $08 - $0F
-    .db $18, $90, $24, $FF, $9C, $FF, $FF, $FF  ; $10 - $17
-    .db $FF, $FF, $FF, $8A, $FF, $FF, $FF       ; $18 - $1A
-.ENDS
+    .dw EnemyGraphicsTable_Arr0@GKoopa
+    .dw EnemyGraphicsTable_Arr0@RKoopa
+    .dw EnemyGraphicsTable_Arr0@Beetle
+    .dw EnemyGraphicsTable_Arr0@RKoopa
+    .dw EnemyGraphicsTable_Arr0@GKoopa
+    .dw EnemyGraphicsTable_Arr0@HammerBro
+    .dw EnemyGraphicsTable_Arr0@Goomba
+    .dw EnemyGraphicsTable_Arr0@Blooper
 
-; .ENUM $00
-;     GFXID_GreenKoopa                    DB
-;     GFXID_GreenKoopa_01                 DB
-;     GFXID_BuzzyBeetle                   DB
-;     GFXID_RedKoopa                      DB
-;     GFXID_RedKoopa_01                   DB
-;     GFXID_HammerBro                     DB
-;     GFXID_Goomba                        DB
-;     GFXID_Bloober                       DB
-;     ;
-;     GFXID_BulletBill_FrenzyVar          DB
-;     GFXID_TallEnemy                     DB  ;Paratroopa?
-;     GFXID_GreyCheepCheep                DB
-;     GFXID_RedCheepCheep                 DB
-;     GFXID_Podoboo                       DB
-;     GFXID_PiranhaPlant                  DB
-;     GFXID_GreenParatroopaJump           DB
-;     GFXID_RedParatroopa                 DB
-;     ;
-;     GFXID_GreenParatroopaFly            DB
-;     GFXID_Lakitu                        DB
-;     GFXID_Spiny                         DB
-;     GFXID_SpinyEgg                      DB
-;     GFXID_FlyingCheepCheep              DB  ;OBJECTID_FlyCheepCheepFrenzy
-;     GFXID_Princess                      DB  ;OBJECTID_BowserFlame
-;     GFXID_BowserFront                   DB  ;OBJECTID_Fireworks
-;     GFXID_BowserRear                    DB  ;OBJECTID_BBill_CCheep_Frenzy
-;     ;
-;     GFXID_JumpSpring_00                 DB
-;     GFXID_JumpSpring_01                 DB
-;     GFXID_JumpSpring_02                 DB
-;     GFXID_GoombaDefeated                DB
-;     GFXID_RetainerObject                DB
-;     GFXID_BowserFront_01                DB
-;     GFXID_BowserRear_01                 DB
-; .ENDE
+    .dw EnemyGraphicsTable_Arr0@Bullet
+    .dw EnemyGraphicsTable_Arr0@GPKoopa
+    .dw EnemyGraphicsTable_Arr0@GCheep
+    .dw EnemyGraphicsTable_Arr0@RCheep
+    .dw $0000
+    .dw EnemyGraphicsTable_Arr0@Piranha
+    .dw EnemyGraphicsTable_Arr0@GPKoopa
+    .dw EnemyGraphicsTable_Arr0@RPKoopa
+
+    .dw EnemyGraphicsTable_Arr0@GPKoopa
+    .dw EnemyGraphicsTable_Arr0@Lakitu
+    .dw EnemyGraphicsTable_Arr0@Spiny
+    .dw $0000
+    .dw EnemyGraphicsTable_Arr0@RCheep
+.ENDS
 
 EnemyGfxHandler:
     LD L, <Enemy_Y_Position                 ;don't display enemy if it is below visible screen
@@ -748,16 +1235,9 @@ EnemyGfxHandler:
     LD L, <Enemy_SprDataOffset              ;get sprite data offset
     LD E, (HL)
 ;
-    ;XOR A                                   ;initialize vertical flip flag by default
-    ;LD (VerticalFlipFlag), A
-;
     LD L, <Enemy_MovingDir                  ;get enemy object moving direction
     LD A, (HL)
     LD IXL, A
-;
-    ;LD L, <Enemy_SprAttrib                 ;get enemy object sprite attributes
-    ;LD A, (HL)
-    ;LD (Temp_Bytes + $04), A
 ;
     LD L, <Enemy_ID
     LD A, (HL)
@@ -848,26 +1328,31 @@ GmbaAnim:
 
 CheckForSpiny:
     LD A, C
+    ADD A, A
     LD HL, EnemyGfxTableOffsets             ;load value based on enemy object as offset
     addAToHL8_M
-    LD L, (HL)
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
 ;
     LD C, IXH
 ;
-    LD A, L                                 ;check if value loaded is for spiny
-    CP A, $24
+    LD A, L                                 ;check if value loaded is for spiny (low byte)
+    CP A, <EnemyGraphicsTable_Arr0@Spiny
     JR NZ, CheckForLakitu                   ;if not found, branch
 ;
     LD A, C                                 ;if enemy state set to $05, do this,
     CP A, $05
     JR NZ, CheckForHammerBro                ;otherwise branch
 ;
-    LD L, $30                               ;set to spiny egg offset
+    LD HL, EnemyGraphicsTable_Arr0@SpinyEgg ;set to spiny egg offset
     LD IX, $0502                            ;set enemy direction and state
     JP CheckForHammerBro
 
 CheckForLakitu:
-    CP A, $90                               ;check value for lakitu's offset loaded
+    LD A, L                                 ;check value for lakitu's offset loaded (low)
+    CP A, <EnemyGraphicsTable_Arr0@Lakitu                               
     JR NZ, CheckUpsideDownShell             ;branch if not loaded
 ;
     LD A, IYL
@@ -878,7 +1363,7 @@ CheckForLakitu:
     CP A, $10                               ;check timer to see if we've reached a certain range
     JP NC, CheckDefeatedState               ;branch if not
 ;
-    LD L, $96                               ;if d6 not set and timer in range, load alt frame for lakitu
+    LD HL, EnemyGraphicsTable_Arr0@LakituAlt;if d6 not set and timer in range, load alt frame for lakitu
     JP CheckDefeatedState                   ;skip this next part if we found lakitu but alt frame not needed
 
 CheckUpsideDownShell:
@@ -890,24 +1375,24 @@ CheckUpsideDownShell:
     CP A, $02
     JR C, CheckRightSideUpShell             ;branch if enemy state < $02
 ;
-    LD L, $7E                               ;set for upside-down buzzy beetle shell by default
+    LD HL, EnemyGraphicsTable_Arr0@BeetleUSD;set for upside-down buzzy beetle shell by default
     INC D                                   ;increment vertical position by one pixel
     LD A, IYH
     ;LD C, A
     CP A, OBJECTID_BuzzyBeetle              ;check for buzzy beetle object
     JR Z, CheckRightSideUpShell
     DEC D                                   ;revert vertical position
-    LD L, $5A                               ;set for upside-down koopa shell by default (GREEN)
+    LD HL, EnemyGraphicsTable_Arr0@GKoopaUSD;set for upside-down koopa shell by default (GREEN)
     OR A                                    ;$00 = Green Koopa
     JR Z, CheckRightSideUpShell
-    LD L, $EA                               ;set for upside-down koopa shell (RED)
+    LD HL, EnemyGraphicsTable_Arr0@RKoopaUSD;set for upside-down koopa shell (RED)
 
 CheckRightSideUpShell:
     LD A, IXH                               ;check for value set here
     CP A, $04                               ;if enemy state < $02, do not change to shell, if
     JR NZ, CheckForHammerBro                ;enemy state => $02 but not = $04, leave shell upside-down
 ;
-    LD L, $72                               ;set right-side up buzzy beetle shell by default
+    LD HL, EnemyGraphicsTable_Arr0@BeetleRSU;set right-side up buzzy beetle shell by default
     INC D                                   ;increment saved vertical position by one pixel
     LD A, IYH
     LD C, A
@@ -915,7 +1400,7 @@ CheckRightSideUpShell:
     JR Z, CheckForDefdGoomba                ;branch if found
 ;
     INC D                                   ;and increment saved vertical position again
-    LD L, $66                               ;change to right-side up koopa shell if not found (GREEN)
+    LD HL, EnemyGraphicsTable_Arr0@GKoopaRSU;change to right-side up koopa shell if not found (GREEN)
     CP A, $01
     JR Z, +                                 ;check if koopa isn't green
     CP A, OBJECTID_RedKoopa
@@ -923,19 +1408,19 @@ CheckRightSideUpShell:
     CP A, OBJECTID_RedParatroopa            ;check if paratroopa isn't red
     JR NZ, CheckForDefdGoomba
 +:
-    LD L, $F6                               ;else, change to right-side up koopa shell (RED)
+    LD HL, EnemyGraphicsTable_Arr0@RKoopaRSU;else, change to right-side up koopa shell (RED)
 
 CheckForDefdGoomba:
     LD A, C                                 ;check for goomba object (necessary if previously
     CP A, OBJECTID_Goomba
     JR NZ, CheckForHammerBro                ;failed buzzy beetle object test)
 ;
-    LD L, $54                               ;load for regular goomba
+    LD HL, EnemyGraphicsTable_Arr0@Goomba   ;load for regular goomba
     LD A, IYL                               ;note that this only gets performed if enemy state => $02
     AND A, %00100000                        ;check saved enemy state for d5 set
     JR NZ, CheckForHammerBro                ;branch if set
 ;
-    LD L, $8A                               ;load offset for defeated goomba
+    LD HL, EnemyGraphicsTable_Arr0@GoombaDefeat ;load offset for defeated goomba
     DEC D                                   ;set different value and decrement saved vertical position
 
 CheckForHammerBro:
@@ -950,12 +1435,14 @@ CheckForHammerBro:
     AND A, %00001000                        ;if d3 not set, branch further away
     JR Z, CheckDefeatedState
 ;
-    LD L, $B4                               ;otherwise load offset for different frame
+    LD HL, EnemyGraphicsTable_Arr0@HammerBro_Alt    ;otherwise load offset for different frame
     JP CheckToAnimateEnemy
 
 CheckForBloober:
-    LD A, L                                 ;check for cheep-cheep offset loaded
-    CP A, $48
+    LD A, L                                 ;check for green cheep-cheep offset loaded
+    CP A, <EnemyGraphicsTable_Arr0@GCheep
+    JR Z, CheckToAnimateEnemy               ;branch if found
+    CP A, <EnemyGraphicsTable_Arr0@RCheep   ;check for red cheep-cheep offset loaded
     JR Z, CheckToAnimateEnemy               ;branch if found
 ;
     LD A, (ObjectOffset + $01)
@@ -967,8 +1454,8 @@ CheckForBloober:
     CP A, $05                               ;branch if some timer is above a certain point
     JR NC, CheckDefeatedState
 ;
-    LD A, L                                 ;check for bloober offset loaded
-    CP A, $3C
+    LD A, L                                 ;check for bloober offset loaded (low)
+    CP A, <EnemyGraphicsTable_Arr0@Blooper
     JR NZ, CheckToAnimateEnemy              ;branch if not found this time
 ;
     LD A, C
@@ -1003,7 +1490,7 @@ CheckAnimationStop:
     JR NZ, CheckDefeatedState               ;if either condition true, branch
 ;
     LD A, $06                               ;add $06 to current enemy offset
-    addAToHL8_M                             ;to animate various enemy objects
+    addAToHL_M                              ;to animate various enemy objects
 
 CheckDefeatedState:
     LD A, IYL                               ;check saved enemy state
@@ -1014,23 +1501,35 @@ CheckDefeatedState:
     CP A, $04                               ;branch if less
     JR C, DrawEnemyObject
 ;
-    ;LD A, $01
-    ;LD (VerticalFlipFlag), A
-    LD IXH, $00                             ;init saved value here
+    LD A, L                                 ;check if enemy is bullet bill
+    CP A, <EnemyGraphicsTable_Arr0@Bullet   ;if so, don't use death sprite
+    JR Z, DrawEnemyObject
+;
+    LD A, $FA                               ;subtract 6 to point to death sprite
+    DEC H
+    addAToHL_M
+    ;LD IXH, $00                             ;init saved value here
+    JR DrawEnemyObject_NoHFlip              ;don't try to flip it horizontally
 
 DrawEnemyObject:
-    LD B, D                                 ;put vertical pos into B
+    DEC IXL                                 ;check which way enemy is facing
+    JR Z, DrawEnemyObject_NoHFlip
+    LD A, $0C                               ;add 12 to point to horizontally flipped sprite
+    addAToHL_M
 
+DrawEnemyObject_NoHFlip:
+    LD B, D                                 ;put vertical pos into B
     LD A, (Temp_Bytes + $05)                ;put horizontal pos into C
     LD C, A
 
+    LD A, (EnemyGFXBank)                    ;point to the correct table       
+    OR A, H
+    LD H, A
+
+    LD A, BANK_ENEMYTBL                     ;set bank for GFX tables
+    LD (MAPPER_SLOT2), A
+
     LD D, >Sprite_Y_Position                ;set up SAT pointer
-    LD H, >EnemyGraphicsTable               ;choose appropriate table based on enemy direction
-    DEC IXL
-    JR Z, +
-    LD H, >EnemyGraphicsTable_HFlip
-;
-+:
     LD IXL, E
     LD A, B
     DrawSpriteObject_YPos                   ;draw six tiles of data
@@ -1053,6 +1552,9 @@ DrawEnemyObject:
     INC E
     LDI
     ; FALL THROUGH
+
+    LD A, BANK_SLOT2                        ;reset bank
+    LD (MAPPER_SLOT2), A
 
 SprObjectOffscrChk:
     LD D, >Sprite_Y_Position                ;set up SAT pointer
@@ -1120,13 +1622,27 @@ MoveESprColOffscreen:
     RET
 
 PodobooGfxHandler:
-;   TILE FRAME SETUP
+;   VERTICAL FLIP CHECK
     LD L, <Enemy_Y_Speed                    ;use v-flipped tiles if y speed is positive
     LD A, (HL)
     OR A
     LD HL, PodobooTiles
     JP M, +
-    LD L, <PodobooTiles + $04
+    LD L, <PodobooTiles + $08
++:
+;   ANIMATION CHECK
+    LD A, (FrameCounter)                    ;load frame counter
+    AND A, $08                              ;mask it
+    JR NZ, +                                ;branch if timing is off
+    LD A, (TimerControl)
+    LD C, A
+    LD A, IYL                               ;check saved enemy state
+    AND A, %10100000                        ;for d7 or d5, or check for timers stopped
+    OR A, C
+    JR NZ, +                                ;if either condition true, branch
+    LD A, $04                               ;add 4 to point to second frame
+    addAToHL8_M
++:
 ;   X/YPOS REG SETUP
 +:
     LD A, D                                 ;add 8 to vertical coordinate (podoboo is only 16px tall)
@@ -1153,8 +1669,10 @@ PodobooGfxHandler:
 
 .SECTION "Podoboo Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PodobooTiles:
-    .db $43, $44, $45, $46  ; FRAME 0
-    .db $47, $48, $49, $4A  ; FRAME 0 VFLIP
+    .db $52, $53, $54, $55  ; FRAME 0
+    .db $5A, $5B, $5C, $5D  ; FRAME 1
+    .db $56, $57, $58, $59  ; FRAME 0 VFLIP
+    .db $5E, $5F, $60, $61  ; FRAME 1 VFLIP
 .ENDS
 
 ;   --- NAMETABLE OBJECT DRAW ROUTINES ---
@@ -1721,7 +2239,7 @@ DrawSmallPlatform:
     SET 7, E
     ;
     LD A, (Enemy_Rel_XPos)                  ;get relative horizontal coordinate
-    LD B, $52                               ;B = tile ID
+    LD B, LIFT_TILE                         ;B = tile ID
     EX DE, HL
     ; TILE 0
     LD (HL), A                              ;first sprite = Xpos
@@ -1860,7 +2378,7 @@ DrawBubble:
     LD (DE), A                      ;store as X coordinate here
 ;
     INC E
-    LD A, $A7                       ;put air bubble tile into OAM data
+    LD A, BUBBLE_TILE               ;put air bubble tile into OAM data
     LD (DE), A
     RET
 

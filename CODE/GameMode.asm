@@ -3591,21 +3591,46 @@ BowserGfxDraw:
     LD E, (HL)
     LD D, >Sprite_Y_Position
 ;
+    LD L, <Enemy_State                      ;check if bowser has died from fireball
+    BIT 5, (HL)
+    JR Z, @CheckDirection
+    XOR A                                   ;reset animation control
+    LD (BowserBodyControls), A
+    LD A, $F8                               ;subtract 8 from ypos
+    ADD A, B
+    LD B, A
+    LD L, <Enemy_MovingDir                  ;skip next check if facing left
+    LD A, (HL)
+    DEC A
+    LD HL, BowserSpriteFrames@Death         ;display death sprite
+    JR NZ, @SelectFrame
+    LD A, C                                 ;move entire bowser (both halves) 16px right
+    SUB A, $10
+    LD C, A
+    LD A, (BowserGfxFlag)                   ;skip if not rendering second half
+    DEC A
+    JR Z, @SelectFrame
+    LD A, C
+    ADD A, $20                              ;add 32 to Xpos to align second half correctly
+    LD C, A
+    JR @SelectFrame
+
+@CheckDirection:
     LD L, <Enemy_MovingDir                  ;get enemy object moving direction
     LD A, (HL)
     DEC A
     LD HL, BowserSpriteFramesHFlip
-    JR Z, +
+    JR Z, @SelectFrame
     LD L, <BowserSpriteFrames
-;
-+:
+
+@SelectFrame:
     LD A, (BowserGfxFlag)
     DEC A
-    JR Z, +
+    JR Z, @DrawHalf
     LD A, $06
     addAToHL8_M
-;
-+:
+
+@DrawHalf:
     LD A, (BowserBodyControls)
     RRCA
     RRCA
@@ -3615,9 +3640,13 @@ BowserGfxDraw:
     CALL DrawSpriteObject
     CALL DrawSpriteObject
     CALL SprObjectOffscrChk
-;
+;   ADDITIONAL SPRITE DRAWING
     POP BC
-    LD A, $F8
+
+    LD L, <Enemy_State
+    BIT 5, (HL)
+    JP NZ, DeathExtraSprites
+    LD A, $F8                               ;subtract 8 from Ypos
     ADD A, B
     LD B, A
     LD A, (BowserGfxFlag)
@@ -3627,28 +3656,28 @@ BowserGfxDraw:
     LD HL, Bubble_SprDataOffset
     LD E, (HL)
     LD D, >Sprite_Y_Position
-    EX DE, HL
+    EX DE, HL                   ; DE: Bubble Spr_Offset, HL: S.A.T. ptr
     JR Z, FrontExtraSprites
-;
+
+;   ---
+
+RearExtraSprites:               ; RENDERING 2ND HALF OF BODY...
     DEC A
     JR NZ, BowserGfxExtraLeftRear
-    LD A, (Enemy_OffscrBits)
+    LD A, (Enemy_OffscrBits)    ; FACING RIGHT
     AND A, %00000100
     JR NZ, BowserGfxRet
     INC D
     INC D
     LD A, (DE)
     LD L, A
-    LD (HL), B
-    SLA L
-    SET 7, L
     LD A, C
     ADD A, $08
-    LD (HL), A
-    INC L
-    LD (HL), $AE
+    LD C, A
+    LD A, $D1
+    CALL WriteBowserExtraSprite
     JP BowserGfxRet
-BowserGfxExtraLeftRear:
+BowserGfxExtraLeftRear:         ; FACING LEFT
     LD A, (Enemy_OffscrBits)
     AND A, %00001000
     JR NZ, BowserGfxRet
@@ -3656,29 +3685,19 @@ BowserGfxExtraLeftRear:
     INC D
     LD A, (DE)
     LD L, A
-    LD (HL), B
-    SLA L
-    SET 7, L
-    LD (HL), C
-    INC L
-    LD (HL), $95
+    LD A, $B8
+    CALL WriteBowserExtraSprite
     JP BowserGfxRet
 
-FrontExtraSprites:
+;   ---
+
+FrontExtraSprites:              ; RENDERING 1ST HALF OF BODY...
     DEC A
     JR NZ, BowserGfxExtraLeftFront
-    LD A, (Enemy_OffscrBits)
+    LD A, (Enemy_OffscrBits)    ; FACING RIGHT
     AND A, %00001000
-    JR NZ, +
-    ; TILE 0
-    LD (HL), B
-    SLA L
-    SET 7, L
-    LD (HL), C
-    INC L
-    LD (HL), $AF
-+:
-    ; TILE 1
+    LD A, $D2         ; TILE 0
+    CALL Z, WriteBowserExtraSprite
     LD A, C
     ADD A, $08
     LD C, A
@@ -3688,26 +3707,14 @@ FrontExtraSprites:
     INC D
     LD A, (DE)
     LD L, A
-    LD (HL), B
-    SLA L
-    SET 7, L
-    LD (HL), C
-    INC L
-    LD (HL), $B0
+    LD A, $D3         ; TILE 1
+    CALL WriteBowserExtraSprite
     JP BowserGfxRet
-BowserGfxExtraLeftFront:
+BowserGfxExtraLeftFront:        ; FACING LEFT
     LD A, (Enemy_OffscrBits)
     AND A, %00001000
-    JR NZ, +
-    ; TILE 0
-    LD (HL), B
-    SLA L
-    SET 7, L
-    LD (HL), C
-    INC L
-    LD (HL), $93
-+:
-    ; TILE 1
+    LD A, $B6         ; TILE 0
+    CALL Z, WriteBowserExtraSprite
     LD A, C
     ADD A, $08
     LD C, A
@@ -3717,48 +3724,108 @@ BowserGfxExtraLeftFront:
     INC D
     LD A, (DE)
     LD L, A
-    LD (HL), B
-    SLA L
-    SET 7, L
-    LD (HL), C
-    INC L
-    LD (HL), $94
+    LD A, $B7         ; TILE 1
+    CALL WriteBowserExtraSprite
 BowserGfxRet:
     LD HL, (ObjectOffset)
     RET
 
+;   ---
+
+DeathExtraSprites:
+    LD A, B                     ;add 16 to Ypos to align top hair tiles
+    ADD A, $10
+    LD B, A
+    LD A, (BowserGfxFlag)
+    DEC A
+    LD L, <Enemy_MovingDir
+    LD A, (HL)
+    LD HL, Bubble_SprDataOffset
+    LD E, (HL)
+    LD D, >Sprite_Y_Position
+    EX DE, HL                   ; DE: Bubble Spr_Offset, HL: S.A.T. ptr
+    JR Z, BowserGfxExtraDeathFront
+
+BowserGfxExtraDeathSideL:       ; RENDERING 2ND HALF OF BODY
+    DEC A
+    JR NZ, +
+    LD A, C
+    ADD A, $10
+    LD C, A
++:
+    INC D
+    INC D
+    LD A, (DE)
+    LD L, A
+    LD A, $FA
+    CALL WriteBowserExtraSprite
+    JP BowserGfxRet
+
+BowserGfxExtraDeathFront:       ; RENDERING 1ST HALF OF BODY
+    DEC A
+    JR NZ, +
+    LD A, C
+    SUB A, $10
+    LD C, A
++:
+    LD A, $F8         ; TILE 0
+    CALL WriteBowserExtraSprite
+    LD A, C
+    ADD A, $08
+    LD C, A
+    INC D
+    LD A, (DE)
+    LD L, A
+    LD A, $F9         ; TILE 1
+    CALL WriteBowserExtraSprite
+    JP BowserGfxRet
+
+;   A = TILE, B = YPOS, C = XPOS
+WriteBowserExtraSprite:
+    LD (HL), B
+    SLA L
+    SET 7, L
+    LD (HL), C
+    INC L
+    LD (HL), A
+    RET
+
 .SECTION "Bowser Sprite Map Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserSpriteFrames:
-    .db $96, $97, $9A, $9B, $9E, $9F ; FRONT FOOT, MOUTH OPEN
-    .db $98, $99, $9C, $9D, $A0, $A1
+    .db $B9, $BA, $BD, $BE, $C1, $C2 ; FRONT FOOT, MOUTH OPEN
+    .db $BB, $BC, $BF, $C0, $C3, $C4
     .db $00, $00, $00, $00
 
-    .db $A2, $A3, $A4, $A5, $9E, $9F ; FRONT FOOT, MOUTH CLOSED
-    .db $98, $99, $9C, $9D, $A0, $A1
+    .db $C5, $C6, $C7, $C8, $C1, $C2 ; FRONT FOOT, MOUTH CLOSED
+    .db $BB, $BC, $BF, $C0, $C3, $C4
     .db $00, $00, $00, $00
 
-    .db $96, $97, $A6, $A7, $A8, $A9 ; REAR FOOT, MOUTH OPEN
-    .db $98, $99, $9C, $9D, $AA, $AB
+    .db $B9, $BA, $C9, $CA, $CB, $CC ; REAR FOOT, MOUTH OPEN
+    .db $BB, $BC, $BF, $C0, $CD, $CE
     .db $00, $00, $00, $00
 
-    .db $A2, $A3, $AC, $AD, $A8, $A9 ; REAR FOOT, MOUTH CLOSED
-    .db $98, $99, $9C, $9D, $AA, $AB
+    .db $C5, $C6, $CF, $D0, $CB, $CC ; REAR FOOT, MOUTH CLOSED
+    .db $BB, $BC, $BF, $C0, $CD, $CE
+
+@Death:
+    .db $EC, $ED, $F0, $F1, $F4, $F5
+    .db $EE, $EF, $F2, $F3, $F6, $F7
 
 BowserSpriteFramesHFlip:
-    .db $B3, $B4, $B7, $B8, $BB, $BC
-    .db $B1, $B2, $B5, $B6, $B9, $BA
+    .db $D6, $D7, $DA, $DB, $DE, $DF
+    .db $D4, $D5, $D8, $D9, $DC, $DD
     .db $00, $00, $00, $00
 
-    .db $BD, $BE, $BF, $C0, $BB, $BC
-    .db $B2, $B2, $B5, $B6, $B9, $BA
+    .db $E0, $E1, $E2, $E3, $DE, $DF
+    .db $D4, $D5, $D8, $D9, $DC, $DD
     .db $00, $00, $00, $00
 
-    .db $B3, $B4, $C1, $C2, $C5, $C6
-    .db $B1, $B2, $B5, $B6, $C3, $C4
+    .db $D6, $D7, $E4, $E5, $E8, $E9
+    .db $D4, $D5, $D8, $D9, $E6, $E7
     .db $00, $00, $00, $00
 
-    .db $BD, $BE, $C7, $C8, $C5, $C6
-    .db $B1, $B2, $B5, $B6, $C3, $C4
+    .db $E0, $E1, $EA, $EB, $E8, $E9
+    .db $D4, $D5, $D8, $D9, $E6, $E7
 .ENDS
 
 BowserGfxDraw_NES:
@@ -3784,24 +3851,46 @@ BowserGfxDraw_NES:
     LD E, (HL)
     LD D, >Sprite_Y_Position
 ;
+    LD L, <Enemy_State                      ;check if bowser has died from fireball
+    BIT 5, (HL)
+    JR Z, @CheckDirection
+    XOR A                                   ;reset animation control
+    LD (BowserBodyControls), A
+    LD L, <Enemy_MovingDir                  ;skip next check if facing right
+    LD A, (HL)
+    LD HL, BowserSpriteFrames_NES@Death     ;display death sprite
+    DEC A
+    JR Z, @SelectFrame
+    LD A, C                                 ;move entire bowser (both halves) 16px right
+    ADD A, $10
+    LD C, A
+    LD A, (BowserGfxFlag)                   ;check if rendering second half
+    DEC A
+    JR Z, @SelectFrame
+    LD A, C                                 ;if so, subtract 32 from XPos
+    SUB A, $20                              ;to align the second half correctly
+    LD C, A
+    JR @SelectFrame
+
+@CheckDirection:
     LD L, <Enemy_MovingDir                  ;get enemy object moving direction
     LD A, (HL)
     DEC A
     LD HL, BowserSpriteFramesHFlip_NES
-    JR Z, +
+    JR Z, @SelectFrame
     LD L, <BowserSpriteFrames_NES
-;
-+:
+
+@SelectFrame:
     LD A, (BowserGfxFlag)
     DEC A
-    JR Z, +
-    LD A, B
+    JR Z, @DrawHalf
+    LD A, B                                 ;if drawing second half, add 8 to Ypos
     ADD A, $08
     LD B, A
-    LD A, $06
+    LD A, $06                               ;point to frame for second half
     addAToHL8_M
-;
-+:
+
+@DrawHalf:
     LD A, (BowserBodyControls)
     RRCA
     RRCA
@@ -3815,36 +3904,40 @@ BowserGfxDraw_NES:
 
 .SECTION "Bowser Sprite Map Data (NES)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserSpriteFrames_NES:
-    .db $93, $94, $95, $96, $00, $99
-    .db $97, $98, $9A, $9B, $9C, $9D
+    .db $B6, $B7, $B8, $B9, $00, $BC
+    .db $BA, $BB, $BD, $BE, $BF, $C0
     .db $00, $00, $00, $00
 
-    .db $93, $94, $9E, $9F, $00, $99
-    .db $97, $98, $9A, $9B, $9C, $9D
+    .db $B6, $B7, $C1, $C2, $00, $BC
+    .db $BA, $BB, $BD, $BE, $BF, $C0
     .db $00, $00, $00, $00
 
-    .db $93, $94, $95, $96, $00, $99
-    .db $97, $98, $9A, $9B, $A0, $A1
+    .db $B6, $B7, $B8, $B9, $00, $BC
+    .db $BA, $BB, $BD, $BE, $C3, $C4
     .db $00, $00, $00, $00
 
-    .db $93, $94, $9E, $9F, $00, $99
-    .db $97, $98, $9A, $9B, $A0, $A1
+    .db $B6, $B7, $C1, $C2, $00, $BC
+    .db $BA, $BB, $BD, $BE, $C3, $C4
+
+@Death:
+    .db $D4, $D5, $D7, $D8, $DB, $DC
+    .db $00, $D6, $D9, $DA, $DD, $DE
 
 BowserSpriteFramesHFlip_NES:
-    .db $A2, $A3, $A6, $A7, $AA, $00
-    .db $A4, $A5, $A8, $A9, $AB, $AC
+    .db $C5, $C6, $C9, $CA, $CD, $00
+    .db $C7, $C8, $CB, $CC, $CE, $CF
     .db $00, $00, $00, $00
 
-    .db $A2, $A3, $AD, $AE, $AA, $00
-    .db $A4, $A5, $A8, $A9, $AB, $AC
+    .db $C5, $C6, $D0, $D1, $CD, $00
+    .db $C7, $C8, $CB, $CC, $CE, $CF
     .db $00, $00, $00, $00
 
-    .db $A2, $A3, $A6, $A7, $AA, $00
-    .db $A4, $A5, $A8, $A9, $AF, $B0
+    .db $C5, $C6, $C9, $CA, $CD, $00
+    .db $C7, $C8, $CB, $CC, $D2, $D3
     .db $00, $00, $00, $00
 
-    .db $A2, $A3, $AD, $AE, $AA, $00
-    .db $A4, $A5, $A8, $A9, $AF, $B0
+    .db $C5, $C6, $D0, $D1, $CD, $00
+    .db $C7, $C8, $CB, $CC, $D2, $D3
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -3863,8 +3956,8 @@ FlameTimerData:
 
 .SECTION "FlameTileData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 FlameTileData:
-    .db $4B, $4C, $4D   ; NORMAL
-    .db $4E, $4F, $50   ; VFLIP
+    .db $62, $63, $64   ; NORMAL
+    .db $65, $66, $67   ; VFLIP
 .ENDS
 
 SetFlameTimer:
@@ -4167,19 +4260,19 @@ DrawStarFlag:
     ADD A, $08
     LD (HL), A                              ;store X coordinates and tile numbers
     INC L
-    LD (HL), $4C
+    LD (HL), $44
     INC L
     LD (HL), C
     INC L
-    LD (HL), $4B
+    LD (HL), $43
     INC L
     LD (HL), A
     INC L
-    LD (HL), $4A
+    LD (HL), $42
     INC L
     LD (HL), C
     INC L
-    LD (HL), $49
+    LD (HL), $41
     EX DE, HL
     RET
 
@@ -6159,8 +6252,7 @@ NoFToECol:
 .SECTION "BowserIdentities" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BowserIdentities:
     .db OBJECTID_Goomba, OBJECTID_GreenKoopa, OBJECTID_BuzzyBeetle
-    ;.db OBJECTID_Spiny, OBJECTID_Lakitu, OBJECTID_Bloober
-    .db OBJECTID_Goomba, OBJECTID_GreenKoopa, OBJECTID_BuzzyBeetle
+    .db OBJECTID_Spiny, OBJECTID_Lakitu, OBJECTID_Bloober
     .db OBJECTID_HammerBro, OBJECTID_Bowser
 .ENDS
 
@@ -6215,7 +6307,7 @@ HurtBowser:
     LD (HL), A                      ;set as new enemy identifier
 ;
     LD A, (WorldNumber)             ;check to see if using offset of 3 or more
-    CP A, $06;$03                   ;branch if so
+    CP A, $03                       ;branch if so
     LD A, $20                       ;set A to use starting value for state
     JR NC, SetDBSte
     OR A, $03                       ;otherwise add 3 to enemy state (shell enemies)

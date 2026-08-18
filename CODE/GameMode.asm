@@ -5860,6 +5860,7 @@ UseAdder:
 ;$02(C) - used for maximum vertical speed
 
 MovePlayerVertically:
+    LD H, >Player_Y_Position        ;set object page for player offset
     LD A, (TimerControl)
     OR A
     JR NZ, NoJSChk                  ;if master timer control set, branch ahead

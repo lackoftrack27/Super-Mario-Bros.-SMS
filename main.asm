@@ -1566,6 +1566,9 @@ AssetLoaderTable:
     ;
     .db :Tiles_Cloud
     .dw Tiles_Cloud, $0A20 | VRAMWRITE
+    ;
+    .db :Tiles_Lift
+    .dw Tiles_Lift, $0A20 | VRAMWRITE
 
 .ENDS
 
@@ -1609,7 +1612,10 @@ AssetLoaderTableNES:
     .dw Tiles_BG_WaterCastle_NES, $3680 | VRAMWRITE
     ;
     .db :Tiles_Cloud_NES
-    .dw Tiles_Cloud_NES, $0A40 | VRAMWRITE
+    .dw Tiles_Cloud_NES, $0A20 | VRAMWRITE
+    ;
+    .db :Tiles_Lift_NES
+    .dw Tiles_Lift_NES, $0A20 | VRAMWRITE
 .ENDS
 
 
@@ -3265,9 +3271,11 @@ FlameFrame0:
 ; Tile index $001
 .db $90 $90 $90 $90 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $C0 $60 $E0 $E0 $E0 $60 $E0 $E0 $E0 $60 $E8 $E8 $E8 $40 $C0 $C0 $C0
 
-; padding
-.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-.db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+; Lift platform tiles (also used as padding)
+Tiles_Lift:
+    .db $00 $00 $00 $FF $FF $FF $FF $00 $C3 $00 $C3 $C3 $C3 $42 $C3 $81 $C3 $42 $C3 $81 $FF $3C $FF $C3 $FF $00 $FF $FF $00 $00 $00 $FF
+Tiles_Lift_NES:
+    .db $00 $00 $00 $FF $FF $FF $FF $00 $C3 $00 $00 $C3 $83 $02 $02 $81 $83 $02 $02 $81 $FF $3C $3C $C3 $FF $00 $00 $FF $FF $FF $FF $00
 
 ; ----------
 LavaFrame1:

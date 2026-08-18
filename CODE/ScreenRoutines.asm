@@ -589,11 +589,13 @@ LoadLevelTileData:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
-    ; LOAD CLOUD PLATFORM IF NEEDED
+    ; LOAD LIFT OR CLOUD PLATFORM AS NEEDED
     LD A, (CloudTypeOverride)
     OR A
+    LD A, ASSET_SPRLIFT
     JR Z, +
     LD A, ASSET_SPRCLOUD
++:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     EX DE, HL
@@ -602,7 +604,6 @@ LoadLevelTileData:
     LD BC, $20 * $100 + VDPDATA_PORT
     OTIR
     ; LOAD SPECIAL TILES DEPENDING ON AREATYPE
-+:
     LD A, (AreaType)
     OR A
     JR Z, WaterAreaSetup

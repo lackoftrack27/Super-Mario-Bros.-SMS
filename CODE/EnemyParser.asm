@@ -1265,7 +1265,7 @@ Enemy17YPosData:
 
 .SECTION "SwimCC_IDData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 SwimCC_IDData:
-    .db $0a, $0b
+    .db OBJECTID_GreyCheepCheep, OBJECTID_RedCheepCheep
 .ENDS
 
 BulletBillCheepCheep:
@@ -1380,7 +1380,7 @@ FireBulletBill:
 ;B - counter for amount of enemies in group
 
 ;   CheckpointEnemyID should not touch BC, DE for this to work
-;   Goomba, GreenKoopa, and Bettle don't touch, so it works
+;   Goomba, GreenKoopa, and Beetle don't touch, so it works
 HandleGroupEnemies:
     LD IXL, $00                         ;load value for green koopa troopa
     SUB A, $37                          ;subtract $37 from second byte read

@@ -8232,7 +8232,7 @@ ChkForBump_HammerBroJ:
 NoBump:
     LD L, <Enemy_ID                 ;check for hammer bro
     LD A, (HL)
-    CP A, $05
+    CP A, OBJECTID_HammerBro
     JP NZ, RXSpd                    ;branch if not found
     
     LD A, H                         ;store pseudo random address in BC

@@ -5953,6 +5953,7 @@ UseAdder:
 ;$02(C) - used for maximum vertical speed
 
 MovePlayerVertically:
+    LD H, >Player_Y_Position        ;set object page for player offset
     LD A, (TimerControl)
     OR A
     JR NZ, NoJSChk                  ;if master timer control set, branch ahead
@@ -8323,7 +8324,7 @@ ChkForBump_HammerBroJ:
 NoBump:
     LD L, <Enemy_ID                 ;check for hammer bro
     LD A, (HL)
-    CP A, $05
+    CP A, OBJECTID_HammerBro
     JP NZ, RXSpd                    ;branch if not found
     
     LD A, H                         ;store pseudo random address in BC

@@ -1159,10 +1159,7 @@ LRWater:
 LRAir:
     LD A, (Left_Right_Buttons)          ;check left/right controller bits (check for jumping/falling)
     OR A
-;    JR Z, JSMove                        ;if not pressing any, skip
-;    CALL ImposeFriction                 ;otherwise process horizontal movement
-;JSMove:
-    CALL NZ, ImposeFriction
+    CALL NZ, ImposeFriction             ;if pressing any, process horizontal movement
     CALL MovePlayerHorizontally         ;do a sub to move player horizontally
     LD (Player_X_Scroll), A             ;set player's speed here, to be used for scroll later
 ;

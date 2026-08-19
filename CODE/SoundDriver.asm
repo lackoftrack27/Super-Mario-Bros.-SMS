@@ -63,14 +63,7 @@
 ;-------------------------------------------------------------------------------------
 .BANK BANK_CODE SLOT 0      ; set bank for sound tables and related data
 
-SoundEngine:
-;   SET FREQUENCY TABLE PTR TO PSG
-    LD HL, PSGFreqTable
-    LD (SndFreqTablePtr), HL
-;   CHECK IF PAUSE OPERATION FLAG IS SET
-    LD A, (SndPauseFlag)
-    OR A
-    JP Z, RunSoundSubroutines
+PauseSoundSubroutine:
     ; SILENCE ALL CHANNELS EXCEPT CHANNEL 0
     LD A, ~CHANALL_BITS | CHAN1_BITS
     OUT (PSG_PORT), A
@@ -106,7 +99,15 @@ SoundEngine:
     LD (SndPauseFlag), A
     RET
 
-RunSoundSubroutines:
+SoundEngine:
+;   SET FREQUENCY TABLE PTR TO PSG
+    LD HL, PSGFreqTable
+    LD (SndFreqTablePtr), HL
+;   DO PAUSE OPERATION STUFF IF FLAG IS SET
+    LD A, (SndPauseFlag)
+    OR A
+    JR NZ, PauseSoundSubroutine
+;   SET BANK FOR SONG DATA
     LD A, BANK_SOUND
     LD (MAPPER_SLOT2), A
 ;   SKIP SFX ON TITLE SCREEN/DEMO
@@ -194,6 +195,43 @@ SkipSoundRoutines:
 ;
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
+    RET
+
+;-------------------------------------------------------------------------------------
+;                               GENERAL SOUND ROUTINES
+;-------------------------------------------------------------------------------------
+
+SndStopChannel:
+;   DO DIFFERENT THING IF DOING PSG TRACK
+    LD A, H
+    CP A, >FMTrack0
+    JR C, @SilencePSG
+
+@SilenceFM:
+;   SEND KEY OFF
+    LD A, FMREG_FNUMKEY
+    LD L, <FMTrack0.ChanBits
+    OR A, (HL)
+    OUT (OPLLREG_PORT), A
+    LD L, <FMTrack0.Control
+    LD A, (HL)
+    RRCA
+    AND A, %00100000
+    LD L, <FMTrack0.FinalFreqMSB
+    OR A, (HL)
+    OUT (OPLLDATA_PORT), A
+    RET
+
+@SilencePSG:
+;   ONLY SEND VOLUME IF TRACK ISN'T OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    RET NZ
+;   SILENCE CHANNEL
+    LD A, ~CHANALL_BITS
+    LD L, <SFXTrack0.ChanBits
+    OR A, (HL)
+    OUT (PSG_PORT), A
     RET
 
 SndStopAll:
@@ -315,6 +353,8 @@ SndInitMemory:
     RET
 
 ;-------------------------------------------------------------------------------------
+;                                   SFX ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndChannelProcessSFX:
 @TrackUpdate:
@@ -362,94 +402,6 @@ SndChannelProcessSFX:
     CALL SndApplyModulation    
     JP SndWriteChannelData@UpdateFreq
 
-
-SndChannelProcessMUS:
-;   PROCESS QUEUE IF IT ISN'T EMPTY
-    LD A, (MusicTrack0.SoundQueue)
-    OR A
-    CALL NZ, SndProcessQueueMusic
-;   CHECK SECONDARY QUEUE (FOR HURRY UP)
-    LD A, (MusicTrack0.Control)
-    AND A, bitValue(CHANCON_PLAYING)
-    JP NZ, +
-    LD A, (MusicTrack1.SoundQueue)
-    OR A
-    CALL NZ, SndProcessQueueMusic
-    XOR A
-    LD (MusicTrack1.SoundQueue), A
-+:
-;   TRACK 0 (NEVER INTERRUPTED BY SFX)
-    LD HL, MusicTrack0.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessSFX@TrackUpdate
-;   TRACK 1
-    LD HL, MusicTrack1.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessMUS@TrackUpdate
-;   TRACK 2
-    LD HL, MusicTrack2.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessMUS@TrackUpdate
-;   TRACK 3
-    LD HL, MusicTrack3.Control
-    BIT CHANCON_PLAYING, (HL)
-    RET Z
-    ; FALL THROUGH
-
-@TrackUpdate:
-    LD L, <SFXTrack0.Duration
-    DEC (HL)
-    JP NZ, +
-;   NEW NOTE...
-    ; READ FROM SOUND DATA
-    CALL SndReadTrackStream
-    ; EXIT IF AT REST
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
-    RET NZ
-    ; FREQUENCY UPDATE
-    LD L, <SFXTrack0.Frequency
-    LD E, (HL)
-    INC L
-    LD D, (HL)
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
-    CALL NZ, SndApplyModulation
-    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    CALL Z, SndWriteChannelData@UpdateFreq
-    ; VOLUME UPDATE
-    JP SndWriteChannelData@UpdateVolume
-;   NOTE IS GOING...
-+:
-    ; EXIT IF AT REST
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
-    RET NZ
-    ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <SFXTrack0.Envelope
-    LD A, (HL)
-    OR A
-    CALL NZ, SndWriteChannelData@UpdateEnvelope
-    ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
-    RET Z
-    LD L, <SFXTrack0.Frequency
-    LD E, (HL)
-    INC L
-    LD D, (HL)
-    CALL SndApplyModulation
-    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    JP Z, SndWriteChannelData@UpdateFreq
-    RET
-
-
-
-;--------------------------------
 
 SndProcessQueueSFX:
     LD B, A
@@ -545,120 +497,12 @@ SndProcessQueueSFX:
     INC H
     RET
 
-SndProcessQueueMusic:
-    LD HL, MusicTrack0.SoundPlaying
-    LD (HL), A
-;   STOP SFX TRACK 0 AND 1 IF QUEUEING DEATH MUSIC
-    CP A, SNDID_DEATH
-    JP NZ, +
-    XOR A
-    LD DE, SFXTrack0
-    LD (DE), A
-    INC D
-    LD (DE), A
-    LD A, (HL)
-;   COPY GLOBAL TRACK DATA
-+:
-    SUB A, $81    
-    ADD A, A
-    EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
-    LD HL, SndIndexTable
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    INC HL          ; UNUSED (FM VOICE)
-    INC HL          ; UNUSED (FM VOICE)
-    INC HL          ; UNUSED
-    INC HL          ; CHANNEL COUNT
-    INC HL          ; TICK MULTIPLIER
-;   SET SPEED FLAG DEPENDING ON ID
-    LD A, (MusicTrack0.SoundPlaying)
-    CP A, SNDID_SILENCE + $01
-    JP NC, @TempoSetup
-    CP A, SNDID_HURRYUP
-    JP C, @TempoSetup
-    LD A, $00
-    LD (SndHurryUpFlag), A
-    JP NZ, @TempoSetup
-    INC A
-    LD (SndHurryUpFlag), A
-;   SETUP TEMPO
-@TempoSetup:
-    XOR A
-    LD (SndTempoTimeout), A
-    ; LD E, <MusicTrack0.SoundPlaying
-    ; LD A, (DE)
-    ; SUB A, SNDID_WATER
-    ; LD BC, SpeedUpTempoTable
-    ; addAToBC8_M
-    LD A, (SndHurryUpFlag)
-    OR A
-    LD A, (HL)
-    JP Z, +
-    XOR A ;LD A, (BC)
-+:
-    LD (SndCurrentTempo), A
-    INC HL
-;   CHANNEL LOOP START
-    LD BC, $04FF
-    LD E, <MusicTrack0.DataPointer
-@ChanSetupLoop:
-    LDI             ; DataPointer
-    LDI             ; DataPointer + $01
-    LDI             ; Transpose
-    LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter)
-    LDI             ; Envelope
-;
-    XOR A
-    LD (DE), A      ; SavedDuration
-    INC E
-    LD (DE), A      ; Detune
-    INC E
-    INC A
-    LD (DE), A      ; Duration
-    ; SET LOOP COUNTERS AND CALL STACK
-    XOR A
-    LD E, <MusicTrack0.LoopCounters
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD A, <MusicTrack0.GoSubStack
-    LD (DE), A
-    ; SET SFX OVERRIDE FLAG IF SFX IS PLAYING ON THE SAME CHANNEL
-    LD E, <SFXTrack0.Control
-    LD A, D
-    CP A, >MusicTrack0
-    LD A, bitValue(CHANCON_PLAYING)
-    JP Z, +
-    INC D
-    INC D
-    INC D
-    LD A, (DE)
-    DEC D
-    DEC D
-    DEC D
-    RLCA
-    LD A, bitValue(CHANCON_PLAYING)
-    JP NC, +
-    LD A, bitValue(CHANCON_PLAYING) | bitValue(CHANCON_SFX)
-+:
-    LD (DE), A
-    INC E
-    INC D           ; Point to next music track
-    DJNZ @ChanSetupLoop
-    EX DE, HL
-    RET
-
-;--------------------------------
+;-------------------------------------------------------------------------------------
+;                               GENERAL TRACK ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndReadTrackStream:
-;
+;   SET BIT 7 FOR NOTE ON DETECTION
     LD L, <FMTrack0.FinalFreqMSB
     SET 7, (HL)
 ;   DO NOTE OFF IF DOING FM TRACK && NO ATK FLAG ISN'T SET
@@ -785,7 +629,7 @@ SndSetFrequency:
     LD L, <SFXTrack0.Frequency + $01
     LD (HL), $FF
 ;   SILENCE CHANNEL
-    JP SndStopChannel@SilenceChan
+    JP SndStopChannel
 @SetNoiseFreq:
     EX AF, AF'
 ;   CLEAR HIGH BYTE OF FREQUENCY
@@ -812,6 +656,271 @@ SndSetFrequency:
     LD L, <SFXTrack0.Envelope
     LD (HL), A
     RET
+
+
+SndApplyModulation:
+    LD L, <SFXTrack0.ModFreq
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    EX DE, HL   ; DE - TRACK PTR, HL - FREQ
+    ADD HL, BC
+    EX DE, HL   ; DE - FREQ + MOD, HL - TRACK PTR
+;   CONTINUE IF MODULATION WAIT IS 0
+    LD L, <SFXTrack0.ModWait
+    LD A, (HL)
+    OR A
+    JP Z, +
+;   ELSE, DECREMENT AND EXIT
+    DEC (HL)
+    RET
+;   DECREMENT MODULATION SPEED AND CONTINUE IF 0
++:
+    INC L
+    DEC (HL)
+    RET NZ
+;   GET MODULATION POINTER TO RESET SPEED
+    LD L, <SFXTrack0.ModPointer
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    INC BC
+    LD A, (BC)
+    LD L, <SFXTrack0.ModSpeed
+    LD (HL), A
+;   CHECK IF STEPS ISN'T 0
+    LD L, <SFXTrack0.ModSteps
+    LD A, (HL)
+    OR A
+    JP NZ, +
+;   ELSE, RESET STEPS, NEGATE DELTA AND EXIT
+    INC BC
+    INC BC
+    LD A, (BC)
+    LD (HL), A
+    DEC L
+    LD A, (HL)
+    NEG
+    LD (HL), A
+    RET
+;   DECREMENT STEPS
++:
+    DEC (HL)
+;   GET MODULATION OFFSET AND ADD DELTA TO IT
+    LD L, <SFXTrack0.ModDelta
+    LD A, (HL)
+    LD L, <SFXTrack0.ModFreq
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    addAToBCS_M
+    LD (HL), B
+    DEC L
+    LD (HL), C
+;   ADD TO BASE FREQUENCY
+    LD L, <SFXTrack0.ModDelta
+    LD A, (HL)
+    addAToDES_M
+    RET
+
+;-------------------------------------------------------------------------------------
+;                               PSG MUSIC ROUTINES
+;-------------------------------------------------------------------------------------
+
+SndProcessQueueMusic:
+    LD HL, MusicTrack0.SoundPlaying
+    LD (HL), A
+;   STOP SFX TRACK 0 AND 1 IF QUEUEING DEATH MUSIC
+    CP A, SNDID_DEATH
+    JP NZ, +
+    XOR A
+    LD DE, SFXTrack0
+    LD (DE), A
+    INC D
+    LD (DE), A
+    LD A, (HL)
+;   COPY GLOBAL TRACK DATA
++:
+    SUB A, $81    
+    ADD A, A
+    EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
+    LD HL, SndIndexTable
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    INC HL          ; UNUSED (FM VOICE)
+    INC HL          ; UNUSED (FM VOICE)
+    INC HL          ; UNUSED
+    INC HL          ; CHANNEL COUNT
+    INC HL          ; TICK MULTIPLIER
+;   SET SPEED FLAG DEPENDING ON ID
+    LD A, (MusicTrack0.SoundPlaying)
+    CP A, SNDID_SILENCE + $01
+    JP NC, @TempoSetup
+    CP A, SNDID_HURRYUP
+    JP C, @TempoSetup
+    LD A, $00
+    LD (SndHurryUpFlag), A
+    JP NZ, @TempoSetup
+    INC A
+    LD (SndHurryUpFlag), A
+;   SETUP TEMPO
+@TempoSetup:
+    XOR A
+    LD (SndTempoTimeout), A
+    ; LD E, <MusicTrack0.SoundPlaying
+    ; LD A, (DE)
+    ; SUB A, SNDID_WATER
+    ; LD BC, SpeedUpTempoTable
+    ; addAToBC8_M
+    LD A, (SndHurryUpFlag)
+    OR A
+    LD A, (HL)
+    JP Z, +
+    XOR A ;LD A, (BC)
++:
+    LD (SndCurrentTempo), A
+    INC HL
+;   CHANNEL LOOP START
+    LD BC, $04FF
+    LD E, <MusicTrack0.DataPointer
+@ChanSetupLoop:
+    LDI             ; DataPointer
+    LDI             ; DataPointer + $01
+    LDI             ; Transpose
+    LDI             ; Volume
+    LDI             ; EnvelopeIndex (Doesn't matter)
+    LDI             ; Envelope
+;
+    XOR A
+    LD (DE), A      ; SavedDuration
+    INC E
+    LD (DE), A      ; Detune
+    INC E
+    INC A
+    LD (DE), A      ; Duration
+    ; SET LOOP COUNTERS AND CALL STACK
+    XOR A
+    LD E, <MusicTrack0.LoopCounters
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD A, <MusicTrack0.GoSubStack
+    LD (DE), A
+    ; SET SFX OVERRIDE FLAG IF SFX IS PLAYING ON THE SAME CHANNEL
+    LD E, <SFXTrack0.Control
+    LD A, D
+    CP A, >MusicTrack0
+    LD A, bitValue(CHANCON_PLAYING)
+    JP Z, +
+    INC D
+    INC D
+    INC D
+    LD A, (DE)
+    DEC D
+    DEC D
+    DEC D
+    RLCA
+    LD A, bitValue(CHANCON_PLAYING)
+    JP NC, +
+    LD A, bitValue(CHANCON_PLAYING) | bitValue(CHANCON_SFX)
++:
+    LD (DE), A
+    INC E
+    INC D           ; Point to next music track
+    DJNZ @ChanSetupLoop
+    EX DE, HL
+    RET
+
+
+SndChannelProcessMUS:
+;   PROCESS QUEUE IF IT ISN'T EMPTY
+    LD A, (MusicTrack0.SoundQueue)
+    OR A
+    CALL NZ, SndProcessQueueMusic
+;   CHECK SECONDARY QUEUE (FOR HURRY UP)
+    LD A, (MusicTrack0.Control)
+    AND A, bitValue(CHANCON_PLAYING)
+    JP NZ, +
+    LD A, (MusicTrack1.SoundQueue)
+    OR A
+    CALL NZ, SndProcessQueueMusic
+    XOR A
+    LD (MusicTrack1.SoundQueue), A
++:
+;   TRACK 0 (NEVER INTERRUPTED BY SFX)
+    LD HL, MusicTrack0.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX@TrackUpdate
+;   TRACK 1
+    LD HL, MusicTrack1.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessMUS@TrackUpdate
+;   TRACK 2
+    LD HL, MusicTrack2.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessMUS@TrackUpdate
+;   TRACK 3
+    LD HL, MusicTrack3.Control
+    BIT CHANCON_PLAYING, (HL)
+    RET Z
+    ; FALL THROUGH
+
+@TrackUpdate:
+    LD L, <SFXTrack0.Duration
+    DEC (HL)
+    JP NZ, +
+;   NEW NOTE...
+    ; READ FROM SOUND DATA
+    CALL SndReadTrackStream
+    ; EXIT IF AT REST
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_REST, (HL)
+    RET NZ
+    ; FREQUENCY UPDATE
+    LD L, <SFXTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_MOD, (HL)
+    CALL NZ, SndApplyModulation
+    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    CALL Z, SndWriteChannelData@UpdateFreq
+    ; VOLUME UPDATE
+    JP SndWriteChannelData@UpdateVolume
+;   NOTE IS GOING...
++:
+    ; EXIT IF AT REST
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_REST, (HL)
+    RET NZ
+    ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
+    LD L, <SFXTrack0.Envelope
+    LD A, (HL)
+    OR A
+    CALL NZ, SndWriteChannelData@UpdateEnvelope
+    ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_MOD, (HL)
+    RET Z
+    LD L, <SFXTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
+    CALL SndApplyModulation
+    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    RET NZ
+    ; FALL THROUGH
 
 
 SndWriteChannelData:
@@ -899,75 +1008,9 @@ SndWriteChannelData:
     OUT (PSG_PORT), A
     RET
 
-
-SndApplyModulation:
-    LD L, <SFXTrack0.ModFreq
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    EX DE, HL   ; DE - TRACK PTR, HL - FREQ
-    ADD HL, BC
-    EX DE, HL   ; DE - FREQ + MOD, HL - TRACK PTR
-;   CONTINUE IF MODULATION WAIT IS 0
-    LD L, <SFXTrack0.ModWait
-    LD A, (HL)
-    OR A
-    JP Z, +
-;   ELSE, DECREMENT AND EXIT
-    DEC (HL)
-    RET
-;   DECREMENT MODULATION SPEED AND CONTINUE IF 0
-+:
-    INC L
-    DEC (HL)
-    RET NZ
-;   GET MODULATION POINTER TO RESET SPEED
-    LD L, <SFXTrack0.ModPointer
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    INC BC
-    LD A, (BC)
-    LD L, <SFXTrack0.ModSpeed
-    LD (HL), A
-;   CHECK IF STEPS ISN'T 0
-    LD L, <SFXTrack0.ModSteps
-    LD A, (HL)
-    OR A
-    JP NZ, +
-;   ELSE, RESET STEPS, NEGATE DELTA AND EXIT
-    INC BC
-    INC BC
-    LD A, (BC)
-    LD (HL), A
-    DEC L
-    LD A, (HL)
-    NEG
-    LD (HL), A
-    RET
-;   DECREMENT STEPS
-+:
-    DEC (HL)
-;   GET MODULATION OFFSET AND ADD DELTA TO IT
-    LD L, <SFXTrack0.ModDelta
-    LD A, (HL)
-    LD L, <SFXTrack0.ModFreq
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    addAToBCS_M
-    LD (HL), B
-    DEC L
-    LD (HL), C
-;   ADD TO BASE FREQUENCY
-    LD L, <SFXTrack0.ModDelta
-    LD A, (HL)
-    addAToDES_M
-    RET
-
-;-----------------------------------------
-;               FM ROUTINES
-;-----------------------------------------
+;-------------------------------------------------------------------------------------
+;                               FM MUSIC ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndProcessQueueMusicFM:
 ;   DO COMPLETE SILENCE IF REQUESTED
@@ -1153,17 +1196,18 @@ SndChannelProcessFM:
     LD E, (HL)
     INC L
     LD D, (HL)
-    ; IF BIT 7 IS SET, ALWAYS UPDATE FREQUENCY (NOTE ON OCCURRED)
-    LD L, <FMTrack0.FinalFreqMSB
-    BIT 7, (HL)
+    ; ALWAYS APPLY MODULATION AND SEND FREQ TO CHIP IF BIT IS SET
     LD L, <FMTrack0.Control
-    JP NZ, +
-    ; ELSE, ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
     BIT CHANCON_MOD, (HL)
-    RET Z
+    JR NZ, +
+    ; ELSE, IF BIT 7 ISN'T SET (NO NEW NOTE), EXIT
+    LD L, <FMTrack0.FinalFreqMSB
+    LD A, (HL)
+    OR A
+    RET P
+    JR SndWriteChannelDataFM
 +:
-    BIT CHANCON_MOD, (HL)   ; REDUNDANT IF FELL THROUGH
-    CALL NZ, SndApplyModulation
+    CALL SndApplyModulation
     ; SEND FREQUENCY TO FM CHIP
     ; FALL THROUGH
 
@@ -1275,6 +1319,8 @@ SndWriteChannelDataFM:
     RET
 
 ;-------------------------------------------------------------------------------------
+;                           COORDINATION FLAG ROUTINES
+;-------------------------------------------------------------------------------------
 
 ;   HL - TRACK RAM, BC - TRACK DATA POINTER
 SndProcessCF:
@@ -1284,10 +1330,6 @@ SndProcessCF:
     ADD A, A
     ADD A, E
 ;   ADD TO TABLE
-    ;LD IX, CoordFlagTable
-    ;addAToIX8_M
-    ;LD A, (BC)
-    ;JP (IX)
     LD E, H
     LD HL, CoordFlagTable
     addAToHL8_M
@@ -1543,9 +1585,8 @@ CoordFlagTable:
     LD L, <SFXTrack0.SoundPlaying
     LD (HL), $00
     ; SILENCE CHANNEL
-    CALL SndStopChannel@SilenceChan
+    CALL SndStopChannel
     ; REMOVE CALLERS (EXIT OUT OF SndChannelProcessXXX)
-    ;POP DE  ; CF RETURN CALLER
     POP DE  ; READ STREAM CALLER
     ; CLEAR SFX OVERRIDE BIT ON MUSIC TRACK IF CURRENTLY PROCESSING A SFX TRACK
     LD A, H
@@ -1643,39 +1684,7 @@ CoordFlagTable:
     JP @return
 
 ;-------------------------------------------------------------------------------------
-
-SndStopChannel:
-@SilenceChan:
-;   DO DIFFERENT THING IF DOING FM TRACK
-    LD A, H
-    CP A, >FMTrack0
-    JP NC, @SilenceFM
-;   ONLY SEND VOLUME IF TRACK ISN'T OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    RET NZ
-;   SILENCE CHANNEL
-    LD A, ~CHANALL_BITS
-    LD L, <SFXTrack0.ChanBits
-    OR A, (HL)
-    OUT (PSG_PORT), A
-    RET
-
-@SilenceFM:
-;   SEND KEY OFF
-    LD A, FMREG_FNUMKEY
-    LD L, <FMTrack0.ChanBits
-    OR A, (HL)
-    OUT (OPLLREG_PORT), A
-    LD L, <FMTrack0.Control
-    LD A, (HL)
-    RRCA
-    AND A, %00100000
-    LD L, <FMTrack0.FinalFreqMSB
-    OR A, (HL)
-    OUT (OPLLDATA_PORT), A
-    RET
-
+;                                   SOUND TABLES
 ;-------------------------------------------------------------------------------------
 
 .SECTION "Sound Index Table" FREE BITWINDOW 8 RETURNORG

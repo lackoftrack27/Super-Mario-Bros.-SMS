@@ -333,14 +333,9 @@ AnimatedBGTileInits:
     .db StripeCount($02 * $20)
     .dw WaterA0Frame0
     .db $08, $08, $08, $08
-@WaterCoin:
-    .dw $3D00 | VRAMWRITE
-    .db StripeCount($04 * $20)
-    .dw WCoinFrame0
-    .db $03, $08, $03, $08
 @Lava:
     .dw $3D80 | VRAMWRITE
-    .db $00;.db StripeCount($04 * $20)
+    .db $00
     .dw LavaFrame0
     .db $08, $08, $08, $08
 @QBlock:
@@ -5419,10 +5414,11 @@ BlockGfxData:
     ;
     .dw $01B4, $01B6, $01B5, $01B7
     .dw $01B8, $01BA, $01B9, $03B6
-    .dw $01BB, $01B6, MT_BLANK, $01BC
-    .dw $01BD, $03B6, $01BE, $01BF
+    .dw $01BB, $01B6, MT_BLANK, $01BC   ; COIN
+    .dw $01BD, $01B6, $01BE, $01BF      ; COIN
     ;
     .dw $0164, $0165, $0165, $0164
+    .dw $0166, $0167, $0167, $0166
 .ENDS
 
 RemoveCoin_Axe:
@@ -5431,11 +5427,22 @@ RemoveCoin_Axe:
     LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to VRAM_Buffer1
 ;
     LD A, (AreaType)                ;check area type
+    LD C, A
+    LD A, $04                       ;for water, use blank water tile
+    SUB A, C                        ;for ground, use blank tile
+    CP A, $03
+    JR NC, PutBlockMetatile
+    CP A, $01                       ;for castle, use blue brick tile
+    LD A, $09
+    JR Z, PutBlockMetatile
+    LD A, (MainUndergndLvlFlag)     ;for underground, first check if in coin room
     OR A
-    LD A, $03                       ;load offset for default blank metatile
-    JR NZ, PutBlockMetatile         ;if not water type, use offset
-    INC A                           ;otherwise load offset for blank metatile used in water
-    JP PutBlockMetatile             ;do a sub to write blank metatile to vram buffer
+    LD A, $03
+    JR Z, PutBlockMetatile          ;if so, use blank tile
+    LD A, (PseudoRandomBitReg)      ;else, use one out of two underground BG tiles
+    AND A, %00000001
+    ADD A, $07
+    JR PutBlockMetatile
 
 DestroyBlockMetatile:
     XOR A                           ;force blank metatile if branched/jumped to this point

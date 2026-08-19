@@ -1399,7 +1399,6 @@ MidTreeL:
     LD A, B
     addAToHL8_M
     LD (HL), MT_TREELEDGE_MID           ;at the start of level for continuous effect
-    ;LD A, MT_TREELEDGE_TRUCK
     ; ALL-STARS
     EX DE, HL                           ;DE: MetatileBuffer, HL: TreeLedgeLength
     ; CHECK IF TOTAL LENGTH IS 2
@@ -1541,7 +1540,7 @@ CastleObject:
     LD A, (HL)
     LD HL, CastleMetatiles
     JR Z, +
-    LD HL, CastleMetatilesPriority
+    LD L, <CastleMetatilesPriority
 +:
     addAToHL8_M
     LD A, B
@@ -2310,25 +2309,15 @@ StrWOffset:
     RET
     
 NoWhirlP:
-    LD A, (AreaType)                    ;skip if not in castle area
+    LD BC, $080F                        ;start at ninth row and go to bottom
+    LD A, (AreaType)                    ;fill hole with blank tile if not in castle area
     CP A, $03
-    JR NZ, +
-    LD HL, MetatileBuffer + $08         ;else, manually fill buffer with castle bg tiles
-    LD (HL), MT_BGCASTLE_00
-    INC L
-    LD (HL), MT_BGCASTLE_01
-    INC L
-    LD (HL), MT_BGCASTLE_01
-    INC L
-    LD (HL), MT_BGCASTLE_01
-    RET
-    ;LD A, (AreaType)                    ;get appropriate metatile, then
-    ;LD HL, HoleMetatiles
-    ;addAToHL8_M
-    ;LD A, (HL)                          ;render the hole proper
-+:
     LD A, MT_BLANK
-    LD BC, $080F                        ;start at ninth row and go to bottom, run RenderUnderPart
+    JR NZ, RenderUnderPart
+    LD A, MT_BGCASTLE_00                ;else, fill first tile with red brick BG tile
+    LD (MetatileBuffer + $08), A
+    LD A, MT_BGCASTLE_01                ;then fill the rest with the blue brick BG tile
+    INC B
     ; FALL THROUGH
 
 ;--------------------------------

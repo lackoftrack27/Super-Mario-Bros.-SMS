@@ -61,15 +61,9 @@
 .DEFINE FM_CHAN8_BITS   $08
 
 ;-------------------------------------------------------------------------------------
+.BANK BANK_CODE SLOT 0      ; set bank for sound tables and related data
 
-SoundEngine:
-;   SET FREQUENCY TABLE PTR TO PSG
-    LD HL, PSGFreqTable
-    LD (SndFreqTablePtr), HL
-;   CHECK IF PAUSE OPERATION FLAG IS SET
-    LD A, (SndPauseFlag)
-    OR A
-    JP Z, RunSoundSubroutines
+PauseSoundSubroutine:
     ; SILENCE ALL CHANNELS EXCEPT CHANNEL 0
     LD A, ~CHANALL_BITS | CHAN1_BITS
     OUT (PSG_PORT), A
@@ -105,7 +99,15 @@ SoundEngine:
     LD (SndPauseFlag), A
     RET
 
-RunSoundSubroutines:
+SoundEngine:
+;   SET FREQUENCY TABLE PTR TO PSG
+    LD HL, PSGFreqTable
+    LD (SndFreqTablePtr), HL
+;   DO PAUSE OPERATION STUFF IF FLAG IS SET
+    LD A, (SndPauseFlag)
+    OR A
+    JR NZ, PauseSoundSubroutine
+;   SET BANK FOR SONG DATA
     LD A, BANK_SOUND
     LD (MAPPER_SLOT2), A
 ;   SKIP SFX ON TITLE SCREEN/DEMO
@@ -193,6 +195,43 @@ SkipSoundRoutines:
 ;
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
+    RET
+
+;-------------------------------------------------------------------------------------
+;                               GENERAL SOUND ROUTINES
+;-------------------------------------------------------------------------------------
+
+SndStopChannel:
+;   DO DIFFERENT THING IF DOING PSG TRACK
+    LD A, H
+    CP A, >FMTrack0
+    JR C, @SilencePSG
+
+@SilenceFM:
+;   SEND KEY OFF
+    LD A, FMREG_FNUMKEY
+    LD L, <FMTrack0.ChanBits
+    OR A, (HL)
+    OUT (OPLLREG_PORT), A
+    LD L, <FMTrack0.Control
+    LD A, (HL)
+    RRCA
+    AND A, %00100000
+    LD L, <FMTrack0.FinalFreqMSB
+    OR A, (HL)
+    OUT (OPLLDATA_PORT), A
+    RET
+
+@SilencePSG:
+;   ONLY SEND VOLUME IF TRACK ISN'T OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    RET NZ
+;   SILENCE CHANNEL
+    LD A, ~CHANALL_BITS
+    LD L, <SFXTrack0.ChanBits
+    OR A, (HL)
+    OUT (PSG_PORT), A
     RET
 
 SndStopAll:
@@ -314,6 +353,8 @@ SndInitMemory:
     RET
 
 ;-------------------------------------------------------------------------------------
+;                                   SFX ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndChannelProcessSFX:
 @TrackUpdate:
@@ -361,94 +402,6 @@ SndChannelProcessSFX:
     CALL SndApplyModulation    
     JP SndWriteChannelData@UpdateFreq
 
-
-SndChannelProcessMUS:
-;   PROCESS QUEUE IF IT ISN'T EMPTY
-    LD A, (MusicTrack0.SoundQueue)
-    OR A
-    CALL NZ, SndProcessQueueMusic
-;   CHECK SECONDARY QUEUE (FOR HURRY UP)
-    LD A, (MusicTrack0.Control)
-    AND A, bitValue(CHANCON_PLAYING)
-    JP NZ, +
-    LD A, (MusicTrack1.SoundQueue)
-    OR A
-    CALL NZ, SndProcessQueueMusic
-    XOR A
-    LD (MusicTrack1.SoundQueue), A
-+:
-;   TRACK 0 (NEVER INTERRUPTED BY SFX)
-    LD HL, MusicTrack0.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessSFX@TrackUpdate
-;   TRACK 1
-    LD HL, MusicTrack1.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessMUS@TrackUpdate
-;   TRACK 2
-    LD HL, MusicTrack2.Control
-    BIT CHANCON_PLAYING, (HL)
-    CALL NZ, SndChannelProcessMUS@TrackUpdate
-;   TRACK 3
-    LD HL, MusicTrack3.Control
-    BIT CHANCON_PLAYING, (HL)
-    RET Z
-    ; FALL THROUGH
-
-@TrackUpdate:
-    LD L, <SFXTrack0.Duration
-    DEC (HL)
-    JP NZ, +
-;   NEW NOTE...
-    ; READ FROM SOUND DATA
-    CALL SndReadTrackStream
-    ; EXIT IF AT REST
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
-    RET NZ
-    ; FREQUENCY UPDATE
-    LD L, <SFXTrack0.Frequency
-    LD E, (HL)
-    INC L
-    LD D, (HL)
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
-    CALL NZ, SndApplyModulation
-    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    CALL Z, SndWriteChannelData@UpdateFreq
-    ; VOLUME UPDATE
-    JP SndWriteChannelData@UpdateVolume
-;   NOTE IS GOING...
-+:
-    ; EXIT IF AT REST
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
-    RET NZ
-    ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <SFXTrack0.Envelope
-    LD A, (HL)
-    OR A
-    CALL NZ, SndWriteChannelData@UpdateEnvelope
-    ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
-    RET Z
-    LD L, <SFXTrack0.Frequency
-    LD E, (HL)
-    INC L
-    LD D, (HL)
-    CALL SndApplyModulation
-    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    JP Z, SndWriteChannelData@UpdateFreq
-    RET
-
-
-
-;--------------------------------
 
 SndProcessQueueSFX:
     LD B, A
@@ -544,120 +497,12 @@ SndProcessQueueSFX:
     INC H
     RET
 
-SndProcessQueueMusic:
-    LD HL, MusicTrack0.SoundPlaying
-    LD (HL), A
-;   STOP SFX TRACK 0 AND 1 IF QUEUEING DEATH MUSIC
-    CP A, SNDID_DEATH
-    JP NZ, +
-    XOR A
-    LD DE, SFXTrack0
-    LD (DE), A
-    INC D
-    LD (DE), A
-    LD A, (HL)
-;   COPY GLOBAL TRACK DATA
-+:
-    SUB A, $81    
-    ADD A, A
-    EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
-    LD HL, SndIndexTable
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    INC HL          ; UNUSED (FM VOICE)
-    INC HL          ; UNUSED (FM VOICE)
-    INC HL          ; UNUSED
-    INC HL          ; CHANNEL COUNT
-    INC HL          ; TICK MULTIPLIER
-;   SET SPEED FLAG DEPENDING ON ID
-    LD A, (MusicTrack0.SoundPlaying)
-    CP A, SNDID_SILENCE + $01
-    JP NC, @TempoSetup
-    CP A, SNDID_HURRYUP
-    JP C, @TempoSetup
-    LD A, $00
-    LD (SndHurryUpFlag), A
-    JP NZ, @TempoSetup
-    INC A
-    LD (SndHurryUpFlag), A
-;   SETUP TEMPO
-@TempoSetup:
-    XOR A
-    LD (SndTempoTimeout), A
-    ; LD E, <MusicTrack0.SoundPlaying
-    ; LD A, (DE)
-    ; SUB A, SNDID_WATER
-    ; LD BC, SpeedUpTempoTable
-    ; addAToBC8_M
-    LD A, (SndHurryUpFlag)
-    OR A
-    LD A, (HL)
-    JP Z, +
-    XOR A ;LD A, (BC)
-+:
-    LD (SndCurrentTempo), A
-    INC HL
-;   CHANNEL LOOP START
-    LD BC, $04FF
-    LD E, <MusicTrack0.DataPointer
-@ChanSetupLoop:
-    LDI             ; DataPointer
-    LDI             ; DataPointer + $01
-    LDI             ; Transpose
-    LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter)
-    LDI             ; Envelope
-;
-    XOR A
-    LD (DE), A      ; SavedDuration
-    INC E
-    LD (DE), A      ; Detune
-    INC E
-    INC A
-    LD (DE), A      ; Duration
-    ; SET LOOP COUNTERS AND CALL STACK
-    XOR A
-    LD E, <MusicTrack0.LoopCounters
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD (DE), A
-    INC E
-    LD A, <MusicTrack0.GoSubStack
-    LD (DE), A
-    ; SET SFX OVERRIDE FLAG IF SFX IS PLAYING ON THE SAME CHANNEL
-    LD E, <SFXTrack0.Control
-    LD A, D
-    CP A, >MusicTrack0
-    LD A, bitValue(CHANCON_PLAYING)
-    JP Z, +
-    INC D
-    INC D
-    INC D
-    LD A, (DE)
-    DEC D
-    DEC D
-    DEC D
-    RLCA
-    LD A, bitValue(CHANCON_PLAYING)
-    JP NC, +
-    LD A, bitValue(CHANCON_PLAYING) | bitValue(CHANCON_SFX)
-+:
-    LD (DE), A
-    INC E
-    INC D           ; Point to next music track
-    DJNZ @ChanSetupLoop
-    EX DE, HL
-    RET
-
-;--------------------------------
+;-------------------------------------------------------------------------------------
+;                               GENERAL TRACK ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndReadTrackStream:
-;
+;   SET BIT 7 FOR NOTE ON DETECTION
     LD L, <FMTrack0.FinalFreqMSB
     SET 7, (HL)
 ;   DO NOTE OFF IF DOING FM TRACK && NO ATK FLAG ISN'T SET
@@ -784,7 +629,7 @@ SndSetFrequency:
     LD L, <SFXTrack0.Frequency + $01
     LD (HL), $FF
 ;   SILENCE CHANNEL
-    JP SndStopChannel@SilenceChan
+    JP SndStopChannel
 @SetNoiseFreq:
     EX AF, AF'
 ;   CLEAR HIGH BYTE OF FREQUENCY
@@ -811,6 +656,271 @@ SndSetFrequency:
     LD L, <SFXTrack0.Envelope
     LD (HL), A
     RET
+
+
+SndApplyModulation:
+    LD L, <SFXTrack0.ModFreq
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    EX DE, HL   ; DE - TRACK PTR, HL - FREQ
+    ADD HL, BC
+    EX DE, HL   ; DE - FREQ + MOD, HL - TRACK PTR
+;   CONTINUE IF MODULATION WAIT IS 0
+    LD L, <SFXTrack0.ModWait
+    LD A, (HL)
+    OR A
+    JP Z, +
+;   ELSE, DECREMENT AND EXIT
+    DEC (HL)
+    RET
+;   DECREMENT MODULATION SPEED AND CONTINUE IF 0
++:
+    INC L
+    DEC (HL)
+    RET NZ
+;   GET MODULATION POINTER TO RESET SPEED
+    LD L, <SFXTrack0.ModPointer
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    INC BC
+    LD A, (BC)
+    LD L, <SFXTrack0.ModSpeed
+    LD (HL), A
+;   CHECK IF STEPS ISN'T 0
+    LD L, <SFXTrack0.ModSteps
+    LD A, (HL)
+    OR A
+    JP NZ, +
+;   ELSE, RESET STEPS, NEGATE DELTA AND EXIT
+    INC BC
+    INC BC
+    LD A, (BC)
+    LD (HL), A
+    DEC L
+    LD A, (HL)
+    NEG
+    LD (HL), A
+    RET
+;   DECREMENT STEPS
++:
+    DEC (HL)
+;   GET MODULATION OFFSET AND ADD DELTA TO IT
+    LD L, <SFXTrack0.ModDelta
+    LD A, (HL)
+    LD L, <SFXTrack0.ModFreq
+    LD C, (HL)
+    INC L
+    LD B, (HL)
+    addAToBCS_M
+    LD (HL), B
+    DEC L
+    LD (HL), C
+;   ADD TO BASE FREQUENCY
+    LD L, <SFXTrack0.ModDelta
+    LD A, (HL)
+    addAToDES_M
+    RET
+
+;-------------------------------------------------------------------------------------
+;                               PSG MUSIC ROUTINES
+;-------------------------------------------------------------------------------------
+
+SndProcessQueueMusic:
+    LD HL, MusicTrack0.SoundPlaying
+    LD (HL), A
+;   STOP SFX TRACK 0 AND 1 IF QUEUEING DEATH MUSIC
+    CP A, SNDID_DEATH
+    JP NZ, +
+    XOR A
+    LD DE, SFXTrack0
+    LD (DE), A
+    INC D
+    LD (DE), A
+    LD A, (HL)
+;   COPY GLOBAL TRACK DATA
++:
+    SUB A, $81    
+    ADD A, A
+    EX DE, HL       ; DE - TRACK RAM, HL - TRACK DATA
+    LD HL, SndIndexTable
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    INC HL          ; UNUSED (FM VOICE)
+    INC HL          ; UNUSED (FM VOICE)
+    INC HL          ; UNUSED
+    INC HL          ; CHANNEL COUNT
+    INC HL          ; TICK MULTIPLIER
+;   SET SPEED FLAG DEPENDING ON ID
+    LD A, (MusicTrack0.SoundPlaying)
+    CP A, SNDID_SILENCE + $01
+    JP NC, @TempoSetup
+    CP A, SNDID_HURRYUP
+    JP C, @TempoSetup
+    LD A, $00
+    LD (SndHurryUpFlag), A
+    JP NZ, @TempoSetup
+    INC A
+    LD (SndHurryUpFlag), A
+;   SETUP TEMPO
+@TempoSetup:
+    XOR A
+    LD (SndTempoTimeout), A
+    ; LD E, <MusicTrack0.SoundPlaying
+    ; LD A, (DE)
+    ; SUB A, SNDID_WATER
+    ; LD BC, SpeedUpTempoTable
+    ; addAToBC8_M
+    LD A, (SndHurryUpFlag)
+    OR A
+    LD A, (HL)
+    JP Z, +
+    XOR A ;LD A, (BC)
++:
+    LD (SndCurrentTempo), A
+    INC HL
+;   CHANNEL LOOP START
+    LD BC, $04FF
+    LD E, <MusicTrack0.DataPointer
+@ChanSetupLoop:
+    LDI             ; DataPointer
+    LDI             ; DataPointer + $01
+    LDI             ; Transpose
+    LDI             ; Volume
+    LDI             ; EnvelopeIndex (Doesn't matter)
+    LDI             ; Envelope
+;
+    XOR A
+    LD (DE), A      ; SavedDuration
+    INC E
+    LD (DE), A      ; Detune
+    INC E
+    INC A
+    LD (DE), A      ; Duration
+    ; SET LOOP COUNTERS AND CALL STACK
+    XOR A
+    LD E, <MusicTrack0.LoopCounters
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD (DE), A
+    INC E
+    LD A, <MusicTrack0.GoSubStack
+    LD (DE), A
+    ; SET SFX OVERRIDE FLAG IF SFX IS PLAYING ON THE SAME CHANNEL
+    LD E, <SFXTrack0.Control
+    LD A, D
+    CP A, >MusicTrack0
+    LD A, bitValue(CHANCON_PLAYING)
+    JP Z, +
+    INC D
+    INC D
+    INC D
+    LD A, (DE)
+    DEC D
+    DEC D
+    DEC D
+    RLCA
+    LD A, bitValue(CHANCON_PLAYING)
+    JP NC, +
+    LD A, bitValue(CHANCON_PLAYING) | bitValue(CHANCON_SFX)
++:
+    LD (DE), A
+    INC E
+    INC D           ; Point to next music track
+    DJNZ @ChanSetupLoop
+    EX DE, HL
+    RET
+
+
+SndChannelProcessMUS:
+;   PROCESS QUEUE IF IT ISN'T EMPTY
+    LD A, (MusicTrack0.SoundQueue)
+    OR A
+    CALL NZ, SndProcessQueueMusic
+;   CHECK SECONDARY QUEUE (FOR HURRY UP)
+    LD A, (MusicTrack0.Control)
+    AND A, bitValue(CHANCON_PLAYING)
+    JP NZ, +
+    LD A, (MusicTrack1.SoundQueue)
+    OR A
+    CALL NZ, SndProcessQueueMusic
+    XOR A
+    LD (MusicTrack1.SoundQueue), A
++:
+;   TRACK 0 (NEVER INTERRUPTED BY SFX)
+    LD HL, MusicTrack0.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessSFX@TrackUpdate
+;   TRACK 1
+    LD HL, MusicTrack1.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessMUS@TrackUpdate
+;   TRACK 2
+    LD HL, MusicTrack2.Control
+    BIT CHANCON_PLAYING, (HL)
+    CALL NZ, SndChannelProcessMUS@TrackUpdate
+;   TRACK 3
+    LD HL, MusicTrack3.Control
+    BIT CHANCON_PLAYING, (HL)
+    RET Z
+    ; FALL THROUGH
+
+@TrackUpdate:
+    LD L, <SFXTrack0.Duration
+    DEC (HL)
+    JP NZ, +
+;   NEW NOTE...
+    ; READ FROM SOUND DATA
+    CALL SndReadTrackStream
+    ; EXIT IF AT REST
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_REST, (HL)
+    RET NZ
+    ; FREQUENCY UPDATE
+    LD L, <SFXTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_MOD, (HL)
+    CALL NZ, SndApplyModulation
+    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    CALL Z, SndWriteChannelData@UpdateFreq
+    ; VOLUME UPDATE
+    JP SndWriteChannelData@UpdateVolume
+;   NOTE IS GOING...
++:
+    ; EXIT IF AT REST
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_REST, (HL)
+    RET NZ
+    ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
+    LD L, <SFXTrack0.Envelope
+    LD A, (HL)
+    OR A
+    CALL NZ, SndWriteChannelData@UpdateEnvelope
+    ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_MOD, (HL)
+    RET Z
+    LD L, <SFXTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
+    CALL SndApplyModulation
+    ; ONLY SEND FREQUENCY IF NOT BEING OVERRIDDEN BY SFX
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_SFX, (HL)
+    RET NZ
+    ; FALL THROUGH
 
 
 SndWriteChannelData:
@@ -898,75 +1008,9 @@ SndWriteChannelData:
     OUT (PSG_PORT), A
     RET
 
-
-SndApplyModulation:
-    LD L, <SFXTrack0.ModFreq
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    EX DE, HL   ; DE - TRACK PTR, HL - FREQ
-    ADD HL, BC
-    EX DE, HL   ; DE - FREQ + MOD, HL - TRACK PTR
-;   CONTINUE IF MODULATION WAIT IS 0
-    LD L, <SFXTrack0.ModWait
-    LD A, (HL)
-    OR A
-    JP Z, +
-;   ELSE, DECREMENT AND EXIT
-    DEC (HL)
-    RET
-;   DECREMENT MODULATION SPEED AND CONTINUE IF 0
-+:
-    INC L
-    DEC (HL)
-    RET NZ
-;   GET MODULATION POINTER TO RESET SPEED
-    LD L, <SFXTrack0.ModPointer
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    INC BC
-    LD A, (BC)
-    LD L, <SFXTrack0.ModSpeed
-    LD (HL), A
-;   CHECK IF STEPS ISN'T 0
-    LD L, <SFXTrack0.ModSteps
-    LD A, (HL)
-    OR A
-    JP NZ, +
-;   ELSE, RESET STEPS, NEGATE DELTA AND EXIT
-    INC BC
-    INC BC
-    LD A, (BC)
-    LD (HL), A
-    DEC L
-    LD A, (HL)
-    NEG
-    LD (HL), A
-    RET
-;   DECREMENT STEPS
-+:
-    DEC (HL)
-;   GET MODULATION OFFSET AND ADD DELTA TO IT
-    LD L, <SFXTrack0.ModDelta
-    LD A, (HL)
-    LD L, <SFXTrack0.ModFreq
-    LD C, (HL)
-    INC L
-    LD B, (HL)
-    addAToBCS_M
-    LD (HL), B
-    DEC L
-    LD (HL), C
-;   ADD TO BASE FREQUENCY
-    LD L, <SFXTrack0.ModDelta
-    LD A, (HL)
-    addAToDES_M
-    RET
-
-;-----------------------------------------
-;               FM ROUTINES
-;-----------------------------------------
+;-------------------------------------------------------------------------------------
+;                               FM MUSIC ROUTINES
+;-------------------------------------------------------------------------------------
 
 SndProcessQueueMusicFM:
 ;   DO COMPLETE SILENCE IF REQUESTED
@@ -1152,17 +1196,18 @@ SndChannelProcessFM:
     LD E, (HL)
     INC L
     LD D, (HL)
-    ; IF BIT 7 IS SET, ALWAYS UPDATE FREQUENCY (NOTE ON OCCURRED)
-    LD L, <FMTrack0.FinalFreqMSB
-    BIT 7, (HL)
+    ; ALWAYS APPLY MODULATION AND SEND FREQ TO CHIP IF BIT IS SET
     LD L, <FMTrack0.Control
-    JP NZ, +
-    ; ELSE, ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
     BIT CHANCON_MOD, (HL)
-    RET Z
+    JR NZ, +
+    ; ELSE, IF BIT 7 ISN'T SET (NO NEW NOTE), EXIT
+    LD L, <FMTrack0.FinalFreqMSB
+    LD A, (HL)
+    OR A
+    RET P
+    JR SndWriteChannelDataFM
 +:
-    BIT CHANCON_MOD, (HL)   ; REDUNDANT IF FELL THROUGH
-    CALL NZ, SndApplyModulation
+    CALL SndApplyModulation
     ; SEND FREQUENCY TO FM CHIP
     ; FALL THROUGH
 
@@ -1274,6 +1319,8 @@ SndWriteChannelDataFM:
     RET
 
 ;-------------------------------------------------------------------------------------
+;                           COORDINATION FLAG ROUTINES
+;-------------------------------------------------------------------------------------
 
 ;   HL - TRACK RAM, BC - TRACK DATA POINTER
 SndProcessCF:
@@ -1283,10 +1330,6 @@ SndProcessCF:
     ADD A, A
     ADD A, E
 ;   ADD TO TABLE
-    ;LD IX, CoordFlagTable
-    ;addAToIX8_M
-    ;LD A, (BC)
-    ;JP (IX)
     LD E, H
     LD HL, CoordFlagTable
     addAToHL8_M
@@ -1294,7 +1337,7 @@ SndProcessCF:
     JP (HL)
 
 
-.SECTION "Coordination Flag Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Coordination Flag Table" FREE BITWINDOW 8 RETURNORG
 CoordFlagTable:
     JP @cfSetPatchEnv       ; $E0 (SET FM PATCH ENVELOPE)
     JP @cfDetune            ; $E1 (DETUNE)
@@ -1542,9 +1585,8 @@ CoordFlagTable:
     LD L, <SFXTrack0.SoundPlaying
     LD (HL), $00
     ; SILENCE CHANNEL
-    CALL SndStopChannel@SilenceChan
+    CALL SndStopChannel
     ; REMOVE CALLERS (EXIT OUT OF SndChannelProcessXXX)
-    ;POP DE  ; CF RETURN CALLER
     POP DE  ; READ STREAM CALLER
     ; CLEAR SFX OVERRIDE BIT ON MUSIC TRACK IF CURRENTLY PROCESSING A SFX TRACK
     LD A, H
@@ -1642,42 +1684,10 @@ CoordFlagTable:
     JP @return
 
 ;-------------------------------------------------------------------------------------
-
-SndStopChannel:
-@SilenceChan:
-;   DO DIFFERENT THING IF DOING FM TRACK
-    LD A, H
-    CP A, >FMTrack0
-    JP NC, @SilenceFM
-;   ONLY SEND VOLUME IF TRACK ISN'T OVERRIDDEN BY SFX
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_SFX, (HL)
-    RET NZ
-;   SILENCE CHANNEL
-    LD A, ~CHANALL_BITS
-    LD L, <SFXTrack0.ChanBits
-    OR A, (HL)
-    OUT (PSG_PORT), A
-    RET
-
-@SilenceFM:
-;   SEND KEY OFF
-    LD A, FMREG_FNUMKEY
-    LD L, <FMTrack0.ChanBits
-    OR A, (HL)
-    OUT (OPLLREG_PORT), A
-    LD L, <FMTrack0.Control
-    LD A, (HL)
-    RRCA
-    AND A, %00100000
-    LD L, <FMTrack0.FinalFreqMSB
-    OR A, (HL)
-    OUT (OPLLDATA_PORT), A
-    RET
-
+;                                   SOUND TABLES
 ;-------------------------------------------------------------------------------------
 
-.SECTION "Sound Index Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound Index Table" FREE BITWINDOW 8 RETURNORG
 SndIndexTable:
     ; SFX START ($00 - $12)
     .dw SFX_JumpBig
@@ -1744,7 +1754,7 @@ SndIndexTable:
 
 ;--------------------------------
 
-.SECTION "Sound PSG Frequency Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Frequency Table" FREE BITWINDOW 8 RETURNORG
 PSGFreqTable:
 ;         C     C#    D     Eb    E     F     F#    G     G#    A     Bb    B
     .dw $03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03FF,$03F9,$03C0,$038A; Octave 2 - (81 - 8C)   0
@@ -1757,7 +1767,7 @@ PSGFreqTable:
 	.dw $000D,$000D,$000C,$000B,$000B,$000A,$0009,$0009,$0008,$0008,$0007,$0007; Octave 9 - (D5 - E0)   7
 .ENDS
 
-.SECTION "Sound FM Frequency Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound FM Frequency Table" FREE BITWINDOW 8 RETURNORG
 FMFreqTable:
 ;         C     C#    D     Eb    E     F     F#    G     G#    A     Bb    B
     .dw $00AC,$00B7,$00C2,$00CD,$00D9,$00E6,$00F4,$0102,$0112,$0122,$0133,$0146; Octave 0 - (81 - 8C)   0
@@ -1772,7 +1782,7 @@ FMFreqTable:
 
 ;--------------------------------
 
-.SECTION "Volume Envelope Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Volume Envelope Table" FREE BITWINDOW 8 RETURNORG
 VolumeEnvTable:
     .dw PSGEnv01    ; SFX PAUSE
     .dw PSGEnv02    ; SFX COIN
@@ -1793,13 +1803,13 @@ VolumeEnvTable:
     .dw PSGEnv10    ; DRUM 1
 .ENDS
 
-.SECTION "Sound PSG Envelope 01 - SFX PAUSE" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 01 - SFX PAUSE" FREE BITWINDOW 8 RETURNORG
 PSGEnv01:
     .db $00, $01, $01, $01, $01, $02, $02, $03, $03, $03, $04, $05, $06, $07, $07, $09
     .db $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 02 - SFX COIN" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 02 - SFX COIN" FREE BITWINDOW 8 RETURNORG
 PSGEnv02:
     .db $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02
     .db $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03, $04, $04, $04, $05
@@ -1807,17 +1817,17 @@ PSGEnv02:
     .db $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 03 - SFX 1UP" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 03 - SFX 1UP" FREE BITWINDOW 8 RETURNORG
 PSGEnv03:
     .db $00, $01, $01, $02, $03, $03, $04, $06, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 04 - SFX SWIM" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 04 - SFX SWIM" FREE BITWINDOW 8 RETURNORG
 PSGEnv04:
     .db $09, $06, $05, $04, $03, $01, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 05 - SFX FLAME" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 05 - SFX FLAME" FREE BITWINDOW 8 RETURNORG
 PSGEnv05:
     .db $06, $04, $04, $03, $03, $02, $02, $01, $01, $01, $01, $00, $00, $00, $00, $00
     .db $00, $00, $00, $01, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $00
@@ -1826,69 +1836,69 @@ PSGEnv05:
     .db $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 06 - SFX JUMP" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 06 - SFX JUMP" FREE BITWINDOW 8 RETURNORG
 PSGEnv06:
     .db $00, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $03, $03, $03, $03, $04
     .db $04, $04, $05, $05, $06, $06, $07, $07, $09, $09, $09, $0C, $0C, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 07 - MUSIC 00" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 07 - MUSIC 00" FREE BITWINDOW 8 RETURNORG
 PSGEnv07:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 08 - MUSIC 01" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 08 - MUSIC 01" FREE BITWINDOW 8 RETURNORG
 PSGEnv08:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
     .db $04, $04, $04, $04, $04, $04, $05, $05, $05, $05, $05, $05, $06, $06, $06, $06
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 09 - MUSIC 02" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 09 - MUSIC 02" FREE BITWINDOW 8 RETURNORG
 PSGEnv09:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0A - MUSIC 03" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0A - MUSIC 03" FREE BITWINDOW 8 RETURNORG
 PSGEnv0A:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
     .db $04, $04, $04, $04, $04, $04, $05, $05, $05, $05, $05, $05, $06, $06, $06, $06
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0B - MUSIC 04" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0B - MUSIC 04" FREE BITWINDOW 8 RETURNORG
 PSGEnv0B:
     .db $00, $01, $01, $03, $06, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0C - MUSIC 05" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0C - MUSIC 05" FREE BITWINDOW 8 RETURNORG
 PSGEnv0C:
     .db $00, $01, $01, $02, $03, $03, $04, $06, $07, $09, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0D - MUSIC 06" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0D - MUSIC 06" FREE BITWINDOW 8 RETURNORG
 PSGEnv0D:
     .db $00, $01, $02, $02, $03, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0E - MUSIC 07" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0E - MUSIC 07" FREE BITWINDOW 8 RETURNORG
 PSGEnv0E:
     .db $00, $00, $00, $00, $00, $00, $00, $00, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 0F - DRUM 00" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 0F - DRUM 00" FREE BITWINDOW 8 RETURNORG
 PSGEnv0F:
     .db $00, $00, $00, $00, $00, $0F, $80
 .ENDS
 
-.SECTION "Sound PSG Envelope 10 - DRUM 01" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Envelope 10 - DRUM 01" FREE BITWINDOW 8 RETURNORG
 PSGEnv10:
     .db $00, $0F, $80
 .ENDS
 
 ;--------------------------------
 
-.SECTION "Sound PSG Drum Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sound PSG Drum Table" FREE BITWINDOW 8 RETURNORG
 PSGDrumTable:
     .db $E4, $0F    ; NOISE HIGH,   ENVELOPE $0F (5 TICKS)
     .db $E4, $10    ; NOISE HIGH,   ENVELOPE $10 (1 TICK)
@@ -1897,7 +1907,7 @@ PSGDrumTable:
 
 ;--------------------------------
 
-.SECTION "Speed Up Tempo Table (FM)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Speed Up Tempo Table (FM)" FREE BITWINDOW 8 RETURNORG
 SpeedUpTempoTableFM:
     .db TempoFunc($38), TempoFunc($23), TempoFunc($83)
     .db TempoFunc($59)
@@ -1916,7 +1926,7 @@ SpeedUpTempoTableFM:
 
 ;--------------------------------
 
-.SECTION "Patch Envelope Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Patch Envelope Table" FREE BITWINDOW 8 RETURNORG
 FMPatchEnvTable:
     .dw PatchEnv01
     .dw PatchEnv02
@@ -1946,140 +1956,140 @@ FMPatchEnvTable:
     .dw PatchEnv1A
 .ENDS
 
-.SECTION "PatchEnv01" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv01" FREE BITWINDOW 8 RETURNORG
 PatchEnv01:
     .db $04, $05, $80
 .ENDS
 
-.SECTION "PatchEnv02" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv02" FREE BITWINDOW 8 RETURNORG
 PatchEnv02:
     .db $02, $01, $80
 .ENDS
 
-.SECTION "PatchEnv03" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv03" FREE BITWINDOW 8 RETURNORG
 PatchEnv03:
     .db $02, $01, $80
 .ENDS
 
-.SECTION "PatchEnv04" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv04" FREE BITWINDOW 8 RETURNORG
 PatchEnv04:
     .db $0C, $0B, $80
 .ENDS
 
-.SECTION "PatchEnv05" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv05" FREE BITWINDOW 8 RETURNORG
 PatchEnv05:
     .db $0C, $03, $80
 .ENDS
 
-.SECTION "PatchEnv06" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv06" FREE BITWINDOW 8 RETURNORG
 PatchEnv06:
     .db $07, $01, $80
 .ENDS
 
-.SECTION "PatchEnv07" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv07" FREE BITWINDOW 8 RETURNORG
 PatchEnv07:
     .db $07, $01, $80
 .ENDS
 
-.SECTION "PatchEnv08" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv08" FREE BITWINDOW 8 RETURNORG
 PatchEnv08:
     .db $0C, $08, $80
 .ENDS
 
-.SECTION "PatchEnv09 (HI-HAT)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv09 (HI-HAT)" FREE BITWINDOW 8 RETURNORG
 PatchEnv09:
     .db $05, $04, $80
 .ENDS
 
-.SECTION "PatchEnv0A (HI-HAT)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0A (HI-HAT)" FREE BITWINDOW 8 RETURNORG
 PatchEnv0A:
     .db $05, $04, $80
 .ENDS
 
-.SECTION "PatchEnv0B" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0B" FREE BITWINDOW 8 RETURNORG
 PatchEnv0B:
     .db $07, $03, $80
 .ENDS
 
-.SECTION "PatchEnv0C" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0C" FREE BITWINDOW 8 RETURNORG
 PatchEnv0C:
     .db $09, $08, $80
 .ENDS
 
-.SECTION "PatchEnv0D" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0D" FREE BITWINDOW 8 RETURNORG
 PatchEnv0D:
     ;.db $0E, $02, $80
     .db $0C, $02, $80
 .ENDS
 
-.SECTION "PatchEnv0E" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0E" FREE BITWINDOW 8 RETURNORG
 PatchEnv0E:
     .db $0C, $03, $80
 .ENDS
 
-.SECTION "PatchEnv0F (SNARE)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv0F (SNARE)" FREE BITWINDOW 8 RETURNORG
 PatchEnv0F:
     .db $0F, $00, $80
 .ENDS
 
-.SECTION "PatchEnv10" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv10" FREE BITWINDOW 8 RETURNORG
 PatchEnv10:
     .db $04, $07, $80
 .ENDS
 
-.SECTION "PatchEnv11" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv11" FREE BITWINDOW 8 RETURNORG
 PatchEnv11:
     .db $0D, $0A, $80
 .ENDS
 
-.SECTION "PatchEnv12 (POWER SNARE)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv12 (POWER SNARE)" FREE BITWINDOW 8 RETURNORG
 PatchEnv12:
     .db $00, $80
 .ENDS
 
-.SECTION "PatchEnv13 (KICK)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv13 (KICK)" FREE BITWINDOW 8 RETURNORG
 PatchEnv13:
     .db $0A, $04, $80 ;$05, $80
 .ENDS
 
-.SECTION "PatchEnv14 (CONGA)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv14 (CONGA)" FREE BITWINDOW 8 RETURNORG
 PatchEnv14:
     .db $0C, $05, $80
 .ENDS
 
-.SECTION "PatchEnv15 (OVERDRIVEN GUITAR)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv15 (OVERDRIVEN GUITAR)" FREE BITWINDOW 8 RETURNORG
 PatchEnv15:
     .db $0B, $04, $80;$0E, $0A, $80
 .ENDS
 
-.SECTION "PatchEnv16 (ORCH HIT)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv16 (ORCH HIT)" FREE BITWINDOW 8 RETURNORG
 PatchEnv16:
     .db $00, $80
 .ENDS
 
-.SECTION "PatchEnv17 (CLAP?)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv17 (CLAP?)" FREE BITWINDOW 8 RETURNORG
 PatchEnv17:
     .db $00, $80
 .ENDS
 
-.SECTION "PatchEnv18 (DRUM?)" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv18 (DRUM?)" FREE BITWINDOW 8 RETURNORG
 PatchEnv18:
     .db $00, $80
 .ENDS
 
-.SECTION "PatchEnv19" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv19" FREE BITWINDOW 8 RETURNORG
 PatchEnv19:
     .db $00, $80
 .ENDS
 
-.SECTION "PatchEnv1A" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "PatchEnv1A" FREE BITWINDOW 8 RETURNORG
 PatchEnv1A:
     .db $00, $80
 .ENDS
 
 ;--------------------------------
 
-.SECTION "FM Volume Envelope Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FM Volume Envelope Table" FREE BITWINDOW 8 RETURNORG
 FMVolumeEnvTable:
     .dw FMVolEnv01  ; OVERWORLD (IDX)
     .dw FMVolEnv02  ; OVERWORLD (IDX)
@@ -2094,7 +2104,7 @@ FMVolumeEnvTable:
     .dw FMVolEnv0B  ; NOTE FILL (CASTLE)
 .ENDS
 
-.SECTION "FMVolEnv01" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv01" FREE BITWINDOW 8 RETURNORG
 FMVolEnv01:
     .db $03, $01, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
     .db $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
@@ -2114,45 +2124,45 @@ FMVolEnv01:
     .db $0C, $0C, $0C, $0C, $0C, $0D, $0D, $0D, $0D, $0E, $0E, $0E, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv02" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv02" FREE BITWINDOW 8 RETURNORG
 FMVolEnv02:
     .db $00, $00, $00, $00, $00, $00, $01, $01, $01, $02, $02, $03, $03, $04, $04, $05
     .db $05, $06, $07, $08, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv03" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv03" FREE BITWINDOW 8 RETURNORG
 FMVolEnv03:
     .db $00, $00, $00, $00, $00 ; $00, $00, $00, $00, 
     .db $03, $06, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv04" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv04" FREE BITWINDOW 8 RETURNORG
 FMVolEnv04:
     .db $00, $03, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv05" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv05" FREE BITWINDOW 8 RETURNORG
 FMVolEnv05:
     .db $00, $01, $03, $05, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv06" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv06" FREE BITWINDOW 8 RETURNORG
 FMVolEnv06:
     .db $04, $04, $02, $02, $00, $80
 .ENDS
 
-.SECTION "FMVolEnv07" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv07" FREE BITWINDOW 8 RETURNORG
 FMVolEnv07:
     .db $00, $00, $01, $01, $01, $02, $02, $02, $02, $03, $03, $03, $04, $80
 .ENDS
 
-.SECTION "FMVolEnv08" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv08" FREE BITWINDOW 8 RETURNORG
 FMVolEnv08:
     .db $00, $01, $01, $02, $02, $02, $02, $02, $03, $03, $03, $03, $04, $04, $04, $04
     .db $04, $04, $06, $80
 .ENDS
 
-.SECTION "FMVolEnv09" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv09" FREE BITWINDOW 8 RETURNORG
 FMVolEnv09:
     .db $04, $04, $04, $04, $04, $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $01
     ;.db $01, $01, $01, $01, $00, $80
@@ -2164,20 +2174,20 @@ FMVolEnv09:
     .db $00, $00, $00, $00, $00, $00, $00, $00, $01, $80
 .ENDS
 
-.SECTION "FMVolEnv0A" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv0A" FREE BITWINDOW 8 RETURNORG
 FMVolEnv0A:
     .db $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02, $03
     .db $03, $03, $03, $03, $04, $80
 .ENDS
 
-.SECTION "FMVolEnv0B" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv0B" FREE BITWINDOW 8 RETURNORG
 FMVolEnv0B:
     .db $00, $00, $80
 .ENDS
 
 ;--------------------------------
 
-.SECTION "Custom Instrument Table" BANK BANK_CODE SLOT 0 FREE BITWINDOW 8 RETURNORG
+.SECTION "Custom Instrument Table" FREE BITWINDOW 8 RETURNORG
 FMInstrumentTable:
     .db $0F, $08, $00, $07, $F1, $F7, $1F, $FF  ; SNARE
     .db $06, $04, $1E, $0F, $F9, $F8, $FF, $FF  ; BONGO

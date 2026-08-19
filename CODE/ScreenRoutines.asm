@@ -615,6 +615,9 @@ CastleSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
+        ; SLOT 0 'CASTLE COIN'
+    LD HL, CastleCoinFrame0
+    LD (BGTileQueue0 + $04), HL
         ; SLOT 1 'QUESTION BLOCK'
     LD HL, AnimatedBGTileInits@QBlock
     LD DE, BGTileQueue1 + $01
@@ -648,10 +651,8 @@ WaterAreaSetup:
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
         ; WATER COIN FOR SLOT 0
-    LD HL, AnimatedBGTileInits@WaterCoin
-    LD DE, BGTileQueue0 + $01
-    LD BC, _sizeof__AnimatedBGTileQueue - $01
-    LDIR
+    LD HL, WCoinFrame0
+    LD (BGTileQueue0 + $04), HL
         ; WATER FOR SLOT 1
     LD HL, AnimatedBGTileInits@WaterA0
     LD DE, BGTileQueue1 + $01
@@ -765,6 +766,13 @@ UndergroundSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
+    LD A, (MainUndergndLvlFlag)
+    OR A
+    JR Z, +
+        ; SLOT 0 'UNDERGROUND COIN'
+    LD HL, UndergroundCoinFrame0
+    LD (BGTileQueue0 + $04), HL
++:
         ; SLOT 1 'LATERN'
     LD HL, AnimatedBGTileInits@Latern
     LD DE, BGTileQueue1 + $01

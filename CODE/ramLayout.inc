@@ -1056,7 +1056,6 @@
     AreaPointer:                    dsb $01
     EntrancePage:                   dsb $01
     AltEntranceControl:             dsb $01
-    CurrentPlayerGfx:               dsb $01
     CurrentPlayer:                  dsb $01 ; 0 = mario, 1 = luigi
     PlayerSize:                     dsb $01 ; 0 = big, 1 = small
     Player_Pos_ForScroll:           dsb $01
@@ -1099,6 +1098,7 @@
     ;Mirror_VDP_REG0:                dsb $01
     ;Mirror_PPU_MASK:                .dsb $01
     ;Mirror_VDP_REG1:                dsb $01
+    CurrentPlayerGfx:               dsb $01
     NumberOfPlayers:                dsb $01
     IntervalTimerControl:           dsb $01
 

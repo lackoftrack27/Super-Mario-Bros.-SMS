@@ -8318,8 +8318,11 @@ DoEnemySideCheck:
     LD BC, $0014                    ;start by finding block to the left of enemy ($00,$14)
     LD L, <Enemy_MovingDir          ;check if enemy is moving left
     LD A, (HL)
+    CP A, $03                       ;ensure moving direction is either 1 or 2
+    RET NC
     DEC A
-    JR NZ, RightChk                 ;if so, jump
+    RET M
+    JR NZ, RightChk                 ;if enemy is moving left (2), jump
     LD B, $10                       ;else, find block to the right of the enemy ($10,$14)
 RightChk:
     CALL BlockBufferCollision_A1    ;find block to left or right of enemy object

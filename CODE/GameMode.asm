@@ -5683,12 +5683,14 @@ SetupJumpCoin:
     ADD A, A
     ADD A, A
     ADD A, A
+    RL L                                ;put carry into L
     ADD A, $05                          ;add five pixels
     LD (DE), A                          ;save as horizontal coordinate for misc object
 ;
     LD E, <Misc_Y_Position
     LD A, IXL                           ;get vertical high nybble offset from earlier
-    ADD A, $20                          ;add 32 pixels for the status bar
+    RR L                                ;get back carry from L
+    ADC A, $20                          ;add 32 pixels for the status bar
     LD (DE), A                          ;store as vertical coordinate
 ;
 JCoinC:

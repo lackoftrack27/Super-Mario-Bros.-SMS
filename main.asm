@@ -211,22 +211,15 @@ ResetStart:
 ;   CLEAR CRAM
     LD HL, $0000 | CRAMWRITE
     RST setVDPAddress
-    ; WRITE ZEROS TO CRAM
-    LD BC, CRAM_SIZE * $100 + VDPDATA_PORT
--:
-    OUT (C), L  ; L IS $00
-    DJNZ -
+    LD B, CRAM_SIZE
+    XOR A
+    CALL MemsetVRAM8
 ;   CLEAR VRAM
     LD HL, $0000 | VRAMWRITE
     RST setVDPAddress
-    ; WRITE ZEROS TO VRAM
     LD BC, <VRAM_SIZE * $100 + >VRAM_SIZE
-    XOR A               ; DATA VALUE
--:
-    OUT (VDPDATA_PORT), A
-    DJNZ -
-    DEC C
-    JP NZ, -
+    XOR A
+    CALL MemsetVRAM16
 ;   VDP REGISTER INIT.
     LD HL, vdpInitData
     LD BC, _sizeof_vdpInitData * $100 + VDPCON_PORT
@@ -888,11 +881,7 @@ InitializeNameTables:
     CALL setVDPAddress
     LD BC, <NAMETABLE_SIZE * $100 + >NAMETABLE_SIZE
     XOR A                               ;clear name table with blank tile
-@writeLoop:
-    OUT (VDPDATA_PORT), A
-    DJNZ @writeLoop
-    DEC C
-    JP NZ, @writeLoop
+    CALL MemsetVRAM16
 ;
     LD HL, VRAM_Buffer1                 ;reset Buffer1's ptr
     LD (VRAM_Buffer1_Ptr), HL

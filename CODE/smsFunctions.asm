@@ -88,3 +88,25 @@ copyFromVDP:
     CPI                     ; POINT TO NEXT BYTE AND DECREMENT COUNTER
     JP PE, copyFromVDP      ; KEEP LOOPING UNTIL BC IS 0
 	RET
+
+;   INFO: Sets VRAM to a given value
+;   INPUT: A - value, B - length (8 bit)
+;   OUTPUT: NONE
+;   USES: AF, B
+MemsetVRAM8:
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+    RET
+
+;   INFO: Sets VRAM to a given value
+;   INPUT: A - value, BC - length (16 bit)
+;   OUTPUT: NONE
+;   USES: AF, BC
+MemsetVRAM16:
+-:
+    OUT (VDPDATA_PORT), A
+    DJNZ -
+    DEC C
+    JP NZ, -
+    RET

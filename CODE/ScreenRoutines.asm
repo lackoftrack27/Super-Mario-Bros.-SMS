@@ -611,6 +611,7 @@ LoadLevelTileData:
     JP Z, OverWorldSetup
     DEC A
     JP Z, UndergroundSetup
+
 CastleSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
@@ -636,6 +637,7 @@ CastleSetup:
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
     JP TileLoadDone
+
 WaterAreaSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
@@ -664,7 +666,7 @@ WaterAreaSetup:
     JR Z, +
     LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
     RST setVDPAddress
-    LD BC, $8003
+    LD BC, $8003        ; 80 TILES
 -:
     XOR A
     OUT (VDPDATA_PORT), A
@@ -689,7 +691,17 @@ WaterAreaSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
+    ; ERASE PIRANHA PLANT TILES IF IN NES GFX MODE
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JP Z, TileLoadDone
+    LD HL, $9E * SMS_TILE_SIZE | VRAMWRITE
+    RST setVDPAddress
+    XOR A
+    LD BC, $4002    ; 10 TILES
+    CALL MemsetVRAM16
     JP TileLoadDone
+
 OverWorldSetup:
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
@@ -724,6 +736,7 @@ OverWorldSetup:
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
     JR TileLoadDone
+
 SnowOverworldSetup:
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
@@ -744,11 +757,12 @@ SnowOverworldSetup:
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
     JR TileLoadDone
+
 UndergroundSetup:
     ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JR NZ, @ClearLaternArea
+    JR NZ, @ClearBGTiles
     LD A, ASSET_BGUNDERGROUND
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
@@ -774,25 +788,20 @@ UndergroundSetup:
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     JR TileLoadDone
+@ClearBGTiles:
     ; FOR NES GFX, CLEAR OUT BG GFX DATA
-@ClearLaternArea:
     LD HL, $3680 | VRAMWRITE
     RST setVDPAddress
-    LD BC, $0004
     XOR A
--:
-    OUT (VDPDATA_PORT), A
-    DJNZ -
-    DEC C
-    JP NZ, -
-    ; FOR NES GFX, CLEAR OUT LATERN GFX AREA
+    LD BC, $0004    ; 32 TILES
+    CALL MemsetVRAM16
+    ; AND CLEAR OUT LATERN GFX AREA
     LD HL, $3D80 | VRAMWRITE
     RST setVDPAddress
-    LD B, $20 * $06
     XOR A
--:
-    OUT (VDPDATA_PORT), A
-    DJNZ -
+    LD B, $C0       ; 06 TILES
+    CALL MemsetVRAM8
+
 TileLoadDone:
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
@@ -1078,11 +1087,9 @@ FadeInScreen:
 ;   CLEAR ALL COLORS
     LD HL, $0000 | CRAMWRITE
     RST setVDPAddress
-    LD B, $20
     XOR A
--:
-    OUT (VDPDATA_PORT), A
-    DJNZ -
+    LD B, $20
+    CALL MemsetVRAM8
 ;   TURN SCREEN ON
     LD A, %11100000
     OUT (VDPCON_PORT), A

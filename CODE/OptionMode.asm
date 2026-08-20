@@ -150,17 +150,10 @@ OptionCheckPause_Debug:
     CALL SilenceAllSound    ; FM, CLEARS FLAGS (ALSO REDUNDANTLY STOPS PSG)
         ; RESET MUSHROOM SELECTOR
     LD HL, $2584 | VRAMWRITE
-    LD C, VDPDATA_PORT
     RST setVDPAddress
+    LD B, $08
     XOR A
-    OUT (VDPDATA_PORT), A
-    OUT (VDPDATA_PORT), A
-    IN F, (C)
-    IN F, (C)
-    OUT (VDPDATA_PORT), A
-    OUT (VDPDATA_PORT), A
-    OUT (VDPDATA_PORT), A
-    OUT (VDPDATA_PORT), A
+    CALL MemsetVRAM8
     JP OptionUpdateSettings
 
 @EnterSoundTest:

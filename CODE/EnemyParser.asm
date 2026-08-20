@@ -555,10 +555,10 @@ PRDiffAdjustData:
     ;.db $20, $22, $24, $26
     ;.db $13, $14, $15, $16
 
-    .db $26, $20, $13, $00
-    .db $2C, $22, $14, $00
-    .db $32, $24, $15, $00
-    .db $38, $26, $16, $00
+    .db $00, $13, $20, $26
+    .db $00, $14, $22, $2C
+    .db $00, $15, $24, $32
+    .db $00, $16, $26, $38
 .ENDS 
 
 LakituAndSpinyHandler:
@@ -649,7 +649,7 @@ CreateSpiny:
     AND A, %00000011
     ADD A, A
     ADD A, A
-    LD HL, PRDiffAdjustData
+    LD HL, PRDiffAdjustData + $03
     addAToHL8_M
     LD DE, Temp_Bytes + $03             ;get three values and save them
     LDD                                 ;to $01-$03

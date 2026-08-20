@@ -351,7 +351,7 @@ L_CastleArea3:
 
     ; --- NEW PAGE ---
     
-    .db $2e, $81
+    .db $2e, $B1 ;$81
 
     .db $2D, $4D ; ceiling tile @ Y01
     .db $2D, $62 ; right floor @ Y0A

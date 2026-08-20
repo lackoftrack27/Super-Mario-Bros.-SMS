@@ -170,6 +170,7 @@ BackSceneryColumnPtrs:
     .dw BGColumn9E
     .dw BGColumn9F
     .dw BGColumnA0
+    .dw BGColumnA1
 .ENDS
 
 .SECTION "BG Scenery Column Data" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
@@ -1172,4 +1173,18 @@ BGColumnA0:
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
     .db $8B, MT_BGCASTLE_01
+
+BGColumnA1:
+    .db $00, MT_BGCASTLE_00
+    .db $01, MT_BGCASTLE_00
+    .db $02, MT_BGCASTLE_00
+    .db $03, MT_BGCASTLE_00
+    .db $04, MT_BGCASTLE_00
+    .db $05, MT_BGCASTLE_00
+    .db $06, MT_BGCASTLE_00
+    .db $07, MT_BGCASTLE_00
+    .db $08, MT_BGCASTLE_00
+    .db $09, MT_BGCASTLE_00
+    .db $0A, MT_BGCASTLE_00
+    .db $8B, MT_BGCASTLE_00
 .ENDS

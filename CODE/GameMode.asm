@@ -765,7 +765,7 @@ FireballExplosion:
 BubbleCheck:
     LD A, H
     SUB A, >Bubble_Y_Position
-    LD DE, PseudoRandomBitReg
+    LD DE, PseudoRandomBitReg+$01
     addAToDE8_M
     LD A, (DE)                      ;get part of LSFR
     AND A, $01
@@ -940,7 +940,7 @@ Next3Slt:
 ;--------------------------------
 
 BulletBillHandler:
-    CALL GetEnemyOffscreenBits      ;get offscreen information
+    CALL GetEnemyOffscreenBits      ;get offscreen information (moved from Chk_BB)
 ;
     LD A, (TimerControl)            ;if master timer control set,
     OR A

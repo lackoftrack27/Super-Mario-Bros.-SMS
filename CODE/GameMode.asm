@@ -3511,7 +3511,7 @@ CopyFToR:
     LD L, <Enemy_Y_Position
     LD E, L
     LD A, (HL)
-    ;ADD A, $08                                  ;add eight pixels to bowser's front object
+    ADD A, $08                                  ;add eight pixels to bowser's front object
     LD (DE), A                                  ;vertical coordinate and store as vertical coordinate
     LD L, <Enemy_State
     LD E, L
@@ -3580,7 +3580,7 @@ BowserGfxDraw:
     LD B, A
     LD A, (Enemy_Rel_XPos)                  ;get enemy object horizontal position
     LD C, A                                 ;relative to screen
-    PUSH BC
+    PUSH BC                                 ;save x & y positions for later
 ;
     LD L, <Enemy_SprDataOffset              ;get sprite data offset
     LD E, (HL)
@@ -3622,7 +3622,10 @@ BowserGfxDraw:
     LD A, (BowserGfxFlag)
     DEC A
     JR Z, @DrawHalf
-    LD A, $06
+    LD A, B                                 ;if drawing second half, subtract 8 from Ypos
+    SUB A, $08
+    LD B, A
+    LD A, $06                               ;point to frame for second half
     addAToHL8_M
 
 @DrawHalf:
@@ -3636,7 +3639,7 @@ BowserGfxDraw:
     CALL DrawSpriteObject
     CALL SprObjectOffscrChk
 ;   ADDITIONAL SPRITE DRAWING
-    POP BC
+    POP BC                                  ;get back x & y positions
 
     LD L, <Enemy_State
     BIT 5, (HL)
@@ -3669,6 +3672,9 @@ RearExtraSprites:               ; RENDERING 2ND HALF OF BODY...
     LD A, C
     ADD A, $08
     LD C, A
+    LD A, B
+    SUB A, $08
+    LD B, A
     LD A, $D1
     CALL WriteBowserExtraSprite
     JP BowserGfxRet
@@ -3680,6 +3686,9 @@ BowserGfxExtraLeftRear:         ; FACING LEFT
     INC D
     LD A, (DE)
     LD L, A
+    LD A, B
+    SUB A, $08
+    LD B, A
     LD A, $B8
     CALL WriteBowserExtraSprite
     JP BowserGfxRet
@@ -3741,7 +3750,7 @@ DeathExtraSprites:
     EX DE, HL                   ; DE: Bubble Spr_Offset, HL: S.A.T. ptr
     JR Z, BowserGfxExtraDeathFront
 
-BowserGfxExtraDeathSideL:       ; RENDERING 2ND HALF OF BODY
+BowserGfxExtraDeathRear:        ; RENDERING 2ND HALF OF BODY
     DEC A
     JR NZ, +
     LD A, C
@@ -3752,6 +3761,9 @@ BowserGfxExtraDeathSideL:       ; RENDERING 2ND HALF OF BODY
     INC D
     LD A, (DE)
     LD L, A
+    LD A, B
+    SUB A, $08
+    LD B, A
     LD A, $FA
     CALL WriteBowserExtraSprite
     JP BowserGfxRet
@@ -3879,9 +3891,6 @@ BowserGfxDraw_NES:
     LD A, (BowserGfxFlag)
     DEC A
     JR Z, @DrawHalf
-    LD A, B                                 ;if drawing second half, add 8 to Ypos
-    ADD A, $08
-    LD B, A
     LD A, $06                               ;point to frame for second half
     addAToHL8_M
 

@@ -1786,17 +1786,17 @@ DrawPipe:
     OR A, C
     JR Z, DrawPipe_1
 ;   FOR BLOCKS UNDER PIPESHAFT (TERRAIN)
-    LD A, IXH
+    LD A, IXH                           ;get buffer offset and pipe vertical length
     INC A
     ADD A, IYH
-    LD DE, MetatileBuffer
+    LD DE, MetatileBuffer               ;use to get proper block underneath pipeshaft
     addAToDE8_M
     LD A, (DE)
-    LD HL, VerticalPipeBlocks
+    LD HL, VerticalPipeBlocks           ;check for any blocks in this table
     LD BC, $0003
     CPIR
-    JP PO, DrawPipe_1
-    INC A
+    JP NZ, DrawPipe_1                   ;if no match, skip
+    INC A                               ;else, give block priority (make it hide sprites)
     LD (DE), A
 DrawPipe_1:
     POP AF                              ;get value saved earlier and use as Y

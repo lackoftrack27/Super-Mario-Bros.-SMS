@@ -815,6 +815,8 @@ SpriteSlotTable:
 
 ;-------------------------------------------------------------------------------------
 
+;   This can potientially corrupt up to the last four bytes of EnemyDataBank if an interrupt fires here
+;   This is not a problem however since there is no enemy data that is even close to filling up the bank
 MoveAllSpritesOffscreen:
 MoveSpritesOffscreen:
 ;   SAVE SP IN DE

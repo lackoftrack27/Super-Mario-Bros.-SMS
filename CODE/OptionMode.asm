@@ -184,7 +184,7 @@ OptionCheckPause_Debug:
     AND A, bitValue(OPTFLAG_FM)
     LD B, $0E + $13   ; PSG LIMIT
     JR Z, +
-    LD B, $11 + $13   ; FM LIMIT
+    LD B, $14 + $13   ; FM LIMIT
 +:
     LD HL, Temp_Bytes + $03
     LD A, (SavedJoypad1Bits)
@@ -257,21 +257,26 @@ OptionCheckPause_Debug:
     ; PLAY SND ID
     LD A, (HL)
     ADD A, $81  ; SND START
-    CP A, SNDID_WATER
+    CP A, SNDID_FMDUPS              ;layered SFX
+    JR NC, @LayeredToneID
+    CP A, SNDID_WATER               ;PSG/FM music
     JR NC, @OverrideID
-    CP A, SNDID_SHATTER
+    CP A, SNDID_SHATTER             ;Noise SFX (brick shatter)
     JR Z, @NoiseID
-    CP A, SNDID_FLAME
+    CP A, SNDID_FLAME               ;Tone SFX
     JR NZ, @ToneID
 @NoiseID:
     LD (SFXTrack2.SoundQueue), A
     JP OptionDrawPlayer
+@LayeredToneID:
+    ADD A, $0E
 @ToneID:
     LD (SFXTrack0.SoundQueue), A
     JP OptionDrawPlayer
 @OverrideID:
     LD (MusicTrack0.SoundQueue), A
     JP OptionDrawPlayer
+; ---
 
 OptionUpdateSettings:
     LD A, (OptionBitflags)          ;set values depending on bit 0 of option bit flags
@@ -299,24 +304,28 @@ OptionUpdateSettings:
     LD (AnimateRoutine), HL
     LD HL, BowserGfxDraw_NES
     LD (BowserDrawRoutine), HL
+    ; FALL THROUGH
+
+; ---
 @UpdateFMSettings:
     LD A, (FMDetectedFlag)          ;skip FM sound setting update if FM module not detected
     OR A
     JR Z, OptionDrawPlayer
+    CALL SndInitMemory@InitChanBits ;set channel bits (only done for sound test)
     LD A, (OptionBitflags)          ;set values depending on bit 1 of option bit flags
     AND A, bitValue(OPTFLAG_FM)
     JR NZ, +
-    XOR A
+    XOR A                           ;only PSG audio enabled
     OUT (AUDIO_CONTROL), A
-    LD HL, SndChannelProcessMUS
+    LD HL, SndChannelProcessMUS     ;FM music update routine
     LD (MusicRoutine), HL
     LD HL, $019A
     LD DE, $0000
     JR @DrawSelector
 +:
-    LD A, %00000011
+    LD A, %00000011                 ;PSG and FM audio enabled
     OUT (AUDIO_CONTROL), A
-    LD HL, SndChannelProcessFM
+    LD HL, SndChannelProcessFM      ;PSG music update routine
     LD (MusicRoutine), HL
     LD HL, $0000
     LD DE, $019A
@@ -342,6 +351,7 @@ OptionUpdateSettings:
     OUT (C), E
     RST SndFMWriteDelay             ;vdp delay
     OUT (C), D
+; ---
     ; FALL THROUGH
 
 OptionDrawPlayer:

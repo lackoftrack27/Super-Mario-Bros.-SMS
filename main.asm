@@ -189,14 +189,11 @@ Start:
 ;   MD CONTROLLER CHECK
     XOR A
     LD (MDControllerFlag), A
-    ; SET PORT 1'S TH TO HIGH OUTPUT
-    LD A, ~(bitValue(P1_TH_DIR))
-    OUT (IO_CONTROL), A
-    ; SET PORT 1'S TH TO LOW OUTPUT
-    LD A, ~(bitValue(P1_TH_LVL) | bitValue(P1_TH_DIR))
-    OUT (IO_CONTROL), A
+    LD A, $D5   ; $DD/0D/CD/D5
+    OUT (IO_CONTROL), A     ; LOW
+    RST SndFMWriteDelay
     ; GET INPUTS (A, START)
-    IN A, CONTROLPORT1
+    IN A, (CONTROLPORT1)
     CPL
     ; DON'T SET FLAG IF MD CONTROLLER ISN'T PLUGGED IN
     AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
@@ -551,9 +548,9 @@ JoypadTable:
 .ENDS
 
 ReadJoypads:
-;   SET PORT 1'S TH TO HIGH OUTPUT
-    LD A, ~(bitValue(P1_TH_DIR))
-    OUT (IO_CONTROL), A
+    LD A, $F5   ;$FD/2D/ED/F5
+    OUT (IO_CONTROL), A     ; HIGH
+    RST SndFMWriteDelay
 ;   CONTROL 1
     LD HL, JoypadTable
     IN A, (CONTROLPORT1)
@@ -630,12 +627,12 @@ PauseBtnChk:
     LD A, (MDControllerFlag)
     OR A
     RET Z
+    ; READ CONTROLLER
+    LD A, $D5 ; $DD/0D/CD/D5
+    OUT (IO_CONTROL), A     ; LOW
+    RST SndFMWriteDelay
     LD HL, MDControllerBits
-    ; SET PORT 1'S TH TO LOW OUTPUT
-    LD A, ~(bitValue(P1_TH_LVL) | bitValue(P1_TH_DIR))
-    OUT (IO_CONTROL), A
-    ; GET INPUTS (A, START)
-    IN A, CONTROLPORT1
+    IN A, (CONTROLPORT1)
     CPL
     LD (HL), A
     ; EXIT IF MD CONTROLLER ISN'T PLUGGED IN (MAYBE IT GOT UNPLUGGED SOMEHOW)

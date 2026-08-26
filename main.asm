@@ -450,7 +450,7 @@ NonMaskableInterrupt:
 ;   SKIP VDP UPDATE AND JOYPAD READING IF ON A LAG FRAME
     LD A, (FrameDoneFlag)
     RRA
-    JR NC, LagFrame
+    JP NC, LagFrame
     LD (FrameDoneFlag), A
 ;   SET VDP HSCROLL TO HSCROLL VALUE FROM LAST PROCESSED GAME FRAME
     LD A, (HorizontalScroll)
@@ -513,6 +513,9 @@ NonMaskableInterrupt:
     JP NZ, StreamPlayerTiles        ;[CPU TIME: 21 LINES]
     JP StreamAnimatedBGTiles        ;[CPU TIME: ~30 LINES]
 TileStreamRet:
+    LD A, BANK_SLOT2
+    LD (MAPPER_SLOT2), A
+;   READ CONTROLLERS
     CALL ReadJoypads
 ;   DON'T SET H-INT IF SPRITE 0 FLAG ISN'T SET (LAG FRAMES ALWAYS SET H-INT)
     LD A, (Sprite0HitDetectFlag)
@@ -1417,10 +1420,6 @@ StreamPlayerTiles:
     .REPEAT $20
     OUTI
     .ENDR
-    ; DEFAULT BANK
-    LD A, BANK_SLOT2
-    LD (MAPPER_SLOT2), A
-    ;RET
     JP TileStreamRet
 
 
@@ -1434,6 +1433,8 @@ StreamAnimatedBGTiles:
     AND A, bitValue(OPTFLAG_GFX)
     JP NZ, TileStreamRet
 ;
+    LD A, BANK_ANITILES
+    LD (MAPPER_SLOT2), A
     LD C, VDPCON_PORT
     LD IXH, >OutiBlock128
 ;   SLOT 0 (4 or less) [MAX CYCLES: 2235]
@@ -1683,11 +1684,9 @@ vdpInitData:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.BANK BANK_SLOT2 SLOT 2
 
-.SECTION "OUTI Blocks" FORCE ORG $0000
+.SECTION "OUTI Blocks" FREE ALIGN $100
 
-;   0x0000 - 0x0100
 OutiBlock128:
 WriteHoriBlock:
 .REPEAT $80
@@ -1734,6 +1733,7 @@ WriteVeriBlock_W:
 
 .ENDS
 ;-------------------------------------------------------------------------------------
+.BANK BANK_SLOT2 SLOT 2
 
 ; PALETTE DATA LAYOUT:
 ;     VDP ADDRESS, BYTE COUNT, DATA, TERMINATOR
@@ -2944,7 +2944,7 @@ Map_BG_SoundSelect:
 .INCLUDE "SND_Data_Comm.inc"
 
 ;-------------------------------------------------------------------------------------
-.BANK BANK_SLOT2 SLOT 2
+.BANK BANK_ANITILES SLOT 2
 
 .SECTION "Animated Background Tiles - BANK 00" ALIGN $100
 WaterA1Frame0:
@@ -3409,7 +3409,7 @@ FlameFrame7:
 .db $00 $00 $00 $00 $00 $00 $80 $80 $00 $00 $00 $00 $00 $00 $10 $10 $00 $00 $80 $80 $00 $00 $C0 $C0 $00 $80 $C0 $C0 $00 $00 $80 $80
 .ENDS
 
-.SECTION "Animated Background Tiles - BANK 40" BANK BANK_CODE SLOT 0 ALIGN $100
+.SECTION "Animated Background Tiles - BANK 40" ALIGN $100
 UndergroundCoinFrame0:
 ; Tile index $000
 .db $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $00 $07 $07 $07 $07 $08 $16 $05 $15 $0B $0C $08 $08 $17 $0D $09 $09 $16 $0D $09 $09 $16

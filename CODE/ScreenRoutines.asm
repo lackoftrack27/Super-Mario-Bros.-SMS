@@ -678,14 +678,10 @@ WaterAreaSetup:
     DEC C
     JP NZ, -
 +:
-    ; LOAD WATER CASTLE TILES IF ON W8-4
-    LD A, (WorldNumber)
-    LD H, A
-    LD A, (LevelNumber)
-    LD L, A
-    OR A
-    LD DE, $0703
-    SBC HL, DE
+    ; LOAD WATER CASTLE TILES IF IN w8-4 WATER AREA
+    LD A, (AreaPointer)
+    AND A, $7F
+    CP A, $02
     JP NZ, TileLoadDone
     LD A, ASSET_BGWATERCASTLE
     CALL AssetLoader

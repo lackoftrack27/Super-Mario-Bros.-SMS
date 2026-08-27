@@ -577,6 +577,7 @@ LoadLevelTileData:
     ; CLEAR GRASS FLAG (BGTileQueue2 will do 4 tiles)
     XOR A
     LD (BGTileQueue2GrassFlag), A
+    LD (BGTileQueue2SwitchFlag), A
     ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -716,43 +717,80 @@ OverWorldSetup:
     LD DE, BGTileQueue1 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-        ; SLOT 2 'GRASS' (6 TILE)
+        ; SLOT 2 PROCESSING
     LD HL, BGTileQueue2.Timer           ; ASSUME NO GRASS
     LD (HL), $FF
     LD HL, BGTileQueue2.UpdateFlag
     LD (HL), $00
+    LD A, (BackgroundColorCtrl)         ; JUMP IF LEVEL IS SET AT NIGHT
+    CP A, $04
+    JR Z, +
     LD A, (BackgroundScenery)           ; IF BACKGROUND DOESN'T HAVE GRASS, SKIP
     AND A, $03
     CP A, $02
     JP NZ, TileLoadDone
+        ; SLOT 2 'GRASS' (6 TILE)
     LD HL, AnimatedBGTileInits@Grass
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
-    JR TileLoadDone
-
-SnowOverworldSetup:
-    ; ANIMATED TILES
-    LD A, :AnimatedBGTileInits
-    LD (MAPPER_SLOT2), A
-        ; WATER FOR SLOT 1
-    LD HL, AnimatedBGTileInits@WaterA1
-    LD DE, BGTileQueue1 + $01
-    LD BC, _sizeof__AnimatedBGTileQueue - $01
-    LDIR
-        ; SLOT 2 'QUESTION BLOCK' (4 TILE)
-    LD HL, AnimatedBGTileInits@QBlock
+    JP TileLoadDone
++:
+    LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
+    LD (BGTileQueue2GrassFlag), A
+    LD HL, AnimatedBGTileInits@Star6    ; ASSUME NO GRASS. DO 6 STARS
+    LD A, (BackgroundScenery)           ; SKIP IF ASSUMPTION IS CORRECT
+    AND A, $03
+    CP A, $02
+    JR NZ, +
+    LD A, $01                           ; ELSE, SET FLAG TO SWITCH VRAM ADDRESSES BETWEEN FRAMES
+    LD (BGTileQueue2SwitchFlag), A
+    LD HL, AnimatedBGTileInits@GrassStar; DO GRASS AND STARS
++:
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
+    JP TileLoadDone
+
+SnowOverworldSetup:
     ; UPLOAD TILES FOR SNOW (ONLY FOR DEFAULT GFX)
     LD A, ASSET_BGSNOW
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
-    JR TileLoadDone
+    ; ANIMATED TILES
+    LD A, :AnimatedBGTileInits
+    LD (MAPPER_SLOT2), A
+        ; SLOT 1 'QUESTION BLOCK'
+    LD HL, AnimatedBGTileInits@QBlock
+    LD DE, BGTileQueue1 + $01
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
+    LDIR
+        ; SLOT 2 PROCESSING
+    LD HL, BGTileQueue2.Timer           ; ASSUME NOTHING
+    LD (HL), $FF
+    LD HL, BGTileQueue2.UpdateFlag
+    LD (HL), $00
+    LD A, (BackgroundColorCtrl)         ; EXIT IF LEVEL IS SET AT DAY
+    CP A, $05
+    JR Z, TileLoadDone
+
+    LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
+    LD (BGTileQueue2GrassFlag), A
+    LD HL, AnimatedBGTileInits@Star4    ; ASSUME LEVEL IS w3-1
+    LD A, (AreaPointer)
+    AND A, $7F
+    CP A, $24
+    JR Z, +
+    LD HL, AnimatedBGTileInits@Star6
++:
+        ; SLOT 2 '6 STARS' OR '4 STARS & WATER'
+    LD DE, BGTileQueue2 + $01
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
+    LDIR
+    JR TileLoadDone    
 
 UndergroundSetup:
     ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)

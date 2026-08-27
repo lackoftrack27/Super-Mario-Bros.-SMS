@@ -323,19 +323,24 @@ AnimatedBGTileInits:
     .db StripeCount($04 * $20)
     .dw LaternFrame0
     .db $03, $10, $03, $10
-@WaterA1:
-    .dw $3CA0 | VRAMWRITE
-    .db StripeCount($02 * $20)
-    .dw WaterA1Frame0
+@Star4:
+    .dw $39A0 | VRAMWRITE
+    .db $00                     ; N/A
+    .dw Star4Frame0
+    .db $08, $08, $08, $08
+@Star6:
+    .dw $3960 | VRAMWRITE
+    .db $00                     ; N/A
+    .dw Star6Frame0
     .db $08, $08, $08, $08
 @WaterA0:
-    .dw $3CA0 | VRAMWRITE
+    .dw $3A20 | VRAMWRITE
     .db StripeCount($02 * $20)
     .dw WaterA0Frame0
     .db $08, $08, $08, $08
 @Lava:
     .dw $3D80 | VRAMWRITE
-    .db $00
+    .db $00                     ; N/A
     .dw LavaFrame0
     .db $08, $08, $08, $08
 @QBlock:
@@ -343,6 +348,11 @@ AnimatedBGTileInits:
     .db StripeCount($04 * $20)
     .dw QBlockFrame0
     .db $03, $08, $03, $08
+@GrassStar:
+    .dw $3960 | VRAMWRITE
+    .db $00                     ; N/A
+    .dw GrassStarFrame0
+    .db $10, $04, $10, $04
 .ENDS
 
 ;   AnimatedBGTileQueue
@@ -406,10 +416,25 @@ AnimateBGTiles:
     RET M
     DEC (HL)
     RET NZ
+        ;
     LD A, (BGTileQueue2.TimerReset)
     LD (HL), A
     LD A, $01
     LD (BGTileQueue2.UpdateFlag), A
+        ;
+    LD A, (BGTileQueue2SwitchFlag)
+    OR A
+    JR Z, ++
+    LD DE, $3D80 | VRAMWRITE
+    BIT 1, A
+    JR Z, +
+    LD DE, $3960 | VRAMWRITE
++:
+    LD (BGTileQueue2.VRAMAdr), DE
+    XOR A, %00000010
+    LD (BGTileQueue2SwitchFlag), A
+        ;
+++:
     LD A, (BGTileQueue2.TileAdr + $01)
     INC A
     DEC L

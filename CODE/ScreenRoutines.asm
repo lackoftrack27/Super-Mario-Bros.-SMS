@@ -651,11 +651,13 @@ WaterAreaSetup:
     LD DE, BGTileQueue1 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-        ; NOTHING FOR SLOT 2
-    LD HL, BGTileQueue2.Timer
-    LD (HL), $FF
-    LD HL, BGTileQueue2.UpdateFlag
-    LD (HL), $00
+        ; SEAPLANT FOR SLOT 2
+    LD HL, AnimatedBGTileInits@Seaplant
+    LD DE, BGTileQueue2 + $01
+    LD BC, _sizeof__AnimatedBGTileQueue - $01
+    LDIR
+    LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
+    LD (BGTileQueue2GrassFlag), A
     ; UNIQUE TILES FOR WATER AREA
     LD A, ASSET_BGWATER
     CALL AssetLoader

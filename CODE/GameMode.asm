@@ -353,6 +353,11 @@ AnimatedBGTileInits:
     .db $00                     ; N/A
     .dw GrassStarFrame0
     .db $10, $04, $10, $04
+@Seaplant:
+    .dw $3D80 | VRAMWRITE
+    .db $00                     ; N/A
+    .dw SeaplantFrame0
+    .db $04, $10, $04, $10
 .ENDS
 
 ;   AnimatedBGTileQueue

@@ -141,16 +141,16 @@ BackSceneryData:
 
 .SECTION "BG Scenery Data - Water (2-2/7-2)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 @Water00:
-    .db $6A, $6B, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $71, $6C, $6D, $6C, $6D, $6C, $6D
+    .db $6A, $6B, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $71, $6C, $6D, $A2, $A3, $6C, $6D
     .db $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D
-    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $72, $73, $74, $75, $76, $77
+    .db $6C, $6D, $A2, $A3, $6C, $6D, $6C, $6D, $6C, $6D, $72, $73, $A4, $A5, $76, $77
 .ENDS
 
 .SECTION "BG Scenery Data - Water (5-2/6-2)" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 @Water01:
-    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D, $6C, $6D
-    .db $6C, $6D, $6C, $6D, $72, $73, $74, $75, $6A, $6B, $6E, $6F, $70, $71, $6C, $6D
-    .db $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D
+    .db $6C, $6D, $A2, $A3, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $72, $73, $A4, $A5, $6A, $6B, $6E, $6F, $70, $71, $6C, $6D
+    .db $6C, $6D, $6C, $6D, $A2, $A3, $6C, $6D, $6C, $6D, $6E, $6F, $70, $71, $6C, $6D
 .ENDS
 
 .SECTION "BG Scenery Data - Water Castle" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
@@ -222,7 +222,7 @@ ForeSceneryData:
 @Water:
     ;.db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
     ;.db MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_SOLIDBLK_WATER;, MT_SOLIDBLK_WATER
-    .db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
+    .db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_BLANK
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
 @Wall:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_BRICK

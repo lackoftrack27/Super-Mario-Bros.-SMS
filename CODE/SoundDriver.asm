@@ -361,7 +361,7 @@ SndChannelProcessSFX:
 ;   TRACK UPDATE
     LD L, <SFXTrack0.Duration
     DEC (HL)
-    JP NZ, +
+    JP NZ, @TrackUpdate@NoteGoing
     ; NEW NOTE...
         ; READ FROM SOUND DATA
     CALL SndReadTrackStream
@@ -380,11 +380,12 @@ SndChannelProcessSFX:
     CALL SndWriteChannelData@UpdateFreq
         ; VOLUME UPDATE
     JP SndWriteChannelData@UpdateVolume
-+:
+@@NoteGoing:
     ; NOTE IS GOING...
         ; EXIT IF AT REST
     LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
+    LD C, (HL)
+    BIT CHANCON_REST, C
     RET NZ
         ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
     LD L, <SFXTrack0.Envelope
@@ -392,8 +393,7 @@ SndChannelProcessSFX:
     OR A
     CALL NZ, SndWriteChannelData@UpdateEnvelope
         ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
+    BIT CHANCON_MOD, C
     RET Z
     LD L, <SFXTrack0.Frequency
     LD E, (HL)
@@ -508,13 +508,13 @@ SndReadTrackStream:
 ;   DO NOTE OFF IF DOING FM TRACK && NO ATK FLAG ISN'T SET
     LD L, <SFXTrack0.Control
     BIT CHANCON_NOATK, (HL)
-    JP NZ, +
+    JR NZ, +
     LD A, H
     CP A, >FMTrack0
     CALL NC, SndStopChannel@SilenceFM
+    LD L, <SFXTrack0.Control
 +:
 ;   CLEAR 'NO ATTACK' FLAG && REST FLAG
-    LD L, <SFXTrack0.Control
     LD A, (HL)
     AND A, ~(bitValue(CHANCON_NOATK) | bitValue(CHANCON_REST))
     LD (HL), A
@@ -535,24 +535,86 @@ SndReadTrackStream:
 ;   CHECK IF BYTE IS DURATION
     OR A
     JP P, @SndUpdateDuration
+
 ;   IF NOT, BYTE IS NOTE. SET CHANNEL FREQUENCY
-    CALL SndSetFrequency
+@SndSetFrequency:
+    ; CHECK IF NOTE IS REST NOTE
+    SUB A, $81
+    JR C, @SndSetFrequency@RestNote
+    ; CHECK IF TRACK IS USING NOISE CHANNEL
+    EX AF, AF'
+    LD L, <SFXTrack0.ChanBits
+    LD A, (HL)
+    CP A, CHAN3_BITS
+    JP Z, @SndSetFrequency@SetNoiseFreq
+    EX AF, AF'
+    ; USE NOTE + TRANSPOSE VALUE AS OFFSET INTO FREQUENCY TABLE TO SET NEW FREQUENCY
+    LD L, <SFXTrack0.Transpose
+    ADD A, (HL)
+    ADD A, A
+    LD DE, (SndFreqTablePtr)
+    addAToDE8_M
+    LD L, <SFXTrack0.Frequency
+    LD A, (DE)
+    LD (HL), A
+    INC L
+    INC E
+    LD A, (DE)
+    LD (HL), A
+    JP @SndNextCheck
+@@RestNote:
+    ; SET REST FLAG
+    LD L, <SFXTrack0.Control
+    SET CHANCON_REST, (HL)
+    ; INVALIDATE FREQUENCY
+    LD L, <SFXTrack0.Frequency + $01
+    LD (HL), $FF
+    ; SILENCE CHANNEL
+    CALL SndStopChannel
+    JP @SndNextCheck
+@@SetNoiseFreq:
+    EX AF, AF'
+    ; CLEAR HIGH BYTE OF FREQUENCY
+    LD L, <SFXTrack0.Frequency + $01
+    LD (HL), $00
+    ; CHECK IF TRACK IS IN DRUM MODE
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_DRUMMODE, (HL)
+    LD L, <SFXTrack0.Frequency
+    JR NZ, @SndSetFrequency@SetupNoiseDrum
+    ; NOT IN DRUM MODE, SO USE VALUE AS NOISE TYPE/FREQUENCY
+    AND A, $07
+    OR A, $E0           ; ADD LATCH BIT, CHANNEL 3 BITS
+    LD (HL), A
+    JP @SndNextCheck
+@@SetupNoiseDrum:
+    ADD A, A
+    LD DE, PSGDrumTable
+    addAToDE8_M
+    LD A, (DE)
+    LD (HL), A
+    INC E
+    LD A, (DE)
+    LD L, <SFXTrack0.Envelope
+    LD (HL), A
+
+@SndNextCheck:
 ;   GET NEXT BYTE AND CHECK IF IT'S NOT A DURATION
     LD A, (BC)
     OR A
-    JP M, +
+    JP M, @SndKeepDuration
 ;   ELSE, ADVANCE POINTER
     INC BC
 @SndUpdateDuration:
 ;   SET NEW DURATION VALUE
     LD L, <SFXTrack0.SavedDuration
     LD (HL), A
-    LD L, <SFXTrack0.Duration
-    LD (HL), A
-+:
-;   SET DURATION TO RESET VALUE (POINTLESS IF DIDN'T BRANCH HERE)
+    JP @SndSetDuration
+@SndKeepDuration:
+;   SET DURATION TO RESET VALUE
     LD L, <SFXTrack0.SavedDuration
     LD A, (HL)
+@SndSetDuration:
     LD L, <SFXTrack0.Duration
     LD (HL), A
 ;   UPDATE TRACK POINTER
@@ -577,15 +639,14 @@ SndReadTrackStream:
     SET CHANCON_REST, (HL)
 +:
 ;   RETURN IF 'NO ATTACK' FLAG IS SET
-    ;LD L, <SFXTrack0.Control
-    BIT CHANCON_NOATK, (HL)
+    LD A, (HL)
+    BIT CHANCON_NOATK, A
     RET NZ
 ;   RESET ENVELOPE INDEX
     LD L, <SFXTrack0.EnvelopeIndex
     LD (HL), $00
 ;   RETURN IF 'MODULATION' FLAG IS CLEAR
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
+    BIT CHANCON_MOD, A
     RET Z
 ;   SET MODULATION VALUES (FOR NEW NOTE)
     LD L, <SFXTrack0.ModPointer
@@ -594,68 +655,6 @@ SndReadTrackStream:
     LD B, (HL)
     LD A, (BC)
     JP CoordFlagTable@cfModSetup@SndSetModulation
-
-
-SndSetFrequency:
-;   CHECK IF NOTE IS REST NOTE
-    SUB A, $81
-    JP C, @RestNote
-;   CHECK IF TRACK IS USING NOISE CHANNEL
-    EX AF, AF'
-    LD L, <SFXTrack0.ChanBits
-    LD A, (HL)
-    CP A, CHAN3_BITS
-    JP Z, @SetNoiseFreq
-    EX AF, AF'
-;   USE NOTE + TRANSPOSE VALUE AS OFFSET INTO FREQUENCY TABLE TO SET NEW FREQUENCY
-    LD L, <SFXTrack0.Transpose
-    ADD A, (HL)
-    ADD A, A
-    LD DE, (SndFreqTablePtr)
-    addAToDE8_M
-    LD L, <SFXTrack0.Frequency
-    LD A, (DE)
-    LD (HL), A
-    INC L
-    INC E
-    LD A, (DE)
-    LD (HL), A
-    RET
-@RestNote:
-;   SET REST FLAG
-    LD L, <SFXTrack0.Control
-    SET CHANCON_REST, (HL)
-;   INVALIDATE FREQUENCY
-    LD L, <SFXTrack0.Frequency + $01
-    LD (HL), $FF
-;   SILENCE CHANNEL
-    JP SndStopChannel
-@SetNoiseFreq:
-    EX AF, AF'
-;   CLEAR HIGH BYTE OF FREQUENCY
-    LD L, <SFXTrack0.Frequency + $01
-    LD (HL), $00
-;   CHECK IF TRACK IS IN DRUM MODE
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_DRUMMODE, (HL)
-    LD L, <SFXTrack0.Frequency
-    JP NZ, @SetupNoiseDrum
-;   NOT IN DRUM MODE, SO USE VALUE AS NOISE TYPE/FREQUENCY
-    AND A, $07
-    OR A, $E0           ; ADD LATCH BIT, CHANNEL 3 BITS
-    LD (HL), A
-    RET
-@SetupNoiseDrum:
-    ADD A, A
-    LD DE, PSGDrumTable
-    addAToDE8_M
-    LD A, (DE)
-    LD (HL), A
-    INC E
-    LD A, (DE)
-    LD L, <SFXTrack0.Envelope
-    LD (HL), A
-    RET
 
 
 SndApplyModulation:
@@ -670,12 +669,8 @@ SndApplyModulation:
     LD L, <SFXTrack0.ModWait
     LD A, (HL)
     OR A
-    JP Z, +
-;   ELSE, DECREMENT AND EXIT
-    DEC (HL)
-    RET
+    JR NZ, @DecayWait   ;  ELSE, DECREMENT AND EXIT 
 ;   DECREMENT MODULATION SPEED AND CONTINUE IF 0
-+:
     INC L
     DEC (HL)
     RET NZ
@@ -722,6 +717,10 @@ SndApplyModulation:
     LD A, (HL)
     addAToDES_M
     RET
+@DecayWait:
+    DEC (HL)
+    RET
+
 
 ;-------------------------------------------------------------------------------------
 ;                               PSG MUSIC ROUTINES
@@ -874,7 +873,7 @@ SndChannelProcessMUS:
 @TrackUpdate:
     LD L, <SFXTrack0.Duration
     DEC (HL)
-    JP NZ, +
+    JP NZ, @TrackUpdate@NoteGoing
 ;   NEW NOTE...
     ; READ FROM SOUND DATA
     CALL SndReadTrackStream
@@ -897,10 +896,11 @@ SndChannelProcessMUS:
     ; VOLUME UPDATE
     JP SndWriteChannelData@UpdateVolume
 ;   NOTE IS GOING...
-+:
+@@NoteGoing:
     ; EXIT IF AT REST
     LD L, <SFXTrack0.Control
-    BIT CHANCON_REST, (HL)
+    LD C, (HL)
+    BIT CHANCON_REST, C
     RET NZ
     ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
     LD L, <SFXTrack0.Envelope
@@ -908,8 +908,7 @@ SndChannelProcessMUS:
     OR A
     CALL NZ, SndWriteChannelData@UpdateEnvelope
     ; ONLY UPDATE FREQUENCY IF MODULATION IS APPLIED
-    LD L, <SFXTrack0.Control
-    BIT CHANCON_MOD, (HL)
+    BIT CHANCON_MOD, C
     RET Z
     LD L, <SFXTrack0.Frequency
     LD E, (HL)
@@ -928,12 +927,10 @@ SndWriteChannelData:
 ;   CHECK IF TRACK IS USING NOISE CHANNEL
     LD L, <SFXTrack0.ChanBits
     LD A, (HL)
+    LD C, A             ; SAVE IN C FOR LATER
     CP A, CHAN3_BITS
-    JP NZ, @UpdateToneFreq
-    LD A, E
-    OUT (PSG_PORT), A
-    RET
-@UpdateToneFreq:
+    JR Z, @UpdateFreq@Noise
+@@Tone:
 ;   ADD DETUNE TO TRACK FREQUENCY
     LD L, <SFXTrack0.Detune
     LD A, (HL)
@@ -942,8 +939,7 @@ SndWriteChannelData:
     LD A, E
     AND A, $0F
     OR A, bitValue(LATCH_BIT)
-    LD L, <SFXTrack0.ChanBits
-    OR A, (HL)
+    OR A, C
     OUT (PSG_PORT), A
     LD A, E
     SRL D
@@ -955,6 +951,11 @@ SndWriteChannelData:
     AND A, $3F
     OUT (PSG_PORT), A
     RET
+@@Noise:
+    LD A, E
+    OUT (PSG_PORT), A
+    RET
+
 
 @UpdateVolume:
 ;   SAVE CHANNEL VOLUME IN B
@@ -965,10 +966,12 @@ SndWriteChannelData:
     LD A, (HL)
     OR A
     JP Z, @WriteVolume
+    JP @UpdateEnvelope@Body
 @UpdateEnvelope:
 ;   SAVE CHANNEL VOLUME IN B
     LD L, <SFXTrack0.Volume
     LD B, (HL)
+@@Body:
 ;   GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
     EX DE, HL   ; DE - TRACK RAM, HL - N/A
     LD HL, VolumeEnvTable
@@ -1112,6 +1115,7 @@ SndProcessQueueMusicFM:
     EX DE, HL
     RET
 
+
 SndChannelProcessFM:
 ;   SET FREQUENCY TABLE PTR TO FM
     LD HL, FMFreqTable
@@ -1168,6 +1172,7 @@ SndChannelProcessFM:
     RET Z
 ;   FALL THROUGH
 
+
 @TrackUpdate:
     LD L, <FMTrack0.Duration
     DEC (HL)
@@ -1178,38 +1183,108 @@ SndChannelProcessFM:
     BIT CHANCON_REST, (HL)
     RET NZ
     ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <FMTrack0.FinalVolume
-    LD B, (HL)
     LD L, <FMTrack0.Envelope
     LD A, (HL)
     OR A
-    CALL NZ, SndWriteChannelDataFM@UpdateEnvelope
+    JR Z, @TrackUpdate@PatchEnvCheck
+    ; VOLUME ENVELOPE UPDATE
+        ; GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
+    EX DE, HL   ; DE - TRACK RAM, HL - N/A
+    LD HL, FMVolumeEnvTable
+    DEC A
+    ADD A, A
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    LD E, <FMTrack0.EnvelopeIndex
+    LD A, (DE)
+    addAToHL8_M
+        ; CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE VOLUME
+    BIT 7, (HL)
+    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
+    JP M, @TrackUpdate@PatchEnvCheck
+        ; INCREMENT INDEX AND ADD VALUE TO VOLUME
+    INC (HL)
+    LD A, (DE)
+    LD L, <FMTrack0.Volume
+    ADD A, (HL)
+        ; LIMIT FINAL VOLUME TO <= $0F
+    LD L, <FMTrack0.FinalVolume
+    CP A, $10
+    LD (HL), A
+    JR C, @TrackUpdate@PatchEnvCheck
+    LD (HL), $0F
+@@PatchEnvCheck:
     ; ONLY UPDATE PATCH IF ENVELOPE IS BEING USED
     LD L, <FMTrack0.PatchEnvelope
     LD A, (HL)
     OR A
-    CALL NZ, SndWriteChannelDataFM@UpdatePatchEnv
-    ; WRITE VOLUME AND INSTRUMENT TO FM CHIP
-    CALL SndWriteChannelDataFM@WriteVolumeInst
-    ; FREQUENCY UPDATE
-    LD L, <FMTrack0.Frequency
-    LD E, (HL)
+    JR Z, @TrackUpdate@WriteVolInst
+    ; PATCH ENVELOPE UPDATE
+        ; GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
+    EX DE, HL   ; DE - TRACK RAM, HL - N/A
+    LD HL, FMPatchEnvTable
+    DEC A
+    ADD A, A
+    addAToHL8_M
+    LD A, (HL)
     INC L
-    LD D, (HL)
-    ; ALWAYS APPLY MODULATION AND SEND FREQ TO CHIP IF BIT IS SET
+    LD H, (HL)
+    LD L, A
+    LD E, <FMTrack0.PatchEnvIndex
+    LD A, (DE)
+    addAToHL8_M
+        ; CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE PATCH
+    BIT 7, (HL)
+    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
+    JP M, @TrackUpdate@WriteVolInst
+        ; INCREMENT INDEX AND USE VALUE AS PATCH
+    INC (HL)
+    LD A, (DE)
+    LD L, <FMTrack0.Instrument
+    LD (HL), A
+@@WriteVolInst:
+    ; WRITE VOLUME AND INSTRUMENT TO FM CHIP
+    LD A, FMREG_INSTVOL
+    LD L, <FMTrack0.ChanBits
+    OR A, (HL)
+    OUT (OPLLREG_PORT), A
+    LD L, <FMTrack0.Instrument
+    LD A, (HL)
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    ADD A, A
+    LD L, <FMTrack0.FinalVolume
+    OR A, (HL)
+    OUT (OPLLDATA_PORT), A
+    ; FREQUENCY UPDATE
+        ; ALWAYS APPLY MODULATION AND SEND FREQ TO CHIP IF MOD BIT IS SET
     LD L, <FMTrack0.Control
     BIT CHANCON_MOD, (HL)
     JR NZ, +
-    ; ELSE, IF BIT 7 ISN'T SET (NO NEW NOTE), EXIT
+        ; ELSE, IF BIT 7 ISN'T SET (NO NEW NOTE), EXIT
     LD L, <FMTrack0.FinalFreqMSB
     LD A, (HL)
     OR A
     RET P
-    JR SndWriteChannelDataFM
+        ; BIT 7 IS SET, SO SEND FREQ FOR NEW NOTE
+    LD L, <FMTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
+    JR SndWriteChannelDataFM@UpdateFreq
 +:
+    LD L, <FMTrack0.Frequency
+    LD E, (HL)
+    INC L
+    LD D, (HL)
     CALL SndApplyModulation
     ; SEND FREQUENCY TO FM CHIP
     ; FALL THROUGH
+
 
 SndWriteChannelDataFM:
 @UpdateFreq:
@@ -1240,81 +1315,6 @@ SndWriteChannelDataFM:
     AND A, %00100000
     OR A, %00010000
     OR A, D
-    OUT (OPLLDATA_PORT), A
-    RET
-
-@UpdateEnvelope:
-;   SAVE CHANNEL VOLUME TO B (REDUNDANT IF FELL THROUGH)
-    LD L, <FMTrack0.Volume
-    LD B, (HL)
-;   GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
-    EX DE, HL   ; DE - TRACK RAM, HL - N/A
-    LD HL, FMVolumeEnvTable
-    DEC A
-    ADD A, A
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    LD E, <FMTrack0.EnvelopeIndex
-    LD A, (DE)
-    addAToHL8_M
-;   CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE VOLUME
-    BIT 7, (HL)
-    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
-    RET M
-;   INCREMENT INDEX AND ADD VALUE TO VOLUME
-    INC (HL)
-    LD A, (DE)
-    ADD A, B
-;   LIMIT FINAL VOLUME TO <= $0F
-    LD L, <FMTrack0.FinalVolume
-    CP A, $10
-    LD (HL), A
-    RET C
-    LD (HL), $0F
-    RET
-
-@UpdatePatchEnv:    
-;   GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
-    EX DE, HL   ; DE - TRACK RAM, HL - N/A
-    LD HL, FMPatchEnvTable
-    DEC A
-    ADD A, A
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    LD E, <FMTrack0.PatchEnvIndex
-    LD A, (DE)
-    addAToHL8_M
-;   CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE PATCH
-    BIT 7, (HL)
-    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
-    RET M
-;   INCREMENT INDEX AND USE VALUE AS PATCH
-    INC (HL)
-    LD A, (DE)
-    LD L, <FMTrack0.Instrument
-    LD (HL), A
-    RET
-
-@WriteVolumeInst:
-;   SEND VOLUME AND INSTRUMENT TO FM
-    LD A, FMREG_INSTVOL
-    LD L, <FMTrack0.ChanBits
-    OR A, (HL)
-    OUT (OPLLREG_PORT), A
-    LD L, <FMTrack0.Instrument
-    LD A, (HL)
-    ADD A, A
-    ADD A, A
-    ADD A, A
-    ADD A, A
-    LD L, <FMTrack0.FinalVolume
-    OR A, (HL)
     OUT (OPLLDATA_PORT), A
     RET
 

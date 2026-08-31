@@ -69,11 +69,10 @@
     ; $2D
     SprDataOffset:                  dsb $01 ; [$17] *
     ; $2E
-    ;VRAM_Buffer2:                   dsb $D2 ; (23 * 2) * 4 + 3 == $BB
-    VRAM_Buffer1_Ptr:               dsb $02
-    VRAM_Buffer1:                   dsb $A0
     ColumnWrite_Ptr:                dsb $02
     ColumnUpdate_Ptr:               dsb $02
+    VRAM_Buffer1_Ptr:               dsb $02
+    VRAM_Buffer1:                   dsb $CC
 .ENDS
 
 .DEFINE Player_X_Speed              SprObject_X_Speed

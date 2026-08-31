@@ -50,7 +50,7 @@ Mus_Water:
     .db $48, nC2, $24, nF2, $0C, nG2, nB2, $0C, $06, $06, $12, nF2, $06, nE2, $24
     smpsJump Mus_Water@ch1
 @ch2:
-    .db nRst, $0C, nE2, nFs2, nG2, nA2, nBb2, nB2, $06, $06, $06, nRst, nB2, nRst, nB2, $18, nG2, $0C
+    .db nD2, $0C, nE2, nFs2, nG2, nA2, nBb2, nB2, $06, $06, $06, nRst, nB2, nRst, nB2, $18, nG2, $0C
 
     .db nE3, $24, nEb3, nE3, $2A, nG2, $06, nA2, nB2, nC3, nD3, nE3, $24, nEb3, $18, nF3, $0C, nE3, $42, nG2, $06
     .db nD3, $24, nCs3, nD3, $2A, nG2, $06, nA2, nB2, nC3, nCs3, nD3, $24, nG2, $18, nF3, $0C, nE3, $42, nG2, $06

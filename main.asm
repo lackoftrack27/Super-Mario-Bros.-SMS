@@ -457,9 +457,8 @@ NonMaskableInterrupt:
     NEG
     LD (VDPHScroll), A
 ;   TURN OFF SCREEN IF FLAG IS CLEAR
-    LD A, %10100000
-    LD HL, DisableScreenFlag
-    OR A, (HL)
+    LD A, (DisableScreenFlag)
+    OR A, %10100000
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A

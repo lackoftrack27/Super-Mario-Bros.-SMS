@@ -147,6 +147,10 @@ PauseBtnVector:
 ;-------------------------------------------------------------------------------------
 ;   MAIN PROGRAM START
 Start:
+;   DO RESET START IF WARM BOOT HAS BEEN MARKED (NEEDED FOR MEGA DRIVE'S RESET BUTTON)
+    LD A, (WarmBootValidation)
+    CP A, $A5
+    JR Z, ResetStart
 ;   CHECK FOR FM UNIT
     ; STORE MEMORY CONTROL VALUE
     LD A, ($C000)

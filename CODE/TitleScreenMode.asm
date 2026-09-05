@@ -123,11 +123,6 @@ GameMenuRoutine:
     LD (PlayerGfxOffset_Old), A     ;invalidate old gfx offset to ensure tile stream occurs
     JR @NullJoypad    
 @TogglePlayers:
-
-    .IF SINGLEPLAYERONLY != $00
-    JR @NullJoypad                  ;don't allow user to select 2 Players
-    .ENDIF
-
     LD A, (NumberOfPlayers)         ;if no, must have been the select button, therefore
     XOR A, $01                      ;change number of players and draw icon accordingly
     LD (NumberOfPlayers), A

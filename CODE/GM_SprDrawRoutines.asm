@@ -596,17 +596,14 @@ EnemyGfxTableOffsets:
 EnemyGfxHandler:
     LD L, <Enemy_Y_Position                 ;don't display enemy if it is below visible screen
     LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, $D0
     INC L
-    LD H, (HL)
-    LD L, A
-    LD DE, $01D0                                
-    OR A
-    SBC HL, DE
-    JP NC, SprObjectOffscrChk
-    LD HL, (ObjectOffset)
-;
-    LD L, <Enemy_Y_Position                 ;get enemy object vertical position
     LD A, (HL)
+    SBC A, $01
+    JP NC, SprObjectOffscrChk
+;
+    DEC L                                   ;<Enemy_Y_Position
+    LD A, (HL)                              ;get enemy object vertical position
     SUB A, SMS_PIXELYOFFSET
     LD D, A
     LD A, (Enemy_Rel_XPos)                  ;get enemy object horizontal position

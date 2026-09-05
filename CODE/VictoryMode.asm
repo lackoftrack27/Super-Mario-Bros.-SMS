@@ -196,7 +196,7 @@ PlayerEndWorld:
     OR A, (HL)                      ;either controller
     AND A, bitValue(SMS_BTN_2)
     RET Z                           ;branch to leave if not
-    LD A, $01                       ;otherwise set world selection flag
+    LD A, $03                       ;otherwise set world selection flag (and enable star icon)
     LD (WorldSelectEnableFlag), A
     LD A, $FF                       ;remove onscreen player's lives
     LD (NumberofLives), A

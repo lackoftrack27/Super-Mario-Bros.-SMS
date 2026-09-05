@@ -80,23 +80,19 @@ GameMenuRoutine:
     CP A, bitValue(SMS_BTN_2) | bitValue(SMS_BTN_1)  ;check to see if A + start was pressed [Button 1 + 2 for SMS]
     JP Z, @ChkContinue              ;if either start or A + start, execute here
 @ChkSelect:
-    CP A, bitValue(SMS_BTN_UP)      ;check to see if the select button was pressed [Up/Down for SMS]
-    JR Z, @SelectBLogic             ;if so, branch reset demo timer
-    CP A, bitValue(SMS_BTN_DOWN)
-    JR Z, @SelectBLogic             ;if so, branch reset demo timer
-    CP A, bitValue(SMS_BTN_RIGHT)   ;if right isn't pressed, skip
-    JR Z, @SelectBLogic
+    AND A, %00001111                ;check to see if any d-pad buttons were pressed
+    JR NZ, @SelectBLogic            ;if so, branch reset demo timer
     LD A, (DemoTimer)               ;otherwise check demo timer
     OR A
     JR NZ, @ChkWorldSel             ;if demo timer not expired, branch to check world selection
     LD (SelectTimer), A             ;set controller bits here if running demo
     CALL DemoEngine                 ;run through the demo actions
-    JR C, @ResetTitle               ;if carry flag set, demo over, thus branch
-    JR @RunDemo                     ;otherwise, run game engine for demo
+    JP C, @ResetTitle               ;if carry flag set, demo over, thus branch
+    JP @RunDemo                     ;otherwise, run game engine for demo
 @ChkWorldSel:
     LD A, (WorldSelectEnableFlag)   ;check to see if world selection has been enabled
-    OR A
-    JR Z, @NullJoypad
+    RRCA
+    JR NC, @NullJoypad
     LD A, B
     CP A, bitValue(SMS_BTN_2)       ;if so, check to see if the B button was pressed (Button 2 for SMS)
     JR NZ, @NullJoypad
@@ -116,7 +112,17 @@ GameMenuRoutine:
     JR Z, @IncWorldSel              ;note this will not be run if world selection is disabled
     LD A, B
     CP A, bitValue(SMS_BTN_RIGHT)   ;if right isn't pressed, skip
+    JR Z, @TogglePlayerGFX
+    CP A, bitValue(SMS_BTN_LEFT)
     JR NZ, @TogglePlayers
+    LD A, (WorldSelectEnableFlag)   ;check if world select flag is set
+    OR A
+    JR Z, @NullJoypad               ;if not, skip
+    XOR A, $02                      ;toggle bit 1 of world select flag (toggle star icon)
+    LD (WorldSelectEnableFlag), A
+    CALL DrawMushroomIcon
+    JR @NullJoypad
+@TogglePlayerGFX:
     LD A, (CurrentPlayerGfx)        ;toggle player graphics
     XOR A, %00000001
     LD (CurrentPlayerGfx), A
@@ -184,8 +190,9 @@ GameMenuRoutine:
     LD (FetchNewGameTimerFlag), A   ;set fetch new game timer flag
     LD (OperMode), A                ;set next game mode
 ;
-    LD A, (WorldSelectEnableFlag)   ;if world select flag is on, then primary
-    LD (PrimaryHardMode), A         ;hard mode must be on as well
+    LD A, (WorldSelectEnableFlag)   ;bit 1 of world select flag determines primary hard mode
+    SRL A
+    LD (PrimaryHardMode), A
 ;
     ;LD HL, ScoreAndCoinDisplay      ;clear player scores and coin displays
     ;LD DE, ScoreAndCoinDisplay + $01
@@ -212,7 +219,7 @@ GameMenuRoutine:
 MushroomIconData:
     .dw swapBytes(xyToNameTbl_M(9, 15))     ; ADDRESS
     .db StripeCount($02)
-    .dw $08B6                               ; $03-$04
+    .dw BLANKTILE                           ; $03-$04
 
     .dw swapBytes(xyToNameTbl_M(9, 17))
     .db StripeCount($02)
@@ -227,11 +234,20 @@ DrawMushroomIcon:
     LD BC, _sizeof_MushroomIconData ;1-player game
     LDIR
 ;
-    LD A, (OptionBitflags)          ;make mushroom icon use bg palette if doing NES GFX
+    LD B, $08                       ;use SPR palette for icon if in new gfx mode
+    LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     JR Z, +
-    XOR A
-    LD (VRAM_Buffer1 + $04), A
+    LD B, $00                       ;else, use BG palette
++:
+    LD A, (WorldSelectEnableFlag)   ;use mushroom icon for normal quest
+    BIT 1, A
+    LD C, $B6
+    JR Z, +
+    LD C, $B5                       ;else, use star icon for second quest
++:
+;
+    LD (VRAM_Buffer1 + $03), BC     ;write icon for 1 player
 ;
 +:
     DEC E
@@ -241,21 +257,9 @@ DrawMushroomIcon:
     OR A
     RET Z                           ;if set to 1-player game, we're done
 ;
-    LD HL, VRAM_Buffer1 + $03
-    LD (HL), BLANKTILE              ;otherwise, load blank tile in 1-player position
-    INC L
-    LD (HL), BLANKTILE
-    LD L,  <VRAM_Buffer1 + $08
-    LD (HL), $B6                    ;then load shroom icon tile in 2-player position
-    INC L
-
-    LD A, (OptionBitflags)          ;use spr palette for default, bg palette for NES
-    AND A, bitValue(OPTFLAG_GFX)
-    LD A, $08
-    JR Z, +
-    XOR A
-+:
-    LD (HL), A
+    LD (VRAM_Buffer1 + $08), BC     ;otherwise, load icon tile in 2-player position
+    LD BC, $0000
+    LD (VRAM_Buffer1 + $03), BC     ;then load blank tile in 1-player position
     RET
 
 ;-------------------------------------------------------------------------------------

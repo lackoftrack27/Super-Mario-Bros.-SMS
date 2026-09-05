@@ -312,7 +312,7 @@ AnimatedBGTileInits:
     .dw $3D00 | VRAMWRITE       ; VRAM ADDR
     .db StripeCount($04 * $20)  ; TILES PER FRAME IN LDI COUNT
     .dw CoinFrame0              ; STARTING TILE ADDR
-    .db $03, $08, $03, $08      ; FRAME COUNT, TIMER COUNT, FRAME RESET, TIMER RESET
+    .db $03, $09, $03, $08      ; FRAME COUNT, TIMER COUNT, FRAME RESET, TIMER RESET
 @Grass:
     .dw $3D80 | VRAMWRITE
     .db $00                     ; N/A
@@ -347,7 +347,7 @@ AnimatedBGTileInits:
     .dw $3C20 | VRAMWRITE
     .db StripeCount($04 * $20)
     .dw QBlockFrame0
-    .db $03, $08, $03, $08
+    .db $03, $0A, $03, $08
 @GrassStar:
     .dw $3960 | VRAMWRITE
     .db $00                     ; N/A
@@ -357,8 +357,13 @@ AnimatedBGTileInits:
     .dw $3D80 | VRAMWRITE
     .db $00                     ; N/A
     .dw SeaplantFrame0
-    .db $04, $10, $04, $10
+    .db $04, $12, $04, $10
 .ENDS
+
+;   UPDATES ARE STAGGERED ACROSS MULTIPLE FRAMES
+;   FRAME 0: WATER/GRASS/STARS/WATER&STARS/GRASS&STARS/LATERN/LAVA
+;   FRAME 1: COIN
+;   FRAME 2: BLOCK/SEA PLANT
 
 ;   AnimatedBGTileQueue
 ;   $00:        animate flag

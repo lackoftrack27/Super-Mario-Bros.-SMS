@@ -2646,7 +2646,6 @@ GetAreaDataAddrs:
     CP A, %00000011                 ;if set to 3, store here
     JR NZ, @StoreStyle              ;and nullify other value
     LD (CloudTypeOverride), A       ;otherwise store value in other place
-    LD (BonusAreaFlag), A
     XOR A
 @StoreStyle:
     LD (AreaStyle), A
@@ -2683,25 +2682,17 @@ GetAreaDataAddrs:
 ;   Restore bank
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-;   set flag for main underground levels so blank blocks are replaced with bg
+;   Set initial area pointer
     LD A, (AreaPointer)
     AND A, $7F
+    LD (InitialAreaPointer), A
+;   Set flag for main underground levels so blank blocks are replaced with bg
     CP A, $40
     JR Z, +
     CP A, $41
-    JR NZ, @ChkBonusArea
+    RET NZ
 +:
     LD (MainUndergndLvlFlag), A
-;   set bonus area flag for underground coin room (FM only)
-@ChkBonusArea:
-    LD A, (OptionBitflags)
-    AND A, bitValue(OPTFLAG_FM)
-    RET Z
-    LD A, (AreaPointer)
-    AND A, $7F
-    CP A, $42
-    RET NZ
-    LD (BonusAreaFlag), A
     RET
 
 @SkipRAMCopy:

@@ -682,8 +682,7 @@ WaterAreaSetup:
     JP NZ, -
 +:
     ; LOAD WATER CASTLE TILES IF IN w8-4 WATER AREA
-    LD A, (AreaPointer)
-    AND A, $7F
+    LD A, (InitialAreaPointer)
     CP A, $02
     JP NZ, TileLoadDone
     LD A, ASSET_BGWATERCASTLE
@@ -781,8 +780,7 @@ SnowOverworldSetup:
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
     LD HL, AnimatedBGTileInits@Star4    ; ASSUME LEVEL IS w3-1
-    LD A, (AreaPointer)
-    AND A, $7F
+    LD A, (InitialAreaPointer)
     CP A, $24
     JR Z, +
     LD HL, AnimatedBGTileInits@Star6
@@ -848,7 +846,7 @@ TileLoadDone:
 
 LoadEnemySprites: 
     LD BC, EnemyVRAMLayout00        ;skip area lookup if in final room in W8-4
-    LD A, (AreaPointer)
+    LD A, (InitialAreaPointer)
     CP A, $65
     JR NZ, +
     LD A, (CurrentPageLoc)

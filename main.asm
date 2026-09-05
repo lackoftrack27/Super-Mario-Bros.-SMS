@@ -867,9 +867,23 @@ NotOnTitleScreen:
     JR Z, StoreMusic
 ChkAreaType:
     LD C, $04                           ;select music for cloud type level
-    LD A, (BonusAreaFlag)               ;use it for in bonus area (cloud or underground coin room)
+    LD A, (CloudTypeOverride)           ;check for cloud type override
     OR A
-    JR NZ, StoreMusic
+    JR NZ, StoreMusic                   ;use cloud type level music if found
+
+    LD A, (AreaType)                    ;load area type as offset for music bit
+    LD C, A
+    LD A, (OptionBitflags)              ;don't do further processing in PSG mode
+    AND A, bitValue(OPTFLAG_FM)
+    JR Z, StoreMusic
+
+    LD A, (InitialAreaPointer)          ;check initial area pointer
+    CP A, $42                           ;use cloud type music if in underground coin room
+    LD C, $04
+    JR Z, StoreMusic
+    CP A, $02                           ;use castle music if in w8-4 water room
+    LD C, $03
+    JR Z, StoreMusic
     LD A, (AreaType)                    ;else, load area type as offset for music bit
     LD C, A
 StoreMusic:

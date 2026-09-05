@@ -1542,7 +1542,7 @@ AssetLoaderTable:
     .dw Tiles_BG_Overworld, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
     .db :Tiles_BG_Snow
-    .dw Tiles_BG_Snow, $3300 | VRAMWRITE
+    .dw Tiles_BG_Snow, $2C60 | VRAMWRITE
     ;
     .db :Tiles_BG_Underground
     .dw Tiles_BG_Underground, $3680 | VRAMWRITE
@@ -1767,13 +1767,13 @@ CastlePaletteData:
 
 .SECTION "Day Snow AreaType Palette Data" FREE
 DaySnowPaletteData:
-    .db $39, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
+    .db $39, $00, $01, $16, $2B, $14, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
     .db $39, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
 .ENDS
 
 .SECTION "Night Snow AreaType Palette Data" FREE
 NightSnowPaletteData:
-    .db $00, $00, $01, $16, $2B, $04, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
+    .db $00, $00, $01, $16, $2B, $14, $18, $1C, $15, $1A, $3E, $1F, $2A, $3F, $3A, $3E
     .db $00, $00, $01, $16, $2B, $24, $0C, $06, $1B, $0F, $2A, $3F, $03, $02, $10, $08
 .ENDS
 

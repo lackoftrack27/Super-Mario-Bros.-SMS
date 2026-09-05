@@ -261,7 +261,7 @@ FadeTable:
     .dw GroundPaletteData
     .dw DaySnowPaletteData
     .dw NightSnowPaletteData
-    .dw CastlePaletteData
+    .dw NightSnowPaletteData ;CastlePaletteData
 .ENDS
 
 GetAreaPalette:
@@ -702,15 +702,14 @@ WaterAreaSetup:
     JP TileLoadDone
 
 OverWorldSetup:
+    ; SKIP EVERYTHING IF ON NES GFX MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     JP NZ, TileLoadDone
     ; DO DIFFERENT SETUP FOR SNOW LEVELS
     LD A, (BackgroundColorCtrl)
     CP A, $05
-    JR Z, SnowOverworldSetup
-    CP A, $06
-    JR Z, SnowOverworldSetup
+    JR NC, SnowOverworldSetup
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A

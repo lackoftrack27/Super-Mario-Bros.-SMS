@@ -192,3 +192,12 @@
     ADD A, IYL
     LD IYL, A
 .ENDM
+
+; Object Offset Linear Addressing Conversion
+
+.MACRO GetLinearEnemySlotBC_M
+    LD A, H
+    ADD A, (<(\1) - $C1) & $FF
+    LD C, A
+    LD B, >(\1)
+.ENDM

@@ -626,11 +626,8 @@ EnemyGfxHandler:
     OR A
     JP M, SetupState                        ;if piranha plant moving upwards, branch
 ;
-    LD A, H                                 ;if timer for movement expired, branch
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
+    LD A, (BC)                              ;if timer for movement expired, branch
     OR A
     RET NZ                                  ;if all conditions fail, leave
 
@@ -823,9 +820,9 @@ CheckForBloober:
     JR Z, CheckToAnimateEnemy               ;branch if found
 ;
     LD A, (ObjectOffset + $01)
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    ADD A, <EnemyIntervalTimer - $C1
+    LD C, A
+    LD B, >EnemyIntervalTimer
     LD A, (BC)
     LD C, A
     CP A, $05                               ;branch if some timer is above a certain point

@@ -886,10 +886,7 @@ ThreeSChk:
     OR A
     JR NZ, Chk_BB                   ;if set, branch to check enemy
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
     LD A, (BC)                      ;otherwise get part of LSFR
     LD C, A
     LD A, (SecondaryHardMode)       ;get secondary hard mode flag, use as offset
@@ -1024,10 +1021,7 @@ SetupBB:
     LD L, <Enemy_State              ;otherwise set bullet bill's state
     LD (HL), $01
 ;
-    LD A, H                         ;set enemy frame timer
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     
     .IF PALBUILD == $00
     LD A, $0A
@@ -1035,7 +1029,7 @@ SetupBB:
     LD A, $09                       ;PAL diff: Faster timer to compensate FPS difference
     .ENDIF
     
-    LD (BC), A
+    LD (BC), A                      ;set enemy frame timer
 ;
     LD A, SNDID_CANNON              ;play fireworks/gunfire sound
     LD (SFXTrack1.SoundQueue), A
@@ -1969,10 +1963,8 @@ EraseEnemyObject:
     LD (HL), A
     ;LD L, <Enemy_SprAttrib
     ;LD (HL), A
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     XOR A
     LD (BC), A
     LD A, <EnemyIntervalTimer - <EnemyFrameTimer
@@ -1984,22 +1976,16 @@ EraseEnemyObject:
 ;-------------------------------------------------------------------------------------
 
 MovePodoboo:
-    LD A, H                                 ;check enemy timer
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
+    LD A, (BC)                              ;check enemy timer
     OR A
     JP NZ, MoveJ_EnemyVertically            ;branch to move enemy if not expired
 ;
     PUSH BC                                 ;save enemy timer
     CALL InitPodoboo                        ;otherwise set up podoboo again
 ;
-    LD A, H                                 ;get part of LSFR
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
+    LD A, (BC)                              ;get part of LSFR
     OR A, %10000000                         ;set d7
     LD L, <Enemy_Y_MoveForce                ;store as movement force
     LD (HL), A
@@ -2082,10 +2068,7 @@ HammerBroJumpCode:
     DEC A                                   ;check for d0 set (for jumping)
     JR Z, MoveHammerBroXDir                 ;if set, branch ahead to moving code
 ;
-    LD A, H 
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
 ;
     LD DE, $00FA                            ;set default value and vertical speed
     LD L, <Enemy_Y_Position                 ;check hammer bro's vertical coordinate
@@ -2123,10 +2106,7 @@ HJump:
     LD L, <HammerBroJumpTimer               ;store in jump timer
     LD (HL), A
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     LD A, $20                               ;get jump length timer data using offset from before
     DEC E
     JR NZ, +
@@ -2242,11 +2222,8 @@ AddHS:
     RET
 
 ReviveStunned:
-    LD A, H                                 ;if enemy timer not expired yet,
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
+    LD A, (BC)                              ;if enemy timer not expired yet,
     OR A
     JP NZ, ChkKillGoomba                    ;skip ahead to something else
 ;
@@ -2436,11 +2413,8 @@ MoveBloober:
     AND A, %00100000
     JP NZ, MoveEnemySlowVert                ;branch if set to move defeated bloober
 ;
-    LD A, H                                 ;get LSFR
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
+    LD A, (BC)                              ;get LSFR
     LD C, A
 
     LD A, (SecondaryHardMode)               ;use secondary hard mode flag as offset
@@ -2516,10 +2490,7 @@ LeftSwim:
     RET
     
 ProcSwimmingB:
-    LD A, H                                 ;put enemy timer address in BC
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer ;put enemy timer address in BC
 ;
     LD L, <BlooperMoveCounter               ;get enemy's movement counter
     LD A, (HL)
@@ -3389,10 +3360,7 @@ ResetMDr:
     LD (HL), $02                                ;sixteen frames
 ;
 B_FaceP:
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     LD A, (BC)                                  ;if timer set here expired,
     OR A
     JR Z, GetPRCmp                              ;branch to next section
@@ -3419,10 +3387,7 @@ GetPRCmp:
     LD L, <Enemy_X_Position
     CP A, (HL)                                  ;if bowser not at original horizontal position,
     JR NZ, GetDToO                              ;branch to skip this part
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)                                  ;get pseudorandom offset
     AND A, %00000011
     LD BC, PRandomRange
@@ -3455,10 +3420,7 @@ CompDToO:
     LD (BowserMovementSpeed), A                 ;otherwise change bowser's movement speed
 ;
 HammerChk:
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     LD A, (BC)                                  ;if timer set here not expired yet, skip ahead to
     OR A
     JR NZ, MakeBJump                            ;some other section of code
@@ -3476,10 +3438,7 @@ SetHmrTmr:
     LD A, (HL)
     CP A, $80                                   ;if still above a certain point
     JR C, ChkFireB                              ;then skip to world number check for flames
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)                                  ;get pseudorandom offset
     AND A, %00000011
     LD BC, PRandomRange
@@ -4312,11 +4271,8 @@ DrawStarFlag:
 DrawFlagSetTimer:
     CALL DrawStarFlag                       ;do sub to draw star flag
 ;
-    LD A, H                                 ;set interval timer here
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
-    LD A, $06
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
+    LD A, $06                               ;set interval timer here
     LD (BC), A
     ; FALL THROUGH
 
@@ -4329,11 +4285,8 @@ IncrementSFTask2:
 DelayToAreaEnd:
     CALL DrawStarFlag                       ;do sub to draw star flag
 ;
-    LD A, H                                 ;if interval timer set in previous task
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
+    LD A, (BC)                              ;if interval timer set in previous task
     OR A
     RET NZ                                  ;not yet expired, branch to leave
 ;
@@ -4355,11 +4308,8 @@ MovePiranhaPlant:
     OR A
     RET NZ                                  ;if set at all, branch to leave
 ;
-    LD A, H                                 ;check enemy's timer here
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
+    LD A, (BC)                              ;check enemy's timer here
     OR A
     RET NZ                                  ;branch to end if not yet expired
 ;
@@ -4424,11 +4374,8 @@ RiseFallPiranhaPlant:
     LD L, <PiranhaPlant_MoveFlag            ;otherwise clear movement flag
     LD (HL), $00
 ;
-    LD A, H                                 ;set timer to delay piranha plant movement
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
-    LD A, $40
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
+    LD A, $40                               ;set timer to delay piranha plant movement
     LD (BC), A
     RET
 
@@ -6635,11 +6582,8 @@ CheckForPUpCollision:
     LD L, <Enemy_X_Speed
     LD (HL), A
 ;
-    LD A, H                         ;check shell enemy's timer
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
+    LD A, (BC)                      ;check shell enemy's timer
     CP A, $03
     LD A, (StompChainCounter)       ;add three to whatever the stomp counter contains
     INC A                           ;(SMS) importantly, don't touch carry flag
@@ -6853,10 +6797,7 @@ HandleStompedShellE:
     INC A
     LD (StompTimer), A
 ;
-    LD A, H                         ;get enemy's timer address
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
     LD A, (PrimaryHardMode)         ;check primary hard mode flag
     OR A
 
@@ -8250,10 +8191,7 @@ LandEnemyProperly:
     CP A, $02                       ;if not in $02 state (used by koopas and buzzy beetles)
     JR NZ, ProcEnemyDirection       ;then branch elsewhere
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
     LD L, <Enemy_ID                 ;check enemy identifier for spiny
     LD A, (HL)
     CP A, OBJECTID_Spiny
@@ -8381,10 +8319,7 @@ NoBump:
     CP A, OBJECTID_HammerBro
     JP NZ, RXSpd                    ;branch if not found
     
-    LD A, H                         ;store pseudo random address in BC
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
     LD DE, $00FA                    ;load default vertical speed for jumping
     JP SetHJ                        ;jump to code that makes hammer bro jump
 
@@ -8458,11 +8393,8 @@ KillEnemyAboveBlock:
     RET
 
 UnderHammerBro:
-    LD A, H                         ;check timer used by hammer bro
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
-    LD A, (BC)
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
+    LD A, (BC)                      ;check timer used by hammer bro
     OR A
     JR NZ, NoUnderHammerBro         ;branch if not expired
 ;

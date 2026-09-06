@@ -381,10 +381,7 @@ InitPodoboo:
     LD L, <Enemy_State
     LD (HL), $00                    ;initialize enemy state
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
     LD A, $01
     LD (BC), A                      ;set timer for enemy
 ;
@@ -433,10 +430,7 @@ InitRedKoopa:
 ;--------------------------------
 
 InitHammerBro:
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyIntervalTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyIntervalTimer
 ;
     LD L, <HammerThrowingTimer      ;init horizontal speed and timer used by hammer bro
     LD (HL), $00                    ;apparently to time hammer throwing
@@ -518,10 +512,7 @@ InitBulletBill:
 InitCheepCheep:
     CALL SmallBBox                  ;set vertical bounding box, speed, init others
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)                      ;check one portion of LSFR
     AND A, %00010000                ;get d4 from it
     LD L, <CheepCheepMoveMFlag      ;save as movement flag of some sort
@@ -641,10 +632,7 @@ CreateSpiny:
     SUB A, $08
     LD (HL), A
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)                          ;get 2 LSB of LSFR and save to Y
     AND A, %00000011
     ADD A, A
@@ -791,10 +779,7 @@ InitFlyingCheepCheep:
 ;
     CALL SmallBBox                      ;jump to set bounding box size $09 and init other values
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
     LD A, (BC)
     AND A, %00000011                    ;set pseudorandom offset here
     LD BC, FlyCCTimerData
@@ -853,10 +838,7 @@ GSeed:
     ADD A, C
     LD (Temp_Bytes + $00), A            ;save it there
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg+1
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
     LD A, (BC)
     AND A, %00000011                    ;if neither of the last two bits of second LSFR set,
     JP Z, RSeed                         ;skip this part and save contents of $00
@@ -955,10 +937,7 @@ InitBowser:
 ;
     LD A, $20
     LD (BowserFeetCounter), A           ;set bowser's feet timer and in enemy timer
-    LD A, H
-    SUB A, $C1
-    LD BC, EnemyFrameTimer
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  EnemyFrameTimer
     LD A, $20
     LD (BC), A
 ;
@@ -1087,10 +1066,7 @@ InitBowserFlame:
 SetFrT:
     LD (FrenzyEnemyTimer), A            ;set timer accordingly
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)
     AND A, %00000011                    ;get 2 LSB from first part of LSFR
     LD L, <BowserFlamePRandomOfs        ;set here
@@ -1134,10 +1110,7 @@ SpawnFromMouth:
     ADD A, $08
     LD (HL), A                          ;save as flame's vertical position
 ;
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)
     AND A, %00000011                    ;get 2 LSB from first part of LSFR
     LD L, <Enemy_YMF_Dummy              ;save here
@@ -1281,9 +1254,7 @@ BulletBillCheepCheep:
     CP A, $C4
     RET NC                              ;if so, branch to leave
 ;
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)
     LD C, $00                           ;load default offset
     CP A, $AA                           ;check first part of LSFR against preset value
@@ -1310,10 +1281,7 @@ Set17ID:
     LD (BitMFilter), A                  ;initialize vertical position filter
 ;
 GetRBit:
-    LD A, H
-    SUB A, $C1
-    LD BC, PseudoRandomBitReg
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  PseudoRandomBitReg
     LD A, (BC)                          ;get first part of LSFR
     AND A, %00000111                    ;mask out all but 3 LSB
     LD E, A                             ;store in E

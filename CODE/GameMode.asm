@@ -5060,11 +5060,7 @@ DecNumTimer:
     LD A, C
     CP A, $0B                               ;check offset for $0b
     JP NZ, LoadNumTiles                     ;branch ahead if not found
-    LD A, (NumberofLives)                   ;give player one extra life (1-up)
-    INC A
-    LD (NumberofLives), A
-    LD A, SNDID_1UP
-    LD (SFXTrack1.SoundQueue), A
+    CALL IncrementLives                     ;give player an extra life
 LoadNumTiles:
     LD A, C
     LD BC, ScoreUpdateData
@@ -5827,6 +5823,17 @@ MiscLoopBack:
 
 ;-------------------------------------------------------------------------------------
 
+IncrementLives:
+    LD A, (NumberofLives)               ;cap max life count to 255
+    INC A
+    JR Z, NoInc
+    LD (NumberofLives), A
+NoInc:
+    LD A, SNDID_1UP                     ;play 1-up sound
+    LD (SFXTrack1.SoundQueue), A
+    RET
+
+
 GiveOneCoin:
     LD A, $01                           ;set digit modifier to add 1 coin
     LD (DigitModifier_05), A            ;to the current player's coin tally
@@ -5845,10 +5852,7 @@ GiveOneCoin:
     CP A, 100                           ;does player have 100 coins yet?
     JP NZ, CoinPoints                   ;if not, skip all of this
     LD (HL), $00                        ;otherwise, reinitialize coin amount
-    LD HL, NumberofLives                ;give the player an extra life
-    INC (HL)
-    LD A, SNDID_1UP
-    LD (SFXTrack1.SoundQueue), A
+    CALL IncrementLives                 ;give player an extra life
 CoinPoints:
     LD A, $02                           ;set digit modifier to award
     LD (DigitModifier_04), A            ;200 points to the player

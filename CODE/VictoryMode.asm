@@ -198,7 +198,7 @@ PlayerEndWorld:
     RET Z                           ;branch to leave if not
     LD A, $03                       ;otherwise set world selection flag (and enable star icon)
     LD (WorldSelectEnableFlag), A
-    LD A, $FF                       ;remove onscreen player's lives
+    XOR A                           ;remove onscreen player's lives
     LD (NumberofLives), A
     JP TerminateGame                ;do sub to continue other player or end game
 

@@ -68,7 +68,7 @@ TransposePlayers:
     RET Z
     LD A, (OffScr_NumberofLives)    ;does offscreen player have any lives left?
     OR A
-    RET M                           ;branch if not
+    RET Z                           ;branch if not
     LD A, (CurrentPlayer)           ;invert bit to update
     XOR A, $01                      ;which player is on the screen
     LD (CurrentPlayer), A

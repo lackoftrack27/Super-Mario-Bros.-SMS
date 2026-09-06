@@ -41,7 +41,7 @@ PrimaryGameSetup:
     LD (FetchNewGameTimerFlag), A   ;set flag to load game timer from header
     LD (PlayerSize), A              ;set player's size to small
 ;
-    INC A
+    LD A, $03
     LD (NumberofLives), A           ;give each player three lives
     LD (OffScr_NumberofLives), A
     JP SecondaryGameSetup

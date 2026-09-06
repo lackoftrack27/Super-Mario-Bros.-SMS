@@ -343,7 +343,7 @@ PlayerLoseLife:
 ;
     LD HL, NumberofLives                ;take one life from player
     DEC (HL)
-    JP P, StillInGame                   ;if player still has lives, branch
+    JP NZ, StillInGame                   ;if player still has lives, branch
     XOR A
     LD (OperMode_Task), A               ;initialize mode task,
     LD A, MODE_GAMEOVER                 ;switch to game over mode

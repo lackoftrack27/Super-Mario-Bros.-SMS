@@ -1069,32 +1069,42 @@ WriteGameText:
     JR NC, CheckPlayerName                  ;if so, print player's name
     OR A                                    ;are we printing the top status bar?
     RET Z                                   ;if so, we're done
-    LD A, (NumberofLives)                   ;otherwise, check number of lives
-    INC A                                   ;and increment by one for display
-    CP A, $0A                               ;more than 9 lives?
+    LD A, (NumberofLives)
+    LD DE, $0000                            ;D:hundreds digit, E: tens digit
+    LD B, $64                               ;D = Lives / 100
+HundredLoop:
+    CP A, B
+    JR C, TensDigit
+    SUB A, B
+    INC D
+    JP HundredLoop
+TensDigit:
+    LD B, $0A                               ;E = Lives(tens+ones) / 10
+TensLoop:
+    CP A, B
     JR C, PutLives
-    CP A, $64                               ;more than 99 lives?
-    JR C, +
-    LD A, $63                               ;if so, cap at 99
-+:
-    SUB A, $0A                              ;get BCD value from table
-    LD HL, LivesBCDTable
-    addAToHL8_M
-    LD A, (HL)
-    RRCA
-    RRCA
-    RRCA
-    RRCA
-    AND A, $0F
-    ADD A, BG_TILE_OFFSET                   ;writes tens place digit
+    SUB A, B
+    INC E
+    JP TensLoop
+PutLives:
+    ADD A, BG_TILE_OFFSET                   ;write ones place digit
+    LD (VRAM_Buffer1 + $0D), A
+    LD A, E                                 ;writes tens place digit (if applicable)
+    OR A
+    JR Z, +
+    ADD A, BG_TILE_OFFSET
     LD (VRAM_Buffer1 + $0B), A
     LD A, $01
     LD (VRAM_Buffer1 + $0C), A
-    LD A, (HL)
-    AND A, $0F
-PutLives:
-    ADD A, BG_TILE_OFFSET                   ;write ones place digit
-    LD (VRAM_Buffer1 + $0D), A                    
++:
+    LD A, D                                 ;writes hundreds place digit (if applicable)
+    OR A
+    JR Z, +
+    ADD A, BG_TILE_OFFSET
+    LD (VRAM_Buffer1 + $09), A
+    LD A, $01
+    LD (VRAM_Buffer1 + $0A), A
++:                    
     LD A, (WorldNumber)                     ;write world and level numbers (incremented for display)
     ADD A, BG_TILE_OFFSET + $01             ;to the buffer in the spaces surrounding the dash
     LD (VRAM_Buffer1 + $20), A
@@ -1145,16 +1155,6 @@ PrintWarpZoneNumbers:
     LDI
     LD (VRAM_Buffer1_Ptr), DE               ;load new buffer pointer at end of message
     RET
-
-.SECTION "LivesBCDTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-LivesBCDTable:
-    .db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
-    .db $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
-    .db $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57
-    .db $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $70, $71, $72, $73
-    .db $74, $75, $76, $77, $78, $79, $80, $81, $82, $83, $84, $85, $86, $87, $88, $89
-    .db $90, $91, $92, $93, $94, $95, $96, $97, $98, $99
-.ENDS
 
 ;-------------------------------------------------------------------------------------
 ;$00(IXL) - used to store status bar nybbles

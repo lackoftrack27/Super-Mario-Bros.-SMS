@@ -1020,9 +1020,8 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch4Call5:
-    ;.db nRst, $60
     .db nRst, $48
-    smpsChangeVol   $02                     ; Vol: $04
+    smpsChangeVol   $01                     ; Vol: $03
     smpsFMVoice     $00
     smpsVolEnv      $00
     smpsPatchEnv    $0F
@@ -1030,18 +1029,7 @@ Mus_Overworld_FM:
     .db nD2,        $04
     smpsModOff
     .db nRst,       $14
-    smpsChangeVol   $FE                     ; Vol: $02
-    ; .db nRst, $48
-    ; smpsDetune $02
-    ; smpsChangeVol $01                       ; Vol: $03
-    ; smpsVolEnv  $03
-    ; smpsPatchEnv    $13
-    ; smpsModSetup    $00, $02, $E8, $FF
-    ; .db nC3, $08
-    ; smpsModOff
-    ; .db nRst, $10
-    ; smpsChangeVol $FF                       ; Vol: $02
-    ; smpsDetune $01
+    smpsChangeVol   $FF                     ; Vol: $02
     smpsRet
 
 ;   --- CHANNEL 5 DATA ---
@@ -1313,8 +1301,8 @@ Mus_Overworld_FM:
 
 ;   --- CHANNEL 6 DATA ---
 @ch6:
+    smpsCall    Mus_Overworld_FM@ch6Call6
 @ch6LoopPoint:
-    .db nRst, $60
     smpsCall    Mus_Overworld_FM@ch6Call1
     ;
     smpsChangeVol $05
@@ -1326,6 +1314,8 @@ Mus_Overworld_FM:
     smpsCall    Mus_Overworld_FM@ch6Call3
     ;
     smpsChangeVol $FE
+    smpsCall    Mus_Overworld_FM@ch6Call6
+    ;
     smpsCall    Mus_Overworld_FM@ch6Call1
     ;
     .db nRst, $7F, $7F, $7F, $7F, $7F, $7F, $06
@@ -1333,8 +1323,10 @@ Mus_Overworld_FM:
     smpsChangeVol $02
     smpsCall    Mus_Overworld_FM@ch6Call3
     ;
-    .db $60, $60, $60
     smpsChangeVol $FE
+    smpsCall    Mus_Overworld_FM@ch6Call6
+    ;
+    .db $60, $60, $60, $60
     smpsJump    Mus_Overworld_FM@ch6LoopPoint
 ;   CHANNEL 6 SUBROUTINES
 @ch6Call1:
@@ -1420,7 +1412,6 @@ Mus_Overworld_FM:
     smpsPatchEnv $00
     smpsFMVoice $01
     .db nA4, $30, nG4, nF4, nE4, nA4, nG4
-    .db nRst, $60
     smpsRet
 
 @ch6Call4:
@@ -1436,6 +1427,20 @@ Mus_Overworld_FM:
     .db nA5, $04, nRst, $02
     smpsChangeVol $FB
     smpsRet
+
+@ch6Call6:
+    .db nRst, $48
+    smpsChangeVol $01                       ; Vol: $01
+    smpsVolEnv  $03
+    smpsPatchEnv    $13
+    smpsModSetup    $00, $02, $E8, $FF
+    .db nC3, $08
+    smpsModOff
+    .db nRst, $10
+    smpsChangeVol $FF                       ; Vol: $00
+    smpsVolEnv  $00
+    smpsRet
+
 
 ;   --- CHANNEL 7 DATA ---
 @ch7:
@@ -1478,7 +1483,13 @@ Mus_Overworld_FM:
 ;   CHANNEL 7 SUBROUTINE
 @ch7Call1:
     .db nA4, $05, nRst, $01, nA4, $05, nRst, $07, nA4, $05, nRst, $07, nFs4, $05, nRst, $01
-    .db nA4, $05, nRst, $07, nC5, $05, nRst, $2B
+    .db nA4, $05, nRst, $07, nC5, $05;, nRst, $2B
+
+    .db nRst, $13
+    smpsPatchEnv $09
+    smpsVolEnv  $04
+    .db nBb7, $08
+    .db nRst, $10
     smpsRet
 
 @ch7Call2:
@@ -1859,7 +1870,7 @@ Mus_PipeIntro_FM:
     smpsChanHeader  Mus_PipeIntro_FM@ch3,  $00, $00, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch4,  $00, $02, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch5,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsChanHeader  Mus_PipeIntro_FM@ch6,  $00, $00, $00, $00
     smpsChanHeader  Mus_PipeIntro_FM@ch7,  $00, $01, $00, $00
     smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
 
@@ -1889,6 +1900,10 @@ Mus_PipeIntro_FM:
 
 @ch5:
     smpsCall    Mus_Overworld_FM@ch5Call5
+    smpsStop
+
+@ch6:
+    smpsCall    Mus_Overworld_FM@ch6Call6
     smpsStop
 
 @ch7:

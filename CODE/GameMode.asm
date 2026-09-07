@@ -2204,21 +2204,20 @@ SlowM:
 SteadM:
     LD L, <Enemy_X_Speed                    ;get current horizontal speed
     LD A, (HL)
-    PUSH AF                                 ;save to stack
     OR A
     JP P, AddHS                             ;if not moving or moving right, skip, leave Y alone
     INC C                                   ;otherwise increment Y to next data
     INC C
 AddHS:
     LD A, (BC)                              ;add value here to slow enemy down if necessary
-    ADD A, (HL)
+    LD B, (HL)                              ;put original h-speed into B (6502 saved to stack)
+    ADD A, B
     LD (HL), A                              ;save as horizontal speed temporarily
 ;
     CALL MoveEnemyHorizontally              ;then do a sub to move horizontally
 ;
-    POP AF
-    LD L, <Enemy_X_Speed                    ;get old horizontal speed from stack and return to
-    LD (HL), A                              ;original memory location, then leave
+    LD L, <Enemy_X_Speed                    ;get old horizontal speed and return to
+    LD (HL), B                              ;original memory location, then leave
     RET
 
 ReviveStunned:

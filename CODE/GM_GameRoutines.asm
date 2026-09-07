@@ -962,7 +962,12 @@ BrickShatter:
     LD L, <Block_RepFlag                ;set flag for block object to immediately replace metatile
     LD (HL), $01
 ;
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_FM)
     LD A, SNDID_SHATTER                 ;load brick shatter sound
+    JR Z, +
+    LD A, SNDID_SHATTER_01              ;load layered version if in FM mode
++:
     LD (SFXTrack2.SoundQueue), A
 ;
     CALL SpawnBrickChunks               ;create brick chunk objects

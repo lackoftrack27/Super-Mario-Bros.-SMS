@@ -414,16 +414,18 @@ SndProcessQueueSFX:
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
     JR Z, @GetSFXData
-    LD A, (HL)
-    CP A, SNDID_JUMPBIG_01
-    JR C, @GetSFXData
-    ; SKIP IF SFX IS REPLAYING
-    DEC L           ; SoundQueue
-    CP A, (HL)
+    ; SKIP IF THIS TRACK ISN'T THE ONE HOLDING THE 2ND LAYER
+    LD A, (SndLayerOwner)
+    CP A, H
+    JR NZ, @GetSFXData
+    ; SKIP IF SFX IS REPLAYING (2ND LAYER GETS RESTARTED BELOW)
+    LD A, (HL)      ; SoundPlaying
+    CP A, B
     JR Z, @GetSFXData
-    ; ELSE, SILENCE 2ND LAYER
+    ; ELSE, RELEASE AND SILENCE 2ND LAYER
     XOR A
     LD (MusicTrack3.Control), A
+    LD (SndLayerOwner), A
     LD A, ~CHANALL_BITS | CHAN2_BITS
     OUT (PSG_PORT), A
 @GetSFXData:
@@ -462,11 +464,29 @@ SndProcessQueueSFX:
 ;   SET UP 2ND LAYER IF DOING LAYERED SFX IN FM MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
-    JP Z, +
+    JR Z, @SetOverride
     LD L, <SFXTrack0.SoundPlaying
     LD A, (HL)
     CP A, SNDID_JUMPBIG_01
     RET C
+    ; STOP NOISE TRACK IF IT'S INTERRUPTED BY ANOTHER LAYERED SFX
+    LD A, (SndLayerOwner)
+    CP A, >SFXTrack2
+    JR NZ, @ClaimLayer
+    ; HOWEVER, DON'T STOP IF ANOTHER NOISE SFX IS INTERRUPTING
+    LD A, H
+    CP A, >SFXTrack2
+    JR Z, @ClaimLayer
+    XOR A
+    LD (SFXTrack2.Control), A
+    LD (SFXTrack2.SoundPlaying), A
+    LD A, ~CHANALL_BITS | CHAN3_BITS
+    OUT (PSG_PORT), A
+@ClaimLayer:
+    ; CLAIM THE 2ND LAYER FOR THIS TRACK
+    LD A, H
+    LD (SndLayerOwner), A
+    ; 2ND LAYER SETUP
     LD HL, MusicTrack3.Control
     LD (HL), bitValue(CHANCON_PLAYING)
     INC L
@@ -485,7 +505,7 @@ SndProcessQueueSFX:
     INC L
     LD (HL), $01    ; Duration
     RET
-+:
+@SetOverride:
 ;   SET SFX OVERRIDE BIT ON MUSIC TRACK THAT SHARES CHANNEL (PSG MODE ONLY)
     DEC H
     DEC H
@@ -1746,10 +1766,12 @@ SndIndexTable:
     .dw Mus_Bowser_FM
     .dw Mus_FinalBowser_FM
     .dw Mus_Title_FM
-    ; ADDITIONAL SFX ($32 - $34)
+    ; ADDITIONAL SFX ($32 - $36)
     .dw SFX_JumpBig_P1
     .dw SFX_JumpSml_P1
     .dw SFX_Powerup_P1
+    .dw SFX_Shatter_P1
+    .dw SFX_Flame_P1
 .ENDS
 
 ;--------------------------------
@@ -1764,7 +1786,7 @@ PSGFreqTable:
 	.dw $006B,$0065,$005F,$005A,$0055,$0050,$004C,$0047,$0043,$0040,$003C,$0039; Octave 6 - (B1 - BC)   4
 	.dw $0035,$0032,$0030,$002D,$002A,$0028,$0026,$0024,$0022,$0020,$001E,$001C; Octave 7 - (BD - C8)   5
 	.dw $001B,$0019,$0018,$0016,$0015,$0014,$0013,$0012,$0011,$0010,$000F,$000E; Octave 8 - (C9 - D4)   6
-	.dw $000D,$000D,$000C,$000B,$000B,$000A,$0009,$0009,$0008,$0008,$0007,$0007; Octave 9 - (D5 - E0)   7
+	.dw $000D,$000D,$000C,$000B,$000B,$000A,$0009,$0009,$0008,$0008,$0002,$0000; Octave 9 - (D5 - E0)   7
 .ENDS
 
 .SECTION "Sound FM Frequency Table" FREE BITWINDOW 8 RETURNORG
@@ -1801,6 +1823,7 @@ VolumeEnvTable:
 
     .dw PSGEnv0F    ; DRUM 0
     .dw PSGEnv10    ; DRUM 1
+    .dw PSGEnv11    ; SFX SHATTER
 .ENDS
 
 .SECTION "Sound PSG Envelope 01 - SFX PAUSE" FREE BITWINDOW 8 RETURNORG
@@ -1896,6 +1919,11 @@ PSGEnv10:
     .db $00, $0F, $80
 .ENDS
 
+.SECTION "Sound PSG Envelope 11 - SFX SHATTER" FREE BITWINDOW 8 RETURNORG
+PSGEnv11:
+    .db $0F, $00, $0F, $00, $0F, $00, $0F, $01, $0F, $01, $0F, $01, $0F, $02, $0F, $02
+    .db $0F, $02, $0F, $02, $0F, $03, $0F, $03, $0F, $03, $0F, $04, $0F, $04, $0F, $80
+.ENDS
 ;--------------------------------
 
 .SECTION "Sound PSG Drum Table" FREE BITWINDOW 8 RETURNORG

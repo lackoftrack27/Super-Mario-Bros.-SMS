@@ -1181,7 +1181,8 @@
     SndCurrentTempo:                dsb $01
     SndPauseFlag:                   dsb $01
     SndHurryUpFlag:                 dsb $01
-    .                               dsb $04 ; SPARE SOUND MEM
+    SndLayerOwner:                  dsb $01
+    .                               dsb $03 ; SPARE SOUND MEM
 ;
     SpritePaletteCopy:              dsb $10
 ;

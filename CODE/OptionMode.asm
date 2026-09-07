@@ -184,7 +184,7 @@ OptionCheckPause_Debug:
     AND A, bitValue(OPTFLAG_FM)
     LD B, $0E + $13   ; PSG LIMIT
     JR Z, +
-    LD B, $14 + $13   ; FM LIMIT
+    LD B, $16 + $13   ; FM LIMIT
 +:
     LD HL, Temp_Bytes + $03
     LD A, (SavedJoypad1Bits)
@@ -256,15 +256,21 @@ OptionCheckPause_Debug:
 @PlaySndID:
     ; PLAY SND ID
     LD A, (HL)
-    ADD A, $81  ; SND START
-    CP A, SNDID_FMDUPS              ;layered SFX
+    ADD A, $81                      ;SND START
+    CP A, SNDID_FMDUPS+$03          ;layered SFX (Noise)
+    JR NC, @LayeredNoiseID
+    CP A, SNDID_FMDUPS              ;layered SFX (Tone)
     JR NC, @LayeredToneID
     CP A, SNDID_WATER               ;PSG/FM music
     JR NC, @OverrideID
-    CP A, SNDID_SHATTER             ;Noise SFX (brick shatter)
+    CP A, SNDID_SHATTER             ;Noise SFX (Brick shatter)
     JR Z, @NoiseID
     CP A, SNDID_FLAME               ;Tone SFX
     JR NZ, @ToneID
+    JR @NoiseID                     ;Noise SFX (Flame)
+
+@LayeredNoiseID:
+    ADD A, $0E
 @NoiseID:
     LD (SFXTrack2.SoundQueue), A
     JP OptionDrawPlayer

@@ -1046,7 +1046,12 @@ InitBowserFlame:
     LD L, <Enemy_Y_MoveForce            ;reset something here
     LD (HL), A
 ;
-    LD A, SNDID_FLAME                   ;load bowser's flame sound into queue
+    LD A, (OptionBitflags)              ;load bowser's flame sound into queue
+    AND A, bitValue(OPTFLAG_FM)
+    LD A, SNDID_FLAME
+    JR Z, +
+    LD A, SNDID_FLAME_01                ;load layered version if in FM mode
++:
     LD (SFXTrack2.SoundQueue), A
 ;
     LD DE, (BowserFront_Offset - 1)     ;get bowser's buffer offset

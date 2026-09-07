@@ -3281,8 +3281,13 @@ RemoveBridge:
     LD HL, (ObjectOffset)                       ;get enemy offset
     LD A, SNDID_CANNON                          ;load the fireworks/gunfire sound into the square 2 sfx
     LD (SFXTrack1.SoundQueue), A                ;queue while at the same time loading the brick
-    LD A, SNDID_SHATTER                         ;shatter sound into the noise sfx queue thus
-    LD (SFXTrack2.SoundQueue), A                ;producing the unique sound of the bridge collapsing
+    LD A, (OptionBitflags)                      ;shatter sound into the noise sfx queue thus
+    AND A, bitValue(OPTFLAG_FM)                 ;producing the unique sound of the bridge collapsing
+    LD A, SNDID_SHATTER
+    JR Z, +
+    LD A, SNDID_SHATTER_01                      ;load layered version if in FM mode
++:
+    LD (SFXTrack2.SoundQueue), A
     LD A, (BridgeCollapseOffset)                ;increment bridge collapse offset
     INC A
     LD (BridgeCollapseOffset), A

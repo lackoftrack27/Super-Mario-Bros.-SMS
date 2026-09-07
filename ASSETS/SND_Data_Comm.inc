@@ -287,6 +287,8 @@
     SNDID_JUMPBIG_01    DB
     SNDID_JUMPSMALL_01  DB
     SNDID_POWERUP_01    DB
+    SNDID_SHATTER_01    DB
+    SNDID_FLAME_01      DB
 .ENDE
 
 
@@ -558,16 +560,17 @@ SFX_Powerup:
 
 .SECTION "SFX Data - Brick Shatter" FREE
 SFX_Shatter:
-    smpsChanHeader  SFX_Shatter + 6,        $00, $00, $00, $00
-    .db nRst, $01, nLow, nRst, nHi, nLow, nRst
+    smpsChanHeader  SFX_Shatter + 6,        $00, $00, $00, $10
+    .db nRst, $01
+    .db nLow, $02, nHi, nLow
     smpsChangeVol   $01
-    .db nHi, nRst, nLow, nRst, nHi, nRst
+    .db nHi, nLow, nHi
     smpsChangeVol   $01
-    .db nHi, nRst, nMid, nRst, nLow, nRst, nLow, nRst
+    .db nHi, nMid, nLow, nLow
     smpsChangeVol   $01
-    .db nHi, nRst, nMid, nRst, nLow, nRst
+    .db nHi, nMid, nLow
     smpsChangeVol   $01
-    .db nLow, nRst, nLow, nRst
+    .db nLow, nLow
     smpsStop
 .ENDS
 
@@ -645,6 +648,35 @@ SFX_JumpSml_P1:
     smpsStop
 .ENDS
 
+.SECTION "SFX Data - Flame (P1)" FREE
+SFX_Flame_P1:
+    smpsChanHeader  @Layer1,                $00, $00, $00, $05
+    smpsChanHeader  @Layer2,                $00, $0F, $00, $00
+@Layer1:
+    .db nCh2, $3F
+    smpsStop
+@Layer2:
+    .db nA2, $3F
+    smpsStop
+.ENDS
+
+.SECTION "SFX Data - Brick Shatter (P1)" FREE
+SFX_Shatter_P1:
+    smpsChanHeader  @Layer1,                $00, $00, $00, $11
+    smpsChanHeader  @Layer2,                $00, $0F, $00, $00
+@Layer1:
+    .db nCh2, $1F
+    smpsStop
+@Layer2:
+    .db nRst, $01
+    .db nD5, $02, nA7, nA4
+    .db nC7, nA4, nBb7
+    .db nA6, nD6, nA2, nD5
+    .db nA7, nA5, nA4
+    .db nA3, $04
+    smpsStop
+.ENDS
+
 ; -----------------------------------------------------------
 ;                     COMMON MUSIC DATA
 ; -----------------------------------------------------------
@@ -658,11 +690,11 @@ Mus_Silence:
     smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
     smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
     smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
 @ch0:
     smpsStop
 .ENDS

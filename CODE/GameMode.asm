@@ -6898,10 +6898,7 @@ EnemiesCollision:
     RET Z                               ;branch to leave if there are no other enemies
     LD D, A                             ;move second enemy offset into D
 ;
-    LD A, H                             ;use enemy as offset into SetBitsMask
-    SUB A, $C1
-    LD BC, SetBitsMask
-    addAToBC8_M
+    GetLinearEnemySlotBC_M  SetBitsMask ;use enemy as offset into SetBitsMask
     LD A, (BC)
     LD IYL, A                           ;load bitmask into IYL
     CPL

@@ -42,11 +42,7 @@ BootVector:
 ;   USER VECTORS
 
 .ORG $0008
-ResetVector:
-    DI
-    NOP
-    LD SP, STACK_PTR
-    JP ResetStart
+    .db $00, $00, $00, $00, $00, $00, $00, $00
 
 
 ;   GIVEN A VALUE IN BOTH A AND HL, THE VALUE IN A WILL BE ADDED TO HL
@@ -147,64 +143,13 @@ PauseBtnVector:
 ;-------------------------------------------------------------------------------------
 ;   MAIN PROGRAM START
 Start:
-;   DO RESET START IF WARM BOOT HAS BEEN MARKED (NEEDED FOR MEGA DRIVE'S RESET BUTTON)
+;   GET MEMORY CONTROL VALUE (COLD BOOT ONLY)
     LD A, (WarmBootValidation)
     CP A, $A5
-    JR Z, ResetStart
-;   CHECK FOR FM UNIT
-    ; STORE MEMORY CONTROL VALUE
+    JR Z, @VDPInit
     LD A, ($C000)
     LD (MemoryControlValue), A
-    ; DISABLE IO
-    OR A, %00000100
-    OUT (MEM_CONTROL), A
-    ; STORE CURRENT STATE OF AUDIO CONTROL PORT IN D
-    IN A, (AUDIO_CONTROL)
-    AND A, $03
-    LD D, A
-    ; 
-    LD BC, $0400
--:
-    LD A, B
-    DEC A
-    LD E, A
-    OUT (AUDIO_CONTROL), A
-    IN A, (AUDIO_CONTROL)
-    AND A, $03
-    CP A, E
-    JR NZ, +
-    INC C
-+:
-    DJNZ -
-    ; RESTORE AUDIO CONTROL PORT
-    LD A, D
-    OUT (AUDIO_CONTROL), A
-    ; REENABLE IO
-    LD A, (MemoryControlValue)
-    OUT (MEM_CONTROL), A
-    ; CHECK COUNTER (1 OR 3 = NO FM. 2 = MARK3. 4 = J-SMS/AFTERMARKET)
-    LD A, C
-    RRCA
-    LD A, $00
-    JR C, +
-    LD A, $01
-+:
-    LD (FMDetectedFlag), A
-;   MD CONTROLLER CHECK
-    XOR A
-    LD (MDControllerFlag), A
-    LD A, $D5   ; $DD/0D/CD/D5
-    OUT (IO_CONTROL), A     ; LOW
-    RST SndFMWriteDelay
-    ; GET INPUTS (A, START)
-    IN A, (CONTROLPORT1)
-    CPL
-    ; DON'T SET FLAG IF MD CONTROLLER ISN'T PLUGGED IN
-    AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
-    CP A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
-    JR NZ, ResetStart
-    LD (MDControllerFlag), A
-ResetStart:
+@VDPInit:
 ;   TURN OFF SCREEN (AND DISABLE VDP INTS)
     CALL turnOffScreen
 ;   WAIT FOR VBLANK
@@ -231,6 +176,57 @@ ResetStart:
     LD (IX + 1), $00    ; BANK SELECT FOR SLOT 0
     LD (IX + 2), $01    ; BANK SELECT FOR SLOT 1
     LD (IX + 3), $02    ; BANK SELECT FOR SLOT 2
+;   WARM BOOT RAM INIT.
+    LD HL, WarmBootOffset
+    CALL InitializeMemory
+    CALL SndInitMemory@InitSndLinearMem
+;   FM DETECTION
+    ; DISABLE IO
+    LD A, (MemoryControlValue)
+    OR A, %00000100
+    OUT (MEM_CONTROL), A
+    ; COUNTER CHECK
+    LD BC, $0700                ;counter (7 -> b), plus 0 -> c
+-:  
+    LD A, B
+    AND A, %00000001            ;mask to bit 0 only
+    OUT (AUDIO_CONTROL), A      ;output to the audio control port
+    LD E, A
+    IN A, (AUDIO_CONTROL)       ;read back
+    AND A, %00000111            ;mask to bits 0-2 only
+    CP A, E                     ;check low 3 bits are the same as what was written
+    JR NZ, +
+    INC C                       ;c = # of times the test was passed
++:  
+    DJNZ -
+    ; COUNTER EVALUATION
+    LD A, C
+    CP A, $07                   ;check test was passed 7 times out of 7
+    JR Z, +
+    XOR A                       ;if not, result is 0 (PSG ONLY)
++:  
+    AND A, $03                  ;if so, result is 3 (PSG + FM ENABLE)
+    OUT (AUDIO_CONTROL), A      ;output result to audio control port
+    RRA                         ;set FM detection flag to 0 or 1 depending on results
+    LD (FMDetectedFlag), A
+    ; REENABLE IO
+    LD A, (MemoryControlValue)
+    OUT (MEM_CONTROL), A
+;   MD CONTROLLER CHECK
+    XOR A
+    LD (MDControllerFlag), A
+    LD A, $D5   ; $DD/0D/CD/D5
+    OUT (IO_CONTROL), A     ; LOW
+    RST SndFMWriteDelay
+    ; GET INPUTS (A, START)
+    IN A, (CONTROLPORT1)
+    CPL
+    ; DON'T SET FLAG IF MD CONTROLLER ISN'T PLUGGED IN
+    AND A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
+    CP A, bitValue(P1_DIR_LEFT) | bitValue(P1_DIR_RIGHT)
+    JR NZ, @MuteAudio
+    LD (MDControllerFlag), A
+@MuteAudio:
 ;   MUTE PSG CHANNELS
     CALL SndStopAll@WritePSG
 ;   MUTE FM CHANNELS IF FM CHIP IS DETECTED
@@ -588,7 +584,7 @@ ReadJoypads:
     IN A, (CONTROLPORT2)
     CPL                             ; INVERT SO 1 = PRESSED, 0 = NO PRESS
     BIT 4, A                        ; CHECK IF RESET BUTTON IS PRESSED
-    JP NZ, ResetVector              ; IF SO, RESET THE GAME
+    JP NZ, BootVector               ; IF SO, RESET THE GAME
     AND A, $0F                      ; ISOLATE 2P BUTTONS
     OR A, D                         ; COMBINE WITH THE BUTTONS FROM THE FIRST READ
     RLCA                            ; SHIFT INTO PLACE
@@ -666,7 +662,7 @@ PauseBtnChk:
     AND A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
     CP A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
     RET NZ
-    RST ResetVector
+    RST BootVector
 
 ;-------------------------------------------------------------------------------------
 

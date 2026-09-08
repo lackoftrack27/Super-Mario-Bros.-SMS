@@ -32,10 +32,7 @@ OptionMode:
 InitializeMenu:
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-    ; INITIALIZE BASIC MEMORY
-    LD HL, WarmBootOffset
-    CALL InitializeMemory
-    CALL SndInitMemory@InitSndLinearMem
+    ; INITIALIZE MENU MEMORY
     LD HL, SndChannelProcessMUS
     LD (MusicRoutine), HL
     XOR A
@@ -321,16 +318,12 @@ OptionUpdateSettings:
     LD A, (OptionBitflags)          ;set values depending on bit 1 of option bit flags
     AND A, bitValue(OPTFLAG_FM)
     JR NZ, +
-    XOR A                           ;only PSG audio enabled
-    OUT (AUDIO_CONTROL), A
     LD HL, SndChannelProcessMUS     ;FM music update routine
     LD (MusicRoutine), HL
     LD HL, $019A
     LD DE, $0000
     JR @DrawSelector
 +:
-    LD A, %00000011                 ;PSG and FM audio enabled
-    OUT (AUDIO_CONTROL), A
     LD HL, SndChannelProcessFM      ;PSG music update routine
     LD (MusicRoutine), HL
     LD HL, $0000

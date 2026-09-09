@@ -2800,6 +2800,14 @@ SetupGFB:
     SET 7, E
     LD (DE), A                                  ;store as X in OAM data
     LD IXH, A                                   ;also save here
+
+    LD A, (FrameCounter)                        ;get tile for firebar
+    RRCA
+    RRCA
+    AND A, $03
+    ADD A, $21
+    LD (Temp_Bytes + $08), A                    ;save here for later use in drawing loop
+
     CALL FirebarCollision                       ;draw fireball part and do collision detection
 ;
     LD IYH, $05                                 ;load value for short firebars by default
@@ -2810,6 +2818,16 @@ SetupGFB:
     LD IYH, $0B                                 ;otherwise load value for long firebars
 SetMFbar:
     PUSH HL                                     ;(SMS)save Object_Offset
+
+    LD A, I                                     ;get A
+    RRCA                                        ;divide by eight or shift three to the right
+    RRCA
+    RRCA
+    AND A, $1F
+    LD HL, FirebarMirrorData                    ;use as offset
+    addAToHL8_M
+    LD A, (HL)
+    LD (Temp_Bytes + $09), A                    ;save here for later use in drawing loop
 
 GetFirebarPosition:                             ;this was moved out of DrawFbar for performance
     LD A, I
@@ -2846,17 +2864,8 @@ GetVAdder:
     LD C, A
 
 DrawFbar:
-    PUSH HL
-    LD A, I                                     ;get A one last time
-    RRCA                                        ;divide by eight or shift three to the right
-    RRCA
-    RRCA
-    AND A, $1F
-    LD HL, FirebarMirrorData                    ;use as offset
-    addAToHL8_M
-    LD A, (HL)                                  ;load mirroring data here
+    LD A, (Temp_Bytes + $09)                    ;load mirroring data here
     LD IXL, A
-    POP HL
 
     CALL DrawFirebar_Collision
     LD A, IYH
@@ -2933,11 +2942,7 @@ SetVFbr:
 ;   IX: XPOS/YPOS
 FirebarCollision:
     INC E                                       ;draw current tile of firebar
-    LD A, (FrameCounter)
-    RRCA
-    RRCA
-    AND A, $03
-    ADD A, $21
+    LD A, (Temp_Bytes + $08)
     LD (DE), A
     INC E                                       ;move to next sprite entry
 ;

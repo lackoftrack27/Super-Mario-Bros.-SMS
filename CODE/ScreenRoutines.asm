@@ -604,6 +604,29 @@ LoadLevelTileData:
     EX DE, HL
     LD BC, $20 * $100 + VDPDATA_PORT
     OTIR
+    ; LOAD STAR FLAG FOR PLAYER (NEW GFX MODE ONLY)
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, @AreaTileLoadDispatch
+        ;SET UP VDP ADDRESS
+    LD HL, $0820 | VRAMWRITE
+    RST setVDPAddress
+        ; SELECT CORRECT GFX
+    LD HL, Tiles_Mario_Flag_00
+    LD A, (CurrentPlayerGfx)
+    OR A
+    JR Z, +
+    LD HL, Tiles_Luigi_Flag_00
++:
+        ; LOAD 1ST HALF (BANK IS ALREADY SET UP, SAME AS LIFT/CLOUD)
+    LD B, $40
+    OTIR
+        ; LOAD 2ND HALF
+    LD A, $C0
+    addAToHL8_M
+    LD B, $40
+    OTIR
+@AreaTileLoadDispatch:
     ; LOAD SPECIAL TILES DEPENDING ON AREATYPE
     LD A, (AreaType)
     OR A

@@ -649,21 +649,6 @@ CheckForBulletBillCV:
     JR NZ, SaveEnemyObject                  ;if not found, branch again
 ;
     DEC D                                   ;decrement saved vertical position
-;
-;     PUSH BC
-;     LD A, H
-;     SUB A, $C1
-;     LD BC, EnemyFrameTimer
-;     addAToBC8_M
-;     LD A, (BC)
-;     POP BC
-;     OR A
-;     LD A, $03
-;     JP Z, SBBAt
-;     LD A, $23
-; SBBAt:
-;     LD (Temp_Bytes + $04), A
-;
     XOR A                                   ;nullify saved enemy state both in Y and in
     LD C, A                                 ;memory location here
     LD IYL, A

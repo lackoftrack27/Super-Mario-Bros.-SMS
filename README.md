@@ -2,6 +2,8 @@
 
 A near-perfect port of the NES/FC classic to the Sega Master System. It also introduces new graphics and sound modes that take advantage of the SMS's hardware.
 
+**Download Link:** [https://www.smspower.org/Homebrew/SuperMarioBrosSmsPort-SMS](https://www.smspower.org/Homebrew/SuperMarioBrosSmsPort-SMS)
+
 ---
 ## Features
 - **Near-perfect Accuracy:** The game plays almost exactly like the original. While I cannot guarantee _perfect_ accuracy, I feel confident that the port is accurate under _normal gameplay_. 

@@ -35,9 +35,6 @@ CheckRightBounds:
     AND A, %11110000
     LD IXH, A                       ;store high nybble
 ;
-    LD A, (EnemyDataOffset)
-    LD E, A
-    INC E
     LD A, (DE)                      ;if MSB of enemy object is clear, branch to check for row $0f
     ADD A, A
     JR NC, CheckPageCtrlRow

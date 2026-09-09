@@ -626,6 +626,9 @@ LoadLevelTileData:
     addAToHL8_M
     LD B, $40
     OTIR
+    ; SET VDP ADDRESS FOR BRICK TILE LOADING (DONE LATER)
+    LD HL, $06E0 | VRAMWRITE
+    RST setVDPAddress
 @AreaTileLoadDispatch:
     ; LOAD SPECIAL TILES DEPENDING ON AREATYPE
     LD A, (AreaType)
@@ -635,8 +638,16 @@ LoadLevelTileData:
     JP Z, OverWorldSetup
     DEC A
     JP Z, UndergroundSetup
+    ; FALL THROUGH
 
 CastleSetup:
+    ; SKIP ANIMATED TILE AND BRICK SPRITE LOAD IN NES GFX MODE
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, @TileLoad
+    ; LOAD BRICK SPRITE TILES
+    LD HL, Tile_Brick_Set2
+    CALL TileBrickSpriteLoad
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -655,6 +666,7 @@ CastleSetup:
     LDIR
     LD A, $01
     LD (BGTileQueue2GrassFlag), A
+@TileLoad:
     ; UNIQUE TILES FOR CASTLE AREA
     LD A, ASSET_BGCASTLE
     CALL AssetLoader
@@ -663,6 +675,24 @@ CastleSetup:
     JP TileLoadDone
 
 WaterAreaSetup:
+    ; LOAD WATER TILES
+    LD A, ASSET_BGWATER
+    CALL AssetLoader
+    LD (MAPPER_SLOT2), A
+    CALL zx7_decompressVRAM
+    ; WATER CASTLE TILES (ONLY FOR w8-4)
+    LD A, (InitialAreaPointer)
+    CP A, $02
+    JR NZ, @CheckNESMode
+    LD A, ASSET_BGWATERCASTLE
+    CALL AssetLoader
+    LD (MAPPER_SLOT2), A
+    CALL zx7_decompressVRAM
+@CheckNESMode:
+    ; CLEAR OUT A BUNCH OF TILE DATA IF IN NES GFX MODE
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, @NESModeClearing
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -681,15 +711,9 @@ WaterAreaSetup:
     LDIR
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
-    ; UNIQUE TILES FOR WATER AREA
-    LD A, ASSET_BGWATER
-    CALL AssetLoader
-    LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
+    JP TileLoadDone
+@NESModeClearing:
     ; CLEAR BG AREA WITH WATER TILE FOR NES GFX MODE
-    LD A, (OptionBitflags)
-    AND A, bitValue(OPTFLAG_GFX)
-    JR Z, +
     LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
     RST setVDPAddress
     LD BC, $8003        ; 80 TILES
@@ -703,19 +727,7 @@ WaterAreaSetup:
     DJNZ -
     DEC C
     JP NZ, -
-+:
-    ; LOAD WATER CASTLE TILES IF IN w8-4 WATER AREA
-    LD A, (InitialAreaPointer)
-    CP A, $02
-    JP NZ, TileLoadDone
-    LD A, ASSET_BGWATERCASTLE
-    CALL AssetLoader
-    LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
     ; ERASE PIRANHA PLANT TILES IF IN NES GFX MODE
-    LD A, (OptionBitflags)
-    AND A, bitValue(OPTFLAG_GFX)
-    JP Z, TileLoadDone
     LD HL, $9E * SMS_TILE_SIZE | VRAMWRITE
     RST setVDPAddress
     XOR A
@@ -732,6 +744,9 @@ OverWorldSetup:
     LD A, (BackgroundColorCtrl)
     CP A, $05
     JR NC, SnowOverworldSetup
+    ; LOAD BRICK SPRITE TILES
+    LD HL, Tile_Brick_Set0
+    CALL TileBrickSpriteLoad
     ; ANIMATED TILES
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -778,6 +793,9 @@ OverWorldSetup:
     JP TileLoadDone
 
 SnowOverworldSetup:
+    ; LOAD BRICK SPRITE TILES
+    LD HL, Tile_Brick_Set1
+    CALL TileBrickSpriteLoad
     ; UPLOAD TILES FOR SNOW (ONLY FOR DEFAULT GFX)
     LD A, ASSET_BGSNOW
     CALL AssetLoader
@@ -815,10 +833,14 @@ SnowOverworldSetup:
     JR TileLoadDone    
 
 UndergroundSetup:
-    ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)
+    ; DO DIFFERENT THING FOR NES GFX MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     JR NZ, @ClearBGTiles
+    ; LOAD BRICK SPRITE TILES
+    LD HL, Tile_Brick_Set1
+    CALL TileBrickSpriteLoad
+    ; UNIQUE TILES FOR UNDERGROUND AREA (ONLY FOR DEFAULT GFX)
     LD A, ASSET_BGUNDERGROUND
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
@@ -857,12 +879,24 @@ UndergroundSetup:
     XOR A
     LD B, $C0       ; 06 TILES
     CALL MemsetVRAM8
+    ; FALL THROUGH
 
 TileLoadDone:
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
     IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
     EI
+    RET
+
+TileBrickSpriteLoad:
+    LD D, $05                       ;load 10 tiles in total (five 64-byte chunks)
+-:
+    LD B, $40
+    OTIR
+    LD A, $C0
+    addAToHL8_M
+    DEC D
+    JR NZ, -
     RET
 
 ;-------------------------------------------------------------------------------------

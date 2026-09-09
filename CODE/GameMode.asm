@@ -2499,8 +2499,7 @@ ProcSwimmingB:
     LD A, (FrameCounter)
     AND A, %00000111                        ;get 3 LSB of frame counter
     RET NZ ;PUSH AF                         ;branch to leave, execute code only every eighth frame
-    LD L, <BlooperMoveCounter               ;get enemy's movement counter
-    LD A, (HL)                              ;check for d0 set
+    LD A, (HL)                              ;check for d0 set in enemy's movement counter
     RRCA
     JR C, SlowSwim                          ;branch if set
     ;POP AF
@@ -6721,7 +6720,6 @@ EnemyStomped:
     LD A, SNDID_SWIM                ;otherwise play stomp/swim sound
     LD (SFXTrack0.SoundQueue), A
 ;
-    LD L, <Enemy_ID
     LD A, (HL)
     LD BC, StompedEnemyPtsData      ;initialize points data offset for stomped enemies
     CP A, OBJECTID_FlyingCheepCheep ;branch for cheep-cheep

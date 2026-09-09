@@ -1371,7 +1371,7 @@ AreaStyleObject:
 
 TreeLedge:
     CALL GetLrgObjAttrib                ;get row and length of green ledge          
-    LD L, <AreaObjectLength
+    INC L                               ;<AreaObjectLength
     LD A, (HL)                          ;check length counter for expiration
     OR A
     JR Z, EndTreeL
@@ -1585,12 +1585,12 @@ NotTall:
     LD (HL), OBJECTID_StarFlagObject    ;set star flag value in buffer itself
     LD L, <Enemy_X_Position
     LD (HL), A                          ;then write horizontal coordinate for star flag
-    LD L, <Enemy_PageLoc
+    DEC L                               ;<Enemy_PageLoc
     LD A, (CurrentPageLoc)
     LD (HL), A                          ;set page location for star flag
     LD L, <Enemy_Y_HighPos
     LD (HL), $01                        ;set vertical high byte
-    LD L, <Enemy_Y_Position
+    DEC L                               ;<Enemy_Y_Position
     LD (HL), $90                        ;set vertical coordinate
     RET
 PlayerStop:
@@ -1769,7 +1769,7 @@ WarpPipe:
     ADD A, $08                          ;add eight to put the piranha plant in the center
     LD (HL), A                          ;store as enemy's horizontal coordinate
     LD A, (CurrentPageLoc)              ;add carry to current page number
-    LD L, <Enemy_PageLoc
+    DEC L                               ;<Enemy_PageLoc
     ADC A, $00
     LD (HL), A                          ;store as enemy's page coordinate
     LD L, <Enemy_Y_HighPos
@@ -2185,7 +2185,7 @@ Jumpspring:
     CALL GetAreaObjXPosition            ;get horizontal coordinate for jumpspring
     LD L, <Enemy_X_Position
     LD (HL), A                          ;and store
-    LD L, <Enemy_PageLoc
+    DEC L                               ;<Enemy_PageLoc
     LD A, (CurrentPageLoc)              ;store page location of jumpspring
     LD (HL), A
     CALL GetAreaObjYPosition            ;get vertical coordinate for jumpspring
@@ -2281,7 +2281,7 @@ Hole_Empty:
     LD (HL), A                          ;store as left extent of whirlpool
     LD A, (CurrentPageLoc)              ;get page location of where we're at
     SBC A, $00                          ;subtract borrow
-    LD L, <Whirlpool_PageLoc
+    DEC L                               ;<Whirlpool_PageLoc
     LD (HL), A                          ;save as page location of whirlpool
     INC C
     INC C                               ;increment length by 2

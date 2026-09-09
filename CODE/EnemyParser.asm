@@ -9,6 +9,7 @@ ProcessEnemyData:
     LD A, (DE)                      ;load first byte
     CP A, $FF                       ;check for EOD terminator
     JP Z, CheckFrenzyBuffer         ;if found, jump to check frenzy buffer, otherwise
+    INC E                           ;point to next byte
 
 ;CheckEndofBuffer:
     AND A, %00001111                ;check for special row $0e
@@ -18,7 +19,6 @@ ProcessEnemyData:
     CP A, >Enemy_ID_05
     JR C, CheckRightBounds          ;if not at end of buffer, branch
 ;
-    INC E
     LD A, (DE)                      ;check for specific value here
     AND A, %00111111                ;not sure what this was intended for, exactly
     CP A, $2E                       ;this part is quite possibly residual code
@@ -30,10 +30,10 @@ CheckRightBounds:
     LD C, A
     LD A, (ScreenRight_PageLoc)     ;add carry to page location of right boundary
     ADC A, $00
-    LD IXL, A ;LD (Temp_Bytes + $06), A        ;store page location + carry
+    LD IXL, A                       ;store page location + carry
     LD A, C
     AND A, %11110000
-    LD IXH, A ;LD (Temp_Bytes + $07), A        ;store high nybble
+    LD IXH, A                       ;store high nybble
 ;
     LD A, (EnemyDataOffset)
     LD E, A
@@ -82,7 +82,7 @@ PositionEnemyObj:
 ;
     LD A, (DE)                      ;get first byte of enemy object
     AND A, %11110000
-    LD L, <Enemy_X_Position
+    INC L                           ;<Enemy_X_Position
     LD (HL), A                      ;store column position
 ;
     LD A, (ScreenRight_X_Pos)
@@ -91,7 +91,7 @@ PositionEnemyObj:
     CP A, C                         ;check column position against right boundary
     LD A, (ScreenRight_PageLoc)
     LD C, A
-    LD L, <Enemy_PageLoc
+    DEC L                           ;<Enemy_PageLoc
     LD A, (HL)                      ;without subtracting, then subtract borrow
     SBC A, C                        ;from page location
     JR NC, CheckRightExtBounds      ;if enemy object beyond or at boundary, branch
@@ -103,12 +103,12 @@ PositionEnemyObj:
     JP CheckThreeBytes              ;if not found, unconditional jump
 
 CheckRightExtBounds:
-    LD A, IXH ;LD A, (Temp_Bytes + $07)        ;check right boundary + 48 against
+    LD A, IXH                       ;check right boundary + 48 against
     LD L, <Enemy_X_Position         ;column position without subtracting,
     CP A, (HL)
-    LD A, IXL ;LD A, (Temp_Bytes + $06)        ;then subtract borrow from page control temp
-    LD L, <Enemy_PageLoc            ;plus carry
-    SBC A, (HL)
+    LD A, IXL                       ;then subtract borrow from page control temp
+    DEC L                           ;<Enemy_PageLoc            
+    SBC A, (HL)                     ;plus carry
     JR C, CheckFrenzyBuffer         ;if enemy object beyond extended boundary, branch
 ;
     LD L, <Enemy_Y_HighPos          ;store value in vertical high byte
@@ -119,7 +119,7 @@ CheckRightExtBounds:
     ADD A, A                        ;coordinate
     ADD A, A
     ADD A, A
-    LD L, <Enemy_Y_Position
+    DEC L                           ;<Enemy_Y_Position
     LD (HL), A
 ;
     CP A, $E0                       ;do one last check for special row $0e
@@ -154,8 +154,8 @@ StrID:
     LD L, <Enemy_ID
     LD (HL), A                      ;store enemy object number into buffer
 ;
-    LD L, <Enemy_Flag               ;set flag for enemy in buffer
-    LD (HL), $01
+    DEC L                           ;<Enemy_Flag               
+    LD (HL), $01                    ;set flag for enemy in buffer
 ;
     CALL InitEnemyObject
 ;
@@ -321,8 +321,8 @@ Setup_Vine:
     LD L, <Enemy_ID                 ;load identifier for vine object 
     LD (HL), OBJECTID_VineObject    ;store in buffer
 ;
-    LD L, <Enemy_Flag               ;set flag for enemy object buffer
-    LD (HL), $01
+    DEC L                           ;<Enemy_Flag
+    LD (HL), $01                    ;set flag for enemy object buffer
 ;
     LD E, <Block_PageLoc            ;copy page location from previous object
     LD L, E
@@ -376,8 +376,8 @@ InitGoomba:
 InitPodoboo:
     LD L, <Enemy_Y_HighPos          ;set enemy position to below
     LD (HL), $02
-    LD L, <Enemy_Y_Position         ;the bottom of the screen
-    LD (HL), $02
+    DEC L                           ;<Enemy_Y_Position
+    LD (HL), $02                    ;the bottom of the screen
     LD L, <Enemy_State
     LD (HL), $00                    ;initialize enemy state
 ;
@@ -722,7 +722,7 @@ InitShortFirebar:
     LD A, $05
     addAToBC8_M                         ;FirebarSpinDirData
     LD A, (BC)                          ;get spinning direction of firebar
-    LD L, <FirebarSpinDirection
+    INC L                               ;<FirebarSpinDirection
     LD (HL), A
 ;
     LD L, <Enemy_Y_Position             ;add four pixels to vertical coordinate
@@ -735,8 +735,8 @@ InitShortFirebar:
     ADD A, $04
     LD (HL), A
 ;
-    LD L, <Enemy_PageLoc                ;add carry to page location
-    LD A, (HL)
+    DEC L                               ;<Enemy_PageLoc
+    LD A, (HL)                          ;add carry to page location
     ADC A, $00
     LD (HL), A
 ;
@@ -910,8 +910,8 @@ FinCCSt:
     LD (HL), $01
     LD L, <Enemy_Y_HighPos              ;set enemy's high vertical byte
     LD (HL), $01
-    LD L, <Enemy_Y_Position             ;put enemy below the screen, and we are done
-    LD (HL), YPOS_OFFSCREEN_LOGICAL
+    DEC L                               ;<Enemy_Y_Position
+    LD (HL), YPOS_OFFSCREEN_LOGICAL     ;put enemy below the screen, and we are done
     RET
 
 ;--------------------------------
@@ -1011,7 +1011,7 @@ FSLoop:
     LD A, (HL)
     LD (DE), A
 ;
-    LD L, <Enemy_X_Position
+    INC L                               ;<Enemy_X_Position
     LD E, L
     LD A, (HL)
     LD (DE), A
@@ -1092,7 +1092,7 @@ PutAtRightExtent:
 ;
     LD A, (ScreenRight_PageLoc)         ;add carry
     ADC A, $00
-    LD L, <Enemy_PageLoc
+    DEC L                               ;<Enemy_PageLoc
     LD (HL), A
 ;
     JP FinishFlame                      ;skip this part to finish setting values
@@ -1206,7 +1206,7 @@ StarFChk:
 ;
     LD A, C                             ;add carry and store as page location for
     ADC A, $00                          ;the fireworks object
-    LD L, <Enemy_PageLoc
+    DEC L                               ;<Enemy_PageLoc
     LD (HL), A
 ;
     LD A, $06                           ;get vertical position using same offset
@@ -1216,8 +1216,8 @@ StarFChk:
     LD (HL), A
 ;
     LD A, $01                           ;store in vertical high byte
-    LD L, <Enemy_Y_HighPos              ;and activate enemy buffer flag
-    LD (HL), A
+    INC L                               ;<Enemy_Y_HighPos
+    LD (HL), A                          ;and activate enemy buffer flag
     LD L, <Enemy_Flag
     LD (HL), A
 ;
@@ -1398,13 +1398,13 @@ GSltLp:
     JR NZ, GSltLp                       ;stored in buffer, and branch if so
 ;
     LD A, IXL
-    LD L, <Enemy_ID                     ;store enemy object identifier
-    LD (HL), A
+    INC L                               ;<Enemy_ID                     
+    LD (HL), A                          ;store enemy object identifier
     LD L, <Enemy_PageLoc                ;store page location for enemy object
     LD (HL), D
     LD A, E
-    LD L, <Enemy_X_Position             ;store x coordinate for enemy object
-    LD (HL), A
+    INC L                               ;<Enemy_X_Position             
+    LD (HL), A                          ;store x coordinate for enemy object
     ADD A, $18                          ;add 24 pixels for next enemy
     LD E, A
     LD A, D                             ;add carry to page location for
@@ -1413,8 +1413,8 @@ GSltLp:
     LD L, <Enemy_Y_Position             ;store y coordinate for enemy object
     LD (HL), C
     LD A, $01                           ;activate flag for buffer, and
-    LD L, <Enemy_Y_HighPos              ;put enemy within the screen vertically
-    LD (HL), A
+    INC L                               ;<Enemy_Y_HighPos              
+    LD (HL), A                          ;put enemy within the screen vertically
     LD L, <Enemy_Flag
     LD (HL), A
     CALL CheckpointEnemyID              ;process each enemy object separately
@@ -1429,13 +1429,13 @@ InitPiranhaPlant:
     LD (HL), $01
 ;
     XOR A                               ;initialize enemy state and what would normally
-    LD L, <Enemy_State                  ;be used as vertical speed, but not in this case
-    LD (HL), A
+    DEC L                               ;<Enemy_State
+    LD (HL), A                          ;be used as vertical speed, but not in this case
     LD L, <PiranhaPlant_MoveFlag
     LD (HL), A
 ;
-    LD L, <Enemy_Y_Position             ;save original vertical coordinate here
-    LD A, (HL)
+    INC L                               ;<Enemy_Y_Position
+    LD A, (HL)                          ;save original vertical coordinate here
     LD L, <PiranhaPlantDownYPos
     LD (HL), A
     SUB A, $18

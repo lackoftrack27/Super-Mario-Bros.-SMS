@@ -735,14 +735,14 @@ FireballObjCore:
 ;
     LD A, (Player_PageLoc)          ;get player's page location
     ADC A, $00                      ;add carry and store as fireball's page location
-    LD L, <Fireball_PageLoc
+    DEC L                           ;<Fireball_PageLoc
     LD (HL), A
 ;
     LD A, (Player_Y_Position)       ;get player's vertical position and store
     LD L, <Fireball_Y_Position
     LD (HL), A
 ;
-    LD L, <Fireball_Y_HighPos
+    INC L                           ;<Fireball_Y_HighPos
     LD (HL), $01                    ;set high byte of vertical position
 ;
     LD A, (PlayerFacingDir)         ;get player's facing direction
@@ -828,7 +828,7 @@ PosBubl:
 ;
     LD A, (Player_PageLoc)
     ADC A, $00                      ;add carry to player's page location
-    LD L, <Bubble_PageLoc
+    DEC L                           ;<Bubble_PageLoc
     LD (HL), A                      ;save as page location for airbubble
 ;
     LD A, (Player_Y_Position)
@@ -836,7 +836,7 @@ PosBubl:
     LD L, <Bubble_Y_Position
     LD (HL), A                      ;save as vertical position for air bubble
 ;
-    LD L, <Bubble_Y_HighPos
+    INC L                           ;<Bubble_Y_HighPos
     LD (HL), $01                    ;set vertical high byte for air bubble
 ;
     LD A, $40                       ;BubbleTimerData[0]
@@ -926,8 +926,8 @@ FireCannon:
     LD (HL), A
 ;
     LD E, <Cannon_X_Position        ;get horizontal coordinate of cannon
-    LD L, <Enemy_X_Position         ;save as horizontal coordinate of bullet bill
-    LD A, (DE)
+    INC L                           ;<Enemy_X_Position
+    LD A, (DE)                      ;save as horizontal coordinate of bullet bill
     LD (HL), A
 ;
     LD E, <Cannon_Y_Position        ;get vertical coordinate of cannon
@@ -937,8 +937,8 @@ FireCannon:
     LD (HL), A                      ;save as vertical coordinate of bullet bill
 ;
     LD A, $01
-    LD L, <Enemy_Y_HighPos          ;set vertical high byte of bullet bill
-    LD (HL), A
+    INC L                           ;<Enemy_Y_HighPos
+    LD (HL), A                      ;set vertical high byte of bullet bill
     LD L, <Enemy_Flag               ;set buffer flag
     LD (HL), A
     XOR A
@@ -1018,8 +1018,8 @@ SetupBB:
     CP A, $50                       ;if less than a certain amount, player is too close
     JP C, EraseEnemyObject          ;to cannon either on left or right side, thus branch
 ;
-    LD L, <Enemy_State              ;otherwise set bullet bill's state
-    LD (HL), $01
+    DEC L                           ;<Enemy_State
+    LD (HL), $01                    ;otherwise set bullet bill's state
 ;
     GetLinearEnemySlotBC_M  EnemyFrameTimer
     
@@ -1294,8 +1294,8 @@ SetHPos:
     SUB A, $0A                              ;move position 10 pixels upward
     LD (HL), A                              ;store as hammer's vertical position
 
-    LD L, <Misc_Y_HighPos                   ;set hammer's vertical high byte
-    LD (HL), $01
+    INC L                                   ;<Misc_Y_HighPos
+    LD (HL), $01                            ;set hammer's vertical high byte
 RunHSubs:
     GetMiscOffscreenBits_M                  ;get offscreen information
     RelativeMiscPosition_M                  ;get relative coordinates
@@ -1481,7 +1481,7 @@ ChkEnemyFrenzy:
 ;
     LD L, <Enemy_ID
     LD (HL), A                      ;store as enemy object identifier here
-    LD L, <Enemy_Flag
+    DEC L                           ;<Enemy_Flag
     LD (HL), $01                    ;activate enemy object flag
     XOR A
     LD L, <Enemy_State
@@ -1953,7 +1953,7 @@ EraseEnemyObject:
     XOR A                                   ;clear all enemy object variables
     LD L, <Enemy_Flag
     LD (HL), A
-    LD L, <Enemy_ID
+    INC L                                   ;<Enemy_ID
     LD (HL), A
     LD L, <Enemy_State
     LD (HL), A
@@ -2031,8 +2031,8 @@ ProcHammerBro:
     AND A, %00001100
     JR NZ, MoveHammerBroXDir                ;if hammer bro a little offscreen, skip to movement code
 ;
-    LD L, <HammerThrowingTimer              ;check hammer throwing timer
-    LD A, (HL)
+    INC L                                   ;<HammerThrowingTimer
+    LD A, (HL)                              ;check hammer throwing timer
     OR A
     JR NZ, DecHT                            ;if not expired, skip ahead, do not throw hammer
     LD A, (SecondaryHardMode)               ;otherwise get secondary hard mode flag
@@ -2216,7 +2216,7 @@ AddHS:
 ;
     CALL MoveEnemyHorizontally              ;then do a sub to move horizontally
 ;
-    LD L, <Enemy_X_Speed                    ;get old horizontal speed and return to
+    DEC L                                   ;<Enemy_X_Speed, get old horizontal speed and return to
     LD (HL), B                              ;original memory location, then leave
     RET
 
@@ -2286,8 +2286,8 @@ ProcMoveRedPTroopa:
     OR A, (HL)
     JP NZ, MoveRedPTUpOrDown                ;branch if any found
 ;
-    LD L, <Enemy_YMF_Dummy                  ;initialize something here
-    LD (HL), A
+    DEC L                                   ;<Enemy_YMF_Dummy
+    LD (HL), A                              ;initialize something here
 ;
     LD L, <Enemy_Y_Position                 ;check current vs. original vertical coordinate
     LD A, (HL)
@@ -2469,7 +2469,7 @@ SwimX:
     LD L, <Enemy_X_Position
     ADD A, (HL)
     LD (HL), A                              ;store result as new horizontal coordinate
-    LD L, <Enemy_PageLoc
+    DEC L                                   ;<Enemy_PageLoc
     LD A, (HL)                              ;add carry to page location     
     ADC A, $00                              ;store as new page location and leave
     LD (HL), A
@@ -2482,8 +2482,8 @@ LeftSwim:
     SUB A, (HL)
     LD L, <Enemy_X_Position                 ;store result as new horizontal coordinate
     LD (HL), A
-    LD L, <Enemy_PageLoc                    ;subtract borrow from page location
-    LD A, (HL)
+    DEC L                                   ;<Enemy_PageLoc
+    LD A, (HL)                              ;subtract borrow from page location
     SBC A, $00
     LD (HL), A                              ;store as new page location and leave
     RET
@@ -2579,7 +2579,7 @@ MoveBulletBill:
     AND A, %00100000
     JP NZ, MoveJ_EnemyVertically            ;if set, jump to move defeated bullet bill downwards
 ;
-    LD L, <Enemy_X_Speed                    ;set bullet bill's horizontal speed
+    INC L                                   ;<Enemy_X_Speed, set bullet bill's horizontal speed
     LD (HL), $E8                            ;and move it accordingly (note: this bullet bill
     JP MoveEnemyHorizontally                ;object occurs in frenzy object $17, not from cannons)
 
@@ -2617,7 +2617,7 @@ MoveSwimmingCheepCheep:
     LD A, (HL)                              ;subtract borrow (thus moving it slowly)
     SBC A, $00
     LD (HL), A                              ;and save as new horizontal coordinate
-    LD L, <Enemy_PageLoc                    ;subtract borrow again, this time from the
+    DEC L                                   ;<Enemy_PageLoc, subtract borrow again, this time from the
     LD A, (HL)                              ;page location, then save
     SBC A, $00
     LD (HL), A
@@ -2627,8 +2627,8 @@ MoveSwimmingCheepCheep:
     RET C
 ;
     LD C, $20                               ;save new value here
-    LD L, <CheepCheepMoveMFlag              ;check movement flag
-    LD A, (HL)
+    DEC L                                   ;<CheepCheepMoveMFlag
+    LD A, (HL)                              ;check movement flag
     CP A, $10                               ;if movement speed set to $00,
     JR C, CCSwimUpwards                     ;branch to move upwards
 ;
@@ -2744,8 +2744,8 @@ ProcFirebar:
     LD L, <FirebarSpinSpeed                     ;load spinning speed of firebar
     LD B, (HL)                                  ;save spinning speed here
 ;FirebarSpin:
-    LD L, <FirebarSpinDirection                 ;check spinning direction
-    LD A, (HL)
+    INC L                                       ;<FirebarSpinDirection
+    LD A, (HL)                                  ;check spinning direction
     OR A
     LD L, <FirebarSpinState_Low
     LD A, (HL)
@@ -3523,8 +3523,8 @@ CopyFToR:
     LD L, E                                     ;put enemy object offset of rear as current
     LD H, D
     LD (ObjectOffset), HL
-    LD L, <Enemy_ID                             ;set bowser's enemy identifier
-    LD (HL), OBJECTID_Bowser
+    DEC L                                       ;<Enemy_ID
+    LD (HL), OBJECTID_Bowser                    ;set bowser's enemy identifier
     CALL ProcessBowserHalf                      ;do a sub here to process bowser's rear
     POP HL
     LD (ObjectOffset), HL                       ;get original enemy object offset
@@ -3997,8 +3997,8 @@ SFlmX:
     SBC A, $01
     LD (HL), A
 ;
-    LD L, <Enemy_PageLoc                    ;subtract borrow from page location
-    LD A, (HL)
+    DEC L                                   ;<Enemy_PageLoc
+    LD A, (HL)                              ;subtract borrow from page location
     SBC A, $00
     LD (HL), A
 ;
@@ -4353,7 +4353,7 @@ SetupToMovePPlant:
     OR A
     LD L, <PiranhaPlantDownYPos             ;get original vertical coordinate (lowest point)
     JP P, RiseFallPiranhaPlant              ;branch if moving downwards
-    LD L, <PiranhaPlantUpYPos               ;otherwise get other vertical coordinate (highest point)
+    DEC L                                   ;<PiranhaPlantUpYPos, otherwise get other vertical coordinate (highest point)
     ; FALL THROUGH
 
 RiseFallPiranhaPlant:
@@ -4375,8 +4375,8 @@ RiseFallPiranhaPlant:
     CP A, C                                 ;compare against low or high coordinate
     RET NZ                                  ;branch to leave if not yet reached
 ;
-    LD L, <PiranhaPlant_MoveFlag            ;otherwise clear movement flag
-    LD (HL), $00
+    DEC L                                   ;<PiranhaPlant_MoveFlag
+    LD (HL), $00                            ;otherwise clear movement flag
 ;
     GetLinearEnemySlotBC_M  EnemyFrameTimer
     LD A, $40                               ;set timer to delay piranha plant movement
@@ -4549,7 +4549,7 @@ DrawEraseRope:
     CP A, $D0
     JR NC, SkipRope1                            ;if not, don't draw rope
 ;
-    LD L, <Enemy_Y_Speed
+    DEC L                                       ;<Enemy_Y_Speed
     LD A, (HL)
     CALL SetupPlatformRope                      ;do a sub to figure out where to put new bg tiles
     EX DE, HL
@@ -4698,7 +4698,7 @@ InitPlatformFall:
     LD L, <FloateyNum_X_Pos
     LD (HL), A
     LD A, (Player_Y_Position)
-    LD L, <FloateyNum_Y_Pos
+    INC L                                       ;<FloateyNum_Y_Pos
     LD (HL), A
 ;
     LD L, <Enemy_MovingDir                      ;set moving direction as flag for
@@ -4742,7 +4742,7 @@ YMovingPlatform:
     OR A, (HL)
     JR NZ, ChkYCenterPos                        ;check on other position
 ;
-    LD L, <Enemy_YMF_Dummy                      ;initialize dummy variable
+    DEC L                                       ;<Enemy_YMF_Dummy, initialize dummy variable
     LD (HL), A
     LD L, <Enemy_Y_Position
     LD A, (HL)
@@ -4864,13 +4864,13 @@ MoveLiftPlatforms:
 ;
     LD L, <Enemy_Y_MoveForce
     LD A, (HL)
-    LD L, <Enemy_YMF_Dummy
+    DEC L                                       ;<Enemy_YMF_Dummy
     ADD A, (HL)                                 ;add contents of movement amount to whatever's here
     LD (HL), A
 ;
     LD L, <Enemy_Y_Speed
     LD A, (HL)
-    LD L, <Enemy_Y_Position                     ;add whatever vertical speed is set to current
+    INC L                                       ;<Enemy_Y_Position, add whatever vertical speed is set to current
     ADC A, (HL)                                 ;vertical position plus carry to move up or down
     LD (HL), A
     RET
@@ -5094,7 +5094,7 @@ SetupNumSpr:
     ;INC L
     ;LD (HL), $02                            ;of left and right sprites
 ;
-    LD L, <FloateyNum_Control
+    DEC L                                   ;<FloateyNum_Control
     LD A, (HL)
     ADD A, A                                ;multiply our floatey number control by 2
     LD DE, FloateyNumTileData               ;and use as offset for look-up table
@@ -5291,7 +5291,7 @@ BlockObjectsCore:
 ;
     INC H
     INC H
-    LD L, <Block_Y_Position         ;Block_Y_Position+2
+    DEC L                           ;<Block_Y_Position, Block_Y_Position+2
     LD A, $F0
     CP A, (HL)                      ;check to see if bottom block object went
     JR NC, ChkTop                   ;to the bottom of the screen, and branch if not
@@ -5353,7 +5353,7 @@ UpdateLoop:
     LD E, (HL)                          ;get low byte of block buffer and store
     LD D, >Block_Buffer_1               ;set high byte of block buffer address
 ;
-    LD L, <Block_Orig_YPos
+    DEC L                               ;<Block_Orig_YPos
     LD A, (HL)                          ;get original vertical coordinate of block object
     LD IXL, A                           ;store here and use as offset to block buffer
 ;
@@ -5638,8 +5638,8 @@ CoinBlock:
     LD A, (HL)
     LD (DE), A
 ;
-    LD L, <Block_X_Position             ;get horizontal coordinate of block object
-    LD E, L
+    INC L                               ;<Block_X_Position
+    LD E, L                             ;get horizontal coordinate of block object
     LD A, (HL)
     ADD A, $05                          ;add 5 pixels
     LD (DE), A                          ;store as horizontal coordinate of misc object
@@ -5734,8 +5734,8 @@ ProcJumpCoin:
     ADD A, (HL)                         ;add current scroll speed
     LD (HL), A                          ;store as new horizontal coordinate
 ;
-    LD L, <Misc_PageLoc                 ;get page location
-    LD A, (HL)
+    DEC L                               ;<Misc_PageLoc
+    LD A, (HL)                          ;get page location
     ADC A, $00                          ;add carry
     LD (HL), A                          ;store as new page location
 ;
@@ -5852,8 +5852,8 @@ SetupPowerUp:
     LD A, (HL)                              ;as page location of power-up object
     LD (Enemy_PageLoc_05), A
 ;
-    LD L, <Block_X_Position                 ;store horizontal coordinate of block object
-    LD A, (HL)
+    INC L                                   ;<Block_X_Position
+    LD A, (HL)                              ;store horizontal coordinate of block object
     LD (Enemy_X_Position_05), A             ;as horizontal coordinate of power-up object
 ;
     LD A, $01                               ;set vertical high byte of power-up object
@@ -6079,7 +6079,7 @@ ImposeGravity_A1:
     JP P, +                         ;if currently moving downwards, do not decrement Y
     DEC E                           ;otherwise decrement E
 +:
-    LD L, <SprObject_Y_Position
+    INC L                           ;<SprObject_Y_Position
     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
     LD (HL), A                      ;store as new vertical position
 ;
@@ -6151,7 +6151,7 @@ ImposeGravity_A0:
     JP P, +                         ;if currently moving downwards, do not decrement Y
     DEC E                           ;otherwise decrement E
 +:
-    LD L, <SprObject_Y_Position
+    INC L                           ;<SprObject_Y_Position
     ADC A, (HL)                     ;add vertical position to vertical speed plus carry
     LD (HL), A                      ;store as new vertical position
 ;
@@ -6212,8 +6212,8 @@ FireballEnemyCDLoop:
     OR A
     JR Z, NoFToECol                 ;if not, skip to next enemy slot
 ;
-    LD L, <Enemy_ID                 ;check enemy identifier
-    LD A, (HL)
+    INC L                           ;<Enemy_ID
+    LD A, (HL)                      ;check enemy identifier
     CP A, $24
     JR C, GoombaDie                 ;if < $24, branch to check further
     CP A, $2B
@@ -6271,7 +6271,7 @@ HandleEnemyFBallCol:
     AND A, %00001111                ;otherwise mask out high nybble and
     ADD A, >Enemy_ID                ;use low nybble as enemy offset
     LD H, A
-    LD L, <Enemy_ID
+    INC L                           ;<Enemy_ID
     LD A, (HL)                      ;check enemy identifier for bowser
     CP A, OBJECTID_Bowser
     JP Z, HurtBowser                ;branch if found
@@ -6348,8 +6348,8 @@ ShellOrBlockDefeat:
 StnE:
     CALL ChkToStunEnemies           ;do yet another sub
 ;
-    LD L, <Enemy_State              ;mask out 2 MSB of enemy object's state
-    LD A, (HL)
+    DEC L                           ;<Enemy_State
+    LD A, (HL)                      ;mask out 2 MSB of enemy object's state
     AND A, %00011111
     OR A, %00100000                 ;set d5 to defeat enemy and save as new state
     LD (HL), A
@@ -6854,7 +6854,7 @@ SetupFloateyNumber:
     LD (HL), A
 ;
     LD A, (Enemy_Rel_XPos)          ;set horizontal coordinate and leave
-    LD L, <FloateyNum_X_Pos
+    DEC L                           ;<FloateyNum_X_Pos
     LD (HL), A
     RET
 
@@ -7258,8 +7258,8 @@ PositionPlayerOnVPlat:
     CP A, $0B                           ;skip all of this
     RET Z
 ;
-    LD L, <Enemy_Y_HighPos              ;if vertical high byte offscreen, skip this
-    LD A, (HL)
+    INC L                               ;<Enemy_Y_HighPos
+    LD A, (HL)                          ;if vertical high byte offscreen, skip this
     CP A, $01
     RET NZ
 ;
@@ -8160,8 +8160,8 @@ ChkBBill:
     JR Z, NoCDirF
     CP A, OBJECTID_BulletBill_FrenzyVar ;check for bullet bill (frenzy variant)
     JR Z, NoCDirF                   ;branch if either found, direction does not change
-    LD L, <Enemy_MovingDir          ;store as moving direction
-    LD (HL), C
+    INC L                           ;<Enemy_MovingDir
+    LD (HL), C                      ;store as moving direction
 NoCDirF:
     LD L, <Enemy_X_Speed            ;store proper horizontal speed
     LD (HL), B
@@ -8214,8 +8214,8 @@ ProcEnemyDirection:
     CP A, OBJECTID_Spiny            ;check for spiny
     JR NZ, InvtD                    ;branch if not found
 ;
-    LD L, <Enemy_MovingDir          ;send enemy moving to the right by default
-    LD (HL), $01
+    INC L                           ;<Enemy_MovingDir
+    LD (HL), $01                    ;send enemy moving to the right by default
     LD L, <Enemy_X_Speed            ;set horizontal speed accordingly
     LD (HL), $08
     LD A, (FrameCounter)
@@ -8361,8 +8361,8 @@ EnemyJump:
 
     JR C, DoEnemySideCheck          ;if enemy vertical coord + 62 < 68, branch to leave
 ;
-    LD L, <Enemy_Y_Speed            ;add two to vertical speed
-    LD A, (HL)
+    DEC L                           ;<Enemy_Y_Speed
+    LD A, (HL)                      ;add two to vertical speed
     ADD A, $02
     CP A, $03                       ;if green paratroopa not falling, branch ahead
     JR C, DoEnemySideCheck
@@ -8374,8 +8374,8 @@ EnemyJump:
     JR Z, DoEnemySideCheck          ;branch if found
 ;
     CALL EnemyLanding               ;change vertical coordinate and speed
-    LD L, <Enemy_Y_Speed            ;make the paratroopa jump again
-    LD (HL), $FD
+    DEC L                           ;<Enemy_Y_Speed
+    LD (HL), $FD                    ;make the paratroopa jump again
     JP DoEnemySideCheck             ;check for horizontal blockage, then leave
 
 ;--------------------------------

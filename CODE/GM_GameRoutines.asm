@@ -748,7 +748,7 @@ DBlockSte:
     LD A, IXL                       ;get vertical high nybble offset used in block buffer routine
     LD (HL), A                      ;set as vertical coordinate for block object
 ;
-    LD L, <Block_BBuf_Low
+    INC L                           ;<Block_BBuf_Low
     LD DE, (Temp_Bytes + $06)       ;get low byte of block buffer address used in same routine
     LD (HL), E                      ;save as offset here to be used later
 ;
@@ -1041,8 +1041,8 @@ SpawnBrickChunks:
 ;
     DEC H
     DEC H
-    LD L, <Block_PageLoc                ;copy page location
-    LD A, (HL)
+    INC L                               ;<Block_PageLoc
+    LD A, (HL)                          ;copy page location
     INC H
     INC H
     LD (HL), A

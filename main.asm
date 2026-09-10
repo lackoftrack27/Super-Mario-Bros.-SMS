@@ -1085,22 +1085,22 @@ TensLoop:
 PutLives:
     ADD A, BG_TILE_OFFSET                   ;write ones place digit
     LD (VRAM_Buffer1 + $0D), A
-    LD A, E                                 ;writes tens place digit (if applicable)
-    OR A
-    JR Z, +
+    LD A, D
+    OR A, E                                 ;writes tens place digit (if applicable)
+    JR Z, PutLevelNumbers
+    LD A, E
     ADD A, BG_TILE_OFFSET
     LD (VRAM_Buffer1 + $0B), A
     LD A, $01
     LD (VRAM_Buffer1 + $0C), A
-+:
     LD A, D                                 ;writes hundreds place digit (if applicable)
     OR A
-    JR Z, +
+    JR Z, PutLevelNumbers
     ADD A, BG_TILE_OFFSET
     LD (VRAM_Buffer1 + $09), A
     LD A, $01
     LD (VRAM_Buffer1 + $0A), A
-+:                    
+PutLevelNumbers:                    
     LD A, (WorldNumber)                     ;write world and level numbers (incremented for display)
     ADD A, BG_TILE_OFFSET + $01             ;to the buffer in the spaces surrounding the dash
     LD (VRAM_Buffer1 + $20), A

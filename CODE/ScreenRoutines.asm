@@ -574,10 +574,13 @@ LoadLevelTileData:
 ;   LOAD ENEMY SPRITES
     CALL LoadEnemySprites
 ;   UPLOAD TILES FOR AREA
-    ; CLEAR GRASS FLAG (BGTileQueue2 will do 4 tiles)
+    ; CLEAR BG ANIMATED QUEUE RELATED DATA
     XOR A
     LD (BGTileQueue2GrassFlag), A
     LD (BGTileQueue2SwitchFlag), A
+    LD (BGTileQueue0.UpdateFlag), A
+    LD (BGTileQueue1.UpdateFlag), A
+    LD (BGTileQueue2.UpdateFlag), A
     ; ALWAYS LOAD COIN INTO SLOT 0 OF ANIMATED TILE QUEUE
     LD A, :AnimatedBGTileInits
     LD (MAPPER_SLOT2), A
@@ -758,8 +761,6 @@ OverWorldSetup:
         ; SLOT 2 PROCESSING
     LD HL, BGTileQueue2.Timer           ; ASSUME NO GRASS
     LD (HL), $FF
-    LD HL, BGTileQueue2.UpdateFlag
-    LD (HL), $00
     LD A, (BackgroundColorCtrl)         ; JUMP IF LEVEL IS SET AT NIGHT
     CP A, $04
     JR Z, +
@@ -812,8 +813,6 @@ SnowOverworldSetup:
         ; SLOT 2 PROCESSING
     LD HL, BGTileQueue2.Timer           ; ASSUME NOTHING
     LD (HL), $FF
-    LD HL, BGTileQueue2.UpdateFlag
-    LD (HL), $00
     LD A, (BackgroundColorCtrl)         ; EXIT IF LEVEL IS SET AT DAY
     CP A, $05
     JR Z, TileLoadDone

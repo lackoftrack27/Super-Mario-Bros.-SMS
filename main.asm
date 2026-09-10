@@ -505,12 +505,21 @@ NonMaskableInterrupt:
     LD (HL), $00                    ;clear buffer header
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
-;   TILE STREAMING
+;   TILE STREAMING                  ;[CPU TIME: ~21 LINES MAX]
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
     SBC HL, DE
-    JP NZ, StreamPlayerTiles        ;[CPU TIME: 21 LINES]
-    JP StreamAnimatedBGTiles        ;[CPU TIME: ~30 LINES]
+    LD B, $00                       ;assume player isn't trying to update, flag clear
+    JP Z, StreamAnimatedBGTiles     ;if player isn't updating, stream BG tiles
+    LD B, $01                       ;player is trying to update, flag set
+    LD A, (BGTileQueue0.UpdateFlag) ;else, check if any BG updates are stalled
+    LD HL, BGTileQueue1.UpdateFlag
+    OR A, (HL)
+    LD L, <BGTileQueue2.UpdateFlag
+    OR A, (HL)
+    AND A, %00000010
+    JP NZ, StreamAnimatedBGTiles    ;if so, force BG update for stalled slot
+    JP StreamPlayerTiles            ;else, update player
 TileStreamRet:
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
@@ -1286,7 +1295,9 @@ CarryOne:
 ;   BC - N/A
 ;   IXL 
 ;   PlayerGfxOffset - %MBPPMMMMMMMMMMMM [B = BANK LSB, P = PALETTE, M = MAPPING POINTER]
-;   PlayerGfxBank   - %00000BBB [B = Bank : B2, = 1, B1 = CHARACTER, B0 = DIRECTION] 
+;   PlayerGfxBank   - %00000BBB [B = Bank : B2, = 1, B1 = CHARACTER, B0 = DIRECTION]
+
+;   [CPU TIME: ~21 LINES]
 StreamPlayerTiles:
     LD (PlayerGfxOffset_Old), DE
 ;   SET VDP ADDRESS
@@ -1435,27 +1446,37 @@ StreamPlayerTiles:
     .ENDR
     JP TileStreamRet
 
-
+;   B - FLAG THAT DICTATES IF A BG SLOT IS STALLED
 ;   C - VDP PORTS
 ;   DE - N/A 
 ;   HL - BGTileQueue0 Ptr/Tile Data Ptr
 ;   IX - Offset into OUTI Block
+
+;   [CPU TIME: ~14 LINES]
 StreamAnimatedBGTiles:
 ;   EXIT IF ON NES GFX
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
     JP NZ, TileStreamRet
-;
+;   SETUP
     LD A, BANK_ANITILES
     LD (MAPPER_SLOT2), A
     LD C, VDPCON_PORT
     LD IXH, >OutiBlock128
-;   SLOT 0 (4 or less) [MAX CYCLES: 2235]
+;   SLOT 0 (4 or less) [MAX CYCLES: ~2235]
     ; CHECK ANIMATE FLAG
     LD HL, BGTileQueue0.UpdateFlag
     LD A, (HL)
     OR A
     JR Z, @CheckSlot1
+        ; IF PLAYER ISN'T TRYING TO UPDATE, SKIP STALLED CHECK
+    LD A, B
+    OR A
+    JR Z, +
+        ; ELSE, ONLY UPDATE IF SLOT IS STALLED
+    BIT 1, (HL)
+    JR Z, @CheckSlot1
++:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS
@@ -1472,14 +1493,22 @@ StreamAnimatedBGTiles:
     LD L, A
     ; WRITE TO VRAM
     CALL IndirectCallIX
-    INC C
+    JP TileStreamRet
 @CheckSlot1:
-;   SLOT 1 (4 or less) [MAX CYCLES: 2235]
+;   SLOT 1 (4 or less) [MAX CYCLES: ~2235]
     ; CHECK ANIMATE FLAG
-    LD HL, BGTileQueue1.UpdateFlag
+    LD L, <BGTileQueue1.UpdateFlag
     LD A, (HL)
     OR A
     JR Z, @CheckSlot2
+        ; IF PLAYER ISN'T TRYING TO UPDATE, SKIP STALLED CHECK
+    LD A, B
+    OR A
+    JR Z, +
+        ; ELSE, ONLY UPDATE IF SLOT IS STALLED
+    BIT 1, (HL)
+    JR Z, @CheckSlot2
++:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS
@@ -1496,14 +1525,22 @@ StreamAnimatedBGTiles:
     LD L, A
     ; WRITE TO VRAM
     CALL IndirectCallIX
-    INC C
+    JP TileStreamRet
 @CheckSlot2:
-;   SLOT 2 (FIXED 4/6) [MAX CYCLES: 3250]
+;   SLOT 2 (FIXED 4/6) [MAX CYCLES: ~3250]
     ; CHECK ANIMATE FLAG
-    LD HL, BGTileQueue2.UpdateFlag
+    LD L, <BGTileQueue2.UpdateFlag
     LD A, (HL)
     OR A
     JP Z, TileStreamRet
+        ; IF PLAYER ISN'T TRYING TO UPDATE, SKIP STALLED CHECK
+    LD A, B
+    OR A
+    JR Z, +
+        ; ELSE, ONLY UPDATE IF SLOT IS STALLED
+    BIT 1, (HL)
+    JP Z, TileStreamRet
++:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS

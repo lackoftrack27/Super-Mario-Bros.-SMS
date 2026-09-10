@@ -375,6 +375,7 @@ AnimatedBGTileInits:
 ;   $08:        frame reset value
 ;   $09:        frame timer reset value
 AnimateBGTiles:
+@UpdateSlot0:
 ;   SLOT 0
     ; DECREMENT TIMER AND BRANCH IF IT HASN'T EXPIRED
     LD HL, BGTileQueue0.Timer
@@ -383,79 +384,109 @@ AnimateBGTiles:
     ; SET TIMER TO RESET VALUE
     LD A, (BGTileQueue0.TimerReset)
     LD (HL), A
-    ; SET UPDATE FLAG
-    LD A, $01
+    ; CHECK IF UPDATE FLAG IS ALREADY SET
+    LD A, (BGTileQueue0.UpdateFlag)
+    OR A
+    JR Z, @@AdvanceSlot0
+        ; IF SO, THIS SLOT IS NOW STALLED
+    LD A, $03
+    LD (BGTileQueue0.UpdateFlag), A
+    JR @UpdateSlot1
+@@AdvanceSlot0:
+        ; ELSE, SET UPDATE FLAG
+    INC A
     LD (BGTileQueue0.UpdateFlag), A
     ; MOVE TO NEXT FRAME IN LIST
     LD A, (BGTileQueue0.TileAdr + $01)
     INC A
     DEC L
     DEC (HL)
-    JR NZ, +
+    JR NZ, @@SetNewPtr
     LD B, A
     LD A, (BGTileQueue0.FrameReset)
     LD (HL), A
     LD A, B
     SUB A, (HL)
-+:
+@@SetNewPtr:
     LD (BGTileQueue0.TileAdr + $01), A
+
 @UpdateSlot1:
     LD HL, BGTileQueue1.Timer
     DEC (HL)
     JR NZ, @UpdateSlot2
+
     LD A, (BGTileQueue1.TimerReset)
     LD (HL), A
-    LD A, $01
+
+    LD A, (BGTileQueue1.UpdateFlag)
+    OR A
+    JR Z, @@AdvanceSlot1
+    LD A, $03
     LD (BGTileQueue1.UpdateFlag), A
+    JR @UpdateSlot2
+@@AdvanceSlot1:
+    INC A
+    LD (BGTileQueue1.UpdateFlag), A
+
     LD A, (BGTileQueue1.TileAdr + $01)
     INC A
     DEC L
     DEC (HL)
-    JR NZ, +
+    JR NZ, @@SetNewPtr
     LD B, A
     LD A, (BGTileQueue1.FrameReset)
     LD (HL), A
     LD A, B
     SUB A, (HL)
-+:
+@@SetNewPtr:
     LD (BGTileQueue1.TileAdr + $01), A
+
 @UpdateSlot2:
+    ; SLOT 2 CHECKS IF IT'S ENABLED
     LD HL, BGTileQueue2.Timer
     LD A, (HL)
     OR A
     RET M
     DEC (HL)
     RET NZ
-        ;
+
     LD A, (BGTileQueue2.TimerReset)
     LD (HL), A
-    LD A, $01
+
+    LD A, (BGTileQueue2.UpdateFlag)
+    OR A
+    JR Z, @@AdvanceSlot2
+    LD A, $03
     LD (BGTileQueue2.UpdateFlag), A
-        ;
+    RET
+@@AdvanceSlot2:
+    INC A
+    LD (BGTileQueue2.UpdateFlag), A
+    ; SLOT 2 IS ABLE TO SWITCH BETWEEN TWO VRAM ADDRESSES (ONLY FOR 6 STARS+GRASS)
     LD A, (BGTileQueue2SwitchFlag)
     OR A
-    JR Z, ++
-    LD DE, $3D80 | VRAMWRITE
+    JR Z, @@UpdateTilePtr
+    LD DE, $3D80 | VRAMWRITE    ; GRASS
     BIT 1, A
-    JR Z, +
-    LD DE, $3960 | VRAMWRITE
-+:
+    JR Z, @@SwitchVRAMAddr
+    LD DE, $3960 | VRAMWRITE    ; 6 STARS
+@@SwitchVRAMAddr:
     LD (BGTileQueue2.VRAMAdr), DE
     XOR A, %00000010
     LD (BGTileQueue2SwitchFlag), A
-        ;
-++:
+
+@@UpdateTilePtr:
     LD A, (BGTileQueue2.TileAdr + $01)
     INC A
     DEC L
     DEC (HL)
-    JR NZ, +
+    JR NZ, @@SetNewPtr
     LD B, A
     LD A, (BGTileQueue2.FrameReset)
     LD (HL), A
     LD A, B
     SUB A, (HL)
-+:
+@@SetNewPtr:
     LD (BGTileQueue2.TileAdr + $01), A
     RET
 

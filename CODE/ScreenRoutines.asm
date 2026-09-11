@@ -647,7 +647,7 @@ CastleSetup:
     ; SKIP ANIMATED TILE AND BRICK SPRITE LOAD IN NES GFX MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JR NZ, @TileLoad
+    JR NZ, @NESBrickLoad
     ; LOAD BRICK SPRITE TILES
     LD HL, Tile_Brick_Set2
     CALL TileBrickSpriteLoad
@@ -669,6 +669,11 @@ CastleSetup:
     LDIR
     LD A, $01
     LD (BGTileQueue2GrassFlag), A
+    JR @TileLoad
+@NESBrickLoad:
+    ; LOAD BRICK SPRITES FOR NES GFX
+    LD DE, Tile_Brick_Set0_NES
+    CALL TileBrickSpriteLoad@NES
 @TileLoad:
     ; UNIQUE TILES FOR CASTLE AREA
     LD A, ASSET_BGCASTLE
@@ -742,7 +747,7 @@ OverWorldSetup:
     ; SKIP EVERYTHING IF ON NES GFX MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JP NZ, TileLoadDone
+    JR NZ, @NESBrickLoad
     ; DO DIFFERENT SETUP FOR SNOW LEVELS
     LD A, (BackgroundColorCtrl)
     CP A, $05
@@ -792,6 +797,11 @@ OverWorldSetup:
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     JP TileLoadDone
+@NESBrickLoad:
+    ; LOAD BRICK SPRITES FOR NES GFX
+    LD DE, Tile_Brick_Set0_NES
+    CALL TileBrickSpriteLoad@NES
+    JP TileLoadDone
 
 SnowOverworldSetup:
     ; LOAD BRICK SPRITE TILES
@@ -835,7 +845,7 @@ UndergroundSetup:
     ; DO DIFFERENT THING FOR NES GFX MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JR NZ, @ClearBGTiles
+    JR NZ, @NESBrickLoad
     ; LOAD BRICK SPRITE TILES
     LD HL, Tile_Brick_Set1
     CALL TileBrickSpriteLoad
@@ -865,6 +875,10 @@ UndergroundSetup:
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
     JR TileLoadDone
+@NESBrickLoad:
+    ; LOAD BRICK SPRITES FOR NES GFX
+    LD DE, Tile_Brick_Set1_NES
+    CALL TileBrickSpriteLoad@NES
 @ClearBGTiles:
     ; FOR NES GFX, CLEAR OUT BG GFX DATA
     LD HL, $3680 | VRAMWRITE
@@ -887,15 +901,25 @@ TileLoadDone:
     EI
     RET
 
+;   HL - Tile Source Address
 TileBrickSpriteLoad:
     LD D, $05                       ;load 10 tiles in total (five 64-byte chunks)
 -:
     LD B, $40
-    OTIR
+    OTIR                            ;BANK IS ALREADY SET UP, SAME AS LIFT/CLOUD
     LD A, $C0
     addAToHL8_M
     DEC D
     JR NZ, -
+    RET
+
+;   DE - Tile Source Address
+@NES:
+    LD HL, $0760 | VRAMWRITE
+    RST setVDPAddress
+    EX DE, HL
+    LD B, $20                       ;load 1 tile
+    OTIR                            ;BANK IS ALREADY SET UP, SAME AS LIFT/CLOUD
     RET
 
 ;-------------------------------------------------------------------------------------

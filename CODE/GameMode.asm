@@ -997,7 +997,7 @@ Chk_BB:
     LD A, (HL)
     CP A, OBJECTID_BulletBill_CannonVar
     JR NZ, Next3Slt                 ;if not found, branch to get next slot
-    CALL OffscreenBoundsCheck       ;otherwise, check to see if it went offscreen
+    CALL OffscreenBoundsCheck@SkipBitChk    ;otherwise, check to see if it went offscreen
     LD L, <Enemy_Flag               ;check enemy buffer flag
     LD A, (HL)
     OR A
@@ -4945,6 +4945,10 @@ ChkSmallPlatCollision:
 ;$03(E) - extended right boundary position
 
 OffscreenBoundsCheck:
+    LD A, (Enemy_OffscrBits)                    ;OPT:exit early if object is
+    AND A, $0F                                  ;completely on screen horizontally
+    RET Z                                       ;skip OPT for ProcessCannons because it
+@SkipBitChk:                                    ;doesn't update Enemy_OffscrBits until after
     LD L, <Enemy_ID                             ;check for cheep-cheep object
     LD A, (HL)
     CP A, OBJECTID_FlyingCheepCheep

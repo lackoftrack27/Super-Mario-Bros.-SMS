@@ -1877,10 +1877,17 @@ RunNormalEnemies:
     CALL EnemyGfxHandler        ; 7, 
     CALL GetEnemyBoundBox       ; 1, 
     CALL EnemyToBGCollisionDet  ; 7,
+;
+    LD A, (FrameCounter)                        ;OPT: move frame counter check to outside
+    RRCA                                        ;of EnemiesCollision and PlayerEnemyCollision
+    JR C, @EnemyVsEnemy                         ;only 1 of them is called per frame
+    CALL PlayerEnemyCollision@SkipFrameChk
+    JP @MoveEnemy
+@EnemyVsEnemy:
     LD A, (AreaType)
     OR A
-    CALL NZ, EnemiesCollision   ; 0,
-    CALL PlayerEnemyCollision   ; 1, 
+    CALL NZ, EnemiesCollision@SkipFrameChk
+@MoveEnemy:
 ;
     LD A, (TimerControl)
     OR A
@@ -6531,7 +6538,7 @@ PlayerEnemyCollision:
     LD A, (FrameCounter)            ;check counter for d0 set
     RRCA
     RET C                           ;if set, branch to leave
-;
+@SkipFrameChk:
     CALL CheckPlayerVertical        ;if player object is completely offscreen or
     RET NC                          ;if down past 224th pixel row, branch to leave
 ;
@@ -6915,7 +6922,7 @@ EnemiesCollision:
     LD A, (FrameCounter)                ;check counter for d0 set
     RRCA
     RET NC                              ;if d0 not set, leave
-;
+@SkipFrameChk:
     LD L, <Enemy_ID                     ;if enemy object => $15, branch to leave
     LD A, (HL)
     CP A, $15

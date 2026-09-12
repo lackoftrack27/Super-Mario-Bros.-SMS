@@ -918,7 +918,11 @@ DrawEnemyObject_NoHFlip:
 SprObjectOffscrChk:
     LD D, >Sprite_Y_Position                ;set up SAT pointer
     LD HL, (ObjectOffset)                   ;get enemy buffer offset
+;
     LD A, (Enemy_OffscrBits)                ;check offscreen information
+    OR A
+    RET Z                                   ;exit early if enemy is completely on screen
+;
     LD C, A
     SRL C                                   ;shift three times to the right
     SRL C                                   ;which puts d2 into carry

@@ -505,6 +505,7 @@ NonMaskableInterrupt:
     LD (HL), $00                    ;clear buffer header
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
+    LD (Buffer2SuppressFlag), A     ;clear flag used for coin/axe removal
 ;   TILE STREAMING                  ;[CPU TIME: 22 LINES MAX]
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)

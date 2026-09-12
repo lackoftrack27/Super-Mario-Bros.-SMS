@@ -275,6 +275,10 @@ UpdScrollVar:
     CP A, VRAMTBL_BUFFER2                   ;if vram address controller set to VRAM_Buffer2
     RET Z                                   ;then branch to leave
 ;
+    LD A, (Buffer2SuppressFlag)              ;if coin/axe is going to be removed
+    OR A                                    ;don't check AreaParserTaskNum
+    RET NZ                                  ;mimics original VRAM_Buffer2 usage
+;
     LD A, (AreaParserTaskNum)               ;otherwise check number of tasks
     OR A
     JP NZ, RunParser
@@ -5445,6 +5449,8 @@ RemoveCoin_Axe:
     LD DE, (VRAM_Buffer1_Ptr)
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;set vram address controller to VRAM_Buffer1
+    INC A
+    LD (Buffer2SuppressFlag), A     ;set flag so AreaParser code will be skipped
 ;
     LD A, (AreaType)                ;check area type
     LD C, A
@@ -7718,8 +7724,10 @@ HandleAxeMetatile:
     ;
     LD DE, (VRAM_Buffer1_Ptr)
     XOR A
-    LD (VRAM_Buffer_AddrCtrl), A        ;set vram address controller to VRAM_Buffer1                        ;otherwise load offset for blank metatile used in water
-    LD A, $09                           ;blue brick background
+    LD (VRAM_Buffer_AddrCtrl), A        ;set vram address controller to VRAM_Buffer1
+    INC A
+    LD (Buffer2SuppressFlag), A         ;set flag so AreaParser code will be skipped
+    LD A, $09                           ;use blue brick background
     JP PutBlockMetatile                 ;do a sub to write blank metatile to vram buffer
 
 ErACM:

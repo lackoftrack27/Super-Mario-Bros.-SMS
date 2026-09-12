@@ -1097,6 +1097,7 @@
     ;Mirror_VDP_REG0:                dsb $01
     ;Mirror_PPU_MASK:                .dsb $01
     ;Mirror_VDP_REG1:                dsb $01
+    Buffer2SuppressFlag:            dsb $01
     CurrentPlayerGfx:               dsb $01
     NumberOfPlayers:                dsb $01
     IntervalTimerControl:           dsb $01

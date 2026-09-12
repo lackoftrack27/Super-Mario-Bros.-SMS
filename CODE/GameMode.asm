@@ -495,6 +495,11 @@ AnimateBGTiles:
     RET
 
 ColorRotation:
+;   VRAM BUFFER OVERFLOW PROTECTION
+    LD A, (VRAM_Buffer1_Ptr)
+    SUB A, <VRAM_Buffer1
+    CP A, _sizeof_VRAM_Buffer1 - $0E
+    RET NC
 ;   SPR PALETTE ROTATION
     LD HL, (VRAM_Buffer1_Ptr)
     LD (HL), $C0
@@ -4578,9 +4583,14 @@ DrawEraseRope:
     LD L, <Enemy_Y_Speed
     OR A, (HL)
     RET Z                                       ;if not, skip all of this and branch to leave
-;
+;   VRAM BUFFER OVERFLOW PROTECTION
+    LD A, (VRAM_Buffer1_Ptr)                    ;get vram buffer offset
+    SUB A, <VRAM_Buffer1                        ;if offset beyond a certain point, go ahead
+    CP A, _sizeof_VRAM_Buffer1 - $3E            ;and skip this, branch to leave
+    RET NC
     ;CPX $20
     ;BCS ExitRp
+;
     CALL GetXOffscreenBits                      ;get offscreen bits for X coordinate
     CP A, $C0 ;$C0                              ;check if rope is offscreen (NOTE: 1 pixel off)
     LD DE, (VRAM_Buffer1_Ptr)                   ;get vram buffer offset

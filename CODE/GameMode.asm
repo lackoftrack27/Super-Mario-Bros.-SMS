@@ -8583,6 +8583,10 @@ GetEnemyBoundBox:
     ; FALL THROUGH
 
 GetMaskedOffScrBits:
+    LD A, (Enemy_OffscrBits)                ;skip bitmask calculation if enemy is completely on screen
+    OR A
+    JR Z, CMBitsNoneSet
+;
     LD A, (ScreenLeft_X_Pos)
     LD E, A
     LD L, <Enemy_X_Position                 ;get enemy object position relative
@@ -8603,6 +8607,7 @@ GetMaskedOffScrBits:
 CMBits:
     LD A, (Enemy_OffscrBits)                ;otherwise use contents of C
     AND A, C
+CMBitsNoneSet:
     LD L, <EnemyOffscrBitsMasked            ;preserve bitwise whatever's in here
     LD (HL), A                              ;save masked offscreen bits here
     JR NZ, MoveBoundBoxOffscreen            ;if anything set here, branch

@@ -462,7 +462,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
-;   SPRITE UPDATE                   [CPU TIME: 10 LINES]
+;   SPRITE UPDATE                   [CPU TIME: 15 LINES]
     ; WRITE Y POSITIONS
     XOR A
     OUT (VDPCON_PORT), A
@@ -470,7 +470,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD C, VDPDATA_PORT
     LD HL, Sprite_Y_Position
-    CALL OutiBlock128 + $80         ; SKIP THE FIRST 64 OUTIs
+    CALL OutiBlock128 + $80         ;SKIP THE FIRST 64 OUTIs
     ; WRITE X POSITIONS AND TILE INDEXES
     LD A, <VRAM_ADR_SPRTBL + $80
     OUT (VDPCON_PORT), A
@@ -482,7 +482,7 @@ NonMaskableInterrupt:
     LD A, (RenderColumnFlag)
     OR A
     CALL NZ, ColumnWriteUpdate
-;   NAMETABLE UPDATE                [CPU TIME: ~04 LINES]
+;   NAMETABLE UPDATE                [CPU TIME: 10 LINES MAX]
     LD A, (VRAM_Buffer_AddrCtrl)    ;load control for pointer to buffer contents
     LD B, A                         ;save for UpdateScreen
     ADD A, A
@@ -505,7 +505,7 @@ NonMaskableInterrupt:
     LD (HL), $00                    ;clear buffer header
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
-;   TILE STREAMING                  ;[CPU TIME: ~21 LINES MAX]
+;   TILE STREAMING                  ;[CPU TIME: 22 LINES MAX]
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
     SBC HL, DE
@@ -680,15 +680,15 @@ UpdateScreen:
     CP A, VRAMTBL_BUFFER2
     JP Z, WriteVertColumnBuff2
     LD IXH, >WriteHoriBlock
+    LD A, (HL)
 @SkipBuff2Chk:
 ;   Write Address to VDP
     INC HL
     INC C                       ;VDPCON_PORT
-    OUTD
     OUTI
+    OUT (C), A
     DEC C                       ;VDPDATA_PORT
 ;   Set count and write data
-    INC HL
     LD A, (HL)
     LD IXL, A
     INC HL

@@ -8123,19 +8123,19 @@ EnemyToBGCollisionDet:
     ; FALL THROUGH
 
 DoIDCheckBGColl:
-    CP A, OBJECTID_GreenParatroopaJump  ;check for some other enemy object
-    JP Z, EnemyJump                 ;jump elsewhere if found
-;
     CP A, OBJECTID_HammerBro        ;check for hammer bro
     JP Z, HammerBroBGColl           ;jump elsewhere if found
 ;
+    CP A, $07
+    JR C, YesIn                     ;if enemy object <$07, branch
+;
+    CP A, OBJECTID_GreenParatroopaJump  ;check for some other enemy object
+    JP Z, EnemyJump                 ;jump elsewhere if found
+;
     CP A, OBJECTID_Spiny            ;if enemy object is spiny, branch
     JR Z, YesIn
-    CP A, OBJECTID_PowerUpObject    ;if special power-up object, branch
-    JR Z, YesIn
-;
-    CP A, $07                       ;if enemy object =>$07, branch to leave
-    RET NC
+    CP A, OBJECTID_PowerUpObject    ;if NOT special power-up object, branch to exit
+    RET NZ
 ;
 YesIn:
     ChkUnderEnemy                   ;if enemy object < $07, or = $12 or $2e, do this sub

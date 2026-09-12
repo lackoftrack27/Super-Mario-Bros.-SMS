@@ -9117,6 +9117,17 @@ GetObjRelativePosition:
 ;-------------------------------------------------------------------------------------
 ;$00 (IXL) - used as temp variable to hold offscreen bits
 
+.SECTION "OffscreenBitsData Optimized" BANK BANK_SLOT2 SLOT 2 FREE ALIGN $100 RETURNORG
+OffscreenBitsTable:
+    ; $00
+    .db $07, $03, $01, $00, $00, $00, $00, $00
+    .db $08, $0C, $0E, $0F, $0F, $0F, $0F, $0F
+    ; $10
+    .db $00, $80, $C0, $E0
+    .db $F0, $70, $30, $10
+    .db $00
+.ENDS
+
 ; GetPlayerOffscreenBits:
 ;     LD H, >Player_OffscrBits
 ;     LD D, H
@@ -9149,7 +9160,37 @@ GetEnemyOffscreenBits:
 ;   BC - OffscreenBits OFFSET
 ;   DE - XOffscreenBitsData/YOffscreenBitsData
 GetOffScreenBitsSet:
-    ;CALL GetXOffscreenBits                  ;do subroutine here
+;   OPT: Try doing faster routine if enemy is completely on screen
+    ; Horizontal bounds check
+    LD L, <SprObject_X_Position
+    LD A, (ScreenEdge_X_Pos)
+    SUB A, (HL)
+    LD E, A
+    DEC L                                   ;<SprObject_PageLoc
+    LD A, (ScreenEdge_PageLoc)
+    SBC A, (HL)
+
+    INC A
+    JR NZ, @CompleteChk                     ;do normal routine if behind visible page
+    LD A, E
+    CP A, $19
+    JR C, @CompleteChk
+    ; Vertical bounds check
+    LD L, <SprObject_Y_HighPos
+    LD A, (HL)
+    DEC A
+    JR NZ, @CompleteChk                     ;do normal routine if above or below visible screen
+    DEC L                                   ;<SprObject_Y_Position
+    LD A, (HL)
+    CP A, $E0
+    JR NC, @CompleteChk                     ;do normal routine if Ypos is too low
+
+    XOR A                                   ;set OffscreenBits to 0, object is completely on screen
+    LD (BC), A
+    RET
+
+;   NORMAL ROUTINE STARTS HERE
+@CompleteChk:
 ;   --- GetXOffscreenBits INLINE ---
     ; LOOP 1 (RIGHT SIDE CHECK)
     LD L, <SprObject_X_Position
@@ -9175,8 +9216,8 @@ GetOffScreenBitsSet:
     RRCA
     AND A, $07
 XLdBData_INLINE:
-    LD DE, XOffscreenBitsData
-    addAToDE8_M
+    LD D, >OffscreenBitsTable
+    LD E, A
     LD A, (DE)                              ;get bits here
     OR A                                    ;if bits not zero, branch to leave
     JR NZ, XOffscrnRet
@@ -9204,18 +9245,11 @@ XLdBData_INLINE:
     AND A, $07
     ADD A, $08
 XLdBData_2_INLINE:
-    LD E, <XOffscreenBitsData
-    addAToDE8_M
+    LD E, A
     LD A, (DE)
 ;
 XOffscrnRet:
-    RRCA                                    ;move high nybble to low
-    RRCA
-    RRCA
-    RRCA
-    AND A, $0F
     LD IXL, A                               ;store here
-    ;CALL GetYOffscreenBits
 ;   --- GetYOffscreenBits INLINE ---
     ; LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
     LD L, <SprObject_Y_Position
@@ -9226,23 +9260,23 @@ XOffscrnRet:
     LD A, $01
     SBC A, (HL)
     ;
-    LD A, $00
+    LD A, $00 + $10
     JP M, YLdBData
-    LD A, $04
+    LD A, $04 + $10
     JR NZ, YLdBData
     ; DividePDiff
     LD A, E
     CP A, $20
-    LD A, $04
+    LD A, $04 + $10
     JR NC, YLdBData
     LD A, E
     RRCA
     RRCA
     RRCA
     AND A, $07
+    ADD A, $10
 YLdBData:
-    LD E, <YOffscreenBitsData
-    addAToDE8_M
+    LD E, A
     LD A, (DE)
     OR A
     JR NZ, YOffscrnRet
@@ -9255,31 +9289,26 @@ YLdBData:
     LD A, $01
     SBC A, (HL)
     ;
-    LD A, $04
+    LD A, $04 + $10
     JP M, YLdBData_2
-    LD A, $00
+    LD A, $00 + $10
     JR NZ, YLdBData_2
     ; DividePDiff_2
     LD A, E
     CP A, $20
-    LD A, $00
+    LD A, $00 + $10
     JR NC, YLdBData_2
     LD A, E
     RRCA
     RRCA
     RRCA
     AND A, $07
-    ADD A, $04
+    ADD A, $04 + $10
 YLdBData_2:
-    LD E, <YOffscreenBitsData
-    addAToDE8_M
+    LD E, A
     LD A, (DE)
 ;
 YOffscrnRet:
-    ADD A, A                                ;move low nybble to high nybble
-    ADD A, A
-    ADD A, A
-    ADD A, A
     OR A, IXL                               ;mask together with previously saved low nybble
     LD (BC), A
     ;LD HL, (ObjectOffset)
@@ -9366,67 +9395,3 @@ XLdBData_2:
     addAToDE8_M
     LD A, (DE)
     RET
-
-;--------------------------------
-
-;GetYOffscreenBits:
-; ;   LOOP 1 (TOP SIDE CHECK) LIMIT AT $0100
-;     LD L, <SprObject_Y_Position
-;     LD A, $00
-;     SUB A, (HL)
-;     LD E, A
-;     INC L                               ;<SprObject_Y_HighPos
-;     LD A, $01
-;     SBC A, (HL)
-; ;
-;     LD A, $00
-;     JP M, YLdBData
-;     LD A, $04
-;     JP NZ, YLdBData
-;     ; DividePDiff
-;     LD A, E
-;     CP A, $20
-;     LD A, $04
-;     JP NC, YLdBData
-;     LD A, E
-;     RRCA
-;     RRCA
-;     RRCA
-;     AND A, $07
-; YLdBData:
-;     LD E, <YOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)
-;     OR A
-;     RET NZ
-; ;   LOOP 2 (BOTTOM SIDE CHECK) LIMIT AT $01FF
-;     DEC L                               ;<SprObject_Y_Position
-;     LD A, $FF
-;     SUB A, (HL)
-;     LD E, A
-;     INC L                               ;<SprObject_Y_HighPos
-;     LD A, $01
-;     SBC A, (HL)
-; ;
-;     LD A, $04
-;     JP M, YLdBData_2
-;     LD A, $00
-;     JP NZ, YLdBData_2
-;     ; DividePDiff_2
-;     LD A, E
-;     CP A, $20
-;     LD A, $00
-;     JP NC, YLdBData_2
-;     LD A, E
-;     RRCA
-;     RRCA
-;     RRCA
-;     AND A, $07
-;     ADD A, $04
-; YLdBData_2:
-;     LD E, <YOffscreenBitsData
-;     addAToDE8_M
-;     LD A, (DE)
-;     RET
-
-;--------------------------------

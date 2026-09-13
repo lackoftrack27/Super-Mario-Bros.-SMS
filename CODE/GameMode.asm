@@ -5451,9 +5451,10 @@ BlockGfxData:
     ;.db $24, $24, $24, $24          ; TILES FOR BLANK METATILE  
     ;.db $26, $26, $26, $26          ; TILES FOR BLANK METATILE FOR WATER
 
-    .dw BG_MACRO($019B), BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($01A4)  ; SHINY BRICK MT
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; BRICK MT
-    .dw BG_MACRO($11A5), BG_MACRO($11A7), BG_MACRO($11A6), BG_MACRO($11A8)  ; EMPTY BLOCK MT (PRIORITY)
+    .dw $0840, $0840, $083B, $083B                                          ; SHINY BRICK MT
+    .dw $083B, $083B, $083B, $083B                                          ; BRICK MT
+    .dw $1837, $1838, $1839, $183A                                          ; EMPTY BLOCK MT (PRIORITY)
+
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; BLANK MT
     .dw $01E7, $01E7, $01E7, $01E7                                          ; WATER MT
     ;

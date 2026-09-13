@@ -1842,7 +1842,7 @@ MushroomPaletteData:
 RetainerPaletteData:
     .dw swapBytes($C010)
     .db StripeCount($10)
-    .db $00, $00, $01, $32, $3A, $24, $0E, $06, $1B, $0F, $17, $3F, $03, $02, $10, $09
+    .db $00, $00, $01, $15, $3A, $24, $0E, $06, $1B, $0F, $32, $3F, $03, $02, $10, $09
     .db $00
 .ENDS
 
@@ -2409,16 +2409,16 @@ Palette1_MTiles:
     .dw BG_MACRO($0356), BG_MACRO($0159), BLANKTILE, BG_MACRO($0155)        ; right
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; blank used for balance rope
     ; Castle
-    .dw BG_MACRO($118B), BG_MACRO($11A4), BG_MACRO($118C), BG_MACRO($11A4)  ; top (PRI)
-    .dw BG_MACRO($018B), BG_MACRO($01A4), BG_MACRO($018C), BG_MACRO($01A4)  ; top (NON PRI)
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($0191), BG_MACRO($0191)  ; window left
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; brick wall
-    .dw BG_MACRO($0191), BG_MACRO($0191), BG_MACRO($01A4), BG_MACRO($01A4)  ; window right
-    .dw BG_MACRO($118D), BG_MACRO($11A4), BG_MACRO($118E), BG_MACRO($11A4)  ; top with brick (PRI)
-    .dw BG_MACRO($018D), BG_MACRO($01A4), BG_MACRO($018E), BG_MACRO($01A4)  ; top with brick (NON PRI)
+    .dw BG_MACRO($118B), $183B, BG_MACRO($118C), $183B                      ; top (PRI)
+    .dw BG_MACRO($018B), $083B, BG_MACRO($018C), $083B                      ; top (NON PRI)
+    .dw $083B, $083B, BG_MACRO($0191), BG_MACRO($0191)                      ; window left
+    .dw $083B, $083B, $083B, $083B                                          ; brick wall
+    .dw BG_MACRO($0191), BG_MACRO($0191), $083B, $083B                      ; window right
+    .dw BG_MACRO($118D), $183B, BG_MACRO($118E), $183B                      ; top with brick (PRI)
+    .dw BG_MACRO($018D), $083B, BG_MACRO($018E), $083B                      ; top with brick (NON PRI)
     .dw BG_MACRO($018F), BG_MACRO($0191), BG_MACRO($0190), BG_MACRO($0191)  ; entry top
     .dw BG_MACRO($0191), BG_MACRO($0191), BG_MACRO($0191), BG_MACRO($0191)  ; entry bottom
-    .dw BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4)  ; brick wall PRIORITY (NEW)
+    .dw $183B, $183B, $183B, $183B                                          ; brick wall PRIORITY (NEW)
     ; Tree Ledge Stump
     .dw BG_MACRO($0135), BG_MACRO($0139), BG_MACRO($0134), BG_MACRO($0138)  ; STUMP CENTER TOP
     .dw BG_MACRO($0133), BG_MACRO($0137), BG_MACRO($0134), BG_MACRO($0138)  ; STUMP LEFT TOP
@@ -2437,23 +2437,23 @@ Palette1_MTiles:
     .dw BG_MACRO($014A), BG_MACRO($014A), BG_MACRO($034A), BG_MACRO($034A)  ; bottom
     ; --- METATILES WITH COLLISION START HERE ---
     ; Breakable bricks
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal
-    .dw BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4), BG_MACRO($11A4)  ; unused (now used for brick priority)
+    .dw $0840, $083B, $0840, $083B                                          ; shiny
+    .dw $083B, $083B, $083B, $083B                                          ; normal
+    .dw $183B, $183B, $183B, $183B                                          ; unused (now used for brick priority)
     ; Rock Terrain
     .dw BG_MACRO($019C), BG_MACRO($019D), BG_MACRO($019E), BG_MACRO($019F)
     .dw BG_MACRO($119C), BG_MACRO($119D), BG_MACRO($119E), BG_MACRO($119F)  ; rock PRIORITY (NEW)
     ; Bricks with something in them
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny with Power-UP
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny with Vine
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny with Star
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny with Coins
-    .dw BG_MACRO($019B), BG_MACRO($01A4), BG_MACRO($019B), BG_MACRO($01A4)  ; shiny with 1-UP
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal with Power-UP
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal with Vine
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal with Star
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal with Coins
-    .dw BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4), BG_MACRO($01A4)  ; normal with 1-UP
+    .dw $0840, $083B, $0840, $083B                                          ; shiny with Power-UP
+    .dw $0840, $083B, $0840, $083B                                          ; shiny with Vine
+    .dw $0840, $083B, $0840, $083B                                          ; shiny with Star
+    .dw $0840, $083B, $0840, $083B                                          ; shiny with Coins
+    .dw $0840, $083B, $0840, $083B                                          ; shiny with 1-UP
+    .dw $083B, $083B, $083B, $083B                                          ; normal with Power-UP
+    .dw $083B, $083B, $083B, $083B                                          ; normal with Vine
+    .dw $083B, $083B, $083B, $083B                                          ; normal with Star
+    .dw $083B, $083B, $083B, $083B                                          ; normal with Coins
+    .dw $083B, $083B, $083B, $083B                                          ; normal with 1-UP
     ; Hidden blocks
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with Coins
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with 1-UP
@@ -2473,12 +2473,12 @@ Palette1_MTiles:
     .dw BG_MACRO($0152), BG_MACRO($0152), BG_MACRO($0153), BG_MACRO($0153)  ; bottom
     ; Jumpspring
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; blank for jumpspring
-    .dw BLANKTILE, BG_MACRO($01A4), BLANKTILE, BG_MACRO($01A4)              ; half brick 
+    .dw BLANKTILE, $083B, BLANKTILE, $083B                                  ; half brick 
     ; Solid brick for water levels
     .dw $01BF, $01C0, $01C1, $01C2
     .dw $11BF, $11C0, $11C1, $11C2
     ; Half brick (unused?)
-    ;.dw BLANKTILE, BG_MACRO($01A4), BLANKTILE, BG_MACRO($01A4)
+    ;.dw BLANKTILE, $083B, BLANKTILE, $083B
     ; Water pipe
     .dw BG_MACRO($116C), BG_MACRO($116D), BG_MACRO($116E), BG_MACRO($116F)
     .dw BG_MACRO($1174), BG_MACRO($1175), BG_MACRO($1176), BG_MACRO($1177)
@@ -2619,7 +2619,7 @@ Palette3_MTiles:
     .dw BG_MACRO($09B0), BG_MACRO($09B1), BG_MACRO($09B2), BG_MACRO($09B3)  ; normal
     .dw BG_MACRO($01B0), BG_MACRO($01B1), BG_MACRO($01B2), BG_MACRO($01B3)  ; underwater
     ; Empty Block
-    .dw BG_MACRO($01A5), BG_MACRO($01A6), BG_MACRO($01A7), BG_MACRO($01A8)
+    .dw $0837, $0839, $0838, $083A
     ; Axe
     .dw $01C4, $01C5, $01C6, $01C7
 

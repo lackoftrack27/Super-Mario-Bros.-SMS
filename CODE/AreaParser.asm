@@ -967,15 +967,15 @@ RunAObj:
 
 CastleCeilingTileY00:
     LD HL, MetatileBuffer
-    JP CastleCeilingTileMain
+    JR CastleCeilingTileMain
 
 CastleCeilingTileY01:
     LD HL, MetatileBuffer + $01
-    JP CastleCeilingTileMain
+    JR CastleCeilingTileMain
 
 CastleCeilingTileY02:
     LD HL, MetatileBuffer + $02
-    JP CastleCeilingTileMain
+    JR CastleCeilingTileMain
 
 CastleCeilingTileY03:
     LD HL, MetatileBuffer + $03
@@ -1014,12 +1014,12 @@ CastleCeilingTileY0B:
 CastleStairsY05:
     LD C, $02
     LD DE, MetatileBuffer + $05
-    JP CastleStairsMain
+    JR CastleStairsMain
 
 CastleStairsY06:
     LD C, $03
     LD DE, MetatileBuffer + $06
-    JP CastleStairsMain
+    JR CastleStairsMain
 
 CastleStairsY07:
     LD C, $04
@@ -1117,19 +1117,19 @@ CastleFloorLeftWallMain:
 
 CastleFloorLeftY07:
     LD HL, MetatileBuffer + $07
-    JP CastleFloorLeftMain
+    JR CastleFloorLeftMain
 
 CastleFloorLeftY08:
     LD HL, MetatileBuffer + $08
-    JP CastleFloorLeftMain
+    JR CastleFloorLeftMain
 
 CastleFloorLeftY09:
     LD HL, MetatileBuffer + $09
-    JP CastleFloorLeftMain
+    JR CastleFloorLeftMain
 
 CastleFloorLeftY0A:
     LD HL, MetatileBuffer + $0A
-    JP CastleFloorLeftMain
+    JR CastleFloorLeftMain
 
 CastleFloorLeftY0B:
     LD HL, MetatileBuffer + $0B
@@ -1199,19 +1199,19 @@ CastleFloorRightWallMain:
 
 CastleFloorRightY07:
     LD HL, MetatileBuffer + $07
-    JP CastleFloorRightMain
+    JR CastleFloorRightMain
 
 CastleFloorRightY08:
     LD HL, MetatileBuffer + $08
-    JP CastleFloorRightMain
+    JR CastleFloorRightMain
 
 CastleFloorRightY09:
     LD HL, MetatileBuffer + $09
-    JP CastleFloorRightMain
+    JR CastleFloorRightMain
 
 CastleFloorRightY0A:
     LD HL, MetatileBuffer + $0A
-    JP CastleFloorRightMain
+    JR CastleFloorRightMain
 
 CastleFloorRightY0B:
     LD HL, MetatileBuffer + $0B

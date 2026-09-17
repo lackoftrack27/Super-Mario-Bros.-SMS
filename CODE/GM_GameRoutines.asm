@@ -222,7 +222,7 @@ VerticalPipeEntry:
     CP A, $03
     JR NZ, ChgAreaPipe                  ;if not castle type level, use mode 1
     INC C
-    JP ChgAreaPipe                      ;otherwise use mode 2
+    JR ChgAreaPipe                      ;otherwise use mode 2
 
 MovePlayerYAxis:
     LD HL, Player_Y_Position            ;add contents of A to player position
@@ -343,7 +343,7 @@ PlayerLoseLife:
 ;
     LD HL, NumberofLives                ;take one life from player
     DEC (HL)
-    JP NZ, StillInGame                   ;if player still has lives, branch
+    JR NZ, StillInGame                   ;if player still has lives, branch
     XOR A
     LD (OperMode_Task), A               ;initialize mode task,
     LD A, MODE_GAMEOVER                 ;switch to game over mode
@@ -606,7 +606,7 @@ PlayerChangeSize:
     JR Z, InitChangeSize                ;branch if before or after that point
     CP A, $C4                           ;check again for another specific moment
     RET NZ                              ;and branch to leave if before or after that point
-    JP DonePlayerTask                   ;otherwise do sub to init timer control and set routine
+    JR DonePlayerTask                   ;otherwise do sub to init timer control and set routine
 
 ;-------------------------------------------------------------------------------------
 

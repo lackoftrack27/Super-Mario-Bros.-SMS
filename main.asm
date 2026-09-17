@@ -345,7 +345,7 @@ ChkPauseTimer:
     JR Z, ChkStart
     DEC A
     LD (GamePauseTimer), A          ;if so, decrement and leave
-    JP UpdateTopScore
+    JR UpdateTopScore
 ChkStart:
     LD A, (SavedJoypad1Bits)        ;check to see if start is pressed
     AND A, bitValue(SMS_BTN_START)
@@ -362,7 +362,7 @@ ChkStart:
     LD A, (GamePauseStatus)
     XOR A, $01                      ;invert d0 and set d7
     OR A, $80
-    JP SetPause                     ;unconditional branch
+    JR SetPause                     ;unconditional branch
 ClrPauseTimer:
     LD A, (GamePauseStatus)         ;clear timer flag if timer is at zero and start button
     AND A, $7F                      ;is not pressed
@@ -1153,7 +1153,7 @@ HundredLoop:
     JR C, TensDigit
     SUB A, B
     INC D
-    JP HundredLoop
+    JR HundredLoop
 TensDigit:
     LD B, $0A                               ;E = Lives(tens+ones) / 10
 TensLoop:
@@ -1161,7 +1161,7 @@ TensLoop:
     JR C, PutLives
     SUB A, B
     INC E
-    JP TensLoop
+    JR TensLoop
 PutLives:
     LD (VRAM_Buffer1 + $0D), A              ;write ones place digit
     LD A, D
@@ -1316,7 +1316,7 @@ DigitPLoop:
 DigitsMathRoutine:
     LD A, (OperMode)
     OR A
-    JP Z, EraseDMods
+    JR Z, EraseDMods
 ;
     LD HL, DigitModifier_05
     LD BC, $0600    ; LOOP/CARRY

@@ -179,7 +179,7 @@ StrFre:
 InitEnemyObject:
     LD L, <Enemy_State              ;initialize enemy state
     LD (HL), $00
-    JP CheckpointEnemyID            ;jump ahead to run jump engine and subroutines
+    JR CheckpointEnemyID            ;jump ahead to run jump engine and subroutines
 
 ParseRow0e:
     INC E                           ;increment Y to load third byte of object
@@ -203,7 +203,7 @@ ParseRow0e:
     AND A, %00011111                ;the 3 MSB from before, save as page number to be
     LD (EntrancePage), A            ;used upon entry to area, if area is entered
 ;
-    JP Inc3B
+    JR Inc3B
 
 CheckThreeBytes:
     LD A, (EnemyDataOffset)         ;load current offset for enemy object data
@@ -216,7 +216,7 @@ Inc3B:
     LD A, (EnemyDataOffset)         ;if row = $0e, increment three bytes
     ADD A, $03
     LD (EnemyDataOffset), A
-    JP +
+    JR +
 Inc2B:
     LD A, (EnemyDataOffset)         ;otherwise increment two bytes
     ADD A, $02
@@ -838,7 +838,7 @@ GSeed:
     GetLinearEnemySlotBC_M  PseudoRandomBitReg+1
     LD A, (BC)
     AND A, %00000011                    ;if neither of the last two bits of second LSFR set,
-    JP Z, RSeed                         ;skip this part and save contents of $00
+    JR Z, RSeed                         ;skip this part and save contents of $00
     INC C
     LD A, (BC)
     AND A, %00001111                    ;otherwise overwrite with lower nybble of
@@ -887,7 +887,7 @@ D2XPos1:
     LD (HL), A
     LD A, (Player_PageLoc)              ;get player's page location
     ADC A, $00                          ;add carry and jump past this part
-    JP FinCCSt
+    JR FinCCSt
 ;
 D2XPos2:
     LD A, (Player_X_Position)           ;get player's horizontal position
@@ -1092,7 +1092,7 @@ PutAtRightExtent:
     DEC L                               ;<Enemy_PageLoc
     LD (HL), A
 ;
-    JP FinishFlame                      ;skip this part to finish setting values
+    JR FinishFlame                      ;skip this part to finish setting values
 
 SpawnFromMouth:
     LD E, <Enemy_X_Position             ;get bowser's horizontal position
@@ -1340,7 +1340,7 @@ FireBulletBill:
     LD A, SNDID_CANNON                  ;play fireworks/gunfire sound
     LD (SFXTrack1.SoundQueue), A
     LD A, OBJECTID_BulletBill_FrenzyVar ;load identifier for bullet bill object
-    JP Set17ID
+    JR Set17ID
 
 ;--------------------------------
 ;$00(C) - used to store Y position of group enemies

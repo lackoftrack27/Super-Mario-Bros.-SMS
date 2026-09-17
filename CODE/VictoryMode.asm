@@ -108,7 +108,7 @@ PrintVictoryMessages:
     CP A, $03                       ;check primary message counter again
     JR C, @IncMsgCounter            ;if not at 3 yet (world 8 only), branch to increment
     DEC A                           ;otherwise subtract one
-    JP @ThankPlayer                 ;and skip to next part
+    JR @ThankPlayer                 ;and skip to next part
 @MRetainerMsg:
     CP A, $02                       ;check primary message counter
     JR C, @IncMsgCounter            ;if not at 2 yet (world 1-7 only), branch

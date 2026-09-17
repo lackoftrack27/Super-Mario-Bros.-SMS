@@ -1165,7 +1165,7 @@
     WorldSelectEnableFlag:          dsb $01
     ContinueWorld:                  dsb $01
     ; Cold boot clears everything ABOVE here
-    WarmBootValidation:             dsb $01
+    WarmBootValidation:             dsb $02
 .ENDS
 
 .DEFINE SavedJoypadBits             SavedJoypad1Bits

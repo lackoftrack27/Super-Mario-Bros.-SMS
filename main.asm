@@ -144,11 +144,13 @@ PauseBtnVector:
 ;   MAIN PROGRAM START
 Start:
 ;   GET MEMORY CONTROL VALUE (COLD BOOT ONLY)
-    LD A, (WarmBootValidation)
+    LD A, (WarmBootValidation + $01)
     CP A, $A5
     JR Z, @VDPInit
     LD A, ($C000)
     LD (MemoryControlValue), A
+    LD A, $A5
+    LD (WarmBootValidation + $01), A
 @VDPInit:
 ;   TURN OFF SCREEN (AND DISABLE VDP INTS)
     CALL turnOffScreen

@@ -2958,12 +2958,16 @@ SubtR1:
 ChkFOfs:
     CP A, $59                                   ;if difference of coordinates within a certain range,
     JR C, VAHandl                               ;continue by handling vertical adder
-    LD A, YPOS_OFFSCREEN_LOGICAL                ;otherwise, load offscreen Y coordinate
+
+OffscrFbr:
+    ;LD A, YPOS_OFFSCREEN_LOGICAL                ;otherwise, load offscreen Y coordinate
+    LD A, YPOS_OFFSCREEN
     JP SetVFbr                                  ;and unconditionally branch to move sprite offscreen
 VAHandl:
     LD A, (Enemy_Rel_YPos)                      ;if vertical relative coordinate offscreen,
     CP A, YPOS_OFFSCREEN_LOGICAL                ;skip ahead of this part and write into sprite Y coordinate
-    JR Z, SetVFbr
+    ;JR Z, SetVFbr
+    JR Z, OffscrFbr
     INC IXL                                     ;shift LSB of mirror data one more time
     LD IXL, A
     LD A, (BC)                                  ;load vertical adder we got from position loader

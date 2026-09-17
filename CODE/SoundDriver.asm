@@ -192,9 +192,6 @@ SkipSoundRoutines:
     LD (HL), A
     INC H
     LD (HL), A
-;
-    LD A, BANK_SLOT2
-    LD (MAPPER_SLOT2), A
     RET
 
 ;-------------------------------------------------------------------------------------

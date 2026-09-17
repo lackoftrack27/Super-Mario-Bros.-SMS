@@ -206,14 +206,14 @@ BackSceneryData:
 ;     .db MT_LATERN_RT, MT_LATERN_RB, MT_BLANK
 ;.ENDS
 
-.SECTION "FG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-;   FOREGROUND SCENERY (0 - NO SCENERY, 1 - WATER, 2 - BRICK WALL, 3 - OVER WATER)
-;   ONLY 1,2,3 HAVE INDEXES
-;   VALUES ARE OFFSETS INTO ForeSceneryData
-FSceneDataOffsets:
-    ;.db $00, $0d, $1a
-    .dw ForeSceneryData@Water, ForeSceneryData@Wall, ForeSceneryData@OverWater
-.ENDS
+; .SECTION "FG Scenery Offsets Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; ;   FOREGROUND SCENERY (0 - NO SCENERY, 1 - WATER, 2 - BRICK WALL, 3 - OVER WATER)
+; ;   ONLY 1,2,3 HAVE INDEXES
+; ;   VALUES ARE OFFSETS INTO ForeSceneryData
+; FSceneDataOffsets:
+;     ;.db $00, $0d, $1a
+;     .dw ForeSceneryData@Water, ForeSceneryData@Wall, ForeSceneryData@OverWater
+; .ENDS
 
 .SECTION "FG Scenery Metatile Data" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 ;   METATILE DATA
@@ -223,14 +223,14 @@ ForeSceneryData:
     ;.db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER
     ;.db MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_SOLIDBLK_WATER;, MT_SOLIDBLK_WATER
     .db MT_WATER_TOP, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_WATER, MT_BLANK
-    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
+    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
 @Wall:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_CASTLE_TOP_NONPRI, MT_CASTLE_BRICK
-    .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_BLANK;, MT_BLANK
+    .db MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_CASTLE_BRICK, MT_BLANK, MT_BLANK
 @OverWater:
     .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK
     .db MT_BLANK, MT_BLANK
-    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_WATER_TOP;, MT_WATER 
+    .db MT_BLANK, MT_BLANK, MT_BLANK, MT_BLANK, MT_WATER_TOP, MT_WATER 
 .ENDS
 
 
@@ -395,16 +395,18 @@ RendFore:
     JR Z, RendTerr                  ;if not, skip this part
 ;   Get pointer to foreground type's data
     DEC A
-    ADD A, A                        ; multiply by 12 (length of MetatileBuffer)
+    LD E, A                         ; E = value * 1
+    ADD A, A                        ; multiply by 13 (length of MetatileBuffer)
     ADD A, A
-    LD B, A
-    ADD A, A
+    LD B, A                         ; B = value * 4
+    ADD A, A                        ; A = value * 8
     ADD A, B
+    ADD A, E
     LD HL, ForeSceneryData
     addAToHL8_M
 ;   Copy foreground scenery data to metatile buffer
     LD DE, MetatileBuffer
-    LD B, $0C
+    LD B, $0D
 SceLoop2:
     LD A, (HL)
     OR A
@@ -430,6 +432,8 @@ NoFore:
     JR NZ, RendTerr
     LD A, MT_LAVA_TOP               ;replace lava waves with priority ones
     LD (MetatileBuffer + $0B), A
+    LD A, MT_LAVA
+    LD (MetatileBuffer + $0C), A
 
 ;   FLOOR TERRAIN
 RendTerr:
@@ -1001,6 +1005,8 @@ CastleCeilingTileY05:
 CastleCeilingTileY0B:
     LD HL, MetatileBuffer + $0B
     LD (HL), MT_CASTLECEILING_S
+    INC L
+    LD (HL), MT_CASTLECEILING_S
     RET
 
 ;--------------------------------
@@ -1068,23 +1074,23 @@ RenderUnderStairs:
 
 CastleFloorLeftWallY07:
     LD HL, MetatileBuffer + $07
-    LD B, $04
-    JP CastleFloorLeftWallMain
+    LD B, $05
+    JR CastleFloorLeftWallMain
 
 CastleFloorLeftWallY08:
     LD HL, MetatileBuffer + $08
-    LD B, $03
-    JP CastleFloorLeftWallMain
+    LD B, $04
+    JR CastleFloorLeftWallMain
 
 CastleFloorLeftWallY09:
     LD HL, MetatileBuffer + $09
-    LD B, $02
-    JP CastleFloorLeftWallMain
+    LD B, $03
+    JR CastleFloorLeftWallMain
 
 CastleFloorLeftWallY0A:
     LD HL, MetatileBuffer + $0A
-    LD B, $01
-    JP CastleFloorLeftWallMain
+    LD B, $02
+    JR CastleFloorLeftWallMain
 
 CastleFloorLeftWallY0B:
     LD HL, MetatileBuffer + $0B
@@ -1150,23 +1156,23 @@ CastleFloorLeftMain:
 
 CastleFloorRightWallY07:
     LD HL, MetatileBuffer + $07
-    LD B, $04
-    JP CastleFloorRightWallMain
+    LD B, $05
+    JR CastleFloorRightWallMain
 
 CastleFloorRightWallY08:
     LD HL, MetatileBuffer + $08
-    LD B, $03
-    JP CastleFloorRightWallMain
+    LD B, $04
+    JR CastleFloorRightWallMain
 
 CastleFloorRightWallY09:
     LD HL, MetatileBuffer + $09
-    LD B, $02
-    JP CastleFloorRightWallMain
+    LD B, $03
+    JR CastleFloorRightWallMain
 
 CastleFloorRightWallY0A:
     LD HL, MetatileBuffer + $0A
-    LD B, $01
-    JP CastleFloorRightWallMain
+    LD B, $02
+    JR CastleFloorRightWallMain
 
 CastleFloorRightWallY0B:
     LD HL, MetatileBuffer + $0B
@@ -1226,14 +1232,16 @@ CastleFloorRightMain:
     ;
     INC L
     LD (HL), MT_CASTLEFLOOR_RCORNER
+    INC L
+    LD (HL), MT_CASTLEFLOOR_BOT
     RET
 
 ;--------------------------------
 
 CastleFloorBodyY07:
     LD HL, MetatileBuffer + $07
-    LD B, $04
-    JP CastleFloorBodyMain
+    LD B, $05
+    JR CastleFloorBodyMain
 
 CastleFloorBodyY0B:
     LD HL, MetatileBuffer + $0B
@@ -1797,6 +1805,8 @@ DrawPipe:
     CPIR
     JP NZ, DrawPipe_1                   ;if no match, skip
     INC A                               ;else, give block priority (make it hide sprites)
+    LD (DE), A
+    INC E
     LD (DE), A
 DrawPipe_1:
     POP AF                              ;get value saved earlier and use as Y
@@ -2464,7 +2474,11 @@ RenderAreaGraphics:
     ADD A, A                            ;then add to the tile offset so we can draw either side
     LD IXL, A                           ;of the metatiles
 ;
+.IF LINEMODE == LINE192P
     LD IXH, $0C                         ;loop counter, amount of metatiles on screen vertically
+.ELSE
+    LD IXH, $0D
+.ENDIF
 DrawMTLoop:
     INC C
     INC E
@@ -2507,7 +2521,11 @@ DrawMTLoop:
     DEC IXH
     JP NZ, DrawMTLoop                   ;if not there yet, loop back
     ;
-    DEC E
+.IF LINEMODE != LINE240P
+    DEC E                               ;remove last tile (it can't be seen)
+.ELSE
+    INC E                               ;display all tiles
+.ENDIF
     XOR A
     LD (DE), A
     ;
@@ -2517,7 +2535,7 @@ DrawMTLoop:
     LD A, (HL)                          ;check current low byte
     AND A, %00111111                    ;if no wraparound, just skip this part
     JR NZ, SetVRAMCtrl
-    LD (HL), $40                        ;if wraparound occurs, make sure low byte stays
+    LD (HL), <NT_ACTIVE_START           ;if wraparound occurs, make sure low byte stays
 SetVRAMCtrl:
     LD A, VRAMTBL_BUFFER2
     LD (VRAM_Buffer_AddrCtrl), A

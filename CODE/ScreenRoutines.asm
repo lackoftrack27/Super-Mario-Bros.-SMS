@@ -82,24 +82,24 @@ WriteBottomStatusLine:
     CALL GetSBNybbles               ;write player's score and coin tally to screen
     LD HL, (VRAM_Buffer1_Ptr)
     LD B, $01                       ;VALUE FOR ATTRIBUTE BYTES
-    LD (HL), >xyToNameTbl_M(20, 0)  ;write address for world-area number on screen
+    LD (HL), >xyToNameTblFixed_M(20, 0) ;write address for world-area number on screen
     INC L
-    LD (HL), <xyToNameTbl_M(20, 0)
+    LD (HL), <xyToNameTblFixed_M(20, 0)
     INC L
     LD (HL), StripeCount($06)       ;write length for it [$03]
     INC L
     LD A, (WorldNumber)             ;first the world number
-    ADD A, BG_TILE_OFFSET + $01
+    INC A
     LD (HL), A
     INC L
     LD (HL), B                      ;USE UPPER BANK FOR TILE
     INC L
-    LD (HL), BG_TILE_OFFSET + $0B   ;next the dash
+    LD (HL), $0B                    ;next the dash
     INC L
     LD (HL), B                      ;USE UPPER BANK FOR TILE
     INC L
     LD A, (LevelNumber)             ;next the level number
-    ADD A, BG_TILE_OFFSET + $01
+    INC A
     LD (HL), A
     INC L
     LD (HL), B                      ;USE UPPER BANK FOR TILE
@@ -117,7 +117,7 @@ DisplayTimeUp:
     XOR A
     LD (GameTimerExpiredFlag), A    ;reset timer expiration flag
     LD A, $02                       ;output time-up screen to buffer
-    JP OutputInter
+    JR OutputInter
 NoTimeUp:
     LD HL, ScreenRoutineTask        ;increment control task 2 tasks forward
     INC (HL)
@@ -144,14 +144,14 @@ ResetScreenTimer:
 ;-------------------------------------------------------------------------------------
 
 DisplayIntermediate:
-    LD A, %10100000                 ;turn off screen for now
+    LD A, %10100000 | MODE_CTRL2    ;turn off screen for now
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
 ;
     LD A, (OperMode)                ;check primary mode of operation
     OR A
-    JR Z, NoInter                   ;if in title screen mode, skip this
+    JP Z, NoInter                   ;if in title screen mode, skip this
     CP A, MODE_GAMEOVER             ;are we in game over mode?
     JR Z, GameOverInter             ;if so, proceed to display game over screen
     LD A, (AltEntranceControl)      ;otherwise check for mode of alternate entry
@@ -188,9 +188,10 @@ OutputInter:
     EX DE, HL
     LD BC, $20 * $100 + VDPDATA_PORT
     OTIR
-    ; RESET BANK, ENABLE INTS
+    ; RESET BANK
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
+    ; ENABLE INTS
     IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
     EI
     ;
@@ -228,7 +229,7 @@ TaskLoop:
     CALL AreaParserTaskHandler      ;render column set of current area
     LD A, (AreaParserTaskNum)
     OR A
-    JP NZ, TaskLoop
+    JR NZ, TaskLoop
     LD HL, ColumnSets               ;do we need to render more column sets?
     DEC (HL)
     RET P
@@ -696,6 +697,8 @@ WaterAreaSetup:
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
+    LD HL, BGTileQueue2.Timer           ; ASSUME NO GRASS
+    LD (HL), $FF
 @CheckNESMode:
     ; CLEAR OUT A BUNCH OF TILE DATA IF IN NES GFX MODE
     LD A, (OptionBitflags)
@@ -712,7 +715,10 @@ WaterAreaSetup:
     LD DE, BGTileQueue1 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-        ; SEAPLANT FOR SLOT 2
+        ; SEAPLANT FOR SLOT 2 (NOT IN w8-4!)
+    LD A, (InitialAreaPointer)
+    CP A, $02
+    JP Z, TileLoadDone
     LD HL, AnimatedBGTileInits@Seaplant
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
@@ -724,7 +730,7 @@ WaterAreaSetup:
     ; CLEAR BG AREA WITH WATER TILE FOR NES GFX MODE
     LD HL, VRAM_ADR_BG_LVL | VRAMWRITE
     RST setVDPAddress
-    LD BC, $8003        ; 80 TILES
+    LD BC, $6803        ; 77 TILES
 -:
     XOR A
     OUT (VDPDATA_PORT), A
@@ -734,7 +740,7 @@ WaterAreaSetup:
     OUT (VDPDATA_PORT), A
     DJNZ -
     DEC C
-    JP NZ, -
+    JR NZ, -
     ; ERASE PIRANHA PLANT TILES IF IN NES GFX MODE
     LD HL, $9E * SMS_TILE_SIZE | VRAMWRITE
     RST setVDPAddress
@@ -780,7 +786,7 @@ OverWorldSetup:
     LDIR
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
-    JP TileLoadDone
+    JR TileLoadDone
 +:
     LD A, $01                           ; SET GRASS FLAG (BGTileQueue2 will do 6 tiles)
     LD (BGTileQueue2GrassFlag), A
@@ -796,12 +802,12 @@ OverWorldSetup:
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-    JP TileLoadDone
+    JR TileLoadDone
 @NESBrickLoad:
     ; LOAD BRICK SPRITES FOR NES GFX
     LD DE, Tile_Brick_Set0_NES
     CALL TileBrickSpriteLoad@NES
-    JP TileLoadDone
+    JR TileLoadDone
 
 SnowOverworldSetup:
     ; LOAD BRICK SPRITE TILES
@@ -839,7 +845,14 @@ SnowOverworldSetup:
     LD DE, BGTileQueue2 + $01
     LD BC, _sizeof__AnimatedBGTileQueue - $01
     LDIR
-    JR TileLoadDone    
+    ; FALL THROUGH
+
+TileLoadDone:
+    LD A, BANK_SLOT2
+    LD (MAPPER_SLOT2), A
+    IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
+    EI
+    RET   
 
 UndergroundSetup:
     ; DO DIFFERENT THING FOR NES GFX MODE
@@ -881,25 +894,19 @@ UndergroundSetup:
     CALL TileBrickSpriteLoad@NES
 @ClearBGTiles:
     ; FOR NES GFX, CLEAR OUT BG GFX DATA
-    LD HL, $3680 | VRAMWRITE
+    LD HL, $2F20 | VRAMWRITE
     RST setVDPAddress
     XOR A
     LD BC, $0004    ; 32 TILES
     CALL MemsetVRAM16
     ; AND CLEAR OUT LATERN GFX AREA
-    LD HL, $3D80 | VRAMWRITE
+    LD HL, VRAM_ADR_BG_SLOT2 | VRAMWRITE
     RST setVDPAddress
     XOR A
     LD B, $C0       ; 06 TILES
     CALL MemsetVRAM8
-    ; FALL THROUGH
+    JR TileLoadDone
 
-TileLoadDone:
-    LD A, BANK_SLOT2
-    LD (MAPPER_SLOT2), A
-    IN A, (VDPCON_PORT)             ;clear any pending VDP interrupts
-    EI
-    RET
 
 ;   HL - Tile Source Address
 TileBrickSpriteLoad:
@@ -972,8 +979,8 @@ LoadEnemySprites:
     POP BC                          ;restore VRAMLayout_XX ptr
     INC C                           ;check next VRAMID
     LD A, (BC)
-    OR A
-    JP P, @ProcessLayout            ;continue until terminator is hit ($FF)
+    RLCA
+    JR NC, @ProcessLayout            ;continue until terminator is hit ($FF)
     RET
 
 .ENUMID $00
@@ -1188,6 +1195,11 @@ EnemyVRAMLayout03:
 
 ;-------------------------------------------------------------------------------------
 
+;   0 - NO FADING
+;   1 - FADING IN   (BLOCK)
+;   2 - FADED IN
+;   3 - FADING OUT  (BLOCK)
+;   4 - FADED OUT
 FadeInScreen:
 ;   EXIT IF DOING NES GFX
     LD A, (OptionBitflags)
@@ -1195,25 +1207,42 @@ FadeInScreen:
     RET NZ
 ;   EXIT IF SCREEN HAS ALREADY FADED IN
     LD A, (PaletteFadeFlag)
-    DEC A
+    CP A, $02
     RET Z
+    LD A, $01
+    LD (PaletteFadeFlag), A
 ;   CLEAR ALL COLORS
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    LD HL, (VRAM_Buffer1_Ptr)
+    LD (HL), >CRAMWRITE
+    INC L
+    LD (HL), <CRAMWRITE
+    INC L
+    LD (HL), StripeCount($20)
+    INC L
     XOR A
-    LD B, $20
-    CALL MemsetVRAM8
+    LD (HL), A
+    LD D, H
+    LD E, L
+    INC E
+    LD BC, $0020
+    LDIR
+    INC A
+    LD (PaletteFadeWriteFlag), A
+    CALL WaitForNewScreen
 ;   TURN SCREEN ON
-    LD A, %11100000
+    LD A, %11100000 | MODE_CTRL2
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
 ;   BLUE FADE IN
     LD DE, $0310
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
+    LD (IX + $01), <CRAMWRITE
+    LD (IX + $02), StripeCount($20)
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1223,9 +1252,13 @@ FadeInScreen:
     JR C, +
     LD A, E                 ;else, put current step into A
 +:
-    OUT (VDPDATA_PORT), A   ;write to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     LD A, E                 ;increment current step
     ADD A, %00010000
     LD E, A
@@ -1234,9 +1267,10 @@ FadeInScreen:
 ;   GREEN FADE IN
     LD DE, $0304
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1250,9 +1284,13 @@ FadeInScreen:
     LD A, E                 ;else, put current step into A
 +:
     OR A, C                 ;OR with modified final color
-    OUT (VDPDATA_PORT), A   ;write to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     LD A, E                 ;increment current step
     ADD A, %00000100
     LD E, A
@@ -1261,9 +1299,10 @@ FadeInScreen:
 ;   RED FADE IN
     LD DE, $0301
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1277,14 +1316,20 @@ FadeInScreen:
     LD A, E                 ;else, put current step into A
 +:
     OR A, C                 ;OR with modified final color
-    OUT (VDPDATA_PORT), A   ;write to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     INC E                   ;increment current step
     DEC D                   ;outer loop check for all steps of color component
     JR NZ, --
-    LD A, $01
+    LD A, $02
     LD (PaletteFadeFlag), A
+    XOR A
+    LD (PaletteFadeWriteFlag), A
     RET
 
 
@@ -1296,14 +1341,19 @@ FadeOutScreen:
     RET NZ
 ;   EXIT IF SCREEN HAS ALREADY BEEN FADED OUT
     LD A, (PaletteFadeFlag)
-    CP A, $02
+    CP A, $04
     RET Z
+    LD A, $03
+    LD (PaletteFadeFlag), A
 ;   RED FADE OUT
     LD DE, $0301
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
+    LD (IX + $01), <CRAMWRITE
+    LD (IX + $02), StripeCount($20)
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1317,18 +1367,23 @@ FadeOutScreen:
     XOR A                   ;else, limit lower bound to 0
 +:
     OR A, C                 ;OR with modified final color
-    OUT (VDPDATA_PORT), A   ;send to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     INC E                   ;increment step offset
     DEC D                   ;outer loop check for all steps of color component
     JR NZ, --
 ;   GREEN FADE OUT
     LD DE, $0304
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1342,9 +1397,13 @@ FadeOutScreen:
     XOR A                   ;else, limit lower bound to 0
 +:
     OR A, C                 ;OR with modified final color
-    OUT (VDPDATA_PORT), A   ;send to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     LD A, E                 ;increment step offset
     ADD A, %00000100
     LD E, A
@@ -1353,9 +1412,10 @@ FadeOutScreen:
 ;   BLUE FADE OUT
     LD DE, $0310
 --:
-    CALL WaitForNewScreen
-    LD HL, $0000 | CRAMWRITE
-    RST setVDPAddress
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD IX, (VRAM_Buffer1_Ptr)
+    LD (IX + $00), >CRAMWRITE
     LD HL, PaletteFadeBuffer
     LD B, $20
 -:
@@ -1365,21 +1425,28 @@ FadeOutScreen:
     JR NC, +                ;skip if no overflow occured
     XOR A                   ;else, limit lower bound to 0
 +:
-    OUT (VDPDATA_PORT), A   ;send to VDP
+    LD (IX + $03), A
+    INC IXL
     INC L                   ;inner loop check for all colors within palette
     DJNZ -
+    LD (IX + $03), $00
+    LD (HL), $01
+    CALL WaitForNewScreen
     LD A, E                 ;increment step offset
     ADD A, %00010000
     LD E, A
     DEC D                   ;outer loop check for all steps of color component
     JR NZ, --
-    LD A, $02
+    LD A, $04
     LD (PaletteFadeFlag), A
+    XOR A
+    LD (PaletteFadeWriteFlag), A
+    LD (DisableScreenFlag), A           ;disable screen output
     RET
 
 WaitForNewScreen:
     HALT
     LD A, (VDPStatus)
-    OR A
-    JP P, WaitForNewScreen
+    RLCA
+    JR NC, WaitForNewScreen
     RET

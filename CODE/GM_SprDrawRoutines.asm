@@ -41,15 +41,15 @@ DrawVine:
     LD A, (Enemy_Rel_YPos)
     ADD A, B
     SUB A, SMS_PIXELYOFFSET                 ;subtract vertical res difference
-    CP A, $D0                               ;skip if at sprite terminator
-    JR Z, +
+    CP A, (YPOS_LOWBOUND + $10) - SMS_PIXELYOFFSET  ;skip if at sprite terminator
+    JR NC, +
     LD (HL), A                              ;store for sprite data's YPOS
     .REPEAT $05
 +:
     INC L                                   ;do this 5 more times...
     ADD A, $08                              ;add successive YPOS offset
-    CP A, $D0
-    JR Z, +
+    CP A, (YPOS_LOWBOUND + $10) - SMS_PIXELYOFFSET
+    JR NC, +
     LD (HL), A
     .ENDR
 +:
@@ -144,6 +144,14 @@ HammerSpriteData:
 .ENDS
 
 DrawHammer:
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $10
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    RET NC
+;
     LD BC, HammerSpriteData                 ;use different set of hammmer sprites
     LD A, (AreaType)                        ;in castle area to get around Bowser's weird palette
     CP A, $03
@@ -182,12 +190,6 @@ RenderH:
     ;
     LD A, (Misc_Rel_YPos)                   ;subtract y offset to adjust for SMS
     SUB A, SMS_PIXELYOFFSET
-
-    ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    RET Z
-    ; ---
-
     ADD A, (HL)                             ;add Ypos offsets from frame data to object's Ypos
     LD (DE), A                              ;and write to S.A.T.
     INC E
@@ -317,6 +319,14 @@ ChkFlagOffscreen:
 ;-------------------------------------------------------------------------------------
 
 DrawLargePlatform:
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $10
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    RET NC
+;
     LD D, >Sprite_Data
 ;   X POSITION & TILE
     LD L, <Enemy_SprDataOffset      ;get S.A.T. address for 1st sprite's Xpos
@@ -344,11 +354,6 @@ DrawLargePlatform:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     SUB A, SMS_PIXELYOFFSET         ;subtract y offset to adjust for SMS
-
-    ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    RET Z
-    ; ---
     .REPEAT $04
     LD (DE), A                      ;dump into first four sprites as Y coordinate
     INC E
@@ -364,6 +369,7 @@ DrawLargePlatform:
     LD A, YPOS_OFFSCREEN
     JR NZ, SetLast2Platform         ;branch if not set elsewhere
     LD A, B                         ;get back Ypos
+    ; FALL THROUGH
 
 SetLast2Platform:
     LD (DE), A                      ;make last two sprites either offscreen or same as the rest
@@ -526,7 +532,7 @@ PowerUpGfxTable:
 DrawPowerUp:
 ;   OFFSCREEN CHECK
     LD HL, (Enemy_Y_Position_05)            ;don't display powerup if it is below visible screen
-    LD DE, $01D8                            ;to avoid sprite terminator
+    LD DE, $0100 + (YPOS_LOWBOUND + $08)    ;to avoid sprite terminator
     OR A
     SBC HL, DE
     JP NC, SprObjectOffscrChk
@@ -596,7 +602,7 @@ EnemyGfxTableOffsets:
 EnemyGfxHandler:
     LD L, <Enemy_Y_Position                 ;don't display enemy if it is below visible screen
     LD A, (HL)                              ;to avoid sprite terminator
-    SUB A, $D0
+    SUB A, YPOS_LOWBOUND
     INC L
     LD A, (HL)
     SBC A, $01
@@ -985,6 +991,13 @@ MoveESprColOffscreen:
     RET
 
 PodobooGfxHandler:
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $08
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    RET NC
 ;   VERTICAL FLIP CHECK
     LD L, <Enemy_Y_Speed                    ;use v-flipped tiles if y speed is positive
     LD A, (HL)
@@ -1010,13 +1023,6 @@ PodobooGfxHandler:
 +:
     LD A, D                                 ;add 8 to vertical coordinate (podoboo is only 16px tall)
     ADD A, $08
-
-    ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    JR NZ, +
-    INC A
-+:
-    ; ---
     LD B, A                                 ;store vertical coord in B
 
     LD A, (Temp_Bytes + $05)                ;store horizontal coord in C
@@ -1140,10 +1146,15 @@ CalculateNTAddr:
     SUB A, SMS_PIXELYOFFSET                 ;subtract SMS Y offset
     AND A, $F8                              ;round down to closest tile (multiple of 8)
     LD L, A
-    LD H, (>VRAMWRITE | >VRAM_ADR_NAMETBL) >> $03 ;$0C
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE) >> $03
     ADD HL, HL                              ;left shift by 3 (d12-d6 determine row)
     ADD HL, HL
     ADD HL, HL
+.IF LINEMODE != LINE192P
+    LD A, H
+    ADD A, >VRAM_ADR_NAMETBL & $0F
+    LD H, A
+.ENDIF
     ;
     LD A, (ScreenLeft_X_Pos)                ;add left-edge of screen to enemy object horizontal position
     LD B, A                                 ;to get real x coordinate
@@ -1199,32 +1210,32 @@ StripeBufferSetup:
 
 .SECTION "Jumpspring Frames" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 JumpspringFramesLeft:
-    .dw $095A, $095B, $0D5A, $0000  ; F1
-    .dw $0000, $095C, $0D5C, $0000  ; F2
-    .dw $0000, $0000, $095D, $0000  ; F3
-    .dw $0000, $095C, $0D5C, $0000  ; F2
-    .dw $095A, $095B, $0D5A, $0000  ; F1
+    .dw BG_MACRO($0922), BG_MACRO($0923), BG_MACRO($0D22), $0000  ; F1
+    .dw $0000, BG_MACRO($0924), BG_MACRO($0D24), $0000            ; F2
+    .dw $0000, $0000, BG_MACRO($0925), $0000                      ; F3
+    .dw $0000, BG_MACRO($0924), BG_MACRO($0D24), $0000            ; F2
+    .dw BG_MACRO($0922), BG_MACRO($0923), BG_MACRO($0D22), $0000  ; F1
 
 JumpspringFramesRight:
-    .dw $0B5A, $0B5B, $0F5A, $0000
-    .dw $0000, $0B5C, $0F5C, $0000
-    .dw $0000, $0000, $0B5D, $0000
-    .dw $0000, $0B5C, $0F5C, $0000
-    .dw $0B5A, $0B5B, $0F5A, $0000
+    .dw BG_MACRO($0B22), BG_MACRO($0B23), BG_MACRO($0F22), $0000
+    .dw $0000, BG_MACRO($0B24), BG_MACRO($0F24), $0000
+    .dw $0000, $0000, BG_MACRO($0B25), $0000
+    .dw $0000, BG_MACRO($0B24), BG_MACRO($0F24), $0000
+    .dw BG_MACRO($0B22), BG_MACRO($0B23), BG_MACRO($0F22), $0000
 .ENDS
 
 .SECTION "Retainer/Princess Tiles" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 RetainerTilesLeft:
-    .dw $0983, $0984, $0985
+    .dw BG_MACRO($094B), BG_MACRO($094C), BG_MACRO($094D)
 
 RetainerTilesRight:
-    .dw $0B83, $0B84, $0B85
+    .dw BG_MACRO($0B4B), BG_MACRO($0B4C), BG_MACRO($0B4D)
 
 PrincessTilesLeft:
-    .dw $0986, $0987, $0988
+    .dw BG_MACRO($094E), BG_MACRO($094F), BG_MACRO($0950)
 
 PrincessTilesRight:
-    .dw $0989, $098A, $098B
+    .dw BG_MACRO($0951), BG_MACRO($0952), BG_MACRO($0953)
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -1319,11 +1330,11 @@ DrawBrickChunks:
 ;   STORE Y POSITIONS
     LD A, (Block_Rel_YPos)                  ;get first block object's relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
-    
+
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    JP NZ, +
-    INC A
+    CP A, (YPOS_LOWBOUND + $10) - SMS_PIXELYOFFSET
+    JR C, +
+    LD A, YPOS_OFFSCREEN
 +:
     ; ---
 
@@ -1334,9 +1345,9 @@ DrawBrickChunks:
     SUB A, SMS_PIXELYOFFSET
 
     ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    JP NZ, +
-    INC A
+    CP A, (YPOS_LOWBOUND + $10) - SMS_PIXELYOFFSET
+    JR C, +
+    LD A, YPOS_OFFSCREEN
 +:
     ; ---
 
@@ -1447,6 +1458,13 @@ ChnkOfs:
 ;-------------------------------------------------------------------------------------
 
 DrawFireball:
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $10
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    RET NC
 ;   GET OBJECT'S S.A.T. ADDRESS
     LD A, H
     ADD A, >FBall_SprDataOffset - >Fireball_State
@@ -1458,14 +1476,6 @@ DrawFireball:
 ;   Y POSITION
     LD A, (Fireball_Rel_YPos)               ;get relative vertical coordinate
     SUB A, SMS_PIXELYOFFSET
-
-    ; FIX TO NOT TRIGGER SPRITE TERMINATOR
-    CP A, $D0
-    JP NZ, +
-    INC A
-+:
-    ; ---
-
     LD (DE), A                              ;store as sprite Y coordinate
 ;   X POSITION
     SLA E
@@ -1594,6 +1604,23 @@ DrawExplosion_Fireworks:
 ;-------------------------------------------------------------------------------------
 
 DrawSmallPlatform:
+    LD C, $00
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $10
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    JR C, @TopVisible
+    SET 0, C                                ;set bit 0 if first lift is too low
+@TopVisible:
+    DEC L                                   ;do the same check for the second lift
+    LD A, (HL)
+    ADD A, $80
+    SUB A, YPOS_LOWBOUND + $10
+    JR C, @BotVisible
+    SET 1, C                                ;set bit 1 if second lift is too low
+@BotVisible:
 ;   X POSITION & TILE
     LD L, <Enemy_SprDataOffset              ;get OAM data offset
     LD E, (HL)
@@ -1645,8 +1672,9 @@ DrawSmallPlatform:
     LD E, (HL)
     LD L, <Enemy_Y_Position                 ;get vertical coordinate
     LD A, (HL)
-    CP A, $D8                               ;move offscreen if below visible screen
-    JP NC, +
+    BIT 0, C                                ;move offscreen if below visible screen (sprite terminator)
+    JR NZ, +
+
     CP A, $20                               ;if vertical coordinate below status bar,
     JP NC, TopSP                            ;do not mess with it
 +:
@@ -1663,8 +1691,9 @@ TopSP:
     LD L, <Enemy_Y_Position
     LD A, (HL)
     ADD A, $80                              ;add 128 pixels
-    CP A, $D8                               ;move offscreen if below visible screen
-    JP NC, +
+    BIT 1, C                                ;move offscreen if below visible screen (sprite terminator)
+    JR NZ, +
+
     CP A, $20                               ;if below status bar (taking wrap into account)
     JP NC, BotSP                            ;then do not change altered coordinate
 +:
@@ -1760,7 +1789,7 @@ PlayerFixedTiles:
 
 PlayerGfxHandler:
     LD HL, (Player_Y_Position)          ;don't draw player if they are under the visible screen
-    LD DE, $01D0                        ;to avoid sprite terminator
+    LD DE, $0100 + YPOS_LOWBOUND        ;to avoid sprite terminator
     OR A
     SBC HL, DE
     RET NC
@@ -1926,7 +1955,7 @@ NPROffscr:
 
 
 DrawPlayer_Intermediate:
-    LD BC, $4060                        ;YPOS/XPOS
+    LD BC, ($58 - SMS_PIXELYOFFSET) * $100 + $60    ;YPOS/XPOS
     LD HL, PlayerGfxBank
     RES 0, (HL)                         ;RIGHT-FACING SPRITES
 ;

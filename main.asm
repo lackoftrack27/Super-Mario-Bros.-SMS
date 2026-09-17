@@ -121,7 +121,7 @@ VdpVector:
     OUT (VDPCON_PORT), A
     LD A, $88
     OUT (VDPCON_PORT), A
-    LD A, %00100100                 ;TURN OFF H-INTS (ONLY 1 IS REQUIRED PER FRAME)
+    LD A, %00100100 | MODE_CTRL1    ;TURN OFF H-INTS (ONLY 1 IS REQUIRED PER FRAME)
     OUT (VDPCON_PORT), A
     LD A, $80
     OUT (VDPCON_PORT), A
@@ -177,6 +177,10 @@ Start:
     LD (IX + 2), $01    ; BANK SELECT FOR SLOT 1
     LD (IX + 3), $02    ; BANK SELECT FOR SLOT 2
 ;   WARM BOOT RAM INIT.
+    XOR A
+    LD (OptionBitflags), A
+    LD (PaletteFadeFlag), A
+    LD (PaletteFadeWriteFlag), A
     LD HL, WarmBootOffset
     CALL InitializeMemory
     CALL SndInitMemory@InitSndLinearMem
@@ -250,12 +254,20 @@ Start:
 .ENDIF
 MainGameInit:
     DI                              ;disable interrupts
-    LD A, %10100000                 ;turn off screen
+    LD A, %10100000 | MODE_CTRL2    ;turn off screen
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
 ;   LOAD CONSTANT BACKGROUND TILES
     LD A, ASSET_BGCOMM
+    CALL AssetLoader
+    LD (MAPPER_SLOT2), A
+    CALL zx7_decompressVRAM
+    LD A, ASSET_BGCOMM_TEXT0
+    CALL AssetLoader
+    LD (MAPPER_SLOT2), A
+    CALL zx7_decompressVRAM
+    LD A, ASSET_BGCOMM_TEXT1
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
     CALL zx7_decompressVRAM
@@ -442,11 +454,27 @@ VRAM_AddrTable:
 .ENDS
 
 NonMaskableInterrupt:
+;   SAVE SLOT2 BANK
+    LD A, (MAPPER_SLOT2)
+    PUSH AF
 ;   INITIALIZE H SCROLL REG
     XOR A
     OUT (VDPCON_PORT), A
     LD A, $88
     OUT (VDPCON_PORT), A
+;   PALETTE FADE WRITE
+    LD A, (PaletteFadeWriteFlag)
+    OR A
+    JR Z, @LagCheck
+    LD C, VDPDATA_PORT
+    LD HL, VRAM_Buffer1
+    LD A, (HL)
+    OR A
+    CALL NZ, UpdateScreen@PaletteWrite
+    LD HL, VRAM_Buffer1
+    LD (VRAM_Buffer1_Ptr), HL
+    LD (HL), $00
+@LagCheck:
 ;   SKIP VDP UPDATE AND JOYPAD READING IF ON A LAG FRAME
     LD A, (FrameDoneFlag)
     RRA
@@ -456,9 +484,15 @@ NonMaskableInterrupt:
     LD A, (HorizontalScroll)
     NEG
     LD (VDPHScroll), A
-;   TURN OFF SCREEN IF FLAG IS CLEAR
+;   TURN ON/OFF SCREEN
+.IF LINEMODE != LINE224P
+    ; TURN OFF SCREEN IF FLAG IS CLEAR (192p && 240p)
     LD A, (DisableScreenFlag)
-    OR A, %10100000
+    OR A, %10100000 | MODE_CTRL2
+.ELSE
+    ; TURN OFF SCREEN. IT WILL BE TURNED BACK ON AFTER VDP TRANSFERS (224p)
+    LD A, %10100000 | MODE_CTRL2
+.ENDIF
     OUT (VDPCON_PORT), A
     LD A, $81
     OUT (VDPCON_PORT), A
@@ -506,6 +540,7 @@ NonMaskableInterrupt:
     XOR A
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
     LD (Buffer2SuppressFlag), A     ;clear flag used for coin/axe removal
+NametableUpdateRet:
 ;   TILE STREAMING                  ;[CPU TIME: 22 LINES MAX]
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
@@ -522,16 +557,25 @@ NonMaskableInterrupt:
     JP NZ, StreamAnimatedBGTiles    ;if so, force BG update for stalled slot
     JP StreamPlayerTiles            ;else, update player
 TileStreamRet:
+.IF LINEMODE == LINE224P
+;   TURN OFF SCREEN IF FLAG IS CLEAR
+    LD A, (DisableScreenFlag)       ;VDP transfers can extend past vblank in 224p mode
+    OR A, %10100000 | MODE_CTRL2    ;conditionally change screen AFTER all transfers have been made
+    OUT (VDPCON_PORT), A
+    LD A, $81
+    OUT (VDPCON_PORT), A
+.ENDIF
+;   READ CONTROLLERS
     LD A, BANK_SLOT2
     LD (MAPPER_SLOT2), A
-;   READ CONTROLLERS
     CALL ReadJoypads
 ;   DON'T SET H-INT IF SPRITE 0 FLAG ISN'T SET (LAG FRAMES ALWAYS SET H-INT)
     LD A, (Sprite0HitDetectFlag)
     OR A
     JR Z, SoundUpdate
 LagFrame:
-    LD A, %00110100
+;   ENABLE LINE INTERRUPTS
+    LD A, %00110100 | MODE_CTRL1
     OUT (VDPCON_PORT), A
     LD A, $80
     OUT (VDPCON_PORT), A
@@ -545,6 +589,9 @@ SoundUpdate:
     POP HL
     POP DE
     POP BC
+;   RESTORE SLOT2 BANK
+    POP AF
+    LD (MAPPER_SLOT2), A
 ;   NMI END
     POP AF
     RET
@@ -679,7 +726,8 @@ PauseBtnChk:
 UpdateScreen:
     LD A, B
     CP A, VRAMTBL_BUFFER2
-    JP Z, WriteVertColumnBuff2
+    JR Z, WriteVertColumnBuff2
+@PaletteWrite:
     LD IXH, >WriteHoriBlock
     LD A, (HL)
 @SkipBuff2Chk:
@@ -715,8 +763,14 @@ WriteVertColumnBuff2:
     LD C, VDPCON_PORT
     LD DE, $0040
     EXX
-;   WRITE 23 WORDS VERTICALLY
-    CALL WriteVeriBlock_W
+;   WRITE 23-26 WORDS VERTICALLY
+.IF LINEMODE == LINE192P
+    CALL WriteVeriBlock_W_23
+.ELIF LINEMODE == LINE224P
+    CALL WriteVeriBlock_W_25
+.ELSE
+    CALL WriteVeriBlock_W_26
+.ENDIF
 ;   check if buffer is empty
     LD A, (HL)
     OR A
@@ -745,8 +799,14 @@ ColumnWriteUpdate:
     LD C, VDPCON_PORT
     LD DE, $0040
     EXX
-;   WRITE 23 WORDS VERTICALLY
-    JP WriteVeriBlock_W
+;   WRITE 23-26 WORDS VERTICALLY
+.IF LINEMODE == LINE192P
+    JP WriteVeriBlock_W_23
+.ELIF LINEMODE == LINE224P
+    JP WriteVeriBlock_W_25
+.ELSE
+    JP WriteVeriBlock_W_26
+.ENDIF
 
 IndirectCallHL:
     JP (HL)
@@ -904,7 +964,11 @@ StoreMusicDirect:
 InitializeNameTables:
     LD HL, VRAM_ADR_NAMETBL | VRAMWRITE
     CALL setVDPAddress
+.IF LINEMODE != LINE240P
     LD BC, <NAMETABLE_SIZE * $100 + >NAMETABLE_SIZE
+.ELSE
+    LD BC, <NAMETABLE_SIZE * $100 + >NAMETABLE_SIZE + $01
+.ENDIF
     XOR A                               ;clear name table with blank tile
     CALL MemsetVRAM16
 ;
@@ -1093,29 +1157,26 @@ TensLoop:
     INC E
     JP TensLoop
 PutLives:
-    ADD A, BG_TILE_OFFSET                   ;write ones place digit
-    LD (VRAM_Buffer1 + $0D), A
+    LD (VRAM_Buffer1 + $0D), A              ;write ones place digit
     LD A, D
     OR A, E                                 ;writes tens place digit (if applicable)
     JR Z, PutLevelNumbers
     LD A, E
-    ADD A, BG_TILE_OFFSET
     LD (VRAM_Buffer1 + $0B), A
     LD A, $01
     LD (VRAM_Buffer1 + $0C), A
     LD A, D                                 ;writes hundreds place digit (if applicable)
     OR A
     JR Z, PutLevelNumbers
-    ADD A, BG_TILE_OFFSET
     LD (VRAM_Buffer1 + $09), A
     LD A, $01
     LD (VRAM_Buffer1 + $0A), A
 PutLevelNumbers:                    
     LD A, (WorldNumber)                     ;write world and level numbers (incremented for display)
-    ADD A, BG_TILE_OFFSET + $01             ;to the buffer in the spaces surrounding the dash
+    INC A                                   ;to the buffer in the spaces surrounding the dash
     LD (VRAM_Buffer1 + $20), A
     LD A, (LevelNumber)
-    ADD A, BG_TILE_OFFSET + $01
+    INC A
     LD (VRAM_Buffer1 + $24), A              ;we're done here
     RET
 
@@ -1171,15 +1232,15 @@ PrintWarpZoneNumbers:
 StatusBarData:
     .dw swapBytes(xyToNameTbl_M(16, 20))    ; top score display on title screen
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(4, 0))      ; player score
+    .dw swapBytes(xyToNameTblFixed_M(4, 0))      ; player score
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(4, 0))      ; 2nd player score
+    .dw swapBytes(xyToNameTblFixed_M(4, 0))      ; 2nd player score
     .db StripeCount($0C), $06
-    .dw swapBytes(xyToNameTbl_M(15, 0))     ; coin tally
+    .dw swapBytes(xyToNameTblFixed_M(15, 0))     ; coin tally
     .db StripeCount($04), $02
-    .dw swapBytes(xyToNameTbl_M(15, 0))     ; 2nd coin tally
+    .dw swapBytes(xyToNameTblFixed_M(15, 0))     ; 2nd coin tally
     .db StripeCount($04), $02
-    .dw swapBytes(xyToNameTbl_M(26, 0))     ; game timer
+    .dw swapBytes(xyToNameTblFixed_M(26, 0))     ; game timer
     .db StripeCount($06), $03
 .ENDS
 
@@ -1229,7 +1290,6 @@ OutputNumbers:
     LD L, A
 DigitPLoop:
     LD A, (HL)                  ;write digits to the buffer
-    ADD A, BG_TILE_OFFSET
     LD (DE), A
     INC E
     LD A, $01                   ;ATTRIBUTE BYTE
@@ -1298,7 +1358,7 @@ CarryOne:
 ;   PlayerGfxOffset - %MBPPMMMMMMMMMMMM [B = BANK LSB, P = PALETTE, M = MAPPING POINTER]
 ;   PlayerGfxBank   - %00000BBB [B = Bank : B2, = 1, B1 = CHARACTER, B0 = DIRECTION]
 
-;   [CPU TIME: ~21 LINES]
+;   [CPU TIME: 22 LINES MAX]
 StreamPlayerTiles:
     LD (PlayerGfxOffset_Old), DE
 ;   SET VDP ADDRESS
@@ -1453,7 +1513,7 @@ StreamPlayerTiles:
 ;   HL - BGTileQueue0 Ptr/Tile Data Ptr
 ;   IX - Offset into OUTI Block
 
-;   [CPU TIME: ~14 LINES]
+;   [CPU TIME: ~15 LINES]
 StreamAnimatedBGTiles:
 ;   EXIT IF ON NES GFX
     LD A, (OptionBitflags)
@@ -1581,22 +1641,22 @@ AssetLoaderTable:
     .dw Tiles_BG_TitleScreen, VRAM_ADR_BG_TITLE | VRAMWRITE
     ;
     .db :Tiles_Mario_Emblem
-    .dw Tiles_Mario_Emblem, $28E0 | VRAMWRITE
+    .dw Tiles_Mario_Emblem, VRAM_ADR_BG + $01E0 | VRAMWRITE
     ;
     .db :Tiles_Luigi_Emblem
-    .dw Tiles_Luigi_Emblem, $28E0 | VRAMWRITE
+    .dw Tiles_Luigi_Emblem, VRAM_ADR_BG + $01E0 | VRAMWRITE
     ;
     .db :Tiles_BG_Overworld
     .dw Tiles_BG_Overworld, VRAM_ADR_BG_LVL | VRAMWRITE
     ;
     .db :Tiles_BG_Snow
-    .dw Tiles_BG_Snow, $2C60 | VRAMWRITE
+    .dw Tiles_BG_Snow, VRAM_ADR_BG_LVL + $0360 | VRAMWRITE
     ;
     .db :Tiles_BG_Underground
-    .dw Tiles_BG_Underground, $3680 | VRAMWRITE
+    .dw Tiles_BG_Underground, VRAM_ADR_BG_LVL + $0D20 | VRAMWRITE
     ;
     .db :Tiles_BG_Castle
-    .dw Tiles_BG_Castle, $2C80 | VRAMWRITE
+    .dw Tiles_BG_Castle, VRAM_ADR_BG_LVL + $0380 | VRAMWRITE
     ;
     .db :Tiles_BG_Water
     .dw Tiles_BG_Water, VRAM_ADR_BG_LVL | VRAMWRITE
@@ -1609,7 +1669,12 @@ AssetLoaderTable:
     ;
     .db :Tiles_Lift
     .dw Tiles_Lift, $0A20 | VRAMWRITE
-
+    ;
+    .db :Tiles_BG_Comm_Text0
+    .dw Tiles_BG_Comm_Text0, VRAM_ADR_BG + $1600 | VRAMWRITE
+    ;
+    .db :Tiles_BG_Comm_Text1
+    .dw Tiles_BG_Comm_Text1, VRAM_ADR_BG + $1E80 | VRAMWRITE
 .ENDS
 
 .SECTION "Asset Table for NES GFX" BITWINDOW 8 RETURNORG
@@ -1628,10 +1693,10 @@ AssetLoaderTableNES:
     .dw Tiles_BG_TitleScreen_NES, VRAM_ADR_BG_TITLE | VRAMWRITE
     ;
     .db :Tiles_Mario_Emblem_NES
-    .dw Tiles_Mario_Emblem_NES, $28E0 | VRAMWRITE
+    .dw Tiles_Mario_Emblem_NES, VRAM_ADR_BG + $01E0 | VRAMWRITE
     ;
     .db :Tiles_Luigi_Emblem_NES
-    .dw Tiles_Luigi_Emblem_NES, $28E0 | VRAMWRITE
+    .dw Tiles_Luigi_Emblem_NES, VRAM_ADR_BG + $01E0 | VRAMWRITE
     ;
     .db :Tiles_BG_Overworld_NES
     .dw Tiles_BG_Overworld_NES, VRAM_ADR_BG_LVL | VRAMWRITE
@@ -1643,19 +1708,25 @@ AssetLoaderTableNES:
     .dw $0000, $0000
     ;
     .db :Tiles_BG_Castle_NES
-    .dw Tiles_BG_Castle_NES, $2C80 | VRAMWRITE
+    .dw Tiles_BG_Castle_NES, VRAM_ADR_BG_LVL + $0380 | VRAMWRITE
     ;
     .db :Tiles_BG_Water_NES
-    .dw Tiles_BG_Water_NES, $3480 | VRAMWRITE
+    .dw Tiles_BG_Water_NES, VRAM_ADR_BG_LVL + $0B20 | VRAMWRITE
     ;
     .db :Tiles_BG_WaterCastle_NES
-    .dw Tiles_BG_WaterCastle_NES, $3680 | VRAMWRITE
+    .dw Tiles_BG_WaterCastle_NES, VRAM_ADR_BG_LVL + $0D20 | VRAMWRITE
     ;
     .db :Tiles_Cloud_NES
     .dw Tiles_Cloud_NES, $0A20 | VRAMWRITE
     ;
     .db :Tiles_Lift_NES
     .dw Tiles_Lift_NES, $0A20 | VRAMWRITE
+    ;
+    .db :Tiles_BG_Comm_Text0_NES
+    .dw Tiles_BG_Comm_Text0_NES, VRAM_ADR_BG + $1600 | VRAMWRITE
+    ;
+    .db :Tiles_BG_Comm_Text1_NES
+    .dw Tiles_BG_Comm_Text1_NES, VRAM_ADR_BG + $1E80 | VRAMWRITE
 .ENDS
 
 
@@ -1700,10 +1771,10 @@ sdscAuth:
 .SECTION "VDP Init. Data" FREE
 ;   VDP REG INIT. DATA
 vdpInitData:
-    .db $24         ; ENABLE MODE 4 AND HIDE LEFTMOST 8 PIXELS...
+    .db $24 | MODE_CTRL1    ; ENABLE MODE 4 AND HIDE LEFTMOST 8 PIXELS...
     .db $80         ; FOR REG 00 (MODE CONTROL 1)
     ;----------------------
-    .db $A0         ; SET BIT 7 AND ENABLE LINE INTERRUPTS
+    .db $A0 | MODE_CTRL2    ; SET BIT 7 AND ENABLE LINE INTERRUPTS
     .db $81         ; FOR REG 01 (MODE CONTROL 2)
     ;----------------------
     .db ((VRAM_ADR_NAMETBL >> $0A) | $01) & $FF
@@ -1730,7 +1801,13 @@ vdpInitData:
     .db $00         ; NO Y SCROLL...
     .db $89         ; FOR REG 09 (BACKGROUND Y SCROLL)
     ;----------------------
+.IF LINEMODE == LINE192P
     .db $07         ; LINE COUNTER AT $07
+.ELIF LINEMODE == LINE224P
+    .db $17         ; LINE COUNTER AT $17
+.ELSE
+    .db $1F         ; LINE COUNTER AT $1F
+.ENDIF
     .db $8A         ; FOR REG 0A (LINE COUNTER)
 .ENDS
 
@@ -1745,32 +1822,37 @@ WriteHoriBlock:
 .ENDR
     RET
 
-;   0x0101 - 0x0341
-; .REPT $40           ; 09 (8 + 1) bytes per iteration
-;     EXX
-;     OUT (C), L      ; WRITE VDP ADDRESS
-;     OUT (C), H
-;     ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-;     EXX
-;     OUTI            ; WRITE BYTE FOR CURRENT ROW
-; .ENDR
-; WriteVeriBlock_B:
-;     RET
-    
-;   0x0342 - 0x0602
-; .REPT $40           ; 11 (8 + 3) bytes per iteration
-;     EXX
-;     OUT (C), L      ; WRITE VDP ADDRESS
-;     OUT (C), H
-;     ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-;     EXX
-;     OUTI            ; WRITE WORD FOR CURRENT ROW
-;     OUTI
-; .ENDR
-; WriteVeriBlock_W:
-;     RET
-    
-WriteVeriBlock_W:
+;   240px
+WriteVeriBlock_W_26:
+    EXX
+    OUT (C), L      ; WRITE VDP ADDRESS
+    OUT (C), H
+    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+    EXX
+    OUTI            ; WRITE WORD FOR CURRENT ROW
+    OUTI
+    ; FALL THROUGH
+
+;   224px
+WriteVeriBlock_W_25:
+    EXX
+    OUT (C), L      ; WRITE VDP ADDRESS
+    OUT (C), H
+    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+    EXX
+    OUTI            ; WRITE WORD FOR CURRENT ROW
+    OUTI
+    EXX
+    OUT (C), L      ; WRITE VDP ADDRESS
+    OUT (C), H
+    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+    EXX
+    OUTI            ; WRITE WORD FOR CURRENT ROW
+    OUTI
+    ; FALL THROUGH
+
+;   192px
+WriteVeriBlock_W_23:
 .REPEAT $17         ; 11 (8 + 3) bytes per iteration
     EXX
     OUT (C), L      ; WRITE VDP ADDRESS
@@ -1950,9 +2032,9 @@ MarioThanksMessage:
 ;   "THANK YOU MARIO!"
     .dw swapBytes(xyToNameTbl_M(8, 7))
     .db StripeCount($20)
-    .dw $01F9, $0179, $01FA, $01FE, $017A, $0000
-    .dw $017B, $01F7, $017C, $0000
-    .dw $01F8, $01FA, $01FB, $017D, $01F7, $01FF
+    .dw BG_MACRO($01B5), BG_MACRO($0141), BG_MACRO($01B6), BG_MACRO($01F6), BG_MACRO($0142), $0000
+    .dw BG_MACRO($0143), BG_MACRO($01B3), BG_MACRO($0144), $0000
+    .dw BG_MACRO($01B4), BG_MACRO($01B6), BG_MACRO($01B7), BG_MACRO($0145), BG_MACRO($01B3), BG_MACRO($01F7)
     .db $00
 .ENDS
 
@@ -1961,9 +2043,9 @@ LuigiThanksMessage:
 ;   "THANK YOU LUIGI!"
     .dw swapBytes(xyToNameTbl_M(8, 7))
     .db StripeCount($20)
-    .dw $01F9, $0179, $01FA, $01FE, $017A, $0000
-    .dw $017B, $01F7, $017C, $0000
-    .dw $01F5, $017C, $017D, $0178, $017D, $01FF
+    .dw BG_MACRO($01B5), BG_MACRO($0141), BG_MACRO($01B6), BG_MACRO($01F6), BG_MACRO($0142), $0000
+    .dw BG_MACRO($0143), BG_MACRO($01B3), BG_MACRO($0144), $0000
+    .dw BG_MACRO($01B1), BG_MACRO($0144), BG_MACRO($0145), BG_MACRO($0140), BG_MACRO($0145), BG_MACRO($01F7)
     .db $00
 .ENDS
 
@@ -1972,16 +2054,16 @@ MushroomRetainerSaved:
 ;   "BUT OUR PRINCESS IS IN"
     .dw swapBytes(xyToNameTbl_M(5, 11))
     .db StripeCount($2C)
-    .dw $017E, $017C, $01F9, $0000
-    .dw $01F7, $017C, $01FB, $0000
-    .dw $01FC, $01FB, $017D, $01FE, $01F6, $01F4, $017F, $017F, $0000
-    .dw $017D, $017F, $0000
-    .dw $017D, $01FE
+    .dw BG_MACRO($0146), BG_MACRO($0144), BG_MACRO($01B5), $0000
+    .dw BG_MACRO($01B3), BG_MACRO($0144), BG_MACRO($01B7), $0000
+    .dw BG_MACRO($01F4), BG_MACRO($01B7), BG_MACRO($0145), BG_MACRO($01F6), BG_MACRO($01B2), BG_MACRO($01B0), BG_MACRO($0147), BG_MACRO($0147), $0000
+    .dw BG_MACRO($0145), BG_MACRO($0147), $0000
+    .dw BG_MACRO($0145), BG_MACRO($01F6)
 ;   "ANOTHER CASTLE!"
     .dw swapBytes(xyToNameTbl_M(5, 13))
     .db StripeCount($1E)
-    .dw $01FA, $01FE, $01F7, $01F9, $0179, $01F4, $01FB, $0000
-    .dw $01F6, $01FA, $017F, $01F9, $01F5, $01F4, $01FF
+    .dw BG_MACRO($01B6), BG_MACRO($01F6), BG_MACRO($01B3), BG_MACRO($01B5), BG_MACRO($0141), BG_MACRO($01B0), BG_MACRO($01B7), $0000
+    .dw BG_MACRO($01B2), BG_MACRO($01B6), BG_MACRO($0147), BG_MACRO($01B5), BG_MACRO($01B1), BG_MACRO($01B0), BG_MACRO($01F7)
     .db $00
 .ENDS
 
@@ -1990,10 +2072,10 @@ PrincessSaved1:
 ;   "YOUR QUEST IS OVER."
     .dw swapBytes(xyToNameTbl_M(7, 10))
     .db StripeCount($26)
-    .dw $017B, $01F7, $017C, $01FB, $0000
-    .dw $0180, $017C, $01F4, $017F, $01F9, $0000
-    .dw $017D, $017F, $0000
-    .dw $01F7, $0181, $01F4, $01FB, $0177
+    .dw BG_MACRO($0143), BG_MACRO($01B3), BG_MACRO($0144), BG_MACRO($01B7), $0000
+    .dw BG_MACRO($0148), BG_MACRO($0144), BG_MACRO($01B0), BG_MACRO($0147), BG_MACRO($01B5), $0000
+    .dw BG_MACRO($0145), BG_MACRO($0147), $0000
+    .dw BG_MACRO($01B3), BG_MACRO($0149), BG_MACRO($01B0), BG_MACRO($01B7), BG_MACRO($013F)
     .db $00
 .ENDS
 
@@ -2002,12 +2084,12 @@ PrincessSaved2:
 ;   "WE PRESENT YOU A NEW QUEST."
     .dw swapBytes(xyToNameTbl_M(3, 12))
     .db StripeCount($36)
-    .dw $0142, $01F4, $0000
-    .dw $01FC, $01FB, $01F4, $017F, $01F4, $01FE, $01F9, $0000
-    .dw $017B, $01F7, $017C, $0000
-    .dw $01FA, $0000
-    .dw $01FE, $01F4, $0142, $0000
-    .dw $0180, $017C, $01F4, $017F, $01F9, $0177
+    .dw BG_MACRO($010A), BG_MACRO($01B0), $0000
+    .dw BG_MACRO($01F4), BG_MACRO($01B7), BG_MACRO($01B0), BG_MACRO($0147), BG_MACRO($01B0), BG_MACRO($01F6), BG_MACRO($01B5), $0000
+    .dw BG_MACRO($0143), BG_MACRO($01B3), BG_MACRO($0144), $0000
+    .dw BG_MACRO($01B6), $0000
+    .dw BG_MACRO($01F6), BG_MACRO($01B0), BG_MACRO($010A), $0000
+    .dw BG_MACRO($0148), BG_MACRO($0144), BG_MACRO($01B0), BG_MACRO($0147), BG_MACRO($01B5), BG_MACRO($013F)
     .db $00
 .ENDS
 
@@ -2016,9 +2098,9 @@ WorldSelectMessage1:
 ;   "PUSH BUTTON 2"
     .dw swapBytes(xyToNameTbl_M(10, 15))
     .db StripeCount($1A)
-    .dw $01FC, $017C, $017F, $0179, $0000
-    .dw $017E, $017C, $01F9, $01F9, $01F7, $01FE, $0000
-    .dw $013A
+    .dw BG_MACRO($01F4), BG_MACRO($0144), BG_MACRO($0147), BG_MACRO($0141), $0000
+    .dw BG_MACRO($0146), BG_MACRO($0144), BG_MACRO($01B5), BG_MACRO($01B5), BG_MACRO($01B3), BG_MACRO($01F6), $0000
+    .dw BG_MACRO($0102)
     .db $00
 .ENDS
 
@@ -2027,10 +2109,10 @@ WorldSelectMessage2:
 ;   "TO SELECT A WORLD"
     .dw swapBytes(xyToNameTbl_M(8, 17))
     .db StripeCount($22)
-    .dw $01F9, $01F7, $0000
-    .dw $017F, $01F4, $01F5, $01F4, $01F6, $01F9, $0000
-    .dw $01FA, $0000
-    .dw $0142, $01F7, $01FB, $01F5, $0182
+    .dw BG_MACRO($01B5), BG_MACRO($01B3), $0000
+    .dw BG_MACRO($0147), BG_MACRO($01B0), BG_MACRO($01B1), BG_MACRO($01B0), BG_MACRO($01B2), BG_MACRO($01B5), $0000
+    .dw BG_MACRO($01B6), $0000
+    .dw BG_MACRO($010A), BG_MACRO($01B3), BG_MACRO($01B7), BG_MACRO($01B1), BG_MACRO($014A)
     .db $00
 .ENDS
 
@@ -2194,19 +2276,19 @@ TopStatusBarLine:
 ;   0x00 - 0x1C
     .db @end-TopStatusBarLine - 1
     ; PLAYER ICON
-    .dw swapBytes(xyToNameTbl_M(2, 0))
+    .dw swapBytes(xyToNameTblFixed_M(2, 0))
     .db StripeCount($02)
     .dw BG_MACRO($090F)
     ; 'W'
-    .dw swapBytes(xyToNameTbl_M(19, 0))
+    .dw swapBytes(xyToNameTblFixed_M(19, 0))
     .db StripeCount($02)
     .dw BG_MACRO($010A)
     ; CLOCK ICON
-    .dw swapBytes(xyToNameTbl_M(25, 0))
+    .dw swapBytes(xyToNameTblFixed_M(25, 0))
     .db StripeCount($02)
     .dw BG_MACRO($010E)
     ; '0  [COIN]x' 
-    .dw swapBytes(xyToNameTbl_M(10, 0))
+    .dw swapBytes(xyToNameTblFixed_M(10, 0))
     .db StripeCount($0A)
     .dw BG_MACRO($0100), BLANKTILE, BLANKTILE, BG_MACRO($090D), BG_MACRO($010C)
 @end:
@@ -2268,10 +2350,10 @@ WarpZoneWelcome:
     ; "WELCOME TO WARP ZONE!"
     .dw swapBytes(xyToNameTbl_M(04, 09))
     .db StripeCount($2A)
-    .dw $0142, $01F4, $01F5, $01F6, $01F7, $01F8, $01F4, BLANKTILE
-    .dw $01F9, $01F7, BLANKTILE
-    .dw $0142, $01FA, $01FB, $01FC, BLANKTILE
-    .dw $01FD, $01F7, $01FE, $01F4, $01FF
+    .dw BG_MACRO($010A), BG_MACRO($01B0), BG_MACRO($01B1), BG_MACRO($01B2), BG_MACRO($01B3), BG_MACRO($01B4), BG_MACRO($01B0), BLANKTILE
+    .dw BG_MACRO($01B5), BG_MACRO($01B3), BLANKTILE
+    .dw BG_MACRO($010A), BG_MACRO($01B6), BG_MACRO($01B7), BG_MACRO($01F4), BLANKTILE
+    .dw BG_MACRO($01F5), BG_MACRO($01B3), BG_MACRO($01F6), BG_MACRO($01B0), BG_MACRO($01F7)
     ; placeholder for left pipe
     .dw swapBytes(xyToNameTbl_M(05, 14))
     .db StripeCount($02)
@@ -2319,9 +2401,9 @@ Palette0_MTiles:
     ;.dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; black
     .dw BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0118), BG_MACRO($0112)  ; middle center
     ; Grass
-    .dw BLANKTILE, BLANKTILE, BLANKTILE, BG_MACRO($01B4)                    ; left
-    .dw BG_MACRO($01B5), BG_MACRO($01B6), BG_MACRO($01B7), BG_MACRO($01B8)  ; middle
-    .dw BLANKTILE, BG_MACRO($01B9), BLANKTILE, BLANKTILE                    ; right
+    .dw BLANKTILE, BLANKTILE, BLANKTILE, BG_MACRO($01A9)                    ; left
+    .dw BG_MACRO($01AA), BG_MACRO($01AB), BG_MACRO($01AC), BG_MACRO($01AD)  ; middle
+    .dw BLANKTILE, BG_MACRO($01AE), BLANKTILE, BLANKTILE                    ; right
     ; Mountain
     .dw BLANKTILE, BG_MACRO($0110), BG_MACRO($0110), BG_MACRO($0111)        ; left
     .dw BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113), BG_MACRO($0112)  ; left bottom
@@ -2331,29 +2413,29 @@ Palette0_MTiles:
     .dw BG_MACRO($0112), BG_MACRO($0112), BG_MACRO($0112), BG_MACRO($0112)  ; middle bottom
     ;.dw
     ; Bridge guardrail
-    .dw BLANKTILE, $115F, BLANKTILE, $115F                                  ; middle
-    .dw BLANKTILE, $115E, BLANKTILE, $115F                                  ; left
-    .dw BLANKTILE, $115F, BLANKTILE, $1160                                  ; right
-    .dw BLANKTILE, $015F, BLANKTILE, $0160                                  ; NES
+    .dw BLANKTILE, BG_MACRO($1127), BLANKTILE, BG_MACRO($1127)              ; middle
+    .dw BLANKTILE, BG_MACRO($1126), BLANKTILE, BG_MACRO($1127)              ; left
+    .dw BLANKTILE, BG_MACRO($1127), BLANKTILE, BG_MACRO($1128)              ; right
+    .dw BLANKTILE, BG_MACRO($0127), BLANKTILE, BG_MACRO($0128)              ; NES
     ; Chain
-    .dw $0164, $0194, $0194, $0164 ;$00, $0194, $0194, $00
+    .dw BG_MACRO($012C), BG_MACRO($015C), BG_MACRO($015C), BG_MACRO($012C)  ;$00, $0194, $0194, $00
     ; Trees
-    .dw BG_MACRO($0183), BG_MACRO($0189), BG_MACRO($0185), BG_MACRO($018A)  ; tall top, top half
-    .dw BG_MACRO($0183), BG_MACRO($0184), BG_MACRO($0185), BG_MACRO($0186)  ; short top
-    .dw BG_MACRO($0189), BG_MACRO($0184), BG_MACRO($018A), BG_MACRO($0186)  ; tall top, bottom half
+    .dw BG_MACRO($0180), BG_MACRO($0186), BG_MACRO($0182), BG_MACRO($0187)  ; tall top, top half
+    .dw BG_MACRO($0180), BG_MACRO($0181), BG_MACRO($0182), BG_MACRO($0183)  ; short top
+    .dw BG_MACRO($0186), BG_MACRO($0181), BG_MACRO($0187), BG_MACRO($0183)  ; tall top, bottom half
     ; Latern (NEW)
-    .dw $01C3, $01C4, $01F0, $01EC                                          ; LATERN LT
-    .dw $01F1, $01EE, $07C4, $01C6                                          ; LATERN RT
-    .dw $05C3, MT_BLANK, $01ED, $01C5                                       ; LATERN LB
-    .dw $01EF, MT_BLANK, $03C4, $01C7                                       ; LATERN RB
+    .dw BG_MACRO($0188), BG_MACRO($0189), BG_MACRO($01AD), BG_MACRO($01A9)  ; LATERN LT
+    .dw BG_MACRO($01AE), BG_MACRO($01AB), BG_MACRO($0789), BG_MACRO($018B)  ; LATERN RT
+    .dw BG_MACRO($0588), MT_BLANK, BG_MACRO($01AA), BG_MACRO($018A)         ; LATERN LB
+    .dw BG_MACRO($01AC), MT_BLANK, BG_MACRO($0389), BG_MACRO($018C)         ; LATERN RB
     ; --- METATILES WITH COLLISION START HERE ---
     ; Vertical Pipe
-    .dw BG_MACRO($1160), BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163)  ; warp pipe end left, points up
-    .dw BG_MACRO($1164), BG_MACRO($1165), BG_MACRO($1166), BG_MACRO($1167)  ; warp pipe end right, points up
-    .dw BG_MACRO($1160), BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163)  ; decoration pipe end left, points up
-    .dw BG_MACRO($1164), BG_MACRO($1165), BG_MACRO($1166), BG_MACRO($1167)  ; decoration pipe end right, points up
-    .dw BG_MACRO($1168), BG_MACRO($1168), BG_MACRO($1169), BG_MACRO($1169)  ; pipe shaft left
-    .dw BG_MACRO($116A), BG_MACRO($116A), BG_MACRO($116B), BG_MACRO($116B)  ; pipe shaft right
+    .dw BG_MACRO($115D), BG_MACRO($115E), BG_MACRO($115F), BG_MACRO($1160)  ; warp pipe end left, points up
+    .dw BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163), BG_MACRO($1164)  ; warp pipe end right, points up
+    .dw BG_MACRO($115D), BG_MACRO($115E), BG_MACRO($115F), BG_MACRO($1160)  ; decoration pipe end left, points up
+    .dw BG_MACRO($1161), BG_MACRO($1162), BG_MACRO($1163), BG_MACRO($1164)  ; decoration pipe end right, points up
+    .dw BG_MACRO($1165), BG_MACRO($1165), BG_MACRO($1166), BG_MACRO($1166)  ; pipe shaft left
+    .dw BG_MACRO($1167), BG_MACRO($1167), BG_MACRO($1168), BG_MACRO($1168)  ; pipe shaft right
     ; Tree Ledge
     .dw BG_MACRO($012B), BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($012E)  ; left edge
     .dw BG_MACRO($012D), BG_MACRO($012F), BG_MACRO($012D), BG_MACRO($0130)  ; middle
@@ -2363,39 +2445,39 @@ Palette0_MTiles:
     .dw BG_MACRO($0141), BG_MACRO($0142), BG_MACRO($0143), BG_MACRO($0144)  ; middle
     .dw BG_MACRO($0145), BG_MACRO($0146), BG_MACRO($0147), BG_MACRO($0148)  ; right edge
     ; Horizontal Pipe
-    .dw BG_MACRO($116C), BG_MACRO($116D), BG_MACRO($116E), BG_MACRO($116F)  ; sideways pipe end top
-    .dw BG_MACRO($1170), BG_MACRO($1171), BG_MACRO($1170), BG_MACRO($1171)  ; sideways pipe shaft top
-    .dw BG_MACRO($1172), BG_MACRO($1173), BG_MACRO($1169), BG_MACRO($1169)  ; sideways pipe joint top
-    .dw BG_MACRO($1174), BG_MACRO($1175), BG_MACRO($1176), BG_MACRO($1177)  ; sideways pipe end bottom
-    .dw BG_MACRO($1178), BG_MACRO($1179), BG_MACRO($1178), BG_MACRO($1179)  ; sideways pipe shaft bottom
-    .dw BG_MACRO($117A), BG_MACRO($117B), BG_MACRO($1169), BG_MACRO($1169)  ; sideways pipe joint bottom
+    .dw BG_MACRO($1169), BG_MACRO($116A), BG_MACRO($116B), BG_MACRO($116C)  ; sideways pipe end top
+    .dw BG_MACRO($116D), BG_MACRO($116E), BG_MACRO($116D), BG_MACRO($116E)  ; sideways pipe shaft top
+    .dw BG_MACRO($116F), BG_MACRO($1170), BG_MACRO($1166), BG_MACRO($1166)  ; sideways pipe joint top
+    .dw BG_MACRO($1171), BG_MACRO($1172), BG_MACRO($1173), BG_MACRO($1174)  ; sideways pipe end bottom
+    .dw BG_MACRO($1175), BG_MACRO($1176), BG_MACRO($1175), BG_MACRO($1176)  ; sideways pipe shaft bottom
+    .dw BG_MACRO($1177), BG_MACRO($1178), BG_MACRO($1166), BG_MACRO($1166)  ; sideways pipe joint bottom
     ; Seaplant
-    .dw $01BB, $01BC, $01BD, $01BE
+    .dw BG_MACRO($0180), BG_MACRO($0181), BG_MACRO($0182), BG_MACRO($0183)
     ; Blank for bricks/blocks that are hit
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
     ; All-Stars Castle MTs
-    .dw $01C8, $01C9, $01CA, $01CB                                          ; ceiling left
-    .dw $01CC, $01CD, $01CE, $01CF                                          ; ceiling right
-    .dw $01C8, $01C9, $01CE, $01CF                                          ; ceiling single
-    .dw $01B4, $01B5, $01B6, $01B7                                          ; floor top
-    .dw $11B4, $11B5, $11B6, $11B7                                          ; floor top (PRI)
-    .dw $01C0, $01BF, $01BC, $01BD                                          ; floor bottom
+    .dw BG_MACRO($018D), BG_MACRO($018E), BG_MACRO($018F), BG_MACRO($0190)  ; ceiling left
+    .dw BG_MACRO($0191), BG_MACRO($0192), BG_MACRO($0193), BG_MACRO($0194)  ; ceiling right
+    .dw BG_MACRO($018D), BG_MACRO($018E), BG_MACRO($0193), BG_MACRO($0194)  ; ceiling single
+    .dw BG_MACRO($0179), BG_MACRO($017A), BG_MACRO($017B), BG_MACRO($017C)  ; floor top
+    .dw BG_MACRO($1179), BG_MACRO($117A), BG_MACRO($117B), BG_MACRO($117C)  ; floor top (PRI)
+    .dw BG_MACRO($0185), BG_MACRO($0184), BG_MACRO($0181), BG_MACRO($0182)  ; floor bottom
 
-    .dw $01B8, $01B9, $01B6, $01B7                                          ; floor left top corner
-    .dw $01BA, $01BB, $01BC, $01BD                                          ; floor left side
-    .dw $01BE, $01BF, $01BC, $01BD                                          ; floor left bot corner
+    .dw BG_MACRO($017D), BG_MACRO($017E), BG_MACRO($017B), BG_MACRO($017C)  ; floor left top corner
+    .dw BG_MACRO($017F), BG_MACRO($0180), BG_MACRO($0181), BG_MACRO($0182)  ; floor left side
+    .dw BG_MACRO($0183), BG_MACRO($0184), BG_MACRO($0181), BG_MACRO($0182)  ; floor left bot corner
 
-    .dw $01B4, $01B5, $01C1, $01C2                                          ; floor right top corner
-    .dw $01C0, $01BF, $01C2, $01C2                                          ; floor right side
-    .dw $01C0, $01BF, $01C3, $01BD                                          ; floor right bot corner
+    .dw BG_MACRO($0179), BG_MACRO($017A), BG_MACRO($0186), BG_MACRO($0187)  ; floor right top corner
+    .dw BG_MACRO($0185), BG_MACRO($0184), BG_MACRO($0187), BG_MACRO($0187)  ; floor right side
+    .dw BG_MACRO($0185), BG_MACRO($0184), BG_MACRO($0188), BG_MACRO($0182)  ; floor right bot corner
 
-    .dw $01D0, $01F2, $01F3, $01D3                                          ; stairs end
-    .dw $01D4, $01D5, $01D6, $01D7                                          ; stairs end low
-    .dw $01D0, $01F2, $01D0, $01F2                                          ; stairs top
-    .dw $01D4, $01D5, $01D5, $01D4                                          ; stairs bottom
+    .dw BG_MACRO($0195), BG_MACRO($0138), BG_MACRO($0139), BG_MACRO($013A)  ; stairs end
+    .dw BG_MACRO($0199), BG_MACRO($019A), BG_MACRO($019B), BG_MACRO($019C)  ; stairs end low
+    .dw BG_MACRO($0195), BG_MACRO($0138), BG_MACRO($0195), BG_MACRO($0138)  ; stairs top
+    .dw BG_MACRO($0199), BG_MACRO($019A), BG_MACRO($019A), BG_MACRO($0199)  ; stairs bottom
     ; --- CLIMBABLE METATILES START HERE ---
     ; Flagpole
-    .dw BLANKTILE, BG_MACRO($017C), BLANKTILE, BG_MACRO($017D)              ; ball
+    .dw BLANKTILE, BG_MACRO($0179), BLANKTILE, BG_MACRO($017A)              ; ball
     .dw BG_MACRO($015A), BG_MACRO($015A), BG_MACRO($015B), BG_MACRO($015B)  ; shaft
     ; Blank for vines
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
@@ -2409,15 +2491,15 @@ Palette1_MTiles:
     .dw BG_MACRO($0356), BG_MACRO($0159), BLANKTILE, BG_MACRO($0155)        ; right
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; blank used for balance rope
     ; Castle
-    .dw BG_MACRO($118B), $183B, BG_MACRO($118C), $183B                      ; top (PRI)
-    .dw BG_MACRO($018B), $083B, BG_MACRO($018C), $083B                      ; top (NON PRI)
-    .dw $083B, $083B, BG_MACRO($0191), BG_MACRO($0191)                      ; window left
+    .dw BG_MACRO($1188), $183B, BG_MACRO($1189), $183B                      ; top (PRI)
+    .dw BG_MACRO($0188), $083B, BG_MACRO($0189), $083B                      ; top (NON PRI)
+    .dw $083B, $083B, BG_MACRO($018E), BG_MACRO($018E)                      ; window left
     .dw $083B, $083B, $083B, $083B                                          ; brick wall
-    .dw BG_MACRO($0191), BG_MACRO($0191), $083B, $083B                      ; window right
-    .dw BG_MACRO($118D), $183B, BG_MACRO($118E), $183B                      ; top with brick (PRI)
-    .dw BG_MACRO($018D), $083B, BG_MACRO($018E), $083B                      ; top with brick (NON PRI)
-    .dw BG_MACRO($018F), BG_MACRO($0191), BG_MACRO($0190), BG_MACRO($0191)  ; entry top
-    .dw BG_MACRO($0191), BG_MACRO($0191), BG_MACRO($0191), BG_MACRO($0191)  ; entry bottom
+    .dw BG_MACRO($018E), BG_MACRO($018E), $083B, $083B                      ; window right
+    .dw BG_MACRO($118A), $183B, BG_MACRO($118B), $183B                      ; top with brick (PRI)
+    .dw BG_MACRO($018A), $083B, BG_MACRO($018B), $083B                      ; top with brick (NON PRI)
+    .dw BG_MACRO($018C), BG_MACRO($018E), BG_MACRO($018D), BG_MACRO($018E)  ; entry top
+    .dw BG_MACRO($018E), BG_MACRO($018E), BG_MACRO($018E), BG_MACRO($018E)  ; entry bottom
     .dw $183B, $183B, $183B, $183B                                          ; brick wall PRIORITY (NEW)
     ; Tree Ledge Stump
     .dw BG_MACRO($0135), BG_MACRO($0139), BG_MACRO($0134), BG_MACRO($0138)  ; STUMP CENTER TOP
@@ -2429,9 +2511,9 @@ Palette1_MTiles:
     .dw BG_MACRO($0738), BG_MACRO($0139), BG_MACRO($013C), BG_MACRO($013A)  ; STUMP RIGHT BOTTOM
     .dw BG_MACRO($013B), BG_MACRO($0137), BG_MACRO($013C), BG_MACRO($013A)  ; STUMP SINGLE BOTTOM
     ; Fence
-    .dw BG_MACRO($017F), BG_MACRO($0180), BG_MACRO($0181), BG_MACRO($0182)
+    .dw BG_MACRO($017C), BG_MACRO($017D), BG_MACRO($017E), BG_MACRO($017F)
     ; Tree Trunk
-    .dw BG_MACRO($0187), BG_MACRO($0187), BG_MACRO($0188), BG_MACRO($0188)
+    .dw BG_MACRO($0184), BG_MACRO($0184), BG_MACRO($0185), BG_MACRO($0185)
     ; Mushroom Stump
     .dw BG_MACRO($0149), BG_MACRO($014A), BG_MACRO($0349), BG_MACRO($034A)  ; top
     .dw BG_MACRO($014A), BG_MACRO($014A), BG_MACRO($034A), BG_MACRO($034A)  ; bottom
@@ -2441,8 +2523,8 @@ Palette1_MTiles:
     .dw $083B, $083B, $083B, $083B                                          ; normal
     .dw $183B, $183B, $183B, $183B                                          ; unused (now used for brick priority)
     ; Rock Terrain
-    .dw BG_MACRO($019C), BG_MACRO($019D), BG_MACRO($019E), BG_MACRO($019F)
-    .dw BG_MACRO($119C), BG_MACRO($119D), BG_MACRO($119E), BG_MACRO($119F)  ; rock PRIORITY (NEW)
+    .dw BG_MACRO($0199), BG_MACRO($019A), BG_MACRO($019B), BG_MACRO($019C)
+    .dw BG_MACRO($1199), BG_MACRO($119A), BG_MACRO($119B), BG_MACRO($119C)  ; rock PRIORITY (NEW)
     ; Bricks with something in them
     .dw $0840, $083B, $0840, $083B                                          ; shiny with Power-UP
     .dw $0840, $083B, $0840, $083B                                          ; shiny with Vine
@@ -2457,16 +2539,16 @@ Palette1_MTiles:
     ; Hidden blocks
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with Coins
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; with 1-UP
-    .dw $01B4, $01B5, $01B6, $01B7                                          ; with Coins (underground)
-    .dw $0164, $0165, $0165, $0164                                          ; with Coins (castle)
+    .dw BG_MACRO($0179), BG_MACRO($017A), BG_MACRO($017B), BG_MACRO($017C)  ; with Coins (underground)
+    .dw BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($012D), BG_MACRO($012C)  ; with Coins (castle)
     ; Solid blocks
-    .dw BG_MACRO($01A0), BG_MACRO($01A1), BG_MACRO($01A2), BG_MACRO($01A3)  ; 3D block
-    .dw BG_MACRO($11A0), BG_MACRO($11A1), BG_MACRO($11A2), BG_MACRO($11A3)  ; 3D block PRIORITY (for pipes)
-    .dw $01D8, $01D9, $01DA, $01DB                                          ; white wall (castle levels)
-    .dw $11D8, $11D9, $11DA, $11DB                                          ; white wall (castle levels) PRI
+    .dw BG_MACRO($019D), BG_MACRO($019E), BG_MACRO($019F), BG_MACRO($01A0)  ; 3D block
+    .dw BG_MACRO($119D), BG_MACRO($119E), BG_MACRO($119F), BG_MACRO($11A0)  ; 3D block PRIORITY (for pipes)
+    .dw BG_MACRO($019D), BG_MACRO($019E), BG_MACRO($019F), BG_MACRO($01A0)  ; white wall (castle levels)
+    .dw BG_MACRO($119D), BG_MACRO($119E), BG_MACRO($119F), BG_MACRO($11A0)  ; white wall (castle levels) PRI
     ; Bridge
-    .dw BG_MACRO($117E), BLANKTILE, BG_MACRO($117E), BLANKTILE              ; PRIORITY
-    .dw BG_MACRO($017E), BLANKTILE, BG_MACRO($017E), BLANKTILE              ; NES
+    .dw BG_MACRO($117B), BLANKTILE, BG_MACRO($117B), BLANKTILE              ; PRIORITY
+    .dw BG_MACRO($017B), BLANKTILE, BG_MACRO($017B), BLANKTILE              ; NES
     ; Bullet Bill
     .dw BG_MACRO($114B), BG_MACRO($114C), BG_MACRO($115C), BG_MACRO($114D)  ; barrel
     .dw BG_MACRO($014E), BG_MACRO($014F), BG_MACRO($0150), BG_MACRO($0151)  ; top
@@ -2475,16 +2557,16 @@ Palette1_MTiles:
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; blank for jumpspring
     .dw BLANKTILE, $083B, BLANKTILE, $083B                                  ; half brick 
     ; Solid brick for water levels
-    .dw $01BF, $01C0, $01C1, $01C2
-    .dw $11BF, $11C0, $11C1, $11C2
+    .dw BG_MACRO($0184), BG_MACRO($0185), BG_MACRO($0186), BG_MACRO($0187)
+    .dw BG_MACRO($1184), BG_MACRO($1185), BG_MACRO($1186), BG_MACRO($1187)
     ; Half brick (unused?)
     ;.dw BLANKTILE, $083B, BLANKTILE, $083B
     ; Water pipe
-    .dw BG_MACRO($116C), BG_MACRO($116D), BG_MACRO($116E), BG_MACRO($116F)
-    .dw BG_MACRO($1174), BG_MACRO($1175), BG_MACRO($1176), BG_MACRO($1177)
+    .dw BG_MACRO($1169), BG_MACRO($116A), BG_MACRO($116B), BG_MACRO($116C)
+    .dw BG_MACRO($1171), BG_MACRO($1172), BG_MACRO($1173), BG_MACRO($1174)
     ; --- CLIMBABLE METATILES START HERE ---
     ; Flagball (unused)
-    .dw BLANKTILE, BG_MACRO($017C), BLANKTILE, BG_MACRO($017D)
+    .dw BLANKTILE, BG_MACRO($0179), BLANKTILE, BG_MACRO($017A)
 
     
 Palette2_MTiles:
@@ -2496,132 +2578,132 @@ Palette2_MTiles:
     .dw BG_MACRO($011F), BLANKTILE, BG_MACRO($0120), BLANKTILE              ; middle bottom
     .dw BG_MACRO($0121), BLANKTILE, BLANKTILE, BLANKTILE                    ; left bottom
     ; Water
-    .dw $01D1, $01E7, $01D2, $01E7                                          ; waves
-    .dw $01E7, $01E7, $01E7, $01E7                                          ; body
-    .dw $11D1, $01E7, $11D2, $01E7                                          ; waves (PRIORITY)
+    .dw BG_MACRO($0196), BG_MACRO($0198), BG_MACRO($0197), BG_MACRO($0198)  ; waves
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198)  ; body
+    .dw BG_MACRO($1196), BG_MACRO($0198), BG_MACRO($1197), BG_MACRO($0198)  ; waves (PRIORITY)
     ; Lava
-    .dw $11EC, $11ED, $11EE, $11EF                                          ; waves
-    .dw $1176, $1176, $1176, $1176                                          ; body
+    .dw BG_MACRO($11A9), BG_MACRO($11AA), BG_MACRO($11AB), BG_MACRO($11AC)  ; waves
+    .dw BG_MACRO($113E), BG_MACRO($113E), BG_MACRO($113E), BG_MACRO($113E)  ; body
     ; Stars for Night Levels
-    .dw $0000, $0000, $0000, $01CB
-    .dw $0000, $0000, $01CE, $0000
-    .dw $0000, $0000, $01D0, $0000
-    .dw $0000, $01CA, $0000, $0000
-    .dw $01CA, $0000, $0000, $0000
-    .dw $0000, $0000, $0000, $01CD
-    .dw $0000, $0000, $0000, $01CC
-    .dw $0000, $0000, $01CA, $0000
-    .dw $0000, $0000, $01CF, $0000
-    .dw $0000, $0000, $01CD, $0000
-    .dw $0000, $01CF, $0000, $0000
-    .dw $01CB, $0000, $0000, $0000
-    .dw $01CF, $0000, $0000, $0000
-    .dw $0000, $0000, $0000, $01CE
-    .dw $0000, $01CD, $0000, $0000
-    .dw $0000, $01CE, $0000, $0000
-    .dw $0000, $0000, $0000, $01CA
+    .dw $0000, $0000, $0000, BG_MACRO($0190)
+    .dw $0000, $0000, BG_MACRO($0193), $0000
+    .dw $0000, $0000, BG_MACRO($0195), $0000
+    .dw $0000, BG_MACRO($018F), $0000, $0000
+    .dw BG_MACRO($018F), $0000, $0000, $0000
+    .dw $0000, $0000, $0000, BG_MACRO($0192)
+    .dw $0000, $0000, $0000, BG_MACRO($0191)
+    .dw $0000, $0000, BG_MACRO($018F), $0000
+    .dw $0000, $0000, BG_MACRO($0194), $0000
+    .dw $0000, $0000, BG_MACRO($0192), $0000
+    .dw $0000, BG_MACRO($0194), $0000, $0000
+    .dw BG_MACRO($0190), $0000, $0000, $0000
+    .dw BG_MACRO($0194), $0000, $0000, $0000
+    .dw $0000, $0000, $0000, BG_MACRO($0193)
+    .dw $0000, BG_MACRO($0192), $0000, $0000
+    .dw $0000, BG_MACRO($0193), $0000, $0000
+    .dw $0000, $0000, $0000, BG_MACRO($018F)
     ; Background for Water Levels (Except area in W8-4)
-    .dw $0148, $0149, $01E7, $014A
-    .dw $014B, $014C, $014D, $014E
-    .dw $014F, $0150, $0151, $0152
-    .dw $01E7, $0153, $01E7, $01E7
-    .dw $0154, $0155, $0156, $0157
-    .dw $0158, $0150, $0159, $0152
-    .dw $015A, $015B, $015C, $015D
-    .dw $015E, $015F, $0160, $0161
-    .dw $0162, $0150, $0163, $0152
-    .dw $0164, $0165, $0166, $0167
-    .dw $0168, $0169, $016A, $016B
-    .dw $016C, $0155, $016D, $0157
-    .dw $016E, $016F, $015C, $015D
-    .dw $0170, $0171, $0172, $0161
-    .dw $0164, $0165, $0173, $0174
-    .dw $0168, $0169, $0175, $0176
-    .dw $01E7, $01E7, $01E7, $0177
-    .dw $01E7, $01E7, $0178, $0179
-    .dw $017A, $017B, $017C, $017D
-    .dw $017E, $0155, $017F, $0157
-    .dw $0180, $0181, $0159, $0182
-    .dw $0183, $014C, $0184, $014E
-    .dw $0185, $0186, $0187, $017D
-    .dw $0188, $0189, $0184, $018A
+    .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0198), BG_MACRO($0112)
+    .dw BG_MACRO($0113), BG_MACRO($0114), BG_MACRO($0115), BG_MACRO($0116)
+    .dw BG_MACRO($0117), BG_MACRO($0118), BG_MACRO($0119), BG_MACRO($011A)
+    .dw BG_MACRO($0198), BG_MACRO($011B), BG_MACRO($0198), BG_MACRO($0198)
+    .dw BG_MACRO($011C), BG_MACRO($011D), BG_MACRO($011E), BG_MACRO($011F)
+    .dw BG_MACRO($0120), BG_MACRO($0118), BG_MACRO($0121), BG_MACRO($011A)
+    .dw BG_MACRO($0122), BG_MACRO($0123), BG_MACRO($0124), BG_MACRO($0125)
+    .dw BG_MACRO($0126), BG_MACRO($0127), BG_MACRO($0128), BG_MACRO($0129)
+    .dw BG_MACRO($012A), BG_MACRO($0118), BG_MACRO($012B), BG_MACRO($011A)
+    .dw BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($012E), BG_MACRO($012F)
+    .dw BG_MACRO($0130), BG_MACRO($0131), BG_MACRO($0132), BG_MACRO($0133)
+    .dw BG_MACRO($0134), BG_MACRO($011D), BG_MACRO($0135), BG_MACRO($011F)
+    .dw BG_MACRO($0136), BG_MACRO($0137), BG_MACRO($0124), BG_MACRO($0125)
+    .dw BG_MACRO($0138), BG_MACRO($0139), BG_MACRO($013A), BG_MACRO($0129)
+    .dw BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($013B), BG_MACRO($013C)
+    .dw BG_MACRO($0130), BG_MACRO($0131), BG_MACRO($013D), BG_MACRO($013E)
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($013F)
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0140), BG_MACRO($0141)
+    .dw BG_MACRO($0142), BG_MACRO($0143), BG_MACRO($0144), BG_MACRO($0145)
+    .dw BG_MACRO($0146), BG_MACRO($011D), BG_MACRO($0147), BG_MACRO($011F)
+    .dw BG_MACRO($0148), BG_MACRO($0149), BG_MACRO($0121), BG_MACRO($014A)
+    .dw BG_MACRO($014B), BG_MACRO($0114), BG_MACRO($014C), BG_MACRO($0116)
+    .dw BG_MACRO($014D), BG_MACRO($014E), BG_MACRO($014F), BG_MACRO($0145)
+    .dw BG_MACRO($0150), BG_MACRO($0151), BG_MACRO($014C), BG_MACRO($0152)
     ; --- METATILES WITH COLLISION START HERE ---
     ; Cloud Terrain
     .dw BG_MACRO($0129), BG_MACRO($012A), BG_MACRO($0329), BG_MACRO($032A)
     ; Bowser's bridge
-    .dw $0195, $0196, $0195, $0197
+    .dw BG_MACRO($013B), BG_MACRO($013C), BG_MACRO($013B), BG_MACRO($013D)
     
 
 Palette3_MTiles:
     ; Background for water area in W8-4
-    .dw $0148, $0149, $014A, $014B
-    .dw $014C, $014D, $014E, $014F
-    .dw $01E7, $0150, $01E7, $0151
-    .dw $0152, $0153, $0154, $0155
-    .dw $01E7, $0156, $01E7, $0157
-    .dw $0158, $0159, $015A, $015B
-    .dw $01E7, $01E7, $01E7, $015C
-    .dw $01E7, $0150, $015D, $015E
-    .dw $01E7, $01E7, $015F, $0160
-    .dw $0161, $0162, $0163, $0164
-    .dw $0165, $0166, $0167, $0168
-    .dw $0158, $0159, $0169, $015B
-    .dw $016A, $016B, $016C, $016D
-    .dw $016E, $016F, $0170, $0171
-    .dw $016E, $0172, $0170, $0171
-    .dw $0173, $0149, $0174, $014B
-    .dw $0175, $0176, $0177, $0178
-    .dw $0179, $017A, $017B, $01E7
-    .dw $017C, $017D, $01E7, $017E
-    .dw $017F, $014D, $0180, $014F
-    .dw $016A, $0181, $016C, $0182
-    .dw $037B, $01E7, $0183, $0184
-    .dw $01E7, $0185, $015D, $015E
-    .dw $0186, $0153, $0154, $0155
-    .dw $0175, $0187, $0177, $0188
-    .dw $0165, $0189, $0167, $0164
-    .dw $018A, $016B, $018B, $018C
-    .dw $018D, $018E, $0177, $0178
-    .dw $018A, $018F, $0190, $0191
-    .dw $016E, $016F, $01E7, $0171
-    .dw $01E7, $0379, $01E7, $01E7
-    .dw $0192, $017A, $01E7, $01E7
-    .dw $01E7, $0185, $01E7, $0151
-    .dw $0158, $0159, $0193, $0194
-    .dw $0195, $0196, $0197, $0195
-    .dw $01C4, $01C5, $01C6, $01C7
-    .dw $01E7, $01DC, $015D, $01DD
-    .dw $01DE, $01DF, $01E0, $01E1
-    .dw $01E2, $0197, $0196, $01E2
+    .dw BG_MACRO($0110), BG_MACRO($0111), BG_MACRO($0112), BG_MACRO($0113)
+    .dw BG_MACRO($0114), BG_MACRO($0115), BG_MACRO($0116), BG_MACRO($0117)
+    .dw BG_MACRO($0198), BG_MACRO($0118), BG_MACRO($0198), BG_MACRO($0119)
+    .dw BG_MACRO($011A), BG_MACRO($011B), BG_MACRO($011C), BG_MACRO($011D)
+    .dw BG_MACRO($0198), BG_MACRO($011E), BG_MACRO($0198), BG_MACRO($011F)
+    .dw BG_MACRO($0120), BG_MACRO($0121), BG_MACRO($0122), BG_MACRO($0123)
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0124)
+    .dw BG_MACRO($0198), BG_MACRO($0118), BG_MACRO($0125), BG_MACRO($0126)
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0127), BG_MACRO($0128)
+    .dw BG_MACRO($0129), BG_MACRO($012A), BG_MACRO($012B), BG_MACRO($012C)
+    .dw BG_MACRO($012D), BG_MACRO($012E), BG_MACRO($012F), BG_MACRO($0130)
+    .dw BG_MACRO($0120), BG_MACRO($0121), BG_MACRO($0131), BG_MACRO($0123)
+    .dw BG_MACRO($0132), BG_MACRO($0133), BG_MACRO($0134), BG_MACRO($0135)
+    .dw BG_MACRO($0136), BG_MACRO($0137), BG_MACRO($0138), BG_MACRO($0139)
+    .dw BG_MACRO($0136), BG_MACRO($013A), BG_MACRO($0138), BG_MACRO($0139)
+    .dw BG_MACRO($013B), BG_MACRO($0111), BG_MACRO($013C), BG_MACRO($0113)
+    .dw BG_MACRO($013D), BG_MACRO($013E), BG_MACRO($013F), BG_MACRO($0140)
+    .dw BG_MACRO($0141), BG_MACRO($0142), BG_MACRO($0143), BG_MACRO($0198)
+    .dw BG_MACRO($0144), BG_MACRO($0145), BG_MACRO($0198), BG_MACRO($0146)
+    .dw BG_MACRO($0147), BG_MACRO($0115), BG_MACRO($0148), BG_MACRO($0117)
+    .dw BG_MACRO($0132), BG_MACRO($0149), BG_MACRO($0134), BG_MACRO($014A)
+    .dw BG_MACRO($0343), BG_MACRO($0198), BG_MACRO($014B), BG_MACRO($014C)
+    .dw BG_MACRO($0198), BG_MACRO($014D), BG_MACRO($0125), BG_MACRO($0126)
+    .dw BG_MACRO($014E), BG_MACRO($011B), BG_MACRO($011C), BG_MACRO($011D)
+    .dw BG_MACRO($013D), BG_MACRO($014F), BG_MACRO($013F), BG_MACRO($0150)
+    .dw BG_MACRO($012D), BG_MACRO($0151), BG_MACRO($012F), BG_MACRO($012C)
+    .dw BG_MACRO($0152), BG_MACRO($0133), BG_MACRO($0153), BG_MACRO($0154)
+    .dw BG_MACRO($0155), BG_MACRO($0156), BG_MACRO($013F), BG_MACRO($0140)
+    .dw BG_MACRO($0152), BG_MACRO($0157), BG_MACRO($0158), BG_MACRO($0159)
+    .dw BG_MACRO($0136), BG_MACRO($0137), BG_MACRO($0198), BG_MACRO($0139)
+    .dw BG_MACRO($0198), BG_MACRO($0341), BG_MACRO($0198), BG_MACRO($0198)
+    .dw BG_MACRO($015A), BG_MACRO($0142), BG_MACRO($0198), BG_MACRO($0198)
+    .dw BG_MACRO($0198), BG_MACRO($014D), BG_MACRO($0198), BG_MACRO($0119)
+    .dw BG_MACRO($0120), BG_MACRO($0121), BG_MACRO($015B), BG_MACRO($015C)
+    .dw BG_MACRO($0199), BG_MACRO($019A), BG_MACRO($019B), BG_MACRO($0199)
+    .dw BG_MACRO($0189), BG_MACRO($018A), BG_MACRO($018B), BG_MACRO($018C)
+    .dw BG_MACRO($0198), BG_MACRO($01A9), BG_MACRO($0125), BG_MACRO($01AA)
+    .dw BG_MACRO($01AB), BG_MACRO($01AC), BG_MACRO($01AD), BG_MACRO($01AE)
+    .dw BG_MACRO($01AF), BG_MACRO($019B), BG_MACRO($019A), BG_MACRO($01AF)
     ; Background for underground levels
-    .dw $01B4, $01B5, $01B6, $01B7
-    .dw $01B8, $01B9, $01BA, $03B6
-    .dw $01BB, MT_BLANK, $01B6, $01BC
-    .dw $01BD, $01BE, $03B6, $01BF
-    .dw $01C0, $01B6, $01C1, $01C2
+    .dw BG_MACRO($0179), BG_MACRO($017A), BG_MACRO($017B), BG_MACRO($017C)
+    .dw BG_MACRO($017D), BG_MACRO($017E), BG_MACRO($017F), BG_MACRO($037B)
+    .dw BG_MACRO($0180), MT_BLANK, BG_MACRO($017B), BG_MACRO($0181)
+    .dw BG_MACRO($0182), BG_MACRO($0183), BG_MACRO($037B), BG_MACRO($0184)
+    .dw BG_MACRO($0185), BG_MACRO($017B), BG_MACRO($0186), BG_MACRO($0187)
     ; Background for castle levels
-    .dw $0164, $0165, $0165, $0164
-    .dw $0166, $0167, $0167, $0166
-    .dw $0164, $01F0, $0165, $01F1 ; FLAME
-    .dw $0168, $0169, $016A, $0369
-    .dw $016B, $016C, $016D, $036C
-    .dw $0166, $01F0, $0167, $01F1 ; FLAME
+    .dw BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($012D), BG_MACRO($012C)
+    .dw BG_MACRO($012E), BG_MACRO($012F), BG_MACRO($012F), BG_MACRO($012E)
+    .dw BG_MACRO($012C), BG_MACRO($01AD), BG_MACRO($012D), BG_MACRO($01AE)  ; FLAME
+    .dw BG_MACRO($0130), BG_MACRO($0131), BG_MACRO($0132), BG_MACRO($0331)
+    .dw BG_MACRO($0133), BG_MACRO($0134), BG_MACRO($0135), BG_MACRO($0334)
+    .dw BG_MACRO($012E), BG_MACRO($01AD), BG_MACRO($012F), BG_MACRO($01AE)  ; FLAME
     ; Seaplant for water area background
-    .dw $01E7, $01E7, $01E7, $01EC  ; TOP LEFT
-    .dw $01E7, $01ED, $01E7, $01E7  ; TOP RIGHT
-    .dw $01E7, $01E7, $01EE, $01F0  ; BOT LEFT
-    .dw $01EF, $01F1, $01E7, $01E7  ; BOT RIGHT
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($01A9)  ; TOP LEFT
+    .dw BG_MACRO($0198), BG_MACRO($01AA), BG_MACRO($0198), BG_MACRO($0198)  ; TOP RIGHT
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($01AB), BG_MACRO($01AD)  ; BOT LEFT
+    .dw BG_MACRO($01AC), BG_MACRO($01AE), BG_MACRO($0198), BG_MACRO($0198)  ; BOT RIGHT
     ; --- METATILES WITH COLLISION START HERE ---
     ; Question Blocks
-    .dw BG_MACRO($01A9), BG_MACRO($01AA), BG_MACRO($01AB), BG_MACRO($01AC)  ; with coin
-    .dw BG_MACRO($01A9), BG_MACRO($01AA), BG_MACRO($01AB), BG_MACRO($01AC)  ; with power-UP
+    .dw BG_MACRO($01A1), BG_MACRO($01A2), BG_MACRO($01A3), BG_MACRO($01A4)  ; with coin
+    .dw BG_MACRO($01A1), BG_MACRO($01A2), BG_MACRO($01A3), BG_MACRO($01A4)  ; with power-UP
     ; Coins
-    .dw BG_MACRO($09B0), BG_MACRO($09B1), BG_MACRO($09B2), BG_MACRO($09B3)  ; normal
-    .dw BG_MACRO($01B0), BG_MACRO($01B1), BG_MACRO($01B2), BG_MACRO($01B3)  ; underwater
+    .dw BG_MACRO($09A5), BG_MACRO($09A6), BG_MACRO($09A7), BG_MACRO($09A8)  ; normal
+    .dw BG_MACRO($01A5), BG_MACRO($01A6), BG_MACRO($01A7), BG_MACRO($01A8)  ; underwater
     ; Empty Block
     .dw $0837, $0839, $0838, $083A
     ; Axe
-    .dw $01C4, $01C5, $01C6, $01C7
+    .dw BG_MACRO($0189), BG_MACRO($018A), BG_MACRO($018B), BG_MACRO($018C)
 
 .ENDS
 
@@ -2643,6 +2725,18 @@ Palette3_MTiles:
 
 Tiles_BG_Comm:
     .INCBIN "BG_Comm.zx7"
+.ENDS
+
+.SECTION "BG Common Tiles Text 0" SUPERFREE SLOT 2
+
+Tiles_BG_Comm_Text0:
+    .INCBIN "BG_Comm_Text0.zx7"
+.ENDS
+
+.SECTION "BG Common Tiles Text 1" SUPERFREE SLOT 2
+
+Tiles_BG_Comm_Text1:
+    .INCBIN "BG_Comm_Text1.zx7"
 .ENDS
 
 .SECTION "BG Titlescreen Tiles" BANK BANK_AREAENEMY SLOT 2 FREE
@@ -2766,6 +2860,18 @@ Tiles_SPR_RKoopa:
 
 Tiles_BG_Comm_NES:
     .INCBIN "BG_Comm.zx7"
+.ENDS
+
+.SECTION "BG Common Tiles Text 0 (NES)" SUPERFREE SLOT 2
+
+Tiles_BG_Comm_Text0_NES:
+    .INCBIN "BG_Comm_Text0.zx7"
+.ENDS
+
+.SECTION "BG Common Tiles Text 1 (NES)" SUPERFREE SLOT 2
+
+Tiles_BG_Comm_Text1_NES:
+    .INCBIN "BG_Comm_Text1.zx7"
 .ENDS
 
 .SECTION "BG Titlescreen Tiles (NES)" BANK BANK_PLAYERGFX04 SLOT 2 FREE
@@ -2892,9 +2998,9 @@ Pal_BG_Options:
 .SECTION "Options BG Sound Select TMAP" BANK BANK_PLAYERGFX04 SLOT 2 FREE
 Map_BG_SoundSelect:
 @Line1:
-    .dw $0195, $0196, $0197
+    .dw VRAM_IDX_BG + $005D, VRAM_IDX_BG + $005E, VRAM_IDX_BG + $005F
 @Line2:
-    .dw $0198, $0199, $0000
+    .dw VRAM_IDX_BG + $0060, VRAM_IDX_BG + $0061, BLANKTILE
 .ENDS
 
 ;-------------------------------------------------------------------------------------

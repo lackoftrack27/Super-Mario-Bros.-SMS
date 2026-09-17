@@ -1,4 +1,9 @@
-main.o
 smb.sms
+smbPAL.sms
+smb224p.sms
+smbPAL240p.sms
 smb.sym
+smbPAL.sym
+smb224p.sym
+smbPAL240p.sym
 SMS SMB.code-workspace

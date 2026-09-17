@@ -15,7 +15,6 @@ GameMode:
 
 InitializeArea:
     DI                              ;prevent interrupts from corrupting mem initialization
-
     LD A, (TitleLoadedFlag)         ;skip mem initialization if past initial load on title screen
     OR A
     JR NZ, +
@@ -44,7 +43,7 @@ InitializeArea:
     LD (CurrentPageLoc), A          ;also set as current page
     LD (BackloadingFlag), A         ;set flag here if halfway page or saved entry page number found
     CALL GetScreenPosition          ;get pixel coordinates for screen borders
-    LD HL, VRAM_ADR_NAMETBL + $40 | VRAMWRITE
+    LD HL, NT_ACTIVE_START | VRAMWRITE
     LD (CurrentNTAddr), HL          ;store name table address
     AND A, %00000001
     ADD A, A                        ;store LSB of page number in high nybble
@@ -313,52 +312,52 @@ CheckScrollEight:
 .SECTION "Animated Background Tile Initializations" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 AnimatedBGTileInits:
 @Coin:
-    .dw $3D00 | VRAMWRITE       ; VRAM ADDR
+    .dw VRAM_ADR_BG_SLOT1 | VRAMWRITE       ; VRAM ADDR
     .db StripeCount($04 * $20)  ; TILES PER FRAME IN LDI COUNT
     .dw CoinFrame0              ; STARTING TILE ADDR
     .db $03, $09, $03, $08      ; FRAME COUNT, TIMER COUNT, FRAME RESET, TIMER RESET
 @Grass:
-    .dw $3D80 | VRAMWRITE
+    .dw VRAM_ADR_BG_SLOT2 | VRAMWRITE
     .db $00                     ; N/A
     .dw GrassFrame0
     .db $03, $10, $03, $10
 @Latern:
-    .dw $3D80 | VRAMWRITE
+    .dw VRAM_ADR_BG_SLOT2 | VRAMWRITE
     .db StripeCount($04 * $20)
     .dw LaternFrame0
     .db $03, $10, $03, $10
 @Star4:
-    .dw $39A0 | VRAMWRITE
+    .dw VRAM_ADR_BG_STAR4 | VRAMWRITE
     .db $00                     ; N/A
     .dw Star4Frame0
     .db $08, $08, $08, $08
 @Star6:
-    .dw $3960 | VRAMWRITE
+    .dw VRAM_ADR_BG_STAR6 | VRAMWRITE
     .db $00                     ; N/A
     .dw Star6Frame0
     .db $08, $08, $08, $08
 @WaterA0:
-    .dw $3A20 | VRAMWRITE
+    .dw VRAM_ADR_BG_WATER | VRAMWRITE
     .db StripeCount($02 * $20)
     .dw WaterA0Frame0
     .db $08, $08, $08, $08
 @Lava:
-    .dw $3D80 | VRAMWRITE
+    .dw VRAM_ADR_BG_SLOT2 | VRAMWRITE
     .db $00                     ; N/A
     .dw LavaFrame0
     .db $08, $08, $08, $08
 @QBlock:
-    .dw $3C20 | VRAMWRITE
+    .dw VRAM_ADR_BG_SLOT0 | VRAMWRITE
     .db StripeCount($04 * $20)
     .dw QBlockFrame0
     .db $03, $0A, $03, $08
 @GrassStar:
-    .dw $3960 | VRAMWRITE
+    .dw VRAM_ADR_BG_STAR6 | VRAMWRITE
     .db $00                     ; N/A
     .dw GrassStarFrame0
     .db $10, $04, $10, $04
 @Seaplant:
-    .dw $3D80 | VRAMWRITE
+    .dw VRAM_ADR_BG_SLOT2 | VRAMWRITE
     .db $00                     ; N/A
     .dw SeaplantFrame0
     .db $04, $12, $04, $10
@@ -470,10 +469,10 @@ AnimateBGTiles:
     LD A, (BGTileQueue2SwitchFlag)
     OR A
     JR Z, @@UpdateTilePtr
-    LD DE, $3D80 | VRAMWRITE    ; GRASS
+    LD DE, VRAM_ADR_BG_SLOT2 | VRAMWRITE    ; GRASS
     BIT 1, A
     JR Z, @@SwitchVRAMAddr
-    LD DE, $3960 | VRAMWRITE    ; 6 STARS
+    LD DE, VRAM_ADR_BG_STAR6 | VRAMWRITE    ; 6 STARS
 @@SwitchVRAMAddr:
     LD (BGTileQueue2.VRAMAdr), DE
     XOR A, %00000010
@@ -3266,10 +3265,12 @@ SPixelLak:
 
 .SECTION "BridgeCollapseData" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 BridgeCollapseData:
-    .dw $6374   ;axe
-    .dw $63F0   ;chain
-    .dw $6470, $646C, $6468, $6464, $6460, $645C, $6458 ; bridge
-    .dw $6454, $6450, $644C, $6448, $6444, $6440
+    .dw xyToNameTbl_M(26, 13)  ;axe
+    .dw xyToNameTbl_M(24, 15)  ;chain
+    ; bridge
+    .dw xyToNameTbl_M(24, 17), xyToNameTbl_M(22, 17), xyToNameTbl_M(20, 17), xyToNameTbl_M(18, 17), xyToNameTbl_M(16, 17)
+    .dw xyToNameTbl_M(14, 17), xyToNameTbl_M(12, 17), xyToNameTbl_M(10, 17), xyToNameTbl_M(8, 17), xyToNameTbl_M(6, 17)
+    .dw xyToNameTbl_M(4, 17), xyToNameTbl_M(2, 17), xyToNameTbl_M(0, 17)
 .ENDS
 
 BridgeCollapse:
@@ -3614,7 +3615,7 @@ ProcessBowserHalf:
 BowserGfxDraw:
     LD L, <Enemy_Y_Position                 ;don't display enemy if it is below visible screen
     LD A, (HL)                              ;to avoid sprite terminator
-    SUB A, $D0
+    SUB A, YPOS_LOWBOUND
     INC L
     LD A, (HL)
     SBC A, $01
@@ -3884,7 +3885,7 @@ BowserSpriteFramesHFlip:
 BowserGfxDraw_NES:
     LD L, <Enemy_Y_Position                 ;don't display enemy if it is below visible screen
     LD A, (HL)                              ;to avoid sprite terminator
-    SUB A, $D0
+    SUB A, YPOS_LOWBOUND
     INC L
     LD A, (HL)
     SBC A, $01
@@ -4619,13 +4620,13 @@ DrawEraseRope:
     LD A, (DE)                                  ;to do something else
     OR A
     JP M, EraseR1
-    LD (HL), $8C                                ;otherwise put tile numbers for left
+    LD (HL), <BG_MACRO($0154)                   ;otherwise put tile numbers for left
     INC L
-    LD (HL), $01                                ;and right sides of rope in vram buffer
+    LD (HL), >BG_MACRO($0154)                   ;and right sides of rope in vram buffer
     INC L
-    LD (HL), $8D
+    LD (HL), <BG_MACRO($0155)
     INC L
-    LD (HL), $01
+    LD (HL), >BG_MACRO($0155)
     JP OtherRope                                ;jump to skip this part
 EraseR1:
     XOR A                                       ;put blank tiles in vram buffer
@@ -4678,13 +4679,13 @@ SkipRope1:
     POP AF                                      ;pull first copy of vertical speed from stack
     OR A
     JP P, EraseR2                               ;if moving upwards (note inversion earlier), skip this
-    LD (HL), $8C                                ;otherwise put tile numbers for left
+    LD (HL), <BG_MACRO($0154)                   ;otherwise put tile numbers for left
     INC L
-    LD (HL), $01                                ;and right sides of rope in vram
+    LD (HL), >BG_MACRO($0154)                   ;and right sides of rope in vram
     INC L
-    LD (HL), $8D                                ;transfer buffer
+    LD (HL), <BG_MACRO($0155)                   ;transfer buffer
     INC L
-    LD (HL), $01
+    LD (HL), >BG_MACRO($0155)
     JP EndRp                                    ;jump to skip this part
 EraseR2:
     XOR A                                       ;put blank tiles in vram buffer
@@ -4721,10 +4722,15 @@ StoreRopeY:
     SUB A, SMS_PIXELYOFFSET                     ;subtract offset to adjust to SMS resolution
     AND A, $F8                                  ;remove unwanted bits (round down to whole tile)
     LD L, A                                     ;store in HL
-    LD H, $0C                                   ;set bits to factor in NT base and VDP Write command
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE) >> $03   ;set bits to factor in NT base and VDP Write command
     ADD HL, HL                                  ;shift into the correct place
     ADD HL, HL                                  ;tile -> row addr ($08 -> $40)
     ADD HL, HL
+.IF LINEMODE != LINE192P
+    LD A, H
+    ADD A, >VRAM_ADR_NAMETBL & $0F
+    LD H, A
+.ENDIF
 ;
     LD A, (SecondaryHardMode)                   ;if secondary hard mode flag set,
     OR A
@@ -5456,15 +5462,15 @@ BlockGfxData:
     .dw $1837, $1838, $1839, $183A                                          ; EMPTY BLOCK MT (PRIORITY)
 
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE                          ; BLANK MT
-    .dw $01E7, $01E7, $01E7, $01E7                                          ; WATER MT
+    .dw BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198), BG_MACRO($0198)  ; WATER MT
     ;
-    .dw $01B4, $01B6, $01B5, $01B7
-    .dw $01B8, $01BA, $01B9, $03B6
-    .dw $01BB, $01B6, MT_BLANK, $01BC   ; COIN
-    .dw $01BD, $01B6, $01BE, $01BF      ; COIN
+    .dw BG_MACRO($0179), BG_MACRO($017B), BG_MACRO($017A), BG_MACRO($017C)
+    .dw BG_MACRO($017D), BG_MACRO($017F), BG_MACRO($017E), BG_MACRO($037B)
+    .dw BG_MACRO($0180), BG_MACRO($017B), MT_BLANK, BG_MACRO($0181)         ; COIN
+    .dw BG_MACRO($0182), BG_MACRO($017B), BG_MACRO($0183), BG_MACRO($0184)  ; COIN
     ;
-    .dw $0164, $0165, $0165, $0164
-    .dw $0166, $0167, $0167, $0166
+    .dw BG_MACRO($012C), BG_MACRO($012D), BG_MACRO($012D), BG_MACRO($012C)
+    .dw BG_MACRO($012E), BG_MACRO($012F), BG_MACRO($012F), BG_MACRO($012E)
 .ENDS
 
 RemoveCoin_Axe:
@@ -5566,12 +5572,17 @@ PutBlockMetatile:
     JP Z, PutBlockMetatile_RHalf
 ;   CONVERT BLOCK BUFFER ROW TO NAMETABLE ROW
     LD A, IXL
-    ADD A, $08  ; SKIP 1ST ROW (STATUS BAR)
+    ADD A, (NT_ACTIVE_START - VRAM_ADR_NAMETBL) / $08
     LD L, A
-    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE)  >> $03
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE) >> $03
     ADD HL, HL
     ADD HL, HL
     ADD HL, HL
+.IF LINEMODE != LINE192P
+    LD A, H
+    ADD A, >VRAM_ADR_NAMETBL & $0F
+    LD H, A
+.ENDIF
 ;   NAMETABLE ROW LOW BYTE + COLUMN
     LD A, B
     ADD A, L
@@ -5624,12 +5635,17 @@ RemBridge:
 PutBlockMetatile_RHalf:
 ;   CONVERT BLOCK BUFFER ROW TO NAMETABLE ROW
     LD A, IXL
-    ADD A, $08  ; SKIP 1ST ROW (STATUS BAR)
+    ADD A, (NT_ACTIVE_START - VRAM_ADR_NAMETBL) / $08
     LD L, A
-    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE)  >> $03
+    LD H, (>VRAM_ADR_NAMETBL | >VRAMWRITE) >> $03
     ADD HL, HL
     ADD HL, HL
     ADD HL, HL
+.IF LINEMODE != LINE192P
+    LD A, H
+    ADD A, >VRAM_ADR_NAMETBL & $0F
+    LD H, A
+.ENDIF
 ;   NAMETABLE ROW LOW BYTE + COLUMN
     LD A, B
     ADD A, L
@@ -5896,7 +5912,7 @@ UpdateNumber:
     LD DE, -$000C
     ADD HL, DE
     LD A, (HL)
-    CP A, BG_TILE_OFFSET
+    OR A
     JP NZ, NoZSup                       ;if zero, overwrite with space tile for zero suppression
     LD (HL), BLANKTILE
     INC L
@@ -7970,7 +7986,7 @@ HandlePipeEntry:
     INC L
 GetWNum:
     LD A, (HL)                          ;get warp zone numbers
-    SUB A, BG_TILE_OFFSET + 1           ;decrement for use as world number
+    DEC A                               ;decrement for use as world number
     LD (WorldNumber), A                 ;store as world number and offset
     ADD A, A
     LD HL, WorldAddrOffsets             ;get offset to where this world's area offsets are

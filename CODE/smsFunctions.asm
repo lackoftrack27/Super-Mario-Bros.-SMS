@@ -31,7 +31,7 @@ turnOffVblankInts:
     JR +
 turnOffScreen:
 ;   TURN OFF SCREEN (AND DISABLE VDP INTS)
-    LD A, $80   ; BIT 7 SET (OFFICAL DOCS SAY TO DO SO...)
+    LD A, $80 | MODE_CTRL2   ; BIT 7 SET (OFFICAL DOCS SAY TO DO SO...)
     JR +
 turnOnScreen:
 ;   TURN ON SCREEN (AND VDP INTS)

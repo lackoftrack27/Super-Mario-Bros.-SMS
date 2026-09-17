@@ -683,7 +683,8 @@ BGColumn6A:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_00
     .db $0A, MT_WATERBG_01
-    .db $8B, MT_WATERBG_02
+    .db $0B, MT_WATERBG_02
+    .db $8C, MT_WATERBG_17
 
 BGColumn6B:
     .db $06, MT_WATER
@@ -691,7 +692,8 @@ BGColumn6B:
     .db $08, MT_WATER
     .db $09, MT_WATER
     .db $0A, MT_WATERBG_03
-    .db $8B, MT_WATERBG_04
+    .db $0B, MT_WATERBG_04
+    .db $8C, MT_WATERBG_16
 
 BGColumn6C:
     .db $06, MT_WATER
@@ -699,7 +701,8 @@ BGColumn6C:
     .db $08, MT_WATER
     .db $09, MT_WATER
     .db $0A, MT_WATER
-    .db $8B, MT_WATERBG_05
+    .db $0B, MT_WATERBG_05
+    .db $8C, MT_WATERBG_17
 
 BGColumn6D:
     .db $06, MT_WATER
@@ -707,7 +710,8 @@ BGColumn6D:
     .db $08, MT_WATER
     .db $09, MT_WATER
     .db $0A, MT_WATER
-    .db $8B, MT_WATERBG_04
+    .db $0B, MT_WATERBG_04
+    .db $8C, MT_WATERBG_16
 
 BGColumn6E:
     .db $06, MT_WATER
@@ -715,7 +719,8 @@ BGColumn6E:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_06
     .db $0A, MT_WATERBG_07
-    .db $8B, MT_WATERBG_08
+    .db $0B, MT_WATERBG_08
+    .db $8C, MT_WATERBG_17
 
 BGColumn6F:
     .db $06, MT_WATER
@@ -723,7 +728,8 @@ BGColumn6F:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_09
     .db $0A, MT_WATERBG_0A
-    .db $8B, MT_WATERBG_0B
+    .db $0B, MT_WATERBG_0B
+    .db $8C, MT_WATERBG_16
 
 BGColumn70:
     .db $06, MT_WATER
@@ -731,7 +737,8 @@ BGColumn70:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_0C
     .db $0A, MT_WATERBG_0D
-    .db $8B, MT_WATERBG_08
+    .db $0B, MT_WATERBG_08
+    .db $8C, MT_WATERBG_17
 
 BGColumn71:
     .db $06, MT_WATER
@@ -739,7 +746,8 @@ BGColumn71:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_0E
     .db $0A, MT_WATERBG_0F
-    .db $8B, MT_WATERBG_0B
+    .db $0B, MT_WATERBG_0B
+    .db $8C, MT_WATERBG_16
 
 BGColumn72:
     .db $06, MT_WATER
@@ -747,7 +755,8 @@ BGColumn72:
     .db $08, MT_WATER
     .db $09, MT_WATER
     .db $0A, MT_WATERBG_10
-    .db $8B, MT_WATERBG_05
+    .db $0B, MT_WATERBG_05
+    .db $8C, MT_WATERBG_17
 
 BGColumn73:
     .db $06, MT_WATER
@@ -755,7 +764,8 @@ BGColumn73:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_11
     .db $0A, MT_WATERBG_12
-    .db $8B, MT_WATERBG_13
+    .db $0B, MT_WATERBG_13
+    .db $8C, MT_WATERBG_16
 
 BGColumn74:
     .db $06, MT_WATER
@@ -763,7 +773,8 @@ BGColumn74:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_14
     .db $0A, MT_WATERBG_15
-    .db $8B, MT_WATERBG_02
+    .db $0B, MT_WATERBG_02
+    .db $8C, MT_WATERBG_17
 
 BGColumn75:
     .db $06, MT_WATER
@@ -771,7 +782,8 @@ BGColumn75:
     .db $08, MT_WATER
     .db $09, MT_WATERBG_04
     .db $0A, MT_WATERBG_16
-    .db $8B, MT_WATERBG_13
+    .db $0B, MT_WATERBG_13
+    .db $8C, MT_WATERBG_16
 
 BGColumn76:
     .db $06, MT_WATER
@@ -779,7 +791,8 @@ BGColumn76:
     .db $08, MT_WATERBG_07
     .db $09, MT_WATERBG_08
     .db $0A, MT_WATERBG_17
-    .db $8B, MT_WATERBG_02
+    .db $0B, MT_WATERBG_02
+    .db $8C, MT_WATERBG_17
 
 BGColumn77:
     .db $06, MT_WATER
@@ -787,7 +800,8 @@ BGColumn77:
     .db $08, MT_WATERBG_0F
     .db $09, MT_WATERBG_0B
     .db $0A, MT_WATERBG_16
-    .db $8B, MT_WATERBG_13
+    .db $0B, MT_WATERBG_13
+    .db $8C, MT_WATERBG_16
 
 ;   ---
 
@@ -959,7 +973,8 @@ BGColumn8E:
     .db $08, MT_UGND04
     .db $09, MT_UGND00
     .db $0A, MT_UGND01
-    .db $8B, MT_UGND02
+    .db $0B, MT_UGND02
+    .db $8C, MT_UGND04
 
 BGColumn8F:
     .db $00, MT_UGND04
@@ -973,7 +988,8 @@ BGColumn8F:
     .db $08, MT_UGND01
     .db $09, MT_UGND02
     .db $0A, MT_UGND03
-    .db $8B, MT_UGND04
+    .db $0B, MT_UGND04
+    .db $8C, MT_UGND01
 
 BGColumn90:
     .db $00, MT_UGND03
@@ -987,7 +1003,8 @@ BGColumn90:
     .db $08, MT_UGND03
     .db $09, MT_UGND01
     .db $0A, MT_UGND00
-    .db $8B, MT_UGND02
+    .db $0B, MT_UGND02
+    .db $8C, MT_UGND03
 
 BGColumn91:
     .db $00, MT_UGND01
@@ -1001,7 +1018,8 @@ BGColumn91:
     .db $08, MT_UGND01
     .db $09, MT_UGND04
     .db $0A, MT_UGND02
-    .db $8B, MT_UGND03
+    .db $0B, MT_UGND03
+    .db $8C, MT_UGND01
 
 BGColumn92:
     .db $00, MT_UGND02
@@ -1015,7 +1033,8 @@ BGColumn92:
     .db $08, MT_UGND03
     .db $09, MT_UGND02
     .db $0A, MT_UGND01
-    .db $8B, MT_UGND00
+    .db $0B, MT_UGND00
+    .db $8C, MT_UGND03
 
 BGColumn93:
     .db $00, MT_UGND04
@@ -1029,7 +1048,8 @@ BGColumn93:
     .db $08, MT_UGND00
     .db $09, MT_UGND01
     .db $0A, MT_UGND03
-    .db $8B, MT_UGND04
+    .db $0B, MT_UGND04
+    .db $8C, MT_UGND00
 
 BGColumn94:
     .db $00, MT_UGND02
@@ -1043,7 +1063,8 @@ BGColumn94:
     .db $08, MT_UGND02
     .db $09, MT_UGND04
     .db $0A, MT_UGND02
-    .db $8B, MT_UGND03
+    .db $0B, MT_UGND03
+    .db $8C, MT_UGND02
 
 BGColumn95:
     .db $00, MT_UGND03
@@ -1057,7 +1078,8 @@ BGColumn95:
     .db $08, MT_UGND00
     .db $09, MT_UGND03
     .db $0A, MT_UGND04
-    .db $8B, MT_UGND01
+    .db $0B, MT_UGND01
+    .db $8C, MT_UGND00
 
 BGColumn96:
     .db $00, MT_UGND02
@@ -1071,7 +1093,8 @@ BGColumn96:
     .db $08, MT_UGND02
     .db $09, MT_UGND04
     .db $0A, MT_UGND02
-    .db $8B, MT_UGND03
+    .db $0B, MT_UGND03
+    .db $8C, MT_UGND02
 
 BGColumn97:
     .db $00, MT_UGND03
@@ -1085,7 +1108,8 @@ BGColumn97:
     .db $08, MT_UGND00
     .db $09, MT_UGND03
     .db $0A, MT_UGND04
-    .db $8B, MT_UGND01
+    .db $0B, MT_UGND01
+    .db $8C, MT_UGND00
 
 BGColumn98:
     .db $00, MT_UGND03
@@ -1099,7 +1123,8 @@ BGColumn98:
     .db $08, MT_UGND00
     .db $09, MT_UGND03
     .db $0A, MT_UGND04
-    .db $8B, MT_UGND01
+    .db $0B, MT_UGND01
+    .db $8C, MT_UGND00
 
 BGColumn99:
     .db $00, MT_UGND00
@@ -1113,7 +1138,8 @@ BGColumn99:
     .db $08, MT_UGND04
     .db $09, MT_UGND00
     .db $0A, MT_UGND01
-    .db $8B, MT_UGND02
+    .db $0B, MT_UGND02
+    .db $8C, MT_UGND04
 
 ;   ---
 
@@ -1129,7 +1155,8 @@ BGColumn9A:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumn9B:
     .db $00, MT_BGCASTLE_00
@@ -1143,7 +1170,8 @@ BGColumn9B:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumn9C:
     .db $00, MT_BGCASTLE_00
@@ -1157,7 +1185,8 @@ BGColumn9C:
     .db $08, MT_BGCASTLE_02
     .db $09, MT_BGCASTLE_04
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumn9D:
     .db $00, MT_BGCASTLE_00
@@ -1171,7 +1200,8 @@ BGColumn9D:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumn9E:
     .db $00, MT_BGCASTLE_00
@@ -1185,7 +1215,8 @@ BGColumn9E:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_05
     .db $0A, MT_BGCASTLE_04
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumn9F:
     .db $00, MT_BGCASTLE_00
@@ -1199,7 +1230,8 @@ BGColumn9F:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumnA0:
     .db $00, MT_BGCASTLE_00
@@ -1213,7 +1245,8 @@ BGColumnA0:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_01
     .db $0A, MT_BGCASTLE_01
-    .db $8B, MT_BGCASTLE_01
+    .db $0B, MT_BGCASTLE_01
+    .db $8C, MT_BGCASTLE_01
 
 BGColumnA1:
     .db $00, MT_BGCASTLE_00
@@ -1227,7 +1260,8 @@ BGColumnA1:
     .db $08, MT_BGCASTLE_00
     .db $09, MT_BGCASTLE_00
     .db $0A, MT_BGCASTLE_00
-    .db $8B, MT_BGCASTLE_00
+    .db $0B, MT_BGCASTLE_00
+    .db $8C, MT_BGCASTLE_00
 
 ;   ---
 
@@ -1237,7 +1271,8 @@ BGColumnA2:
     .db $08, MT_SEAPLANT_00
     .db $09, MT_SEAPLANT_02
     .db $0A, MT_SEAPLANT_02
-    .db $8B, MT_WATERBG_05
+    .db $0B, MT_WATERBG_05
+    .db $8C, MT_WATERBG_17
 
 BGColumnA3:
     .db $06, MT_WATER
@@ -1245,7 +1280,8 @@ BGColumnA3:
     .db $08, MT_SEAPLANT_01
     .db $09, MT_SEAPLANT_03
     .db $0A, MT_SEAPLANT_03
-    .db $8B, MT_WATERBG_04
+    .db $0B, MT_WATERBG_04
+    .db $8C, MT_WATERBG_16
 
 BGColumnA4:
     .db $06, MT_SEAPLANT_00
@@ -1253,7 +1289,8 @@ BGColumnA4:
     .db $08, MT_SEAPLANT_02
     .db $09, MT_WATERBG_14
     .db $0A, MT_WATERBG_15
-    .db $8B, MT_WATERBG_02
+    .db $0B, MT_WATERBG_02
+    .db $8C, MT_WATERBG_17
 
 BGColumnA5:
     .db $06, MT_SEAPLANT_01
@@ -1261,5 +1298,6 @@ BGColumnA5:
     .db $08, MT_SEAPLANT_03
     .db $09, MT_WATERBG_04
     .db $0A, MT_WATERBG_16
-    .db $8B, MT_WATERBG_13
+    .db $0B, MT_WATERBG_13
+    .db $8C, MT_WATERBG_16
 .ENDS

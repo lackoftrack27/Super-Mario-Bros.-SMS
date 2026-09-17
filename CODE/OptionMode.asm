@@ -1,5 +1,8 @@
 ;-------------------------------------------------------------------------------------
 
+.DEFINE MUSHROOM_TILE       VRAM_IDX_BG + $0062
+.DEFINE DIGIT_TILE_START    VRAM_IDX_BG + $0063
+
 OptionMode:
     ; LOAD BACKGROUND DATA
     LD A, :Tiles_BG_Options
@@ -8,7 +11,7 @@ OptionMode:
     LD DE, VRAM_ADR_BG | VRAMWRITE
     CALL zx7_decompressVRAM
     LD HL, Map_BG_Options
-    LD DE, VRAM_ADR_NAMETBL | VRAMWRITE
+    LD DE, VRAM_ADR_NAMETBL + OPTION_OFFSET | VRAMWRITE
     CALL zx7_decompressVRAM
     LD HL, $0000 | CRAMWRITE
     RST setVDPAddress
@@ -19,15 +22,15 @@ OptionMode:
     LD A, (FMDetectedFlag)
     OR A
     JR Z, InitializeMenu
-    LD HL, $2048 | VRAMWRITE
+    LD HL, VRAM_ADR_NAMETBL + $0048 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
     LD HL, Map_BG_SoundSelect@Line1
-    LD BC, $0600 + VDPDATA_PORT
+    LD B, $06
     OTIR
-    LD HL, $20C8 | VRAMWRITE
+    LD HL, VRAM_ADR_NAMETBL + $00C8 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
     LD HL, Map_BG_SoundSelect@Line2
-    LD BC, $0600 + VDPDATA_PORT
+    LD B, $06
     OTIR
 InitializeMenu:
     LD A, BANK_SLOT2
@@ -50,11 +53,9 @@ InitializeMenu:
     LD (PlayerAnimTimerSet), A
     LD A, $40
     LD (DisableScreenFlag), A
-    LD A, $D0
-    LD (Sprite_Y_Position + $09), A
     LD A, $20
     LD (Player_Rel_XPos), A
-    ADD A, SMS_PIXELYOFFSET
+    ADD A, SMS_PIXELYOFFSET + (OPTION_OFFSET / 8)
     LD (Player_Rel_YPos), A
     CALL PlayerGfxHandler
     ;
@@ -87,7 +88,7 @@ OptionsCheckJoypad:
     ; ONLY DO SOUND DEBUG IF FLAG IS SET
     LD A, (Temp_Bytes + $02)
     OR A
-    JP NZ, OptionCheckPause_Debug
+    JR NZ, OptionCheckPause_Debug
     ; --- BUTTON UP/DOWN PROCESS ---
     LD A, (HL)
     AND A, bitValue(SMS_BTN_UP) | bitValue(SMS_BTN_DOWN)
@@ -146,7 +147,7 @@ OptionCheckPause_Debug:
     CALL SndStopAll         ; PSG, CLEARS FLAGS
     CALL SilenceAllSound    ; FM, CLEARS FLAGS (ALSO REDUNDANTLY STOPS PSG)
         ; RESET MUSHROOM SELECTOR
-    LD HL, $2584 | VRAMWRITE
+    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
     LD B, $08
     XOR A
@@ -159,15 +160,12 @@ OptionCheckPause_Debug:
     XOR A
     LD (Temp_Bytes + $03), A
         ; SET SELECTOR FOR SOUND TEST
-    LD C, VDPCON_PORT
-    LD HL, $019A
-    LD B, $25 | >VRAMWRITE
-    LD A, $84
-    OUT (C), A
-    OUT (C), B
-    DEC C
-    OUT (C), L
-    OUT (C), H
+    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+    LD A, <MUSHROOM_TILE
+    OUT (VDPDATA_PORT), A
+    LD A, >MUSHROOM_TILE
+    OUT (VDPDATA_PORT), A
         ; DRAW SOUND ID
     LD HL, Temp_Bytes + $03
     JR @DrawSndID
@@ -226,7 +224,7 @@ OptionCheckPause_Debug:
 +:
     ; DRAW SND ID
     EX DE, HL
-    LD HL, $2588 | VRAMWRITE
+    LD HL, VRAM_ADR_NAMETBL + $0588 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
         ; LEFT DIGIT
     LD A, (DE)
@@ -235,7 +233,7 @@ OptionCheckPause_Debug:
     RRCA
     RRCA
     RRCA
-    ADD A, $9B
+    ADD A, <DIGIT_TILE_START
     OUT (VDPDATA_PORT), A
     LD A, (IX + 0)                  ;vdp delay
     LD A, $01
@@ -243,7 +241,7 @@ OptionCheckPause_Debug:
         ; RIGHT DIGIT
     LD A, (DE)
     AND A, $0F
-    ADD A, $9B
+    ADD A, <DIGIT_TILE_START
     OUT (VDPDATA_PORT), A
     LD A, (IX + 0)                  ;vdp delay
     LD A, $01
@@ -289,7 +287,7 @@ OptionUpdateSettings:
     LD (PlayerGfxBank), A
     LD A, VRAMTBL_OPTIONPAL
     LD (VRAM_Buffer_AddrCtrl), A
-    LD A, $38
+    LD A, $20 + SMS_PIXELYOFFSET + (OPTION_OFFSET / 8)
     LD (Player_Rel_YPos), A
     LD HL, AnimateBGTiles
     LD (AnimateRoutine), HL
@@ -301,7 +299,7 @@ OptionUpdateSettings:
     LD (PlayerGfxBank), A
     LD A, VRAMTBL_OPTIONPAL_NES
     LD (VRAM_Buffer_AddrCtrl), A
-    LD A, $38 + $68
+    LD A, $20 + $68 + SMS_PIXELYOFFSET + (OPTION_OFFSET / 8)
     LD (Player_Rel_YPos), A
     LD HL, ColorRotation
     LD (AnimateRoutine), HL
@@ -320,36 +318,24 @@ OptionUpdateSettings:
     JR NZ, +
     LD HL, SndChannelProcessMUS     ;FM music update routine
     LD (MusicRoutine), HL
-    LD HL, $019A
-    LD DE, $0000
+    LD DE, <MUSHROOM_TILE
     JR @DrawSelector
 +:
     LD HL, SndChannelProcessFM      ;PSG music update routine
     LD (MusicRoutine), HL
-    LD HL, $0000
-    LD DE, $019A
+    LD DE, <MUSHROOM_TILE * $100
 @DrawSelector:
-    LD BC, $2000 | VRAMWRITE + VDPCON_PORT
-    LD A, $44
-    OUT (C), A
-    RST SndFMWriteDelay             ;vdp delay
-    OUT (C), B
-    RST SndFMWriteDelay             ;vdp delay
-    DEC C
-    OUT (C), L
-    RST SndFMWriteDelay             ;vdp delay
-    OUT (C), H
-    RST SndFMWriteDelay             ;vdp delay
-    INC C
-    LD A, $C4
-    OUT (C), A
-    RST SndFMWriteDelay             ;vdp delay
-    OUT (C), B
-    RST SndFMWriteDelay             ;vdp delay
-    DEC C
+    LD HL, VRAM_ADR_NAMETBL + $0044 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+    LD BC, $0100 + VDPDATA_PORT
     OUT (C), E
-    RST SndFMWriteDelay             ;vdp delay
+    LD A, (IX + 0)                  ;vdp delay
+    OUT (C), B
+    LD HL, VRAM_ADR_NAMETBL + $00C4 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
     OUT (C), D
+    LD A, (IX + 0)                  ;vdp delay
+    OUT (C), B
 ; ---
     ; FALL THROUGH
 

@@ -27,7 +27,7 @@ InitializeGame:
 ;
     LD A, $18                       ;set demo timer
     LD (DemoTimer), A
-    LD A, $02
+    LD A, $04
     LD (PaletteFadeFlag), A
 ;
     CALL LoadAreaPointer
@@ -148,7 +148,6 @@ GameMenuRoutine:
     DEC E
     LD (VRAM_Buffer1_Ptr), DE       ;update buffer index
     LD A, (WorldNumber)             ;get world number from variable and increment for
-    ADD A, BG_TILE_OFFSET
     INC A                           ;proper display, and put in blank byte before
     LD (VRAM_Buffer1+3), A          ;null terminator
 ;

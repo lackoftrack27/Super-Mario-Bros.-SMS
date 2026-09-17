@@ -1,7 +1,10 @@
 ;   Special Functions
-.FUNCTION BG_MACRO(val) val + BG_TILE_OFFSET
+.FUNCTION BG_MACRO(val) val
 
-.FUNCTION xyToNameTbl_M(x, y) (VRAM_ADR_NAMETBL + ((y * 32 + x) * 2)) | VRAMWRITE
+.FUNCTION xyToNameTbl_M(x, y) (VRAM_ADR_NAMETBL + NT_ACTIVE_OFFSET + ((y * 32 + x) * 2)) | VRAMWRITE
+
+
+.FUNCTION xyToNameTblFixed_M(x, y) (VRAM_ADR_NAMETBL + NT_HUD_START + ((y * 32 + x) * 2)) | VRAMWRITE
 
 .FUNCTION swapBytes(v) (v << $08 | v >> $08) & $FFFF
 

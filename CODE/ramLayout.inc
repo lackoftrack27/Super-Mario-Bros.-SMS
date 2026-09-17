@@ -193,7 +193,7 @@
     ; $40
     MusicTrack0                     INSTANCEOF SndTrack
     ;
-    ColumnBuffer:                   dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer:                   dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -254,7 +254,7 @@
     .                               dsb $06
     ; $40
     MusicTrack1                     INSTANCEOF SndTrack
-    ColumnBuffer_01:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_01:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -314,7 +314,7 @@
     .                               dsb $06
     ; $40
     MusicTrack2                     INSTANCEOF SndTrack
-    ColumnBuffer_02:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_02:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -371,7 +371,7 @@
     .                               dsb $06
     ; $40
     MusicTrack3                     INSTANCEOF SndTrack
-    ColumnBuffer_03:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_03:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -428,7 +428,7 @@
     .                               dsb $06
     ; $40
     SFXTrack0                       INSTANCEOF SndTrack
-    ColumnBuffer_04:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_04:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -485,7 +485,7 @@
     .                               dsb $06
     ; $40
     SFXTrack1                       INSTANCEOF SndTrack
-    ColumnBuffer_05:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_05:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -519,7 +519,7 @@
     .                               dsb $06
     ; $40
     SFXTrack2                       INSTANCEOF SndTrack
-    ColumnBuffer_06:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_06:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -543,7 +543,7 @@
     .                               dsb $06
     ; $40
     FMTrack0                        INSTANCEOF SndTrack
-    ColumnBuffer_07:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_07:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -583,7 +583,7 @@
     .                               dsb $06
     ; $40
     FMTrack1                        INSTANCEOF SndTrack
-    ColumnBuffer_08:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_08:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -609,7 +609,7 @@
     .                               dsb $06
     ; $40
     FMTrack2                        INSTANCEOF SndTrack
-    ColumnBuffer_09:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_09:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -635,7 +635,7 @@
     .                               dsb $06
     ; $40
     FMTrack3                        INSTANCEOF SndTrack
-    ColumnBuffer_0A:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0A:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -661,7 +661,7 @@
     .                               dsb $06
     ; $40
     FMTrack4                        INSTANCEOF SndTrack
-    ColumnBuffer_0B:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0B:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -696,7 +696,7 @@
     .                               dsb $06
     ; $40
     FMTrack5                        INSTANCEOF SndTrack
-    ColumnBuffer_0C:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0C:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -721,7 +721,7 @@
     .                               dsb $06
     ; $40
     FMTrack6                        INSTANCEOF SndTrack
-    ColumnBuffer_0D:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0D:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -746,7 +746,7 @@
     .                               dsb $06
     ; $40
     FMTrack7                        INSTANCEOF SndTrack
-    ColumnBuffer_0E:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0E:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -771,7 +771,7 @@
     .                               dsb $06
     ; $40
     FMTrack8                        INSTANCEOF SndTrack
-    ColumnBuffer_0F:                dsb $30 ; VDP ADDRESS + 23 WORDS
+    ColumnBuffer_0F:                dsb $36 ; VDP ADDRESS + 26 WORDS
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -843,8 +843,8 @@
     ; $2D
     Misc_SprDataOffset_06:          dsb $01 ; [$17] *
     ; $2E
-    VRAM_Buffer2_Ptr:               dsb $02
-    VRAM_Buffer2:                   dsb $C1 ; (23 * 2) * 4 + 3 == $BB
+    ;VRAM_Buffer2_Ptr:               dsb $02
+    ;VRAM_Buffer2:                   dsb $C1
     ; (VDP ADDRESS + 23 WORDS) * 4 + TERMINATOR
 .ENDS
 
@@ -903,12 +903,17 @@
     .                               dsb $01 ; UNUSED
     Bubble_YMF_Dummy_02:            dsb $01
     .                               dsb $01 ; UNUSED
-    .                               dsb $01 ; UNUSED
-    .                               dsb $04 ; UNUSED
+    ;.                               dsb $01 ; UNUSED
+    ;.                               dsb $04 ; UNUSED
     ; $2A
-    .                               dsb $03 ; UNUSED
+    ;.                               dsb $03 ; UNUSED
     ; $2D
-    .                               dsb $01 ; UNUSED
+    ;.                               dsb $01 ; UNUSED
+
+    ; $25
+    VRAM_Buffer2_Ptr:               dsb $02
+    VRAM_Buffer2:                   dsb $D9
+    ; (VDP ADDRESS + 26 WORDS) * 4 + TERMINATOR
 .ENDS
 
 ;   --- END OF 2D ARRAY MEM LAYOUT ---
@@ -1194,6 +1199,7 @@
     BGTileQueue2GrassFlag:          dsb $01
     BGTileQueue2SwitchFlag:         dsb $01
     PaletteFadeBuffer:              dsb $20
+    PaletteFadeWriteFlag:           dsb $01
     PaletteFadeFlag:                dsb $01
     VDPStatus:                      dsb $01
 ;

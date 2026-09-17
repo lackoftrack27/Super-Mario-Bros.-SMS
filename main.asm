@@ -608,6 +608,7 @@ JoypadTable:
     .db $c0, $c8, $c4, $cc, $c2, $ca, $c6, $ce, $c1, $c9, $c5, $cd, $c3, $cb, $c7, $cf
 .ENDS
 
+.SECTION "Joypad Routine" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 ReadJoypads:
     LD A, $F5   ;$FD/2D/ED/F5
     OUT (IO_CONTROL), A     ; HIGH
@@ -722,6 +723,7 @@ PauseBtnChk:
     CP A, bitValue(SMS_BTN_1) | bitValue(SMS_BTN_2)
     RET NZ
     RST BootVector
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
@@ -907,6 +909,7 @@ MoveSpritesOffscreen:
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "GetAreaMusic" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 GetAreaMusic:
     LD A, (OperMode)                    ;if in title screen mode, skip
     OR A
@@ -920,7 +923,7 @@ GetAreaMusic:
     LD A, SNDID_TITLE_FM
     JR NZ, StoreMusicDirect
     LD A, SNDID_SILENCE
-    JP StoreMusicDirect
+    JR StoreMusicDirect
 ;
 NotOnTitleScreen:
     LD A, (AltEntranceControl)          ;check for specific alternate mode of entry
@@ -960,6 +963,7 @@ StoreMusic:
 StoreMusicDirect:
     LD (MusicTrack0.SoundQueue), A      ;store in queue and leave
     RET
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 

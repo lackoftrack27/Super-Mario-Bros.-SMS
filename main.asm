@@ -825,6 +825,7 @@ IndirectCallIY:
 
 TopScoreCheck:
     LD HL, TopScoreDisplay + $05        ;start with the lowest digit
+    OR A
 GetScoreDiff:
     .REPEAT $06
     LD A, (DE)                          ;subtract each player digit from each high score digit

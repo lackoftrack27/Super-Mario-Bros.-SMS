@@ -2453,6 +2453,12 @@ XMRight:
 ; .ENDS
 
 MoveBloober:
+.IF PALBUILD == $00
+    LD E, $08                               ;add sixteen pixels for ChkNearPlayer
+.ELSE
+    LD E, $06                               ;add twelve pixels for ChkNearPlayer (PAL bugfix: Bloopers can get closer vertically)
+.ENDIF
+;
     LD L, <Enemy_State                      ;check enemy state for d5 set
     LD A, (HL)
     AND A, %00100000
@@ -2487,6 +2493,12 @@ MoveBloober:
     JR C, SBMDir                            ;if so, do an unconditional branch to set
     LD C, $02                               ;set left moving direction by default
     CALL PlayerEnemyDiff                    ;get horizontal difference between player and bloober
+    CCF                                     ;invert carry for ChkNearPlayer
+.IF PALBUILD == $00
+    LD E, $08                               ;reload values for ChkNearPlayer because PlayerEnemyDiff clobbers E 
+.ELSE
+    LD E, $06
+.ENDIF
     JP P, SBMDir                            ;if enemy to the right of player, keep left
     DEC C                                   ;otherwise decrement to set right moving direction
 SBMDir:
@@ -2494,6 +2506,7 @@ SBMDir:
     LD (HL), C
 
 BlooberSwim:
+    RL E                                    ;shift carry into E and double values for ChkNearPlayer
     CALL ProcSwimmingB                      ;execute sub to make bloober swim characteristically
 ;
     LD L, <Enemy_Y_Position                 ;get vertical coordinate
@@ -2602,13 +2615,7 @@ ChkNearPlayer:
     LD C, A
     LD L, <Enemy_Y_Position                 ;get vertical coordinate
     LD A, (HL)
-
-    .IF PALBUILD == $00                     ;6502 used adc without clc, but carry is never set
-    ADD A, $10                              ;add sixteen pixels           
-    .ELSE
-    ADD A, $0C                              ;add twelve pixels;PAL bugfix: Bloopers can get closer vertically
-    .ENDIF
-
+    ADD A, E                                ;add pixel amount with potential carry
     CP A, C                                 ;compare result with player's vertical coordinate
     JR C, Floatdown                         ;if modified vertical less than player's, branch
 ;
@@ -5613,7 +5620,7 @@ RemBridge:
     LDI
     LDI
 ;   WRITE VRAM BUFFER (VDP ADDRESS)
-    LD A, $44
+    LD A, $44   ;+4 due to LDI decrement
     addAToBC_M
     LD (DE), A  ; HIGH BYTE
     INC E

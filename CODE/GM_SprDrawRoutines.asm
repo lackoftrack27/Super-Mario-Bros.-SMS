@@ -310,7 +310,7 @@ ChkFlagOffscreen:
     LD D, >Sprite_Y_Position
     LD A, YPOS_OFFSCREEN
     LD (DE), A
-    .REPEAT $04
+    .REPEAT $05                     ;only 5 sprites used, but 6 are cleared in 6502 asm...
     INC E
     LD (DE), A
     .ENDR

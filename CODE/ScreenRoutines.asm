@@ -24,7 +24,9 @@ ScreenRoutines:
 
 InitScreen:
     CALL MoveAllSpritesOffscreen    ;initialize all sprites including sprite #0
+    DI                              ;disable interrupts so line interrupt doesn't change VDP address mid screen clear
     CALL InitializeNameTables       ;and erase both name and attribute tables
+    EI                              ;reenable line interrupts
 ;
     CALL IncSubtask
     LD A, (OperMode)

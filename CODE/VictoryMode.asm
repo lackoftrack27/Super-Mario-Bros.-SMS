@@ -41,10 +41,16 @@ SetupVictoryMode:
     LD A, (WorldNumber)             ;load either retainer or princess palettes
     CP A, WORLD8
     LD A, VRAMTBL_RETAINERPAL
+    LD HL, RetainerPaletteData + $03
     JR NZ, +
     INC A
+    LD HL, PrincessPaletteData + $03
 +:
     LD (VRAM_Buffer_AddrCtrl), A
+;
+    LD DE, PaletteFadeBuffer + $10  ;load palette into fade buffer as well
+    LD BC, $10
+    LDIR
     JP IncModeTask_B                ;jump to set next major task in victory mode
 
 ;-------------------------------------------------------------------------------------

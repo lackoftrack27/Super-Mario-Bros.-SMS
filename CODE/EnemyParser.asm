@@ -944,20 +944,24 @@ InitBowser:
     SRL A                               ;set default movement speed here
     LD (BowserMovementSpeed), A
 ;
-    LD HL, BowserPaletteData            ;load palette for bowser depending on gfx mode
-    LD BC, _sizeof_BowserPaletteData
+    LD HL, BowserPaletteData_NES        ;load palette for bowser depending on gfx mode
+    LD BC, _sizeof_BowserPaletteData_NES
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_GFX)
-    JR Z, +
-    LD HL, BowserPaletteData_NES
-    LD BC, _sizeof_BowserPaletteData_NES
+    JR NZ, +
+    LD HL, BowserPaletteData + $03      ;load palette into fade buffer if in
+    LD DE, PaletteFadeBuffer + $10      ;new gfx mode as well
+    LD BC, $10
+    LDIR
+    LD HL, BowserPaletteData
+    LD BC, _sizeof_BowserPaletteData
 +:
     LD DE, (VRAM_Buffer1_Ptr)
     LDIR
     DEC E
     LD (VRAM_Buffer1_Ptr), DE
-    LD HL, (ObjectOffset)
 ;
+    LD HL, (ObjectOffset)
     LD A, (OptionBitflags)              ;play boss music if doing FM sound
     AND A, bitValue(OPTFLAG_FM)
     RET Z

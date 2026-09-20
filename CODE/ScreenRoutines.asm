@@ -322,7 +322,7 @@ BackgroundColors:
 PlayerColors:
     .db $03, $0B, $06, $00       ;mario's colors
     .db $3F, $0B, $08, $00       ;luigi's colors
-    .db $1F, $0B, $03, $00       ;fiery (used by both)
+    .db $2F, $0B, $03, $00       ;fiery (used by both)
 .ENDS
 
 GetBackgroundColor:

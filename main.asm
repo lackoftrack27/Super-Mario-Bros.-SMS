@@ -1388,127 +1388,128 @@ StreamPlayerTiles:
 ;   WRITE TILE DATA
     ; TILE 0
     LD A, (DE)
-    LD L, $00
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 1
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 2
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 3
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 4
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 5
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 6
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     INC E
     .REPEAT $20
     OUTI
     .ENDR
     ; TILE 7
-    XOR A
-    LD L, A
     LD A, (DE)
-    RRA
-    RR L
-    RRA
-    RR L
-    RRA
-    RR L
+    RRCA
+    RRCA
+    RRCA
+    LD L, A
+    AND A, $1F
     OR A, IXL
     LD H, A
+    LD A, L
+    AND A, $E0
+    LD L, A
     .REPEAT $20
     OUTI
     .ENDR

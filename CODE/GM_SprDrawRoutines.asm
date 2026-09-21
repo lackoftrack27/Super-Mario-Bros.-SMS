@@ -144,20 +144,6 @@ HammerSpriteData:
 .ENDS
 
 DrawHammer:
-    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
-    LD A, (HL)                              ;to avoid sprite terminator
-    SUB A, YPOS_LOWBOUND + $10
-    INC L
-    LD A, (HL)
-    SBC A, $01
-    RET NC
-;
-    LD BC, HammerSpriteData                 ;use different set of hammmer sprites
-    LD A, (AreaType)                        ;in castle area to get around Bowser's weird palette
-    CP A, $03
-    JR NZ, +
-    LD C, <HammerSpriteData@Castle
-+:
 ;   GET OBJECT'S S.A.T. ADDRESS
     LD D, H                                 ;get misc object OAM data offset
     INC D
@@ -167,6 +153,21 @@ DrawHammer:
     LD IXL, A                               ;save S.A.T. address in IXL for later
     LD E, A
     LD D, >Sprite_Y_Position                ;DE: S.A.T. ADDRESS for 1st sprite's Ypos
+;   POSITION-BASED OFFSCREEN CHECK
+    LD L, <Enemy_Y_Position                 ;don't display object if it is below visible screen
+    LD A, (HL)                              ;to avoid sprite terminator
+    SUB A, YPOS_LOWBOUND + $10
+    INC L
+    LD A, (HL)
+    SBC A, $01
+    JR NC, HOffscreenChk
+;   HAMMER DATA SELECTION
+    LD BC, HammerSpriteData                 ;use different set of hammmer sprites
+    LD A, (AreaType)                        ;in castle area to get around Bowser's weird palette
+    CP A, $03
+    JR NZ, +
+    LD C, <HammerSpriteData@Castle
++:
 ;   CALCULATE HAMMER FRAME
     LD A, (TimerControl)                    ;if master timer control set, skip this part
     OR A
@@ -213,6 +214,7 @@ RenderH:
     INC L
     LDI
 ;   OFFSCREEN CHECK
+HOffscreenChk:
     LD HL, (ObjectOffset)                   ;get misc object offset
     LD A, (Misc_OffscrBits)                 ;check offscreen bits
     AND A, %11111100
@@ -917,7 +919,6 @@ DrawEnemyObject_NoHFlip:
     INC E
     LDI
     ; FALL THROUGH
-
     LD A, BANK_SLOT2                        ;reset bank
     LD (MAPPER_SLOT2), A
 
@@ -996,8 +997,8 @@ PodobooGfxHandler:
     SUB A, YPOS_LOWBOUND + $08
     INC L
     LD A, (HL)
-    SBC A, $01
-    RET NC
+    SBC A, $01                              ;don't bother with SprObjectOffscrChk,
+    RET NC                                  ;Podoboo only clears sprites, doesn't delete object
 ;   VERTICAL FLIP CHECK
     LD L, <Enemy_Y_Speed                    ;use v-flipped tiles if y speed is positive
     LD A, (HL)
@@ -1049,8 +1050,8 @@ PodobooTiles:
 RetainerGfxHandler:
 ;   EXIT IF RETAINER/PRINCESS HAS ALREADY BEEN DRAWN
     LD A, (RetainerDrawnFlag)
-    OR A
-    RET NZ
+    OR A                                    ;don't bother with SprObjectOffscrChk,
+    RET NZ                                 ;object can't move vertically, so it can never be deleted
 ;   SET FLAG TO SIGNAL THAT IT HAS BEEN DRAWN
     INC A
     LD (RetainerDrawnFlag), A
@@ -1088,8 +1089,8 @@ JumpspringGfxHandler:
     LD A, (JumpspringAnimCtrl_Old)
     LD B, A
     LD A, (JumpspringAnimCtrl)
-    CP A, B
-    RET Z
+    CP A, B                                 ;don't bother with SprObjectOffscrChk,
+    RET Z                                   ;object can't move vertically, so it can never be deleted
     LD (JumpspringAnimCtrl_Old), A
 ;   CALCULATE WHERE IT SHOULD BE DRAWN
     LD L, <Jumpspring_FixedYPos             ;get fixed y position of jumpspring

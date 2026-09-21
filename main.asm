@@ -2401,7 +2401,7 @@ WarpZoneNumbers:
 .ENDS
 
 ;-------------------------------------------------------------------------------------
-.SECTION "Metatile Graphics Tables" FREE ALIGN $100
+.SECTION "Metatile Graphics Tables" FREE ALIGN $800
 
 ;   ----- METATILE GRAPHICS TABLES-----
 Palette0_MTiles:
@@ -2489,6 +2489,9 @@ Palette0_MTiles:
     .dw BG_MACRO($015A), BG_MACRO($015A), BG_MACRO($015B), BG_MACRO($015B)  ; shaft
     ; Blank for vines
     .dw BLANKTILE, BLANKTILE, BLANKTILE, BLANKTILE
+    ; padding
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
 
 Palette1_MTiles:
     ; Rope
@@ -2575,6 +2578,9 @@ Palette1_MTiles:
     ; --- CLIMBABLE METATILES START HERE ---
     ; Flagball (unused)
     .dw BLANKTILE, BG_MACRO($0179), BLANKTILE, BG_MACRO($017A)
+    ; padding
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
 
     
 Palette2_MTiles:
@@ -2640,7 +2646,17 @@ Palette2_MTiles:
     .dw BG_MACRO($0129), BG_MACRO($012A), BG_MACRO($0329), BG_MACRO($032A)
     ; Bowser's bridge
     .dw BG_MACRO($013B), BG_MACRO($013C), BG_MACRO($013B), BG_MACRO($013D)
-    
+    ; padding
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
+    .dw $0000, $0000, $0000, $0000
 
 Palette3_MTiles:
     ; Background for water area in W8-4

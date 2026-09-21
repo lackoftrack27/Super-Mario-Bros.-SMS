@@ -2447,10 +2447,10 @@ GetAreaObjYPosition:
 ;DE,IX,IY = 00/01,02/03,04/05
 ;HL = 06/07
 
-.SECTION "Metatile Graphics TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-MetatileGraphics:
-    .dw Palette0_MTiles, Palette1_MTiles, Palette2_MTiles, Palette3_MTiles
-.ENDS
+; .SECTION "Metatile Graphics TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; MetatileGraphics:
+;     .dw Palette0_MTiles, Palette1_MTiles, Palette2_MTiles, Palette3_MTiles
+; .ENDS
 
 RenderAreaGraphics:
     LD BC, MetatileBuffer-1
@@ -2482,39 +2482,23 @@ RenderAreaGraphics:
 DrawMTLoop:
     INC C
     INC E
-    LD A, (BC)                          ;get first metatile number, and mask out all but 2 MSB
-    AND A, %11000000
-    RLCA                                ;note that metatile format is:
-    RLCA                                ;%xx000000 - attribute table bits,
-    ADD A, A                            ;rotate bits to d1-d0 and use as offset here
-    LD HL, MetatileGraphics
-    addAToHL8_M
-    LD A, (HL)                          ;get address to graphics table from here
-    INC L
-    LD H, (HL)
+    LD A, (BC)                          ;get first metatile number
+    LD H, >Palette0_MTiles >> 3         ;multiply by 4
+    ADD A, A
+    RL H
+    ADD A, A
+    RL H
+    ADD A, IXL                          ;add column offset
+    ADD A, A                            ;multiply by 8 in total
+    RL H
     LD L, A
     ;
-    LD A, (BC)                          ;get metatile number again
-    ADD A, A                            ;multiply by 4 and use as tile offset
-    ADD A, A
-    ADD A, IXL                          ;add column position
-    ADD A, A                            ;NOTICE: Overflow can occur here
-    JR NC, +
-    INC H
-+:
-    addAToHL_M
-    LD A, (HL)                          ;get first tile number (top left or top right) and store
-    LD (DE), A
-    INC E
-    INC L
-    LD A, (HL)
-    LD (DE), A
-    INC E
-    INC L
-    LD A, (HL)                          ;now get the second (bottom left or bottom right) and store
-    LD (DE), A
-    INC E
-    INC L
+    LDI                                 ;get first tile number (top left or top right) and store
+    INC C                               ;counteract LDI decrement
+    LDI
+    INC C
+    LDI                                 ;now get the second (bottom left or bottom right) and store
+    INC C
     LD A, (HL)
     LD (DE), A
     ;

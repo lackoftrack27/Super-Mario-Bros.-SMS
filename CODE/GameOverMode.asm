@@ -10,6 +10,7 @@ GameOverMode:
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "SetupGameOver" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 SetupGameOver:
     XOR A                           ;reset screen routine task control for title screen, game,
     LD (ScreenRoutineTask), A       ;and game over modes
@@ -21,9 +22,11 @@ SetupGameOver:
     LD A, SNDID_GAMEOVER
     LD (MusicTrack0.SoundQueue), A    ; EVENT
     RET
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "RunGameOver/TerminateGame/ContinueGame/TransposePlayers" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 RunGameOver:
     LD A, $40                       ;reenable screen
     LD (DisableScreenFlag), A
@@ -89,3 +92,4 @@ TransLoop:
     DJNZ TransLoop
     SCF                             ;set carry flag to get game going
     RET
+.ENDS

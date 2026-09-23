@@ -27,6 +27,7 @@ VictoryModeSubroutines:
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "SetupVictoryMode" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 SetupVictoryMode:
     LD A, (ScreenRight_PageLoc)     ;get page location of right side of screen
     INC A                           ;increment to next page
@@ -52,9 +53,11 @@ SetupVictoryMode:
     LD BC, $10
     LDIR
     JP IncModeTask_B                ;jump to set next major task in victory mode
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "PlayerVictoryWalk" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 PlayerVictoryWalk:
     XOR A                           ;set value here to not walk player by default
     LD (VictoryWalkControl), A
@@ -90,11 +93,13 @@ PlayerVictoryWalk:
 @ExitVWalk:
     LD A, (VictoryWalkControl)      ;load value set here
     OR A
-    JR Z, PrintVictoryMessages@IncModeTask_A    ;if zero, branch to change modes
+    JP Z, PrintVictoryMessages@IncModeTask_A    ;if zero, branch to change modes
     RET                             ;otherwise leave     
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "PrintVictoryMessages" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 PrintVictoryMessages:
     LD A, (SecondaryMsgCounter)     ;load secondary message counter
     OR A
@@ -171,9 +176,11 @@ PrintVictoryMessages:
     LD HL, OperMode_Task            ;move onto next task in mode
     INC (HL)
     RET                             ;leave
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 
+.SECTION "PlayerEndWorld" BANK BANK_SLOT2 SLOT 2 FREE RETURNORG
 PlayerEndWorld:
     LD A, (WorldEndTimer)           ;check to see if world end timer expired
     OR A
@@ -207,5 +214,6 @@ PlayerEndWorld:
     XOR A                           ;remove onscreen player's lives
     LD (NumberofLives), A
     JP TerminateGame                ;do sub to continue other player or end game
+.ENDS
 
 ;-------------------------------------------------------------------------------------

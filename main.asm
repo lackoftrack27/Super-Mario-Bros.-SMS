@@ -514,7 +514,7 @@ NonMaskableInterrupt:
     OUT (VDPCON_PORT), A
     LD L, <Sprite_X_Position
     CALL OutiBlock128
-;   EXTRA NAMETABLE UPDATE FOR COLUMN DRAWING   [CPU TIME: 08 LINES]
+;   EXTRA NAMETABLE UPDATE FOR COLUMN DRAWING   [CPU TIME: 08 LINES, 06 FOR LINE224P]
     LD A, (RenderColumnFlag)
     OR A
     CALL NZ, ColumnWriteUpdate
@@ -757,6 +757,7 @@ UpdateScreen:
     RET
 
 WriteVertColumnBuff2:
+.IF LINEMODE != LINE224P
 ;   ADVANCE POINTER TO TILE DATA
     PUSH HL
     INC L
@@ -771,14 +772,11 @@ WriteVertColumnBuff2:
     LD C, VDPCON_PORT
     LD DE, $0040
     EXX
-;   WRITE 23-26 WORDS VERTICALLY
-.IF LINEMODE == LINE192P
-    CALL WriteVeriBlock_W_23
-.ELIF LINEMODE == LINE224P
-    CALL WriteVeriBlock_W_25
 .ELSE
-    CALL WriteVeriBlock_W_26
+    INC L
 .ENDIF
+;   WRITE 23/25/26 WORDS VERTICALLY
+    CALL WriteVeriBlock_W
 ;   check if buffer is empty
     LD A, (HL)
     OR A
@@ -796,6 +794,7 @@ ColumnWriteUpdate:
 ;   ADVANCE POINTER TO TILE DATA
     LD HL, (ColumnWrite_Ptr)
     INC L
+.IF LINEMODE != LINE224P
     INC L
 ;   PREPARE SHADOW REGS
     EXX
@@ -807,14 +806,118 @@ ColumnWriteUpdate:
     LD C, VDPCON_PORT
     LD DE, $0040
     EXX
-;   WRITE 23-26 WORDS VERTICALLY
-.IF LINEMODE == LINE192P
-    JP WriteVeriBlock_W_23
-.ELIF LINEMODE == LINE224P
-    JP WriteVeriBlock_W_25
-.ELSE
-    JP WriteVeriBlock_W_26
+;   WRITE 23/26 WORDS VERTICALLY
+WriteVeriBlock_W:
+.IF LINEMODE == LINE240P
+    .REPEAT $03     ; 11 (8 + 3) bytes per iteration
+    EXX
+    OUT (C), L      ; WRITE VDP ADDRESS
+    OUT (C), H
+    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+    EXX
+    OUTI            ; WRITE WORD FOR CURRENT ROW
+    OUTI
+    .ENDR
 .ENDIF
+
+    .REPEAT $17     ; 11 (8 + 3) bytes per iteration
+    EXX
+    OUT (C), L      ; WRITE VDP ADDRESS
+    OUT (C), H
+    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
+    EXX
+    OUTI            ; WRITE WORD FOR CURRENT ROW
+    OUTI
+    .ENDR
+    RET
+.ELSE
+;   FASTER VERSION ONLY COMPATIBLE FOR SMS
+;   WORKS BECAUSE 224P ISN'T AVAILABLE ON MD/GEN ANYWAY
+WriteVeriBlock_W:
+    LD A, (HL)
+    OUT (VDPCON_PORT), A
+    LD A, $37 | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, (HL)
+    AND A, %00111111
+    LD D, A
+    LD E, $40
+    INC L
+
+    OUTI
+    OUTI
+    OUT (VDPCON_PORT), A
+    LD A, $38 | >VRAMWRITE      ;only set high byte of VDP address
+    OUT (VDPCON_PORT), A        ;on overflow
+    LD A, D
+
+    .REPEAT $04
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+
+    LD A, $39 | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, D
+
+    .REPEAT $04
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+    
+    LD A, $3A | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, D
+
+    .REPEAT $04
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+    
+    LD A, $3B | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, D
+
+    .REPEAT $04
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+
+    LD A, $3C | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, D
+
+    .REPEAT $04
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+
+    LD A, $3D | >VRAMWRITE
+    OUT (VDPCON_PORT), A
+    LD A, D
+
+    .REPEAT $03
+    OUTI
+    OUTI
+    ADD A, E
+    OUT (VDPCON_PORT), A
+    .ENDR
+
+    OUTI
+    OUTI
+    RET
+.ENDIF
+
 
 IndirectCallHL:
     JP (HL)
@@ -1855,56 +1958,12 @@ vdpInitData:
 ;-------------------------------------------------------------------------------------
 
 .SECTION "OUTI Blocks" FREE ALIGN $100
-
 OutiBlock128:
 WriteHoriBlock:
 .REPEAT $80
     OUTI
 .ENDR
     RET
-
-;   240px
-WriteVeriBlock_W_26:
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE WORD FOR CURRENT ROW
-    OUTI
-    ; FALL THROUGH
-
-;   224px
-WriteVeriBlock_W_25:
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE WORD FOR CURRENT ROW
-    OUTI
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE WORD FOR CURRENT ROW
-    OUTI
-    ; FALL THROUGH
-
-;   192px
-WriteVeriBlock_W_23:
-.REPEAT $17         ; 11 (8 + 3) bytes per iteration
-    EXX
-    OUT (C), L      ; WRITE VDP ADDRESS
-    OUT (C), H
-    ADD HL, DE      ; INCREMENT ADDRESS FOR NEXT ROW
-    EXX
-    OUTI            ; WRITE WORD FOR CURRENT ROW
-    OUTI
-.ENDR
-    RET
-
 .ENDS
 ;-------------------------------------------------------------------------------------
 .BANK BANK_SLOT2 SLOT 2

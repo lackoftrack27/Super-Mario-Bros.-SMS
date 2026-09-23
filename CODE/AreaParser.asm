@@ -472,75 +472,114 @@ StoreMT:
     ADD A, A                        ;multiply by 2 and use as yet another offset
     LD HL, TerrainRenderBits
     addAToHL8_M
-    LD IXL, $00                     ;initialize X, use as metatile buffer offset
     LD DE, MetatileBuffer
-TerrLoop:
+; ------
+    LD A, IYL                       ;do faster version if not doing castle terrain
+    OR A
+    JR Z, TerrLoopFast
+;TerrLoop:
     LD C, (HL)                      ;get one of the terrain rendering bit data
+    LD B, $08                       ;do first byte of terrain data
+    JP TerrBChk
+TerrSecondByte:
+    INC HL                          ;get second byte of terrain data
+    LD C, (HL)
     LD A, (CloudTypeOverride)       ;skip if value here is zero
     OR A
-    JR Z, NoCloud2
-    LD A, IXL                       ;otherwise, check if we're doing the ceiling byte
-    OR A
-    JR Z, NoCloud2
-    LD A, C                         ;if not, mask out all but d3
+    JR Z, +
+    LD A, C                         ;otherwise mask out all but d3
     AND A, %00001000
     LD C, A
-NoCloud2:
-    LD B, $08                       ;start at beginning of bitmasks
++:
+    LD B, $05                       ;do only 5 bits of second byte (top 3 are always 0)
+    ; FALL THROUGH
 TerrBChk:
-    RR C                            ;rotate byte and check if carry occured
-    JR C, RenderBit                 ;if not set, skip this part (do not write terrain to buffer)
-    LD A, IYL                       ;
+    RR C
+    JR C, RenderBit                 ;skip if bit is set
+    LD A, IYL                       ;check castle terrain counter
     DEC A
-    JR NZ, NextTBit
-    INC IYL                         ;set flag to render castle floor
+    JR NZ, NextTBit                 ;skip if already incremented
+    INC IYL                         ;else, increment
     JP NextTBit
 RenderBit:
-    LD A, IYL                       ;check if rendering castle floor top
+    LD A, IYL                       ;check if there was a gap
     CP A, $02
     JR NZ, +                        ;if not, skip
-    LD IXH, MT_CASTLEFLOOR_TOP      ;set metatile to castle floor top
+    LD IXH, MT_CASTLEFLOOR_TOP      ;else, use top floor metatile
 +:
-    ;
     LD A, IXH
-    LD (DE), A                      ;load terrain type metatile number and store into buffer here
-    ;
-    LD A, IYL                       ;check if doing castle ceiling/floor rendering
+    LD (DE), A                      ;store either ceiling or floor metatile
+    LD A, IYL                       ;check if already doing bottom floor metatiles     
     OR A
-    JR Z, NextTBit                  ;if not, skip
-    ;
-    CP A, $02                       ;check if rendering if castle floor top
-    JR NZ, +                        ;if not, skip
-    LD IYL, $00                     ;disable castle ceiling/floor processing
-    INC IXH                         ;set metatile to castle floor bottom
+    JR Z, NextTBit                  ;if so, skip
+    CP A, $02                       ;else, check if there was a gap (again)
+    JR NZ, +                        ;if not, skip (we are still doing ceiling tiles)
+    LD IYL, $00                     ;else, reset castle counter
+    INC IXH                         ;IXH now holds the "bottom" floor metatile
     INC IXH
-    JP NextTBit                     ;do next terrain bit
-    ;
+    JP NextTBit
 +:
-    LD A, IYH                       ;check if we need to render right castle ceiling tile               
+    LD A, IYH                       ;check ceiling bit flag
+    INC IYH                         ;toggle bit and check it
     AND A, $01
-    JR NZ, NextTBit                 ;if not, skip
-    LD A, IXH
+    JR NZ, NextTBit                 ;skip if set
+    LD A, IXH                       ;else, use right ceiling metatile
     INC A
     LD (DE), A
 NextTBit:
-    INC E                           ;continue until end of buffer
-    INC IXL
-    LD A, IXL
-    CP A, $0D
-    JR Z, RendBBuf                  ;if we're at the end, break out of this loop
-    LD A, (AreaType)                ;check world type for underground area
+    INC E
+    DJNZ TerrBChk                   ;do for all bits...
+    LD A, E                         ;check if first terrain byte is done
+    CP A, <(MetatileBuffer + $08)
+    JR Z, TerrSecondByte            ;if so, now do second byte
+    JP RendBBuf
+; ------
+; Faster version used for non-castle levels
+TerrLoopFast:
+    LD A, (AreaType)                ;check for underground areatype
     CP A, $02
-    JR NZ, EndUChk                  ;if not underground, skip this part
-    LD A, IXL
-    CP A, $0B
-    JR NZ, EndUChk                  ;if we're at the bottom of the screen, override
-    LD IXH, MT_ROCK                 ;old terrain type with ground level terrain type
-EndUChk:
-    INC IYH                         ;toggle castle ceiling tile flag
-    DJNZ TerrBChk                   ;if not all bits checked, loop back
+    LD A, IXH                       ;if not, use metatile from table
+    JR NZ, +
+    LD IXH, MT_ROCK                 ;else, use MT_ROCK
++:
+    LD C, (HL)                      ;load 1st byte (ceiling terrain bits) into C
+    LD B, $08
+@BitChk1:
+    RR C
+    JR NC, +
+    LD (DE), A                      ;if bit is set, store metatile
++:
+    INC E
+    DJNZ @BitChk1                   ;do for all bits...
     INC HL
-    JP TerrLoop                     ;unconditional branch, use Y to load next byte
+    LD C, (HL)                      ;load second byte (floor terrain)
+    LD B, A                         ;save metatile into B
+    LD A, (CloudTypeOverride)       ;skip if value here is zero
+    OR A
+    JR Z, +
+    LD A, C                         ;otherwise mask out all but d3
+    AND A, %00001000
+    LD C, A
++:
+    LD A, B                         ;put metatile back into A
+    LD B, $03                       ;do first three bits of second byte
+@BitChk2:
+    RR C
+    JR NC, +
+    LD (DE), A                      ;if bit is set...
++:
+    INC E
+    DJNZ @BitChk2
+    LD A, IXH                       ;use metatile from table or forced MT_ROCK
+    LD B, $02                       ;do last two bits of second byte
+@BitChk3:
+    RR C
+    JR NC, +
+    LD (DE), A                      ;if bit is set...
++:
+    INC E
+    DJNZ @BitChk3
+; ------
 RendBBuf:
     CALL ProcessAreaData            ;do the area data loading routine now
 ;   WRITE BLOCK BUFFER (COLLISION DATA)
@@ -558,21 +597,13 @@ RendBBuf:
     LD (Temp_Bytes + $06), DE
     ;;;
 
-    LD H, >BlockBuffLowBounds       ;init index regs and start at beginning of smaller buffer
+    LD H, >BlockBuffValues          ;init index regs and start at beginning of smaller buffer
     LD BC, MetatileBuffer
     LD IXL, $0D
 ChkMTLow:
     LD A, (BC)                      ;load stored metatile number
-    AND A, %11000000                ;mask out all but 2 MSB
-    RLCA                            ;make %xx000000 into %000000xx
-    RLCA
-    ADD A, <BlockBuffLowBounds      ;(SMS) calculate pointer to BlockBuffLowBounds
-    LD L, A
-    LD A, (BC)                      ;reload original unmasked value here
-    CP A, (HL)                      ;check for certain values depending on bits set
-    JR NC, StrBlock                 ;if equal or greater, branch
-    XOR A                           ;if less, init value before storing
-StrBlock:
+    LD L, A                         ;use as direct index into LUT
+    LD A, (HL)
     LD (DE), A                      ;store value into block buffer
     LD A, $10
     addAToDE_M                      ;add 16 (move down one row) to offset
@@ -597,11 +628,36 @@ StrBlock:
     ; B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
     ; C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF <- UNSEEN DUE TO SMALLER RESOLUTION
 
-.SECTION "Metatile Index Collision Floor TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
-;numbers lower than these with the same attribute bits
-;will not be stored in the block buffer
-BlockBuffLowBounds:
-    .db MT_WARPPIPE_TOP_LEFT, MT_SBRICK, MT_CLOUDGND, MT_QBLK_COIN
+; .SECTION "Metatile Index Collision Floor TBL" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+; ;numbers lower than these with the same attribute bits
+; ;will not be stored in the block buffer
+; BlockBuffLowBounds:
+;     .db MT_WARPPIPE_TOP_LEFT, MT_SBRICK, MT_CLOUDGND, MT_QBLK_COIN
+; .ENDS
+
+; generates 256 byte table for ChkMTLow
+.SECTION "Block Buffer Value Table" BANK BANK_SLOT2 SLOT 2 FREE ALIGN $100 RETURNORG
+BlockBuffValues:
+.DEFINE mtVal $00
+.REPEAT $04 INDEX mtGroup
+    .REPEAT $40
+        .IF mtGroup == $00
+            .REDEFINE mtBound   MT_WARPPIPE_TOP_LEFT
+        .ELIF mtGroup == $01
+            .REDEFINE mtBound   MT_SBRICK
+        .ELIF mtGroup == $02
+            .REDEFINE mtBound   MT_CLOUDGND
+        .ELSE
+            .REDEFINE mtBound   MT_QBLK_COIN
+        .ENDIF
+        .IF mtVal >= mtBound
+            .db mtVal
+        .ELSE
+            .db $00
+        .ENDIF
+        .REDEFINE mtVal mtVal + $01
+    .ENDR
+.ENDR
 .ENDS
 
 ;-------------------------------------------------------------------------------------
@@ -791,16 +847,14 @@ ChkSRows:
     JP NormObj
     ; Get Large Object's ID
 LrgObj:
-    LD IXL, A                               ;store value here (branch for large objects)
     CP A, $70                               ;check for vertical pipe object
-    JR NZ, NotWPipe
+    JR NZ, MoveAOId
     LD A, (DE)
     AND A, %00001000                        ;if d3 clear, branch to get original value
-    JR Z, NotWPipe
-    LD IXL, $00                             ;otherwise, nullify value for warp pipe
-NotWPipe:
-    LD A, IXL                               ;get value and jump ahead
-    JP MoveAOId
+    LD A, $70
+    JR Z, MoveAOId
+    XOR A                                   ;otherwise, nullify value for warp pipe
+    JP NormObj
     ; Get Special Object's ID
 SpecObj:
     INC E                                   ;branch here for rows 12-15
@@ -809,9 +863,8 @@ SpecObj:
 MoveAOId:
     RRCA                                    ;move d6-d4 to lower nybble
     RRCA
-    RRCA
-    RRCA
-    AND A, $0F
+    RRCA                                    ;result is always bitmasked before the shift
+    RRCA                                    ;don't need to worry about carry
 ;
 NormObj:
     ; If object already in progress, always render
@@ -2338,25 +2391,35 @@ RenderUnderPart:
     LD A, (HL)                          ;check current spot to see if there's something
     OR A
     JR Z, DrawThisRow                   ;we need to keep, if nothing, go ahead
+
+    CP A, MT_ROCK + $01                 ;skip most checks if metatile is anything 
+    JR NC, +                            ;past MT_ROCK
+
     CP A, MT_TREELEDGE_MID
     JR Z, WaitOneRow                    ;if middle part (tree ledge), wait until next row
     CP A, MT_MUSHROOM_MID
     JR Z, WaitOneRow                    ;if middle part (mushroom ledge), wait until next row
-    CP A, MT_QBLK_COIN
-    JR Z, DrawThisRow                   ;if question block w/ coin, overwrite
+    ;CP A, MT_QBLK_COIN
+    ;JR Z, DrawThisRow                   ;if question block w/ coin, overwrite
 ;
     CP A, MT_TREELEDGE_TRUCK            ;don't overwrite the center tiles of the tree trunk
     JR Z, WaitOneRow
     CP A, MT_TREELEDGE_TRUCK_CB
     JR Z, WaitOneRow
 ;
-    CP A, MT_QBLK_COIN
-    JR NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
+    ;CP A, MT_QBLK_COIN
+    ;JR NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
     CP A, MT_ROCK
     JR NZ, DrawThisRow                  ;if cracked rock terrain, overwrite
     LD A, E
     CP A, MT_MSTUMP_BOT
     JR Z, WaitOneRow                    ;if stem top of mushroom, wait until next row
+    JP DrawThisRow
+
++:
+    CP A, MT_QBLK_COIN                  ;if question block w/ coin, overwrite
+    JR Z, DrawThisRow
+    JR NC, WaitOneRow                   ;if any other metatile with palette 3, wait until next row
 DrawThisRow:
     LD (HL), E                          ;render contents of A from routine that called this
 WaitOneRow:
@@ -2453,7 +2516,6 @@ GetAreaObjYPosition:
 ; .ENDS
 
 RenderAreaGraphics:
-    LD BC, MetatileBuffer-1
     LD A, (ColumnSets)
     CP A, $04
     LD HL, (VRAM_Buffer2_Ptr)
@@ -2472,45 +2534,38 @@ RenderAreaGraphics:
     CPL
     AND A, %00000001
     ADD A, A                            ;then add to the tile offset so we can draw either side
-    LD IXL, A                           ;of the metatiles
+    LD B, A                             ;of the metatiles
 ;
 .IF LINEMODE == LINE192P
-    LD IXH, $0C                         ;loop counter, amount of metatiles on screen vertically
+    .DEFINE MT_AMT  $0C                 ;loop counter, amount of metatiles on screen vertically
 .ELSE
-    LD IXH, $0D
+    .DEFINE MT_AMT  $0D
 .ENDIF
 DrawMTLoop:
-    INC C
+    LD C, MT_AMT * $04                  ;fill C so LDI never touches B!
     INC E
-    LD A, (BC)                          ;get first metatile number
+.REPEAT MT_AMT INDEX counter
+    LD A, (MetatileBuffer + counter)
     LD H, >Palette0_MTiles >> 3         ;multiply by 4
     ADD A, A
     RL H
     ADD A, A
     RL H
-    ADD A, IXL                          ;add column offset
+    ADD A, B                            ;add column offset
     ADD A, A                            ;multiply by 8 in total
     RL H
     LD L, A
-    ;
     LDI                                 ;get first tile number (top left or top right) and store
-    INC C                               ;counteract LDI decrement
     LDI
-    INC C
     LDI                                 ;now get the second (bottom left or bottom right) and store
-    INC C
-    LD A, (HL)
-    LD (DE), A
-    ;
-    DEC IXH
-    JP NZ, DrawMTLoop                   ;if not there yet, loop back
-    ;
+    LDI
+.ENDR
 .IF LINEMODE != LINE240P
     DEC E                               ;remove last tile (it can't be seen)
-.ELSE
-    INC E                               ;display all tiles
+    DEC E
 .ENDIF
-    XOR A
+
+    XOR A                               ;set terminator
     LD (DE), A
     ;
     LD HL, CurrentNTAddr                ;increment name table address low
@@ -2519,23 +2574,23 @@ DrawMTLoop:
     LD A, (HL)                          ;check current low byte
     AND A, %00111111                    ;if no wraparound, just skip this part
     JR NZ, SetVRAMCtrl
-    LD (HL), <NT_ACTIVE_START           ;if wraparound occurs, make sure low byte stays
+    LD (HL), <NT_ACTIVE_START           ;if wraparound occurs, make sure low byte stays in range
 SetVRAMCtrl:
     LD A, VRAMTBL_BUFFER2
     LD (VRAM_Buffer_AddrCtrl), A
 
-    LD A, D
+    LD A, D                             ;check if VRAM_Buffer2 was used
     CP A, >VRAM_Buffer2
-    JR NZ, +
-    LD (VRAM_Buffer2_Ptr), DE
+    JR NZ, +                            ;if not, skip
+    LD (VRAM_Buffer2_Ptr), DE           ;else, update its pointer
     RET
 +:
-    LD HL, ColumnUpdate_Ptr + $01
+    LD HL, ColumnUpdate_Ptr + $01       ;increment high byte of column ptr
     INC (HL)
-    LD A, (HL)
+    LD A, (HL)                          ;check if it's out of bounds
     CP A, >ColumnBuffer_0F + $01
-    RET NZ
-    LD (HL), >ColumnBuffer
+    RET NZ                              ;if not, exit
+    LD (HL), >ColumnBuffer              ;else, reset it back to first column buffer
     RET
 
 ;-------------------------------------------------------------------------------------

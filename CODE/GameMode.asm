@@ -5998,21 +5998,52 @@ SetupPowerUp:
     LD A, $03                               ;set bounding box size control for power-up object
     LD (Enemy_BoundBoxCtrl_05), A
 ;
-    LD A, (PowerUpType)                     ;check currently loaded power-up type
-    CP A, $02
-    JR NC, PutBehind                        ;if star or 1-up, branch ahead
-    LD A, (PlayerStatus)                    ;otherwise check player's current status
-    CP A, $02
-    JR C, StrType                           ;if player not fiery, use status as power-up type
-    SRL A                                   ;otherwise shift right to force fire flower type
-StrType:
-    LD (PowerUpType), A                     ;store type here
-PutBehind:
-    ;LD A, %00100000
-    ;LD (Enemy_SprAttrib_05), A
     LD A, SNDID_ITEM                        ;load power-up reveal sound and leave
     LD (SFXTrack1.SoundQueue), A
+    LD C, $04                               ;assume 1-up power-up (needs 4 tiles)
+    LD A, (PowerUpType)                     ;check currently loaded power-up type
+    CP A, $03
+    JR Z, StrType                           ;jump if 1-up
+    LD C, $10                               ;assume star power-up (needs 16 tiles)
+    CP A, $02
+    JR Z, StrType                           ;jump if star
+    LD C, $04                               ;asssume mushroom power-up (4 tiles)
+    LD A, (PlayerStatus)                    ;check player's current status
+    OR A
+    JR Z, StrType                           ;jump if player is small (must use mushroom)
+    LD C, $10                               ;set tile amount for flower (16 tiles)
+    LD A, $01                               ;set status for fire flower
+StrType:
+    LD (PowerUpType), A                     ;store type here
+
+    LD A, (OptionBitflags)                  ;exit if in NES GFX mode        
+    AND A, bitValue(OPTFLAG_GFX)
+    RET NZ
+    LD A, C
+    LD (PowerUpTileAmount), A               ;store tile amount here
+;
+    PUSH HL                                 ;save object offset
+    LD A, (PowerUpType)                     ;use power-up type as index into table
+    ADD A, A
+    LD HL, PowerUpSrcTable
+    addAToHL8_M
+    LD A, (HL)
+    INC L
+    LD H, (HL)
+    LD L, A
+    LD (PowerUpTilePtr), HL                 ;set pointer for tile data of power-up
+    LD HL, VRAM_ADR_SPR_COMM | VRAMWRITE    ;set VDP address
+    LD (PowerUpVDPAddr), HL
+    POP HL                                  ;restore object offset
     RET
+
+.SECTION "PowerUpSrcTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+PowerUpSrcTable:
+    .dw Tiles_SPR_PowerUp@Mushroom          ;0 - mushroom, 1 frame
+    .dw Tiles_SPR_PowerUp@Flower            ;1 - fire flower, 4 frames
+    .dw Tiles_SPR_PowerUp@Star              ;2 - star, 4 frames
+    .dw Tiles_SPR_PowerUp@ExtraLife         ;3 - 1-up, 1 frame
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------

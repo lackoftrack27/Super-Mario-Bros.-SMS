@@ -525,10 +525,10 @@ JCoinGfxHandler:
 
 .SECTION "PowerUpGfxTable" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
 PowerUpGfxTable:
-    .db $09, $0A, $0B, $0C  ; mushroom
-    .db $11, $12, $13, $14  ; fire flower
-    .db $15, $16, $17, $18  ; star
-    .db $0D, $0E, $0F, $10  ; 1-up mushroom
+    .db $09, $0A, $0B, $0C  ; active powerup/mushroom
+    .db $11, $12, $13, $14  ; cycle frame 1/fire flower
+    .db $15, $16, $17, $18  ; cycle frame 2/star
+    .db $0D, $0E, $0F, $10  ; cycle frame 3/1-up mushroom
 .ENDS
 
 DrawPowerUp:
@@ -549,11 +549,24 @@ DrawPowerUp:
     LD A, (Enemy_Rel_XPos)                  ;get relative horizontal coordinate
     LD C, A                                 ;store here
 ;   TILE SETUP
+    LD HL, PowerUpGfxTable
+    LD A, (OptionBitflags)                  ;check if doing new GFX mode
+    AND A, bitValue(OPTFLAG_GFX)
+    JR NZ, @NoCycle                         ;if not, skip
+    LD A, (PowerUpType)                     ;check for flower or star power-up
+    DEC A
+    CP A, $02
+    JR NC, @SATWrite                        ;if not them, don't cycle sprites
+    LD A, (FrameCounter)                    ;else, cycle sprites every 2 frames
+    AND A, %00000110
+    JR +
+@NoCycle:
     LD A, (PowerUpType)                     ;get power-up type
     ADD A, A
-    ADD A, A
-    LD HL, PowerUpGfxTable
-    addAToHL8_M
++:
+    ADD A, A                                ;use either power-up type or frame cycle as index
+    addAToHL8_M                             ;into sprite table
+@SATWrite:
 ;   WRITE TO S.A.T.
     CALL DrawSpriteObject                   ;draw first row of our power-up object
     CALL DrawSpriteObject                   ;draw second row of our power-up object

@@ -544,8 +544,12 @@ NonMaskableInterrupt:
     LD (Buffer2SuppressFlag), A     ;clear flag used for coin/axe removal
 NametableUpdateRet:
 ;   TILE STREAMING                  ;[CPU TIME: 22 LINES MAX]
+    LD A, (PowerUpTileAmount)       ;stream power-up tiles if needed (only in new GFX mode)
+    OR A
+    CALL NZ, StreamPowerUpTile
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
+    OR A
     SBC HL, DE
     LD B, $00                       ;assume player isn't trying to update, flag clear
     JP Z, StreamAnimatedBGTiles     ;if player isn't updating, stream BG tiles
@@ -1358,6 +1362,33 @@ CarryOne:
 
 ;-------------------------------------------------------------------------------------
 
+;   [CPU TIME: 3 LINES MAX]
+StreamPowerUpTile:
+;   SET BANK
+    LD A, :Tiles_SPR_PowerUp
+    LD (MAPPER_SLOT2), A
+;   UPDATE TILE AMOUNT
+    LD HL, PowerUpTileAmount
+    DEC (HL)
+;   SET VDP ADDRESS
+    LD HL, (PowerUpVDPAddr)
+    INC C   ; VDPCON_PORT
+    OUT (C), L
+    OUT (C), H
+    DEC C   ; VDPDATA_PORT
+    ; UPDATE FOR NEXT ITERATION
+    LD DE, SMS_TILE_SIZE
+    ADD HL, DE
+    LD (PowerUpVDPAddr), HL
+;   WRITE TO VDP AND UPDATE TILE PTR
+    LD HL, (PowerUpTilePtr)
+    .REPEAT $20
+    OUTI
+    .ENDR
+    LD (PowerUpTilePtr), HL
+    RET
+
+
 ;   HL - N/A
 ;   DE - PlayerGfxOffset
 ;   BC - N/A
@@ -1369,8 +1400,8 @@ CarryOne:
 StreamPlayerTiles:
     LD (PlayerGfxOffset_Old), DE
 ;   SET VDP ADDRESS
-    LD C, VDPCON_PORT
     LD HL, VRAM_ADR_SPR_PLR | VRAMWRITE
+    INC C   ; VDPCON_PORT
     OUT (C), L
     OUT (C), H
     DEC C   ; VDPDATA_PORT
@@ -1530,7 +1561,6 @@ StreamAnimatedBGTiles:
 ;   SETUP
     LD A, BANK_ANITILES
     LD (MAPPER_SLOT2), A
-    LD C, VDPCON_PORT
     LD IXH, >OutiBlock128
 ;   SLOT 0 (4 or less) [MAX CYCLES: ~2235]
     ; CHECK ANIMATE FLAG
@@ -1549,9 +1579,10 @@ StreamAnimatedBGTiles:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS
+    INC C   ; VDPCON_PORT
     OUTI
     OUTI
-    DEC C
+    DEC C   ; VDPDATA_PORT
     ; GET COUNT AND POINTER   
     LD A, (HL)
     LD IXL, A
@@ -1581,9 +1612,10 @@ StreamAnimatedBGTiles:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS
+    INC C   ; VDPCON_PORT
     OUTI
     OUTI
-    DEC C
+    DEC C   ; VDPDATA_PORT
     ; GET COUNT AND POINTER   
     LD A, (HL)
     LD IXL, A
@@ -1613,9 +1645,10 @@ StreamAnimatedBGTiles:
     LD (HL), $00
     INC L
     ; SET VDP ADDRESS
+    INC C   ; VDPCON_PORT
     OUTI
     OUTI
-    DEC C
+    DEC C   ; VDPDATA_PORT
     ; GET POINTER   
     INC L
     LD A, (HL)
@@ -3122,6 +3155,108 @@ Map_BG_SoundSelect:
 
 ;-------------------------------------------------------------------------------------
 .INCLUDE "SND_Data_Comm.inc"
+
+;-------------------------------------------------------------------------------------
+.SECTION "Uncompressed Power-up Tiles (New GFX mode)" SUPERFREE SLOT 2 ALIGN $100
+Tiles_SPR_PowerUp:
+@Mushroom:
+;   MUSHROOM
+; Tile index $000
+.db $07 $00 $00 $00 $1F $06 $01 $07 $3C $1C $03 $1F $70 $00 $3F $3F $60 $00 $3F $3F $C3 $43 $3C $7F $E7 $67 $18 $7F $E7 $67 $18 $7F
+; Tile index $001
+.db $E0 $00 $00 $00 $F8 $60 $80 $E0 $3C $38 $C0 $F8 $0E $00 $FC $FC $06 $00 $FC $FC $C3 $C2 $3C $FE $E7 $E6 $18 $FE $E7 $E6 $18 $FE
+; Tile index $002
+.db $C7 $47 $38 $7F $CF $03 $7C $7F $FF $00 $70 $70 $72 $00 $00 $0D $2F $0D $00 $1D $2F $0F $00 $1F $37 $07 $00 $0F $0F $00 $00 $00
+; Tile index $003
+.db $E3 $E2 $1C $FE $F3 $C0 $3E $FE $FF $00 $0E $0E $4E $00 $00 $B0 $F4 $B0 $00 $B8 $F4 $F0 $00 $F8 $E8 $E0 $00 $F0 $F0 $00 $00 $00
+@ExtraLife:
+;   1UP
+; Tile index $004
+.db $07 $00 $00 $00 $1F $07 $01 $07 $3C $1F $03 $1C $70 $3F $3F $30 $60 $3F $3F $20 $C3 $7F $3C $43 $E7 $7F $18 $67 $E7 $7F $18 $67
+; Tile index $005
+.db $E0 $00 $00 $00 $F8 $E0 $80 $E0 $3C $F8 $C0 $38 $0E $FC $FC $0C $06 $FC $FC $04 $C3 $FE $3C $C2 $E7 $FE $18 $E6 $E7 $FE $18 $E6
+; Tile index $006
+.db $C7 $7F $38 $47 $CF $7F $7C $4F $FF $70 $70 $70 $72 $00 $00 $0D $2F $0D $00 $1D $2F $0F $00 $1F $37 $07 $00 $0F $0F $00 $00 $00
+; Tile index $007
+.db $E3 $FE $1C $E2 $F3 $FE $3E $F2 $FF $0E $0E $0E $4E $00 $00 $B0 $F4 $B0 $00 $B8 $F4 $F0 $00 $F8 $E8 $E0 $00 $F0 $F0 $00 $00 $00
+; ---
+@Flower:
+;   FLOWER
+; Tile index $014
+.db $1F $00 $00 $00 $7F $00 $0F $00 $F8 $00 $38 $07 $E3 $01 $60 $1D $E2 $00 $60 $1D $F8 $00 $78 $07 $FF $00 $3F $00 $7F $00 $0F $00
+; Tile index $015
+.db $F8 $00 $00 $00 $FE $00 $F0 $00 $1F $00 $1C $E0 $C7 $80 $06 $B8 $47 $00 $06 $B8 $1F $00 $1E $E0 $FF $00 $FC $00 $FE $00 $F0 $00
+; Tile index $016
+.db $1F $00 $00 $00 $63 $01 $00 $00 $9A $00 $61 $00 $A6 $20 $59 $00 $92 $10 $6D $00 $4A $08 $35 $00 $34 $04 $0B $00 $0F $00 $00 $00
+; Tile index $017
+.db $F8 $00 $00 $00 $C6 $80 $00 $00 $59 $00 $86 $00 $65 $04 $9A $00 $49 $08 $B6 $00 $52 $10 $AC $00 $2C $20 $D0 $00 $F0 $00 $00 $00
+
+; Tile index $010
+.db $1F $00 $00 $00 $7F $00 $0F $0F $F8 $00 $3F $3F $E3 $01 $7C $7D $E2 $00 $7D $7D $F8 $00 $7F $7F $FF $00 $3F $3F $7F $00 $0F $0F
+; Tile index $011
+.db $F8 $00 $00 $00 $FE $00 $F0 $F0 $1F $00 $FC $FC $C7 $80 $3E $BE $47 $00 $BE $BE $1F $00 $FE $FE $FF $00 $FC $FC $FE $00 $F0 $F0
+; Tile index $012
+.db $1F $00 $00 $00 $62 $01 $01 $01 $FB $00 $61 $00 $DF $20 $79 $20 $EF $10 $7D $10 $77 $08 $3D $08 $3B $04 $0F $04 $0F $00 $00 $00
+; Tile index $013
+.db $F8 $00 $00 $00 $46 $80 $80 $80 $DF $00 $86 $00 $FB $04 $9E $04 $F7 $08 $BE $08 $EE $10 $BC $10 $DC $20 $F0 $20 $F0 $00 $00 $00
+; ---
+; Tile index $008
+.db $1F $00 $00 $00 $70 $00 $00 $0F $C7 $00 $00 $3F $9F $01 $00 $7D $9F $00 $00 $7D $87 $00 $00 $7F $C0 $00 $00 $3F $70 $00 $00 $0F
+; Tile index $009
+.db $F8 $00 $00 $00 $0E $00 $00 $F0 $E3 $00 $00 $FC $F9 $80 $00 $BE $F9 $00 $00 $BE $E1 $00 $00 $FE $03 $00 $00 $FC $0E $00 $00 $F0
+; Tile index $00A
+.db $1F $00 $00 $00 $63 $01 $01 $01 $9A $61 $61 $00 $A6 $79 $79 $20 $92 $7D $7D $10 $4A $3D $3D $08 $34 $0F $0F $04 $0F $00 $00 $00
+; Tile index $00B
+.db $F8 $00 $00 $00 $C6 $80 $80 $80 $59 $86 $86 $00 $65 $9E $9E $04 $49 $BE $BE $08 $52 $BC $BC $10 $2C $F0 $F0 $20 $F0 $00 $00 $00
+
+; Tile index $00C
+.db $1F $00 $00 $00 $7F $0F $0F $0F $F8 $3F $3F $38 $E3 $7D $7C $61 $E2 $7D $7D $60 $F8 $7F $7F $78 $FF $3F $3F $3F $7F $0F $0F $0F
+; Tile index $00D
+.db $F8 $00 $00 $00 $FE $F0 $F0 $F0 $1F $FC $FC $1C $C7 $BE $3E $86 $47 $BE $BE $06 $1F $FE $FE $1E $FF $FC $FC $FC $FE $F0 $F0 $F0
+; Tile index $00E
+.db $1F $00 $00 $00 $62 $01 $00 $01 $FB $61 $00 $61 $DF $79 $00 $79 $EF $7D $00 $7D $77 $3D $00 $3D $3B $0F $00 $0F $0F $00 $00 $00
+; Tile index $00F
+.db $F8 $00 $00 $00 $46 $80 $00 $80 $DF $86 $00 $86 $FB $9E $00 $9E $F7 $BE $00 $BE $EE $BC $00 $BC $DC $F0 $00 $F0 $F0 $00 $00 $00
+; ---
+@Star:
+;   STAR
+; Tile index $020
+.db $00 $01 $00 $00 $01 $02 $01 $01 $01 $02 $01 $01 $02 $04 $03 $03 $02 $FC $03 $03 $40 $80 $7F $7F $22 $40 $3D $3D $12 $20 $1D $1D
+; Tile index $021
+.db $00 $80 $00 $00 $80 $40 $80 $80 $80 $40 $80 $80 $40 $20 $C0 $C0 $40 $3F $C0 $C0 $02 $01 $FE $FE $44 $02 $BC $BC $48 $04 $B8 $B8
+; Tile index $022
+.db $0A $10 $0D $0D $08 $10 $0F $0F $10 $20 $1F $1F $11 $20 $1F $1F $26 $41 $3E $3E $38 $46 $38 $38 $60 $98 $60 $60 $00 $E0 $00 $00
+; Tile index $023
+.db $50 $08 $B0 $B0 $10 $08 $F0 $F0 $08 $04 $F8 $F8 $88 $04 $F8 $F8 $64 $82 $7C $7C $1C $62 $1C $1C $06 $19 $06 $06 $00 $07 $00 $00
+
+; Tile index $01C
+.db $00 $01 $01 $01 $01 $03 $03 $03 $01 $03 $03 $03 $02 $07 $07 $06 $02 $FF $FF $FE $40 $FF $FF $C0 $22 $7D $7D $60 $12 $3D $3D $30
+; Tile index $01D
+.db $00 $80 $80 $80 $80 $C0 $C0 $C0 $80 $C0 $C0 $C0 $40 $E0 $E0 $60 $40 $FF $FF $7F $02 $FF $FF $03 $44 $BE $BE $06 $48 $BC $BC $0C
+; Tile index $01E
+.db $0A $1D $1D $18 $08 $1F $1F $18 $10 $3F $3F $30 $11 $3F $3F $31 $26 $7F $7F $67 $38 $7E $7E $7E $60 $F8 $F8 $F8 $00 $E0 $E0 $E0
+; Tile index $01F
+.db $50 $B8 $B8 $18 $10 $F8 $F8 $18 $08 $FC $FC $0C $88 $FC $FC $8C $64 $FE $FE $E6 $1C $7E $7E $7E $06 $1F $1F $1F $00 $07 $07 $07
+; ---
+
+; Tile index $024
+.db $00 $01 $01 $01 $01 $02 $03 $02 $01 $02 $03 $02 $02 $04 $06 $05 $02 $FC $FE $FD $40 $80 $C0 $BF $22 $40 $60 $5D $12 $20 $30 $2D
+; Tile index $025
+.db $00 $80 $80 $80 $80 $40 $C0 $40 $80 $40 $C0 $40 $40 $20 $60 $A0 $40 $3F $7F $BF $02 $01 $03 $FD $44 $02 $06 $BA $48 $04 $0C $B4
+; Tile index $026
+.db $0A $10 $18 $15 $08 $10 $18 $17 $10 $20 $30 $2F $11 $20 $31 $2E $26 $41 $67 $59 $38 $46 $7E $46 $60 $98 $F8 $98 $00 $E0 $E0 $E0
+; Tile index $027
+.db $50 $08 $18 $A8 $10 $08 $18 $E8 $08 $04 $0C $F4 $88 $04 $8C $74 $64 $82 $E6 $9A $1C $62 $7E $62 $06 $19 $1F $19 $00 $07 $07 $07
+
+; Tile index $018
+.db $01 $00 $01 $01 $02 $00 $02 $03 $02 $00 $02 $03 $05 $00 $04 $07 $FD $00 $FC $FF $BF $00 $80 $FF $5F $00 $40 $7D $2F $00 $20 $3D
+; Tile index $019
+.db $80 $00 $80 $80 $40 $00 $40 $C0 $40 $00 $40 $C0 $A0 $00 $20 $E0 $BF $00 $3F $FF $FD $00 $01 $FF $FA $00 $02 $BE $F4 $00 $04 $BC
+; Tile index $01A
+.db $17 $00 $10 $1D $17 $00 $10 $1F $2F $00 $20 $3F $2E $00 $20 $3F $59 $00 $41 $7F $46 $00 $46 $7E $98 $00 $98 $F8 $E0 $00 $E0 $E0
+; Tile index $01B
+.db $E8 $00 $08 $B8 $E8 $00 $08 $F8 $F4 $00 $04 $FC $74 $00 $04 $FC $9A $00 $82 $FE $62 $00 $62 $7E $19 $00 $19 $1F $07 $00 $07 $07
+.ENDS
 
 ;-------------------------------------------------------------------------------------
 .BANK BANK_ANITILES SLOT 2

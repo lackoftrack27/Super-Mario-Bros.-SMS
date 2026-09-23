@@ -969,6 +969,9 @@
     PlayerGfxOffset:                dsb $02 ; became absolute address
     PlayerGfxOffset_Old:            dsb $02 ; for detecting sprite changes
     PlayerGfxBank:                  dsb $01 ; determines player character
+    PowerUpTileAmount:              dsb $01
+    PowerUpTilePtr:                 dsb $02
+    PowerUpVDPAddr:                 dsb $02
     Player_SprAttrib:               dsb $01 ; only controls palette for player
     HidePlayerFlag:                 dsb $01
     WarpZoneControl:                dsb $01

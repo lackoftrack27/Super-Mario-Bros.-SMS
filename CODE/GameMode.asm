@@ -2860,6 +2860,38 @@ SetupGFB:
     ADD A, $21
     LD (Temp_Bytes + $08), A                    ;save here for later use in drawing loop
 
+;   moved out of FirebarCollision...
+SetupFirebarCollision:
+    LD A, (TimerControl)                        ;if star mario invincibility timer
+    LD IYL, A                                   ;or master timer controls set
+    LD A, (StarInvincibleTimer)                 ;set $0A for no collision
+    OR A, IYL
+    JR NZ, @NoColl
+    LD A, (Player_Y_HighPos)                    ;if player's vertical high byte offscreen,
+    DEC A
+    JR NZ, @NoColl                              ;set $0A for no collision
+    LD A, (PlayerSize)                          ;get player's size
+    OR A                                        ;if player small, branch to alter variables
+    JR NZ, @AdjSmall
+    LD A, (CrouchingFlag)                       ;if player is crouching, branch to alter variables
+    OR A
+    JR NZ, @AdjSmall
+    LD (Temp_Bytes + $0A), A                    ;initialize $0A
+    LD A, (Player_Y_Position)                   ;store unmodified Ypos in $0B
+    JP @StoreY
+@AdjSmall:
+    LD A, $02                                   ;set $0A to $02
+    LD (Temp_Bytes + $0A), A
+    LD A, (Player_Y_Position)                   ;modify Ypos by $18, then store in $0B
+    ADD A, $18
+@StoreY:
+    LD (Temp_Bytes + $0B), A
+    JP @Ready
+@NoColl:
+    LD A, $FF                                   ;set $0A to $FF to signal for no collision
+    LD (Temp_Bytes + $0A), A
+@Ready:
+
     CALL FirebarCollision                       ;draw fireball part and do collision detection
 ;
     LD IYH, $05                                 ;load value for short firebars by default
@@ -2945,26 +2977,38 @@ NextFbar:
 DrawFirebar_Collision:
     LD A, (HL)                                  ;load horizontal adder we got from position loader
     INC IXL                                     ;shift LSB of mirror data
-    JP M, AddHA                                 ;if carry was set, skip this part
-    NEG                                         ;otherwise get two's compliment of horizontal adder
-AddHA:
+;     JP M, AddHA                                 ;if carry was set, skip this part
+;     NEG                                         ;otherwise get two's compliment of horizontal adder
+; AddHA:
+;     LD IXH, A
+;     LD A, (Enemy_Rel_XPos)                      ;store Enemy_Rel_XPos in IYL
+;     LD IYL, A                                   ;add horizontal coordinate relative to screen to
+;     ADD A, IXH                                  ;horizontal adder, modified or otherwise
+;     LD IXH, A                                   ;store here for now
+;     LD (DE), A                                  ;store as X coordinate here
+;     CP A, IYL                                   ;compare X coordinate of sprite to original X of firebar
+;     JR NC, SubtR1                               ;if sprite coordinate => original coordinate, branch
+;     LD A, IYL                                   ;otherwise subtract sprite X from the
+;     SUB A, IXH                                  ;original one and skip this part
+;     JP ChkFOfs
+; SubtR1:
+;     SUB A, IYL                                  ;subtract original X from the current sprite X
+; ChkFOfs:
+;     CP A, $59                                   ;if difference of coordinates within a certain range,
+;     JR C, VAHandl                               ;continue by handling vertical adder
     LD IXH, A
-    LD A, (Enemy_Rel_XPos)                      ;store Enemy_Rel_XPos in IYL
-    LD IYL, A                                   ;add horizontal coordinate relative to screen to
-    ADD A, IXH                                  ;horizontal adder, modified or otherwise
-    LD IXH, A                                   ;store here for now
-    LD (DE), A                                  ;store as X coordinate here
-    CP A, IYL                                   ;compare X coordinate of sprite to original X of firebar
-    JR NC, SubtR1                               ;if sprite coordinate => original coordinate, branch
-    LD A, IYL                                   ;otherwise subtract sprite X from the
-    SUB A, IXH                                  ;original one and skip this part
-    JP ChkFOfs
-    
-SubtR1:
-    SUB A, IYL                                  ;subtract original X from the current sprite X
-ChkFOfs:
-    CP A, $59                                   ;if difference of coordinates within a certain range,
-    JR C, VAHandl                               ;continue by handling vertical adder
+    LD A, (Enemy_Rel_XPos)
+    JP M, AddHA                                 ;if carry was set, skip this part
+    SUB A, IXH                                  ;subtract horizontal coordinate relative to screen to
+    LD (DE), A                                  ;horizontal adder, modified or otherwise                  
+    LD IXH, A
+    JR C, OffscrFbr                             ;if carry, set offscreen
+    JP VAHandl
+AddHA:
+    ADD A, IXH                                  ;add horizontal coordinate relative to screen to
+    LD (DE), A                                  ;horizontal adder, modified or otherwise
+    LD IXH, A
+    JR NC, VAHandl                              ;if carry, set offscreen
 
 OffscrFbr:
     ;LD A, YPOS_OFFSCREEN_LOGICAL                ;otherwise, load offscreen Y coordinate
@@ -3002,44 +3046,30 @@ FirebarCollision:
     LD (DE), A
     INC E                                       ;move to next sprite entry
 ;
-    LD A, (TimerControl)                        ;if star mario invincibility timer
-    LD IYL, A
-    LD A, (StarInvincibleTimer)                 ;or master timer controls set
-    OR A, IYL
-    RET NZ                                      ;then skip all of this
-;
-    LD IYL, A                                   ;otherwise initialize counter
-    LD A, (Player_Y_HighPos)                    ;if player's vertical high byte offscreen,
-    DEC A
-    RET NZ                                      ;skip all of this
-    LD A, (PlayerSize)                          ;get player's size
+    LD A, (Temp_Bytes + $0A)                    ;check for no collision signal
     OR A
-    JR NZ, AdjSm                                ;if player small, branch to alter variables
-    LD A, (CrouchingFlag)
-    OR A
-    LD A, (Player_Y_Position)
-    JR Z, FBCLoop                               ;if player big and not crouching, jump ahead
-AdjSm:                                          ;if small or big but crouching, execute this part
-    LD IYL, $02                                 ;first increment our counter twice (setting $02 as flag)
-    LD A, (Player_Y_Position)
-    ADD A, $18                                  ;then add 24 pixels to the player's vertical coordinate                                   
-;
-FBCLoop:
-    SUB A, IXL                                  ;subtract vertical position of firebar from the player's
-    JP P, ChkVFBD                               ;if player lower on the screen than firebar, skip two's compliment part 
-    NEG                                         ;otherwise get two's compliment                          
-ChkVFBD:
-    CP A, $08                                   ;if difference => 8 pixels, skip ahead of this part
-    JR NC, Chk2Ofs
-    LD A, IXH                                   ;if firebar on far right on the screen, skip this,
+    RET M                                       ;exit if set
+    LD IYL, A                                   ;cppy $0A to IYL
+
+;   moved out of FBCLoop...
+    LD A, IXH                                   ;if firebar on far right on the screen, exit
     CP A, $F0                                   ;because, really, what's the point?
-    JR NC, Chk2Ofs
+    RET NC                                      ;just exit because this was effectively 'continue' in FBCLoop
     LD A, (Sprite_X_Position + $02)             ;get OAM X coordinate for sprite #1
     ADD A, $04                                  ;add four pixels
     SUB A, IXH                                  ;subtract horizontal coordinate of firebar from the X coordinate of player's sprite 1
     JP P, ChkFBCl                               ;if modded X coordinate to the right of firebar, skip two's compliment part
     NEG                                         ;otherwise get two's compliment
 ChkFBCl:
+    CP A, $08                                   ;if difference => 8 pixels, exit (there is no overlap at any height)
+    RET NC                                      ;there is nothing to scan for
+
+    LD A, (Temp_Bytes + $0B)                    ;get potentially modified player Ypos
+FBCLoop:
+    SUB A, IXL                                  ;subtract vertical position of firebar from the player's
+    JP P, ChkVFBD                               ;if player lower on the screen than firebar, skip two's compliment part 
+    NEG                                         ;otherwise get two's compliment                          
+ChkVFBD:
     CP A, $08                                   ;if difference < 8 pixels, collision, thus branch
     JR C, ChgSDir                               ;to process
 Chk2Ofs:
@@ -3067,6 +3097,13 @@ SetSDir:
     PUSH BC
     PUSH DE                                     ;save SAT Address
     CALL InjurePlayer                           ;perform sub to hurt or kill player
+    
+    LD A, (TimerControl)                        ;check if TimerControl has changed
+    OR A
+    JR Z, +
+    LD (Temp_Bytes + $0A), A                    ;set cached version to $FF if player was injured
++:
+
     POP DE                                      ;restore SAT Address
     POP BC
     RET

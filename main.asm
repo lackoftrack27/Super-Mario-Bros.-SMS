@@ -429,8 +429,8 @@ RotPRandomBit:
     LD B, A
     LD A, (GamePauseStatus)
     OR A, B
-    RRCA                            ;[CPU TIME: 05 LINES]
-    CALL NC, SpriteShuffler
+    RRCA
+    CALL NC, SpriteShuffler         ;[CPU TIME: 05 LINES]
     ; --- MAIN GAME EXEC ---
     LD A, (GamePauseStatus)
     RRCA
@@ -957,7 +957,7 @@ GetScoreDiff:
 ;$00(C) - used for preset value
 
 SpriteShuffler:
-;   PLACE ALL SPRITES OFFSCREEN
+;   PLACE ALL SPRITES OFFSCREEN         [2 LINES]
     CALL MoveAllSpritesOffscreen
 ;   UPDATE SHUFFLE OFFSET
     LD HL, SprShuffleAmtOffset
@@ -974,24 +974,30 @@ SpriteShuffler:
     LD B, A                             ; B = A*8
     ADD A, A                            ; *16
     ADD A, B                            ; *24 (16 + 8)
-    ADD A, <SpriteSlotTable
+
     LD L, A
     LD H, >SpriteSlotTable
-    LD DE, SprDataOffset
 ;   WRITE TABLE DATA TO OBJECT SPRITE SLOTS
-    .REPEAT $18
+    LD DE, SprDataOffset + $0100
+    .REPEAT $16
     LD A, (HL)
     LD (DE), A
     INC L
     INC D
     .ENDR
+    LD A, (HL)
+    LD (DE), A
     RET
 
-.SECTION "Sprite Slot Table" BANK BANK_SLOT2 SLOT 2 FREE BITWINDOW 8 RETURNORG
+.SECTION "Sprite Slot Table" BANK BANK_SLOT2 SLOT 2 FREE ALIGN $100 RETURNORG
 SpriteSlotTable:
-    .db 1, 34, 40, 46, 52, 58, 10, 16, 22, 26, 9, 30, 31, 32, 33, 58, 60, 62, 10, 12, 14, 16, 18, 20
-    .db 1, 52, 58, 10, 16, 22, 28, 34, 40, 44, 9, 48, 49, 50, 51, 22, 24, 26, 28, 30, 32, 34, 36, 38
-    .db 1, 12, 18, 24, 30, 36, 42, 48, 54, 58, 9, 62, 63, 10, 11, 36, 38, 40, 42, 44, 46, 48, 50, 52
+    ;.db 1, 34, 40, 46, 52, 58, 10, 16, 22, 26, 9, 30, 31, 32, 33, 58, 60, 62, 10, 12, 14, 16, 18, 20
+    ;.db 1, 52, 58, 10, 16, 22, 28, 34, 40, 44, 9, 48, 49, 50, 51, 22, 24, 26, 28, 30, 32, 34, 36, 38
+    ;.db 1, 12, 18, 24, 30, 36, 42, 48, 54, 58, 9, 62, 63, 10, 11, 36, 38, 40, 42, 44, 46, 48, 50, 52
+
+    .db 34, 40, 46, 52, 58, 10, 16, 22, 26, 9, 30, 31, 32, 33, 58, 60, 62, 10, 12, 14, 16, 18, 20, $00
+    .db 52, 58, 10, 16, 22, 28, 34, 40, 44, 9, 48, 49, 50, 51, 22, 24, 26, 28, 30, 32, 34, 36, 38, $00
+    .db 12, 18, 24, 30, 36, 42, 48, 54, 58, 9, 62, 63, 10, 11, 36, 38, 40, 42, 44, 46, 48, 50, 52, $00
 .ENDS
 
 ;-------------------------------------------------------------------------------------

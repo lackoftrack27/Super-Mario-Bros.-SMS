@@ -385,7 +385,7 @@ SndChannelProcessSFX:
     BIT CHANCON_REST, C
     RET NZ
         ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <SFXTrack0.Envelope
+    LD L, <SFXTrack0.EnvelopePtr + $01
     LD A, (HL)
     OR A
     CALL NZ, SndWriteChannelData@UpdateEnvelope
@@ -448,8 +448,8 @@ SndProcessQueueSFX:
     LDI             ; DataPointer + $01
     LDI             ; Transpose
     LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter)
-    LDI             ; Envelope
+    LDI             ; VolEnvResetPtr
+    LDI             ; VolEnvResetPtr + $01
 ;
     EX DE, HL       ; DE - TRACK DATA, HL - TRACK RAM
     XOR A
@@ -458,6 +458,11 @@ SndProcessQueueSFX:
     LD (HL), A      ; Detune
     INC L
     LD (HL), $01    ; Duration
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD L, <SFXTrack0.VolEnvResetPtr + $01
+    LD A, (HL)
+    LD L, <SFXTrack0.EnvelopePtr + $01
+    LD (HL), A
 ;   SET UP 2ND LAYER IF DOING LAYERED SFX IN FM MODE
     LD A, (OptionBitflags)
     AND A, bitValue(OPTFLAG_FM)
@@ -492,8 +497,8 @@ SndProcessQueueSFX:
     LDI             ; DataPointer + $01
     LDI             ; Transpose
     LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter)
-    LDI             ; Envelope
+    LDI             ; VolEnvResetPtr
+    LDI             ; VolEnvResetPtr + $01
     EX DE, HL       ; DE - TRACK DATA, HL - TRACK RAM
     XOR A
     LD (HL), A      ; SavedDuration
@@ -501,6 +506,11 @@ SndProcessQueueSFX:
     LD (HL), A      ; Detune
     INC L
     LD (HL), $01    ; Duration
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD L, <SFXTrack0.VolEnvResetPtr + $01
+    LD A, (HL)
+    LD L, <SFXTrack0.EnvelopePtr + $01
+    LD (HL), A
     RET
 @SetOverride:
 ;   SET SFX OVERRIDE BIT ON MUSIC TRACK THAT SHARES CHANNEL (PSG MODE ONLY)
@@ -605,15 +615,27 @@ SndReadTrackStream:
     LD (HL), A
     JP @SndNextCheck
 @@SetupNoiseDrum:
+    LD E, A
     ADD A, A
+    ADD A, E
     LD DE, PSGDrumTable
     addAToDE8_M
+    ; SAVE PSG NOISE FREQUENCY
     LD A, (DE)
     LD (HL), A
     INC E
+    ; SET VOLUME ENVELOPE POINTER
     LD A, (DE)
-    LD L, <SFXTrack0.Envelope
+    LD L, <SFXTrack0.VolEnvResetPtr
     LD (HL), A
+    INC L
+    INC E
+    LD A, (DE)
+    LD (HL), A
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD L, <SFXTrack0.EnvelopePtr + $01
+    LD (HL), A
+    ; FALL THROUGH
 
 @SndNextCheck:
 ;   GET NEXT BYTE AND CHECK IF IT'S NOT A DURATION
@@ -644,9 +666,11 @@ SndReadTrackStream:
     LD A, (HL)
     LD L, <FMTrack0.FinalVolume
     LD (HL), A
-;   RESET FM PATCH INDEX
-    LD L, <SFXTrack0.PatchEnvIndex
-    LD (HL), $00
+;   RESET FM PATCH INDEX (ONLY LOW BYTE)
+    LD L, <SFXTrack0.PatchEnvResetPtr
+    LD A, (HL)
+    LD L, <SFXTrack0.PatchEnvPtr
+    LD (HL), A
 ;   SET REST FLAG IF FREQUENCY IS INVALID
     LD L, <SFXTrack0.Frequency + $01
     LD A, (HL)
@@ -659,11 +683,14 @@ SndReadTrackStream:
     LD A, (HL)
     BIT CHANCON_NOATK, A
     RET NZ
-;   RESET ENVELOPE INDEX
-    LD L, <SFXTrack0.EnvelopeIndex
-    LD (HL), $00
+;   RESET VOLUME ENVELOPE INDEX (ONLY LOW BYTE)
+    LD L, <SFXTrack0.VolEnvResetPtr
+    LD A, (HL)
+    LD L, <SFXTrack0.EnvelopePtr
+    LD (HL), A
 ;   RETURN IF 'MODULATION' FLAG IS CLEAR
-    BIT CHANCON_MOD, A
+    LD L, <SFXTrack0.Control
+    BIT CHANCON_MOD, (HL)
     RET Z
 ;   SET MODULATION VALUES (FOR NEW NOTE)
     LD L, <SFXTrack0.ModPointer
@@ -807,8 +834,8 @@ SndProcessQueueMusic:
     LDI             ; DataPointer + $01
     LDI             ; Transpose
     LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter)
-    LDI             ; Envelope
+    LDI             ; VolEnvResetPtr
+    LDI             ; VolEnvResetPtr + $01
 ;
     XOR A
     LD (DE), A      ; SavedDuration
@@ -817,9 +844,14 @@ SndProcessQueueMusic:
     INC E
     INC A
     LD (DE), A      ; Duration
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD E, <SFXTrack0.VolEnvResetPtr + $01
+    LD A, (DE)
+    LD E, <SFXTrack0.EnvelopePtr + $01
+    LD (DE), A
     ; SET LOOP COUNTERS AND CALL STACK
     XOR A
-    LD E, <MusicTrack0.LoopCounters
+    INC E           ; LoopCounters
     LD (DE), A
     INC E
     LD (DE), A
@@ -920,7 +952,7 @@ SndChannelProcessMUS:
     BIT CHANCON_REST, C
     RET NZ
     ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <SFXTrack0.Envelope
+    LD L, <SFXTrack0.EnvelopePtr + $01
     LD A, (HL)
     OR A
     CALL NZ, SndWriteChannelData@UpdateEnvelope
@@ -979,7 +1011,7 @@ SndWriteChannelData:
     LD L, <SFXTrack0.Volume
     LD B, (HL)
 ;   CHECK IF TRACK IS USING AN ENVELOPE. IF NOT, SKIP ENVELOPE UPDATE 
-    LD L, <SFXTrack0.Envelope
+    LD L, <SFXTrack0.EnvelopePtr + $01
     LD A, (HL)
     OR A
     JP Z, @WriteVolume
@@ -988,27 +1020,18 @@ SndWriteChannelData:
 ;   SAVE CHANNEL VOLUME IN B
     LD L, <SFXTrack0.Volume
     LD B, (HL)
+    LD L, <SFXTrack0.EnvelopePtr + $01
 @@Body:
-;   GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
-    EX DE, HL   ; DE - TRACK RAM, HL - N/A
-    LD HL, VolumeEnvTable
-    DEC A
-    ADD A, A
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    LD E, <SFXTrack0.EnvelopeIndex
-    LD A, (DE)
-    addAToHL8_M
+;   GET POINTER
+    LD D, A
+    DEC L
+    LD E, (HL)
 ;   CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE VOLUME
-    BIT 7, (HL)
-    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
+    LD A, (DE)
+    OR A
     RET M
 ;   INCREMENT INDEX AND ADD VALUE TO VOLUME
     INC (HL)
-    LD A, (DE)
     ADD A, B
 ;   LIMIT VOLUME TO <= $0F
     CP A, $10
@@ -1094,34 +1117,32 @@ SndProcessQueueMusicFM:
     LDI             ; DataPointer + $01
     LDI             ; Transpose
     LDI             ; Volume
-    LDI             ; EnvelopeIndex (Doesn't matter) USED AS PatchEnvelope
-    LDI             ; Envelope
-;
     XOR A
+    LD E, <FMTrack0.SavedDuration
     LD (DE), A      ; SavedDuration
     INC E
     LD (DE), A      ; Detune
     INC E
     INC A
     LD (DE), A      ; Duration
-    LD E, <FMTrack0.Instrument  ; default instrument is Violin
-    LD (DE), A
-    ;
-    LD E, <FMTrack0.EnvelopeIndex
-    LD A, (DE)
-    LD E, <FMTrack0.PatchEnvelope
-    LD (DE), A
-    ; SET LOOP COUNTERS AND CALL STACK
     XOR A
-    LD E, <FMTrack0.LoopCounters
+    LD E, <FMTrack0.EnvelopePtr + $01
     LD (DE), A
     INC E
-    LD (DE), A
+    LD (DE), A      ; LoopCounter 0
     INC E
-    LD (DE), A
+    LD (DE), A      ; LoopCounter 1
+    INC E
+    LD (DE), A      ; LoopCounter 2
     INC E
     LD A, <FMTrack0.GoSubStack
+    LD (DE), A      ; StackPointer
+    XOR A
+    LD E, <FMTrack0.PatchEnvPtr + $01
     LD (DE), A
+    INC E
+    INC A
+    LD (DE), A      ; Instrument
     ; SET PLAYING FLAG
     LD E, <FMTrack0.Control
     LD A, bitValue(CHANCON_PLAYING)
@@ -1200,31 +1221,21 @@ SndChannelProcessFM:
     BIT CHANCON_REST, (HL)
     RET NZ
     ; ONLY UPDATE VOLUME IF ENVELOPE IS BEING USED
-    LD L, <FMTrack0.Envelope
+    LD L, <SFXTrack0.EnvelopePtr + $01
     LD A, (HL)
     OR A
     JR Z, @TrackUpdate@PatchEnvCheck
     ; VOLUME ENVELOPE UPDATE
-        ; GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
-    EX DE, HL   ; DE - TRACK RAM, HL - N/A
-    LD HL, FMVolumeEnvTable
-    DEC A
-    ADD A, A
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    LD E, <FMTrack0.EnvelopeIndex
-    LD A, (DE)
-    addAToHL8_M
+        ; GET POINTER
+    LD D, A
+    DEC L
+    LD E, (HL)
         ; CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE VOLUME
-    BIT 7, (HL)
-    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
+    LD A, (DE)
+    OR A
     JP M, @TrackUpdate@PatchEnvCheck
         ; INCREMENT INDEX AND ADD VALUE TO VOLUME
     INC (HL)
-    LD A, (DE)
     LD L, <FMTrack0.Volume
     ADD A, (HL)
         ; LIMIT FINAL VOLUME TO <= $0F
@@ -1235,31 +1246,21 @@ SndChannelProcessFM:
     LD (HL), $0F
 @@PatchEnvCheck:
     ; ONLY UPDATE PATCH IF ENVELOPE IS BEING USED
-    LD L, <FMTrack0.PatchEnvelope
+    LD L, <FMTrack0.PatchEnvPtr + $01
     LD A, (HL)
     OR A
     JR Z, @TrackUpdate@WriteVolInst
     ; PATCH ENVELOPE UPDATE
-        ; GET TABLE OF ENVELOPE AND ADD CURRENT INDEX
-    EX DE, HL   ; DE - TRACK RAM, HL - N/A
-    LD HL, FMPatchEnvTable
-    DEC A
-    ADD A, A
-    addAToHL8_M
-    LD A, (HL)
-    INC L
-    LD H, (HL)
-    LD L, A
-    LD E, <FMTrack0.PatchEnvIndex
-    LD A, (DE)
-    addAToHL8_M
+        ; GET POINTER
+    LD D, A
+    DEC L
+    LD E, (HL)
         ; CHECK IF AT VALUE >= $80. IF SO, DON'T UPDATE PATCH
-    BIT 7, (HL)
-    EX DE, HL   ; DE - IDX VALUE, HL - TRACK RAM
+    LD A, (DE)
+    OR A
     JP M, @TrackUpdate@WriteVolInst
         ; INCREMENT INDEX AND USE VALUE AS PATCH
     INC (HL)
-    LD A, (DE)
     LD L, <FMTrack0.Instrument
     LD (HL), A
 @@WriteVolInst:
@@ -1391,7 +1392,12 @@ CoordFlagTable:
 ;   E0 - SET FM PATCH ENVELOPE
 @cfSetPatchEnv:
     LD H, E
-    LD L, <FMTrack0.PatchEnvelope
+    LD L, <FMTrack0.PatchEnvResetPtr
+    LD (HL), A
+    INC BC
+    LD A, (BC)
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD L, <FMTrack0.PatchEnvPtr + $01
     LD (HL), A
     JR @return
 ;   ---------------------------------------------
@@ -1635,10 +1641,17 @@ CoordFlagTable:
     RES CHANCON_MOD, (HL)
     JP @return
 ;   ---------------------------------------------
-;   F5 - SET PSG ENVELOPE
+;   F5 - SET VOLUME ENVELOPE
 @cfSetEnvelope:
     LD H, E
-    LD L, <SFXTrack0.Envelope
+    LD L, <SFXTrack0.VolEnvResetPtr
+    LD (HL), A
+    INC L
+    INC BC
+    LD A, (BC)
+    LD (HL), A
+    ; SET HIGH BYTE OF WORKING ENVELOPE PTR HERE (NEVER CHANGES DURING INCREMENT)
+    LD L, <SFXTrack0.EnvelopePtr + $01
     LD (HL), A
     JP @return
 ;   ---------------------------------------------
@@ -1801,28 +1814,6 @@ FMFreqTable:
 
 ;--------------------------------
 
-.SECTION "Volume Envelope Table" FREE BITWINDOW 8 RETURNORG
-VolumeEnvTable:
-    .dw PSGEnv01    ; SFX PAUSE
-    .dw PSGEnv02    ; SFX COIN
-    .dw PSGEnv03    ; SFX 1UP
-    .dw PSGEnv04    ; SFX SWIM & STOMP
-    .dw PSGEnv05    ; SFX FLAME
-    .dw PSGEnv06    ; SFX JUMP
-    .dw PSGEnv07    ; MUS 0 (Overworld, Underground, Castle)
-    .dw PSGEnv08    ; MUS 1 (Level Victory)
-    .dw PSGEnv09    ; MUS 2 (Invincible)
-    .dw PSGEnv0A    ; MUS 3 (Game Over, Hurry Up, Underwater, Game Victory)
-    .dw PSGEnv0B    ; MUS 4 (Death 0)
-    .dw PSGEnv0C    ; MUS 5 (Death 1)
-    .dw PSGEnv0D    ; MUS 6 (World Victory)
-    .dw PSGEnv0E    ; MUS 7 (Common Triangle)
-
-    .dw PSGEnv0F    ; DRUM 0
-    .dw PSGEnv10    ; DRUM 1
-    .dw PSGEnv11    ; SFX SHATTER
-.ENDS
-
 .SECTION "Sound PSG Envelope 01 - SFX PAUSE" FREE BITWINDOW 8 RETURNORG
 PSGEnv01:
     .db $00, $01, $01, $01, $01, $02, $02, $03, $03, $03, $04, $05, $06, $07, $07, $09
@@ -1862,11 +1853,13 @@ PSGEnv06:
     .db $04, $04, $05, $05, $06, $06, $07, $07, $09, $09, $09, $0C, $0C, $0F, $80
 .ENDS
 
+;   MUS 0 (Overworld, Underground, Castle)
 .SECTION "Sound PSG Envelope 07 - MUSIC 00" FREE BITWINDOW 8 RETURNORG
 PSGEnv07:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
+;   MUS 1 (Level Victory)
 .SECTION "Sound PSG Envelope 08 - MUSIC 01" FREE BITWINDOW 8 RETURNORG
 PSGEnv08:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
@@ -1874,11 +1867,13 @@ PSGEnv08:
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
+;   MUS 2 (Invincible)
 .SECTION "Sound PSG Envelope 09 - MUSIC 02" FREE BITWINDOW 8 RETURNORG
 PSGEnv09:
     .db $0F, $03, $03, $04, $05, $05, $06, $06, $0F, $80
 .ENDS
 
+;   MUS 3 (Game Over, Hurry Up, Underwater, Game Victory)
 .SECTION "Sound PSG Envelope 0A - MUSIC 03" FREE BITWINDOW 8 RETURNORG
 PSGEnv0A:
     .db $05, $07, $06, $05, $05, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
@@ -1886,21 +1881,25 @@ PSGEnv0A:
     .db $06, $06, $07, $07, $0F, $80
 .ENDS
 
+;   MUS 4 (Death 0)
 .SECTION "Sound PSG Envelope 0B - MUSIC 04" FREE BITWINDOW 8 RETURNORG
 PSGEnv0B:
     .db $00, $01, $01, $03, $06, $0F, $80
 .ENDS
 
+;   MUS 5 (Death 1)
 .SECTION "Sound PSG Envelope 0C - MUSIC 05" FREE BITWINDOW 8 RETURNORG
 PSGEnv0C:
     .db $00, $01, $01, $02, $03, $03, $04, $06, $07, $09, $0F, $80
 .ENDS
 
+;   MUS 6 (World Victory)
 .SECTION "Sound PSG Envelope 0D - MUSIC 06" FREE BITWINDOW 8 RETURNORG
 PSGEnv0D:
     .db $00, $01, $02, $02, $03, $80
 .ENDS
 
+;   MUS 7 (Common Triangle)
 .SECTION "Sound PSG Envelope 0E - MUSIC 07" FREE BITWINDOW 8 RETURNORG
 PSGEnv0E:
     .db $00, $00, $00, $00, $00, $00, $00, $00, $0F, $80
@@ -1925,9 +1924,14 @@ PSGEnv11:
 
 .SECTION "Sound PSG Drum Table" FREE BITWINDOW 8 RETURNORG
 PSGDrumTable:
-    .db $E4, $0F    ; NOISE HIGH,   ENVELOPE $0F (5 TICKS)
-    .db $E4, $10    ; NOISE HIGH,   ENVELOPE $10 (1 TICK)
-    .db $E5, $10    ; NOISE MID,    ENVELOPE $10 (1 TICK)
+    .db $E4
+    .dw PSGEnv0F    ; NOISE HIGH,   ENVELOPE $0F (5 TICKS)
+
+    .db $E4
+    .dw PSGEnv10    ; NOISE HIGH,   ENVELOPE $10 (1 TICK)
+
+    .db $E5
+    .dw PSGEnv10    ; NOISE MID,    ENVELOPE $10 (1 TICK)
 .ENDS
 
 ;--------------------------------
@@ -1951,54 +1955,9 @@ SpeedUpTempoTableFM:
 
 ;--------------------------------
 
-.SECTION "Patch Envelope Table" FREE BITWINDOW 8 RETURNORG
-FMPatchEnvTable:
-    .dw PatchEnv01
-    .dw PatchEnv02
-    .dw PatchEnv03
-    .dw PatchEnv04
-    .dw PatchEnv05
-    .dw PatchEnv06
-    .dw PatchEnv07
-    .dw PatchEnv08
-    .dw PatchEnv09
-    .dw PatchEnv0A
-    .dw PatchEnv0B
-    .dw PatchEnv0C
-    .dw PatchEnv0D
-    .dw PatchEnv0E
-    .dw PatchEnv0F
-    .dw PatchEnv10
-    .dw PatchEnv11
-    .dw PatchEnv12
-    .dw PatchEnv13
-    .dw PatchEnv14
-    .dw PatchEnv15
-    .dw PatchEnv16
-    .dw PatchEnv17
-    .dw PatchEnv18
-    .dw PatchEnv19
-    .dw PatchEnv1A
-.ENDS
-
 .SECTION "PatchEnv01" FREE BITWINDOW 8 RETURNORG
 PatchEnv01:
     .db $04, $05, $80
-.ENDS
-
-.SECTION "PatchEnv02" FREE BITWINDOW 8 RETURNORG
-PatchEnv02:
-    .db $02, $01, $80
-.ENDS
-
-.SECTION "PatchEnv03" FREE BITWINDOW 8 RETURNORG
-PatchEnv03:
-    .db $02, $01, $80
-.ENDS
-
-.SECTION "PatchEnv04" FREE BITWINDOW 8 RETURNORG
-PatchEnv04:
-    .db $0C, $0B, $80
 .ENDS
 
 .SECTION "PatchEnv05" FREE BITWINDOW 8 RETURNORG
@@ -2006,28 +1965,13 @@ PatchEnv05:
     .db $0C, $03, $80
 .ENDS
 
-.SECTION "PatchEnv06" FREE BITWINDOW 8 RETURNORG
-PatchEnv06:
-    .db $07, $01, $80
-.ENDS
-
 .SECTION "PatchEnv07" FREE BITWINDOW 8 RETURNORG
 PatchEnv07:
     .db $07, $01, $80
 .ENDS
 
-.SECTION "PatchEnv08" FREE BITWINDOW 8 RETURNORG
-PatchEnv08:
-    .db $0C, $08, $80
-.ENDS
-
 .SECTION "PatchEnv09 (HI-HAT)" FREE BITWINDOW 8 RETURNORG
 PatchEnv09:
-    .db $05, $04, $80
-.ENDS
-
-.SECTION "PatchEnv0A (HI-HAT)" FREE BITWINDOW 8 RETURNORG
-PatchEnv0A:
     .db $05, $04, $80
 .ENDS
 
@@ -2047,29 +1991,14 @@ PatchEnv0D:
     .db $0C, $02, $80
 .ENDS
 
-.SECTION "PatchEnv0E" FREE BITWINDOW 8 RETURNORG
-PatchEnv0E:
-    .db $0C, $03, $80
-.ENDS
-
 .SECTION "PatchEnv0F (SNARE)" FREE BITWINDOW 8 RETURNORG
 PatchEnv0F:
     .db $0F, $00, $80
 .ENDS
 
-.SECTION "PatchEnv10" FREE BITWINDOW 8 RETURNORG
-PatchEnv10:
-    .db $04, $07, $80
-.ENDS
-
 .SECTION "PatchEnv11" FREE BITWINDOW 8 RETURNORG
 PatchEnv11:
     .db $0D, $0A, $80
-.ENDS
-
-.SECTION "PatchEnv12 (POWER SNARE)" FREE BITWINDOW 8 RETURNORG
-PatchEnv12:
-    .db $00, $80
 .ENDS
 
 .SECTION "PatchEnv13 (KICK)" FREE BITWINDOW 8 RETURNORG
@@ -2087,49 +2016,9 @@ PatchEnv15:
     .db $0B, $04, $80;$0E, $0A, $80
 .ENDS
 
-.SECTION "PatchEnv16 (ORCH HIT)" FREE BITWINDOW 8 RETURNORG
-PatchEnv16:
-    .db $00, $80
-.ENDS
-
-.SECTION "PatchEnv17 (CLAP?)" FREE BITWINDOW 8 RETURNORG
-PatchEnv17:
-    .db $00, $80
-.ENDS
-
-.SECTION "PatchEnv18 (DRUM?)" FREE BITWINDOW 8 RETURNORG
-PatchEnv18:
-    .db $00, $80
-.ENDS
-
-.SECTION "PatchEnv19" FREE BITWINDOW 8 RETURNORG
-PatchEnv19:
-    .db $00, $80
-.ENDS
-
-.SECTION "PatchEnv1A" FREE BITWINDOW 8 RETURNORG
-PatchEnv1A:
-    .db $00, $80
-.ENDS
-
 ;--------------------------------
 
-.SECTION "FM Volume Envelope Table" FREE BITWINDOW 8 RETURNORG
-FMVolumeEnvTable:
-    .dw FMVolEnv01  ; OVERWORLD (IDX)
-    .dw FMVolEnv02  ; OVERWORLD (IDX)
-    .dw FMVolEnv03  ; KICK
-    .dw FMVolEnv04  ; CLOSED HIHAT
-    .dw FMVolEnv05  ; OPEN HIHAT
-    .dw FMVolEnv06  ; FADE IN (CASTLE)
-    .dw FMVolEnv07  ; PIANO (CLOUD)
-    .dw FMVolEnv08  ; PIANO 2 (CLOUD)
-    .dw FMVolEnv09  ; FADE IN (BOWSER)
-    .dw FMVolEnv0A  ; FADE OUT (BOWSER)
-    .dw FMVolEnv0B  ; NOTE FILL (CASTLE)
-.ENDS
-
-.SECTION "FMVolEnv01" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv01 - OVERWORLD (IDX)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv01:
     .db $03, $01, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
     .db $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
@@ -2149,45 +2038,45 @@ FMVolEnv01:
     .db $0C, $0C, $0C, $0C, $0C, $0D, $0D, $0D, $0D, $0E, $0E, $0E, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv02" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv02 - OVERWORLD (IDX)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv02:
     .db $00, $00, $00, $00, $00, $00, $01, $01, $01, $02, $02, $03, $03, $04, $04, $05
     .db $05, $06, $07, $08, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv03" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv03 - KICK" FREE BITWINDOW 8 RETURNORG
 FMVolEnv03:
     .db $00, $00, $00, $00, $00 ; $00, $00, $00, $00, 
     .db $03, $06, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv04" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv04 - CLOSED HIHAT" FREE BITWINDOW 8 RETURNORG
 FMVolEnv04:
     .db $00, $03, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv05" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv05 - OPEN HIHAT" FREE BITWINDOW 8 RETURNORG
 FMVolEnv05:
     .db $00, $01, $03, $05, $09, $0C, $0F, $80
 .ENDS
 
-.SECTION "FMVolEnv06" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv06 - FADE IN (CASTLE)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv06:
     .db $04, $04, $02, $02, $00, $80
 .ENDS
 
-.SECTION "FMVolEnv07" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv07 - PIANO (CLOUD)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv07:
     .db $00, $00, $01, $01, $01, $02, $02, $02, $02, $03, $03, $03, $04, $80
 .ENDS
 
-.SECTION "FMVolEnv08" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv08 - PIANO 2 (CLOUD)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv08:
     .db $00, $01, $01, $02, $02, $02, $02, $02, $03, $03, $03, $03, $04, $04, $04, $04
     .db $04, $04, $06, $80
 .ENDS
 
-.SECTION "FMVolEnv09" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv09 - FADE IN (BOWSER)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv09:
     .db $04, $04, $04, $04, $04, $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $01
     ;.db $01, $01, $01, $01, $00, $80
@@ -2199,13 +2088,13 @@ FMVolEnv09:
     .db $00, $00, $00, $00, $00, $00, $00, $00, $01, $80
 .ENDS
 
-.SECTION "FMVolEnv0A" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv0A - FADE OUT (BOWSER)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv0A:
     .db $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02, $03
     .db $03, $03, $03, $03, $04, $80
 .ENDS
 
-.SECTION "FMVolEnv0B" FREE BITWINDOW 8 RETURNORG
+.SECTION "FMVolEnv0B - NOTE FILL (CASTLE)" FREE BITWINDOW 8 RETURNORG
 FMVolEnv0B:
     .db $00, $00, $80
 .ENDS

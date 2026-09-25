@@ -669,8 +669,7 @@
     DataPointer:    dw
     Transpose:      db
     Volume:         db
-    EnvelopeIndex:  db
-    Envelope:       db
+    VolEnvResetPtr: dw
     SavedDuration:  db
     Detune:         db
     Duration:       db
@@ -688,14 +687,16 @@
     SoundPlaying:   db
     ChanBits:       db
 ;---
+    EnvelopePtr:    dw
+;---
     LoopCounters:   dsb $03
 ;---
     StackPointer:   dsb $01
     .               dsb $06
     GoSubStack:     .dsb $01
 ;---
-    PatchEnvelope:  db  ; ONLY FOR FM
-    PatchEnvIndex:  db  ; ONLY FOR FM
+    PatchEnvResetPtr:   db  ; ONLY FOR FM
+    PatchEnvPtr:    dw  ; ONLY FOR FM
     Instrument:     db  ; ONLY FOR FM
     FinalFreqMSB:   db  ; ONLY FOR FM
     FinalVolume:    db  ; ONLY FOR FM

@@ -8,15 +8,22 @@
     .DB unused, chan, mult, tempo
 .ENDM
 
-;   ABSOLUTE ADDRESS OF CHANNEL DATA, NOTE OFFSET, INITIAL VOLUME, UNUSED, ENVELOPE
-.MACRO smpsChanHeader ARGS loc offset vol unused env
+;   ABSOLUTE ADDRESS OF CHANNEL DATA, NOTE OFFSET, INITIAL VOLUME, VOLUME ENVELOPE POINTER
+.MACRO smpsChanHeader ARGS loc offset vol envPtr
     .DW loc
-    .DB offset, vol, unused, env
+    .DB offset, vol
+    .dw envPtr
+.ENDM
+
+.MACRO smpsFMChanHeader ARGS loc offset vol
+    .DW loc
+    .DB offset, vol
 .ENDM
 
 ;   CF
 .MACRO smpsPatchEnv ARGS data
-    .db $E0, data
+    .db $E0
+    .dw data
 .ENDM
 
 .MACRO smpsDetune ARGS data
@@ -84,11 +91,13 @@
 .ENDM
 
 .MACRO smpsPSGVoice ARGS data
-    .DB $F5, data
+    .DB $F5
+    .dw data
 .ENDM
 
 .MACRO smpsVolEnv ARGS data
-    .DB $F5, data
+    .DB $F5
+    .dw data
 .ENDM
 
 .MACRO smpsJump ARGS loc
@@ -299,14 +308,14 @@
 
 .SECTION "SFX Data - 1UP" FREE
 SFX_1UP:
-    smpsChanHeader  SFX_1UP + 6,            $00, $00, $00, $03
+    smpsChanHeader  SFX_1UP + 6,            $00, $00, PSGEnv03
     .db nE4, $08, nG4, nE5, nC5, nD5, nG5
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Score Tick" FREE
 SFX_Beep:
-    smpsChanHeader  SFX_Beep + 6,           $00, $03, $00, $00
+    smpsChanHeader  SFX_Beep + 6,           $00, $03, $0000
     .db nB3, $04 ;$05
     smpsChangeVol $03
     .db $01
@@ -316,7 +325,7 @@ SFX_Beep:
 
 .SECTION "SFX Data - Bump" FREE
 SFX_Bump:
-    smpsChanHeader  SFX_Bump + 6,           $00, $00, $00, $00
+    smpsChanHeader  SFX_Bump + 6,           $00, $00, $0000
     smpsModSetup    $00, $01, $3B, $FF
     .db nG1, $04
     smpsNoAtk
@@ -327,7 +336,7 @@ SFX_Bump:
 
 .SECTION "SFX Data - Cannon, Fireworks" FREE
 SFX_Cannon:
-    smpsChanHeader  SFX_Cannon + 6,         $00, $00, $00, $00
+    smpsChanHeader  SFX_Cannon + 6,         $00, $00, $0000
     smpsModSetup    $00, $01, $1D, $FF
     .db nD1, $08
     smpsModSetup    $00, $01, $2E, $FF
@@ -354,7 +363,7 @@ SFX_Cannon:
 
 .SECTION "SFX Data - Coin" FREE
 SFX_Coin:
-    smpsChanHeader  SFX_Coin + 6,           $00, $00, $00, $02
+    smpsChanHeader  SFX_Coin + 6,           $00, $00, PSGEnv02
     .db nB3, $05
     .db nE4, $2B
     smpsStop
@@ -362,7 +371,7 @@ SFX_Coin:
 
 .SECTION "SFX Data - Fireball" FREE
 SFX_Fireball:
-    smpsChanHeader  SFX_Fireball + 6,       $00, $00, $00, $00
+    smpsChanHeader  SFX_Fireball + 6,       $00, $00, $0000
     .db nG1, $01 ;, nG2, nG3, nG4
 
     .db nG2
@@ -377,7 +386,7 @@ SFX_Fireball:
 
 .SECTION "SFX Data - Flagpole" FREE
 SFX_Flagpole:
-    smpsChanHeader  SFX_Flagpole + 6,       $00, $02, $00, $00
+    smpsChanHeader  SFX_Flagpole + 6,       $00, $02, $0000
     ;smpsModSetup    $00, $02, $F3, $FF
     ;.db nA1, $41
 
@@ -477,14 +486,14 @@ SFX_Flagpole:
 
 .SECTION "SFX Data - Flame" FREE
 SFX_Flame:
-    smpsChanHeader  SFX_Flame + 6,          $00, $00, $00, $05
+    smpsChanHeader  SFX_Flame + 6,          $00, $00, PSGEnv05
     .db nLow, $3F
     smpsStop
 .ENDS
 
 .SECTION "SFX Data - Item Reveal" FREE
 SFX_Item:
-    smpsChanHeader  SFX_Item + 6,           $00, $01, $00, $00
+    smpsChanHeader  SFX_Item + 6,           $00, $01, $0000
     .db nC2, $03, nG2, $02, nGs2
     .db nCs2, $04, nGs2, $02, nA2
     .db nD2, $04, nA2, $02, nBb2
@@ -494,7 +503,7 @@ SFX_Item:
 
 .SECTION "SFX Data - Big Jump" FREE
 SFX_JumpBig:
-    smpsChanHeader  SFX_JumpBig + 6,        $00, $00, $00, $06
+    smpsChanHeader  SFX_JumpBig + 6,        $00, $00, PSGEnv06
     smpsModSetup    $00, $01, $02, $FF
     .db nD2, $03
     smpsNoAtk
@@ -508,7 +517,7 @@ SFX_JumpBig:
 
 .SECTION "SFX Data - Small Jump" FREE
 SFX_JumpSml:
-    smpsChanHeader  SFX_JumpSml + 6,        $00, $00, $00, $06
+    smpsChanHeader  SFX_JumpSml + 6,        $00, $00, PSGEnv06
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03
     smpsNoAtk
@@ -522,7 +531,7 @@ SFX_JumpSml:
 
 .SECTION "SFX Data - Kick" FREE
 SFX_Kick:
-    smpsChanHeader  SFX_Kick + 6,           $00, $00, $00, $00
+    smpsChanHeader  SFX_Kick + 6,           $00, $00, $0000
     .db nBb2, $01
     .db nRst, $05
     .db nF3, $01
@@ -531,7 +540,7 @@ SFX_Kick:
 
 .SECTION "SFX Data - Pause" FREE
 SFX_Pause:
-    smpsChanHeader  SFX_Pause + 6,          $00, $00, $00, $01
+    smpsChanHeader  SFX_Pause + 6,          $00, $00, PSGEnv01
     .db nE4, $06, nC4, nE4
     .db nC4, $12
     smpsStop
@@ -539,7 +548,7 @@ SFX_Pause:
 
 .SECTION "SFX Data - Pipe" FREE
 SFX_Pipe:
-    smpsChanHeader  SFX_Pipe + 6,           $00, $02, $00, $00
+    smpsChanHeader  SFX_Pipe + 6,           $00, $02, $0000
     .db nRst, $03
     .db nE4, $01, nA3, nD3, nG2, nE4, nA3, nD3, nG2, nC2, nF1, nBb0
     .db nRst, $05
@@ -551,7 +560,7 @@ SFX_Pipe:
 
 .SECTION "SFX Data - Powerup" FREE
 SFX_Powerup:
-    smpsChanHeader  SFX_Powerup + 6,        $00, $01, $00, $00
+    smpsChanHeader  SFX_Powerup + 6,        $00, $01, $0000
     .db nC3, $02, nG2, nC3, nE3, nG3, nC4, nG3
     .db nGs2, nC3, nEb3, nGs3, nEb3, nGs3, nC4, nEb4, nGs4, nEb4
     .db nBb2, nD3, nF3, nBb3, nF3, nBb3, nD4, nF4, nBb4, nF4
@@ -560,7 +569,7 @@ SFX_Powerup:
 
 .SECTION "SFX Data - Brick Shatter" FREE
 SFX_Shatter:
-    smpsChanHeader  SFX_Shatter + 6,        $00, $00, $00, $10
+    smpsChanHeader  SFX_Shatter + 6,        $00, $00, PSGEnv10
     .db nRst, $01
     .db nLow, $02, nHi, nLow
     smpsChangeVol   $01
@@ -576,7 +585,7 @@ SFX_Shatter:
 
 .SECTION "SFX Data - Swim, Stomp" FREE
 SFX_Swim:
-    smpsChanHeader  SFX_Swim + 6,           $00, $00, $00, $04
+    smpsChanHeader  SFX_Swim + 6,           $00, $00, PSGEnv04
     smpsModSetup    $01, $01, $F7, $FF
     .db nA2, $05
     .db nRst, $03
@@ -586,7 +595,7 @@ SFX_Swim:
 
 .SECTION "SFX Data - Vine" FREE
 SFX_Vine:
-    smpsChanHeader  SFX_Vine + 6,           $00, $01, $00, $00
+    smpsChanHeader  SFX_Vine + 6,           $00, $01, $0000
     .db nC2, $03, nG2, $02, nGs2
     .db nCs2, $04, nGs2, $02, nA2
     .db nD2, $04, nA2, $02, nBb2
@@ -600,7 +609,7 @@ SFX_Vine:
 
 .SECTION "SFX Data - Bowser Fall" FREE
 SFX_BowserFall:
-    smpsChanHeader  SFX_BowserFall + $06,   $00, $00, $00, $00
+    smpsChanHeader  SFX_BowserFall + $06,   $00, $00, $0000
     smpsModSetup    $00, $02, $17, $FF
     .db nD2, $37
     smpsStop
@@ -610,14 +619,14 @@ SFX_BowserFall:
 
 .SECTION "SFX Data - Powerup (P1)" FREE
 SFX_Powerup_P1:
-    smpsChanHeader  SFX_Powerup + 6,        $00, $02, $00, $00
-    smpsChanHeader  SFX_Powerup + 6,        $0C, $04, $00, $00
+    smpsChanHeader  SFX_Powerup + 6,        $00, $02, $0000
+    smpsChanHeader  SFX_Powerup + 6,        $0C, $04, $0000
 .ENDS
 
 .SECTION "SFX Data - Big Jump (P1)" FREE
 SFX_JumpBig_P1:
-    smpsChanHeader  SFX_JumpBig + 6,        $00, $01, $00, $06
-    smpsChanHeader  @Layer2,                $0C, $0F, $00, $06
+    smpsChanHeader  SFX_JumpBig + 6,        $00, $01, PSGEnv06
+    smpsChanHeader  @Layer2,                $0C, $0F, PSGEnv06
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nD2, $03
@@ -633,8 +642,8 @@ SFX_JumpBig_P1:
 
 .SECTION "SFX Data - Small Jump (P1)" FREE
 SFX_JumpSml_P1:
-    smpsChanHeader  SFX_JumpSml + 6,        $00, $01, $00, $06
-    smpsChanHeader  @Layer2,                $0C, $0F, $00, $06
+    smpsChanHeader  SFX_JumpSml + 6,        $00, $01, PSGEnv06
+    smpsChanHeader  @Layer2,                $0C, $0F, PSGEnv06
 @Layer2:
     smpsModSetup    $00, $01, $01, $FF
     .db nA2, $03
@@ -650,8 +659,8 @@ SFX_JumpSml_P1:
 
 .SECTION "SFX Data - Flame (P1)" FREE
 SFX_Flame_P1:
-    smpsChanHeader  @Layer1,                $00, $00, $00, $05
-    smpsChanHeader  @Layer2,                $00, $0F, $00, $00
+    smpsChanHeader  @Layer1,                $00, $00, PSGEnv05
+    smpsChanHeader  @Layer2,                $00, $0F, $0000
 @Layer1:
     .db nCh2, $3F
     smpsStop
@@ -662,8 +671,8 @@ SFX_Flame_P1:
 
 .SECTION "SFX Data - Brick Shatter (P1)" FREE
 SFX_Shatter_P1:
-    smpsChanHeader  @Layer1,                $00, $00, $00, $11
-    smpsChanHeader  @Layer2,                $00, $0F, $00, $00
+    smpsChanHeader  @Layer1,                $00, $00, PSGEnv11
+    smpsChanHeader  @Layer2,                $00, $0F, $0000
 @Layer1:
     .db nCh2, $1F
     smpsStop
@@ -686,15 +695,10 @@ Mus_Silence:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    ;smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $0000
+    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $0000
+    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $0000
+    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $0000
 @ch0:
     smpsStop
 .ENDS
@@ -704,10 +708,10 @@ Mus_HurryUp:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_HurryUp@ch0,    $00, $03, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_HurryUp@ch1,    $00, $00, $00, $0A  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_HurryUp@ch2,    $00, $00, $00, $0A  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_HurryUp@ch0,    $00, $03, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_HurryUp@ch1,    $00, $00, PSGEnv0A  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_HurryUp@ch2,    $00, $00, PSGEnv0A  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $0000     ; NOISE     (CH3)
 @ch0:
     .db nB1, $06, nB2, $08, nRst, $04, nB2, $0E, nRst, $04
     smpsTranspose $01
@@ -739,10 +743,10 @@ Mus_GameVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_GameVictory@ch0,    $00, $03, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_GameVictory@ch1,    $00, $00, $00, $0A  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_GameVictory@ch2,    $00, $00, $00, $0A  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_GameVictory@ch0,    $00, $03, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_GameVictory@ch1,    $00, $00, PSGEnv0A  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_GameVictory@ch2,    $00, $00, PSGEnv0A  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $0000     ; NOISE     (CH3)
 @ch0:
     smpsDetune  $FC
     .db nB0, $18, nC1, $30, nD1, $18, nEb1, nE1, nC1, nA1, nG1, nF1, nE1, nD1, nF1, nG1

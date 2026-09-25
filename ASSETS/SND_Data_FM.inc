@@ -7,15 +7,15 @@
 Mus_HurryUp_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8B)   ; PAL: $74
-    smpsChanHeader  Mus_HurryUp_FM@ch0,  $00, $00, $00, $00
-    smpsChanHeader  Mus_HurryUp_FM@ch0,  $FA, $00, $00, $00
-    smpsChanHeader  Mus_HurryUp_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_HurryUp_FM@ch2,  $FA, $02, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_HurryUp_FM@ch0,  $00, $00
+    smpsFMChanHeader  Mus_HurryUp_FM@ch0,  $FA, $00
+    smpsFMChanHeader  Mus_HurryUp_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_HurryUp_FM@ch2,  $FA, $02
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 2/3 DATA ---
 @ch2:
@@ -48,15 +48,15 @@ Mus_GameVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($AD)  ;PAL: $9C
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_GameVictory_FM@ch0,  $00, $00, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch1,  $00, $00, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch3,  $00, $02, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch4,  $00, $02, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch5,  $00, $05, $00, $00
-    smpsChanHeader  Mus_GameVictory_FM@ch6,  $00, $04, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_GameVictory_FM@ch0,  $00, $00
+    smpsFMChanHeader  Mus_GameVictory_FM@ch1,  $00, $00
+    smpsFMChanHeader  Mus_GameVictory_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_GameVictory_FM@ch3,  $00, $02
+    smpsFMChanHeader  Mus_GameVictory_FM@ch4,  $00, $02
+    smpsFMChanHeader  Mus_GameVictory_FM@ch5,  $00, $05
+    smpsFMChanHeader  Mus_GameVictory_FM@ch6,  $00, $04
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 6 (0) DATA ---
 @ch6:
@@ -211,16 +211,16 @@ Mus_Water_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($62)  ;PAL: $41, $10
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Water_FM@ch0,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch1,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch2,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch3,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch4,  $00, $04, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch5,  $00, $06, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch6,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Water_FM@ch7,  $00, $03, $00, $00
-    ;smpsChanHeader  Mus_Water_FM@ch8,  $00, $05, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_Water_FM@ch0,  $00, $02
+    smpsFMChanHeader  Mus_Water_FM@ch1,  $00, $02
+    smpsFMChanHeader  Mus_Water_FM@ch2,  $00, $01
+    smpsFMChanHeader  Mus_Water_FM@ch3,  $00, $03
+    smpsFMChanHeader  Mus_Water_FM@ch4,  $00, $04
+    smpsFMChanHeader  Mus_Water_FM@ch5,  $00, $06
+    smpsFMChanHeader  Mus_Water_FM@ch6,  $00, $03
+    smpsFMChanHeader  Mus_Water_FM@ch7,  $00, $03
+    ;smpsFMChanHeader  Mus_Water_FM@ch8,  $00, $05
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
@@ -265,12 +265,12 @@ Mus_Water_FM:
 
 ;   --- CHANNEL 1 DATA ---
 @ch1:
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $00
     .db nRst, $0C, nCs3, $0A, nRst, $02, nC3, $0A, nRst, $02, nB2, $0A, nRst, $02, nC3, $0A
     .db nRst, $02, nCs3, $0A, nRst, $02, nD3, $05, nRst, $01, nD3, $05, nRst, $01, nD3, $0A
     .db nRst, $02, nE3, $0A, nRst, $02, nF3, $15, nRst, $03, nF3, $0A, nRst, $02
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
     smpsChangeVol $01 ;$02
 @ch1LoopPoint:
     .db nRst, $0C
@@ -286,7 +286,7 @@ Mus_Water_FM:
     .db nG5, $05, nRst, $07, nG5, $05, nRst, $07
     .db nRst, $06
     ;
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     ;smpsChangeVol $FF
 @ch1Loop2:
     .db nG4, $04, nRst, $02, nB4, $04, nRst, $02, nC5, $04, nRst, $02, nE5, $04, nRst, $02, nG5, $04, nRst, $08
@@ -299,7 +299,7 @@ Mus_Water_FM:
     smpsLoop    $00, $03, Mus_Water_FM@ch1Loop3
     .db nA4, $04, nRst, $02, nB4, $04, nRst, $02, nD5, $04, nRst, $02, nF5, $04, nRst, $02, nA5, $04, nRst, $0E
     ;
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
     ;smpsChangeVol $01
     smpsCall    Mus_Water_FM@ch5Call1
     .db nF5, $05, nRst, $07, nF5, $05, nRst, $07
@@ -318,7 +318,7 @@ Mus_Water_FM:
 
 ;   --- CHANNEL 2 DATA ---
 @ch2:
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     .db nRst, $60
     .db nG2, $05, nRst, $07, nG2, $11, nRst, $07, nG2, $0A, nRst, $02
 @ch2LoopPoint:
@@ -365,7 +365,7 @@ Mus_Water_FM:
 
 ;   --- CHANNEL 4 DATA ---
 @ch4:
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
     .db nRst, $7F, $11
 @ch4LoopPoint:
     .db nRst, $0C
@@ -416,12 +416,12 @@ Mus_Water_FM:
 ;   --- CHANNEL 5 DATA ---
 @ch5:
     smpsDetune $01
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $00
     .db nRst, $09
     smpsCall    Mus_Water_FM@ch0Call1
     .db $03
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
     smpsChangeVol $FD ;$FE
 @ch5LoopPoint:
     smpsCall    Mus_Water_FM@ch5Call1
@@ -517,7 +517,7 @@ Mus_Water_FM:
 ;   --- CHANNEL 8 DATA ---
 ; @ch8:
 ;     smpsDetune $01
-;     smpsPatchEnv $05
+;     smpsPatchEnv PatchEnv05
 ;     .db nRst, $7F, $11
 ; @ch8LoopPoint:
 ;     .db nRst, $74, $7F, $7F, $7F, $5B
@@ -546,15 +546,15 @@ Mus_Overworld_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($4D)  ;PAL: $29, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Overworld_FM@ch0,  $0C, $00, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch1,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch3,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch4,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch5,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch6,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch7,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Overworld_FM@ch8,  $00, $08, $00, $00
+    smpsFMChanHeader  Mus_Overworld_FM@ch0,  $0C, $00
+    smpsFMChanHeader  Mus_Overworld_FM@ch1,  $00, $01
+    smpsFMChanHeader  Mus_Overworld_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_Overworld_FM@ch3,  $00, $00
+    smpsFMChanHeader  Mus_Overworld_FM@ch4,  $00, $02
+    smpsFMChanHeader  Mus_Overworld_FM@ch5,  $00, $01
+    smpsFMChanHeader  Mus_Overworld_FM@ch6,  $00, $00
+    smpsFMChanHeader  Mus_Overworld_FM@ch7,  $00, $01
+    smpsFMChanHeader  Mus_Overworld_FM@ch8,  $00, $08
 
     ; --- CHANNEL 0 DATA ---
 @ch0:
@@ -629,12 +629,12 @@ Mus_Overworld_FM:
     ; ---
     smpsChangeVol $FB
 @ch1LoopPoint:
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsCall    Mus_Overworld_FM@ch1Call1
     .db nRst, $0C
     ;
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     smpsCall    Mus_Overworld_FM@ch1Call2
     .db nRst, $0C
     smpsCall    Mus_Overworld_FM@ch1Call2
@@ -676,15 +676,15 @@ Mus_Overworld_FM:
 
 @ch1Call3:
     smpsModSetup    $08, $01, $FF, $03
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     .db nC4, $05, nRst, $01, nC4, $05, nRst, $07, nC4, $05, nRst, $07, nC4, $05, nRst, $01
     .db nD4, $0A, nRst, $02, nE4, $05, nRst, $01, nC4, $05, nRst, $07, nA3, $05, nRst, $01
     .db nG3, $0A, nRst, $0E, nC4, $05, nRst, $01, nC4, $05, nRst, $07, nC4, $05, nRst, $07
     .db nC4, $05, nRst, $01, nD4, $05, nRst, $01, nE4, $17, nRst, $01
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $02
     .db nE6, $05, nRst, $07, nD6, $0F, nRst, $03
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     smpsChangeVol $FE
     .db nC4, $05, nRst, $01, nC4, $05, nRst, $07, nC4, $05, nRst, $07, nC4, $05, nRst, $01
     .db nD4, $0A, nRst, $02, nE4, $05, nRst, $01, nC4, $05, nRst, $07, nA3, $05, nRst, $01
@@ -693,7 +693,7 @@ Mus_Overworld_FM:
     smpsModOff
     .db nE4, $05, nRst, $01, nE4, $05, nRst, $07, nE4, $05, nRst, $07, nC4, $05, nRst, $01
     .db nE4, $05, nRst, $07, nG4, $04, nRst, $14
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsChangeVol $01
     .db nG5, $06
@@ -704,7 +704,7 @@ Mus_Overworld_FM:
 
 @ch1Call4:
     smpsChangeVol $01
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     .db nE4, $05, nRst, $01, nC4, $05, nRst, $07, nG3, $0F, nRst, $03, nGs3, $0A, nRst, $02
     .db nA3, $05, nRst, $01, nF4, $05, nRst, $07, nF4, $05, nRst, $01, nA3, $0A, nRst, $0E
     .db nB3, $07, nRst, $01, nA4, $07, nRst, $01, nA4, $07, nRst, $01, nA4, $07, nRst, $01
@@ -738,7 +738,7 @@ Mus_Overworld_FM:
     smpsCall    Mus_Overworld_FM@ch2Call2
     smpsLoop    $00, $0F, Mus_Overworld_FM@ch2Loop1
     smpsModOff
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     ;
     ;smpsChangeVol $02
     smpsDetune  $01
@@ -753,7 +753,7 @@ Mus_Overworld_FM:
     smpsCall    Mus_Overworld_FM@ch2Call2
     smpsLoop    $00, $0F, Mus_Overworld_FM@ch2Loop2
     smpsModOff
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     ;
     ;smpsChangeVol $02
     smpsDetune  $01
@@ -770,23 +770,23 @@ Mus_Overworld_FM:
     smpsJump    Mus_Overworld_FM@ch2LoopPoint
 ;   CHANNEL 2 SUBROUTINES
 @ch2Call1:
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     .db nE6, $05, nRst, $01, nE6, $05, nRst, $07, nE6, $05, nRst, $07, nC6, $05, nRst, $01
     .db nE6, $05, nRst, $07, nG6, $04, nRst, $14
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $0A
     smpsChangeVol $FE
     smpsRet
 
 @ch2Call2:
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $2C, $10, $08, $04
 
     ;smpsChangeVol   $FF
-    smpsVolEnv  $00
-    smpsPatchEnv    $0F
+    smpsVolEnv  $0000
+    smpsPatchEnv    PatchEnv0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2, $18
     ;smpsChangeVol   $01
@@ -800,8 +800,8 @@ Mus_Overworld_FM:
     smpsCall    Mus_Overworld_FM@ch3Call1
     .db nRst, $0C
     ;
-    smpsVolEnv $00
-    smpsPatchEnv $0D
+    smpsVolEnv $0000
+    smpsPatchEnv PatchEnv0D
     smpsChangeVol $02
     smpsCall    Mus_Overworld_FM@ch3Call2
     .db $0C
@@ -826,8 +826,8 @@ Mus_Overworld_FM:
     smpsJump Mus_Overworld_FM@ch3LoopPoint
 ;   CHANNEL 3 SUBROUTINES
 @ch3Call1:
-    smpsVolEnv $02
-    smpsPatchEnv $07
+    smpsVolEnv FMVolEnv02
+    smpsPatchEnv PatchEnv07
     smpsDetune  $01
     .db nG3, $0C, nRst, $06, nD3, $12, nC3, $06, nRst, $0C, nE3, $06, nRst, nF3, $0C, nE3
     .db $06, nEb3, $0C, nD3, $08, nC4, $08, $08, nE4, $0C, nC4, $06, nD4, nRst, nB3, nRst
@@ -848,14 +848,14 @@ Mus_Overworld_FM:
 @ch3Call3:
     smpsModSetup    $08, $01, $FF, $03
     smpsDetune  $00
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     .db nA3, $05, nRst, $01, nA3, $05, nRst, $07, nA3, $05, nRst, $07, nA3, $05, nRst, $01
     .db nA3, $0A, nRst, $02, nC4, $05, nRst, $01, nA3, $05, nRst, $07, nG3, $05, nRst, $01
     .db nE3, $0A, nRst, $0E, nA3, $05, nRst, $01, nA3, $05, nRst, $07, nA3, $05, nRst, $07
     .db nA3, $05, nRst, $01, nA3, $05, nRst, $01, nB3, $17, nRst, $01
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     .db nC6, $05, nRst, $07, nBb5, $0F, nRst, $03
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     smpsChangeVol $FF
     .db nA3, $05, nRst, $01, nA3, $05, nRst, $07, nA3, $05, nRst, $07, nA3, $05, nRst, $01
     .db nA3, $0A, nRst, $02, nC4, $05, nRst, $01, nA3, $05, nRst, $07, nG3, $05, nRst, $01
@@ -863,7 +863,7 @@ Mus_Overworld_FM:
     smpsChangeVol $FE
     .db nFs3, $05, nRst, $01, nFs3, $05, nRst, $07, nFs3, $05, nRst, $07, nD3, $05, nRst, $01
     .db nFs3, $05, nRst, $07, nD4, $04, nRst, $14
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsChangeVol $01
     smpsModSetup    $0C, $01, $D4, $FF ;$D5, $FF
@@ -878,8 +878,8 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch3Call4:
-    smpsVolEnv  $00
-    smpsPatchEnv    $0D
+    smpsVolEnv  $0000
+    smpsPatchEnv    PatchEnv0D
     smpsDetune  $01
     .db nC4, $05, nRst, $01, nA3, $05, nRst, $07, nE3, $0F, nRst, $03, nEb3, $0A, nRst, $02
     .db nD3, $05, nRst, $01, nA3, $05, nRst, $07, nA3, $05, nRst, $01, nD3, $0A, nRst, $0E
@@ -939,15 +939,15 @@ Mus_Overworld_FM:
     smpsJump    Mus_Overworld_FM@ch4LoopPoint
 ;   CHANNEL 4 SUBROUTINES
 @ch4Call1:
-    smpsVolEnv $01
-    smpsPatchEnv $00
+    smpsVolEnv FMVolEnv01
+    smpsPatchEnv $0000
     smpsFMVoice $01
     .db nC4, $30, $30, $30, $30, $30, $30
     smpsRet
 
 @ch4Call2:
-    smpsVolEnv $00
-    smpsPatchEnv $0B
+    smpsVolEnv $0000
+    smpsPatchEnv PatchEnv0B
 
     smpsCall    Mus_Overworld_FM@ch4Call3
     smpsCall    Mus_Overworld_FM@ch4Call3
@@ -1023,8 +1023,8 @@ Mus_Overworld_FM:
     .db nRst, $48
     smpsChangeVol   $01                     ; Vol: $03
     smpsFMVoice     $00
-    smpsVolEnv      $00
-    smpsPatchEnv    $0F
+    smpsVolEnv      $0000
+    smpsPatchEnv    PatchEnv0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2,        $04
     smpsModOff
@@ -1065,7 +1065,7 @@ Mus_Overworld_FM:
     smpsJump    Mus_Overworld_FM@ch5LoopPoint
 ;   CHANNEL 5 SUBROUTINES
 @ch5Call1:
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsDetune $00
     smpsFMVoice $0C
     .db nG5, $09, nRst, nD5, nRst, nB4, nRst, nE5, $04, nRst, $08, nFs5, $09, nRst, $03, nF5
@@ -1075,7 +1075,7 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch5Call2:
-    smpsPatchEnv $0B
+    smpsPatchEnv PatchEnv0B
     smpsDetune $00
 
     .db nE5, $05, nRst, $01
@@ -1181,24 +1181,24 @@ Mus_Overworld_FM:
 
 @ch5Call3:
     smpsModSetup    $08, $01, $FF, $03
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     smpsChangeVol $F9
     .db nE4, $05, nRst, $01, nE4, $05, nRst, $07, nE4, $05, nRst, $07, nE4, $05, nRst, $01
     .db nE4, $0A, nRst, $02, nG4, $05, nRst, $01, nE4, $05, nRst, $07, nC4, $05, nRst, $01
     .db nD4, $0A, nRst, $02, nCs4, $0A, nRst, $02, nF4, $05, nRst, $01, nF4, $05, nRst, $07
     .db nF4, $05, nRst, $07, nF4, $05, nRst, $01, nF4, $05, nRst, $01, nG4, $17, nRst, $01
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     .db nBb4, $05, nRst, $07, nBb4, $0F, nRst, $03
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     .db nE4, $05, nRst, $01, nE4, $05, nRst, $07, nE4, $05, nRst, $07, nE4, $05, nRst, $01
     .db nE4, $0A, nRst, $02
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
     .db nC5, $05, nRst, $01, nB4, $05, nRst, $01, nBb4, $05, nRst, $01, nA4, $1A, nRst, $04
-    smpsPatchEnv $0C
+    smpsPatchEnv PatchEnv0C
     smpsChangeVol $FE
     .db nC4, $05, nRst, $01, nC4, $05, nRst, $07, nC4, $05, nRst, $07, nA3, $05, nRst, $01
     .db nC4, $05, nRst, $07, nF4, $04, nRst, $14
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsDetune $FF
     smpsModSetup   $0C, $01, $D5, $FF
@@ -1212,7 +1212,7 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch5Call4:
-    smpsPatchEnv $0B
+    smpsPatchEnv PatchEnv0B
     smpsDetune  $00
 
     smpsCall    Mus_Overworld_FM@ch5Call6
@@ -1330,8 +1330,8 @@ Mus_Overworld_FM:
     smpsJump    Mus_Overworld_FM@ch6LoopPoint
 ;   CHANNEL 6 SUBROUTINES
 @ch6Call1:
-    smpsVolEnv $02
-    smpsPatchEnv $07
+    smpsVolEnv FMVolEnv02
+    smpsPatchEnv PatchEnv07
     smpsDetune $00
     .db nE3, $0C, nRst, $06, nC3, $12, nG2, $06, nRst, $0C, nC3, $06, nRst, nD3, $0C, nCs3
     .db $06, nC3, $0C, $08, nG3, nB3, nC4, $0C, nA3, $06, nB3, nRst, nG3, nRst, nE3, nRst
@@ -1341,8 +1341,8 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch6Call2:
-    smpsVolEnv $00
-    smpsPatchEnv $0B
+    smpsVolEnv $0000
+    smpsPatchEnv PatchEnv0B
 
     smpsCall    Mus_Overworld_FM@ch6Call4
 
@@ -1408,8 +1408,8 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch6Call3:
-    smpsVolEnv $01
-    smpsPatchEnv $00
+    smpsVolEnv FMVolEnv01
+    smpsPatchEnv $0000
     smpsFMVoice $01
     .db nA4, $30, nG4, nF4, nE4, nA4, nG4
     smpsRet
@@ -1431,14 +1431,14 @@ Mus_Overworld_FM:
 @ch6Call6:
     .db nRst, $48
     smpsChangeVol $01                       ; Vol: $01
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $08
     smpsModOff
     .db nRst, $10
     smpsChangeVol $FF                       ; Vol: $00
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsRet
 
 
@@ -1458,8 +1458,8 @@ Mus_Overworld_FM:
     smpsChangeVol   $FF
     smpsTranspose   $F4
     ;smpsDetune  $00
-    smpsVolEnv  $00
-    smpsPatchEnv $0C
+    smpsVolEnv  $0000
+    smpsPatchEnv PatchEnv0C
     smpsCall    Mus_Overworld_FM@ch7Call1
     smpsTranspose   $0C
     ;
@@ -1470,8 +1470,8 @@ Mus_Overworld_FM:
     ;
     smpsChangeVol   $FF
     smpsTranspose   $F4
-    smpsVolEnv  $00
-    smpsPatchEnv $0C
+    smpsVolEnv  $0000
+    smpsPatchEnv PatchEnv0C
     smpsCall    Mus_Overworld_FM@ch7Call1
     smpsTranspose   $0C
     ;
@@ -1486,22 +1486,22 @@ Mus_Overworld_FM:
     .db nA4, $05, nRst, $07, nC5, $05;, nRst, $2B
 
     .db nRst, $13
-    smpsPatchEnv $09
-    smpsVolEnv  $04
+    smpsPatchEnv PatchEnv09
+    smpsVolEnv  FMVolEnv04
     .db nBb7, $08
     .db nRst, $10
     smpsRet
 
 @ch7Call2:
     ;smpsDetune  $7F
-    smpsPatchEnv $09
-    smpsVolEnv  $04
+    smpsPatchEnv PatchEnv09
+    smpsVolEnv  FMVolEnv04
     .db nBb7, $0C, $08, $04
 
-    smpsVolEnv  $05
+    smpsVolEnv  FMVolEnv05
     .db nBb7, $0C
 
-    smpsVolEnv  $04
+    smpsVolEnv  FMVolEnv04
     .db nBb7, $08, $04
     smpsRet
 
@@ -1530,7 +1530,7 @@ Mus_Overworld_FM:
     smpsJump    Mus_Overworld_FM@ch8LoopPoint
 ;   CHANNEL 8 SUBROUTINES
 @ch8Call1:
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     .db nRst, $06
     .db nC4, $07, nRst, $0B, nG3, $07, nRst, $0B, nE3, $06, nRst, $0C, nA3, $06
@@ -1545,7 +1545,7 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch8Call2:
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     .db nRst, $0D
     .db nG5, $06, nFs5, nF5, nEb5, nRst, nE5, nRst, nGs4, nA4, nC5, nRst, nA4, nC5, nD5, nRst
     .db $0C, nG5, $06, nFs5, nF5, nEb5, nRst, nE5, nRst, nC6, nRst, nC6, $06, $07, nRst, $1D
@@ -1554,7 +1554,7 @@ Mus_Overworld_FM:
     smpsRet
 
 @ch8Call3:
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     .db nRst, $01
     .db nE5, $05, nRst, $01, nC5, $05, nRst, $07, nG4, $0F, nRst, $03, nGs4, $0A, nRst, $02
     .db nA4, $05, nRst, $01, nF5, $05, nRst, $07, nF5, $05, nRst, $01, nA4, $0A, nRst, $0E
@@ -1575,20 +1575,20 @@ Mus_Underground_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($AD)  ;PAL: $9C, $6A
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Underground_FM@ch0,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch1,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch2,  $00, $05, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch3,  $00, $07, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch4,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch5,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch6,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch7,  $00, $06, $00, $00
-    smpsChanHeader  Mus_Underground_FM@ch8,  $00, $06, $00, $00
+    smpsFMChanHeader  Mus_Underground_FM@ch0,  $00, $00
+    smpsFMChanHeader  Mus_Underground_FM@ch1,  $00, $00
+    smpsFMChanHeader  Mus_Underground_FM@ch2,  $00, $05
+    smpsFMChanHeader  Mus_Underground_FM@ch3,  $00, $07
+    smpsFMChanHeader  Mus_Underground_FM@ch4,  $00, $03
+    smpsFMChanHeader  Mus_Underground_FM@ch5,  $00, $02
+    smpsFMChanHeader  Mus_Underground_FM@ch6,  $00, $01
+    smpsFMChanHeader  Mus_Underground_FM@ch7,  $00, $06
+    smpsFMChanHeader  Mus_Underground_FM@ch8,  $00, $06
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
 @ch0LoopPoint:
-    smpsPatchEnv    $11
+    smpsPatchEnv    PatchEnv11
     .db nRst, $60
     ;
     smpsCall    Mus_Underground_FM@ch0Call1
@@ -1645,8 +1645,8 @@ Mus_Underground_FM:
 
 ;   --- CHANNEL 4 DATA ---
 @ch4:
-    smpsPatchEnv    $09
-    smpsVolEnv  $04
+    smpsPatchEnv    PatchEnv09
+    smpsVolEnv  FMVolEnv04
 @ch4LoopPoint:
 @ch4Loop1:
     .db nBb7, $03
@@ -1654,8 +1654,8 @@ Mus_Underground_FM:
 
 ;   --- CHANNEL 5 DATA ---
 @ch5:
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
 @ch5LoopPoint:
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $0C
@@ -1684,7 +1684,7 @@ Mus_Underground_FM:
 
 ;   --- CHANNEL 6 DATA ---
 @ch6:
-    smpsPatchEnv    $0F
+    smpsPatchEnv    PatchEnv0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
 @ch6LoopPoint:
@@ -1701,8 +1701,8 @@ Mus_Underground_FM:
 @ch8:
     .db nRst, $02
     smpsDetune  $01
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
     smpsModSetup    $00, $01, $E8, $FF
 @ch8LoopPoint:
     .db nRst, $0C, nC4, nRst, nC4, nRst, nC4, $09, nRst, $0F, nC4, $06, $03, $03
@@ -1716,15 +1716,15 @@ Mus_Castle_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($83)  ; PAL: $6A, $38
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Castle_FM@ch0,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch1,  $00, $08, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch2,  $00, $08, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch3,  $0C, $07, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch4,  $00, $0C, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch5,  $0C, $03, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch6,  $00, $0C, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch7,  $00, $08, $00, $00
-    smpsChanHeader  Mus_Castle_FM@ch7,  $0C, $08, $00, $00
+    smpsFMChanHeader  Mus_Castle_FM@ch0,  $00, $03
+    smpsFMChanHeader  Mus_Castle_FM@ch1,  $00, $08
+    smpsFMChanHeader  Mus_Castle_FM@ch2,  $00, $08
+    smpsFMChanHeader  Mus_Castle_FM@ch3,  $0C, $07
+    smpsFMChanHeader  Mus_Castle_FM@ch4,  $00, $0C
+    smpsFMChanHeader  Mus_Castle_FM@ch5,  $0C, $03
+    smpsFMChanHeader  Mus_Castle_FM@ch6,  $00, $0C
+    smpsFMChanHeader  Mus_Castle_FM@ch7,  $00, $08
+    smpsFMChanHeader  Mus_Castle_FM@ch7,  $0C, $08
 
 ;   --- CHANNEL 3 (0) DATA ---
 @ch3:
@@ -1734,7 +1734,7 @@ Mus_Castle_FM:
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
-    smpsVolEnv $06
+    smpsVolEnv FMVolEnv06
     smpsFMVoice $07
 @ch0LoopPoint:
     .db nEb2, $30
@@ -1745,20 +1745,20 @@ Mus_Castle_FM:
     
     smpsNoAtk
     .db nE2, $0C
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsChangeVol $01
     .db $0C
 
-    smpsVolEnv $06
+    smpsVolEnv FMVolEnv06
     .db nBb2, $18
     
     smpsNoAtk
     .db nA2, $0C
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsChangeVol $01
     .db $0C
 
-    smpsVolEnv $06
+    smpsVolEnv FMVolEnv06
     .db nE2, $18, nEb2, nE2
     smpsJump    Mus_Castle_FM@ch0LoopPoint
 
@@ -1766,7 +1766,7 @@ Mus_Castle_FM:
 @ch1:
     smpsFMVoice $13 ; UPLOAD CUSTOM INSTRUMENT
 @ch1LoopPoint:
-    smpsVolEnv  $0B
+    smpsVolEnv  FMVolEnv0B
     .db nG4, $03, nBb4, nG4, nA4
     .db nG4, nGs4, nG4, nA4
     .db nG4, nBb4, nG4, nB4
@@ -1802,7 +1802,7 @@ Mus_Castle_FM:
     smpsDetune $01
     smpsFMVoice $00
 @ch2LoopPoint:
-    smpsVolEnv  $0B
+    smpsVolEnv  FMVolEnv0B
     .db nG4, $03, nD5, nG4, nCs5
     .db nG4, nC5, nG4, nCs5
     .db nG4, nD5, nG4, nEb5
@@ -1864,15 +1864,15 @@ Mus_PipeIntro_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($4D)  ;PAL: $29, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_PipeIntro_FM@ch0,  $0C, $00, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch1,  $00, $01, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch3,  $00, $00, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch4,  $00, $02, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch5,  $00, $01, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch6,  $00, $00, $00, $00
-    smpsChanHeader  Mus_PipeIntro_FM@ch7,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch0,  $0C, $00
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch1,  $00, $01
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch3,  $00, $00
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch4,  $00, $02
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch5,  $00, $01
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch6,  $00, $00
+    smpsFMChanHeader  Mus_PipeIntro_FM@ch7,  $00, $01
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 @ch0:
     smpsCall    Mus_Overworld_FM@ch0Call5
@@ -1920,19 +1920,19 @@ Mus_Invincible_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($74)  ;PAL: $58, $3F
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Invincible_FM@ch0,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch1,  $00, $04, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch3,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch4,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch5,  $F4, $02, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch6,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch7,  $0C, $04, $00, $00
-    smpsChanHeader  Mus_Invincible_FM@ch8,  $00, $08, $00, $00
+    smpsFMChanHeader  Mus_Invincible_FM@ch0,  $00, $01
+    smpsFMChanHeader  Mus_Invincible_FM@ch1,  $00, $04
+    smpsFMChanHeader  Mus_Invincible_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_Invincible_FM@ch3,  $00, $03
+    smpsFMChanHeader  Mus_Invincible_FM@ch4,  $00, $02
+    smpsFMChanHeader  Mus_Invincible_FM@ch5,  $F4, $02
+    smpsFMChanHeader  Mus_Invincible_FM@ch6,  $00, $03
+    smpsFMChanHeader  Mus_Invincible_FM@ch7,  $0C, $04
+    smpsFMChanHeader  Mus_Invincible_FM@ch8,  $00, $08
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
-    smpsPatchEnv $11
+    smpsPatchEnv PatchEnv11
 @ch0LoopPoint:
     .db nD2, $0C, nA2, $09, nD3, $09
     smpsChangeVol $05
@@ -2068,8 +2068,8 @@ Mus_Invincible_FM:
 
 ;   --- CHANNEL 6 DATA ---
 @ch6:
-    smpsPatchEnv    $09
-    smpsVolEnv  $05
+    smpsPatchEnv    PatchEnv09
+    smpsVolEnv  FMVolEnv05
 @ch6LoopPoint:
     .db nRst, $0C
     .db nBb7, $09, $09
@@ -2086,16 +2086,16 @@ Mus_LevelVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8B) ;$16
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_LevelVictory_FM@ch0,  $00, $01, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch1,  $00, $02, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch3,  $00, $02, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch4,  $F4, $02, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch5,  $00, $06, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch6,  $00, $06, $00, $00
-    smpsChanHeader  Mus_LevelVictory_FM@ch7,  $00, $06, $00, $00
-    ;smpsChanHeader  Mus_LevelVictory_FM@ch8,  $00, $0F, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch0,  $00, $01
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch1,  $00, $02
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch3,  $00, $02
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch4,  $F4, $02
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch5,  $00, $06
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch6,  $00, $06
+    smpsFMChanHeader  Mus_LevelVictory_FM@ch7,  $00, $06
+    ;smpsFMChanHeader  Mus_LevelVictory_FM@ch8,  $00, $0F
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 0 DATA ---
 ; @ch0:
@@ -2249,22 +2249,22 @@ Mus_Death_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($48)  ;PAL: $23
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Death_FM@ch0,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch1,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch3,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch4,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch5,  $F4, $00, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch6,  $00, $06, $00, $00
-    smpsChanHeader  Mus_Death_FM@ch1Jump1,  $00, $07, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_Death_FM@ch0,  $00, $01
+    smpsFMChanHeader  Mus_Death_FM@ch1,  $00, $02
+    smpsFMChanHeader  Mus_Death_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_Death_FM@ch3,  $00, $02
+    smpsFMChanHeader  Mus_Death_FM@ch4,  $00, $01
+    smpsFMChanHeader  Mus_Death_FM@ch5,  $F4, $00
+    smpsFMChanHeader  Mus_Death_FM@ch6,  $00, $06
+    smpsFMChanHeader  Mus_Death_FM@ch1Jump1,  $00, $07
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
 @ch0Jump1:
     smpsModSetup    $00, $02, $FF, $03
     smpsFMVoice $02
-    smpsVolEnv  $07
+    smpsVolEnv  FMVolEnv07
     .db nRst, $14, nB4, $05, nRst, $01, nF5, $05, nRst, $07, nF5, $05, nRst, $01, nF5, $07
     .db nRst, $01, nE5, $07, nRst, $01, nD5, $07, nRst, $01, nC5, $10
     smpsStop
@@ -2274,7 +2274,7 @@ Mus_Death_FM:
     smpsDetune $01
 @ch1Jump1:
     smpsFMVoice $02
-    smpsVolEnv  $07
+    smpsVolEnv  FMVolEnv07
     .db nRst, $14, nG4, $05, nRst, $01, nD5, $05, nRst, $07, nD5, $05, nRst, $01, nD5, $07
     .db nRst, $01, nC5, $07, nRst, $01, nB4, $07, nRst, $01, nG4, $05, nRst, $01, nE4, $05
     .db nRst, $07, nE4, $05, nRst, $01, nC4, $0A
@@ -2324,15 +2324,15 @@ Mus_GameOver_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($7A)  ;PAL: $5F
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_GameOver_FM@ch0,  $00, $01, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch1,  $00, $01, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch2,  $00, $01, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch3,  $00, $01, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch4,  $0C, $03, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch5,  $00, $08, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch6,  $00, $08, $00, $00
-    smpsChanHeader  Mus_GameOver_FM@ch7,  $00, $08, $00, $00
-    smpsChanHeader  Mus_Silence@ch0, $00, $0F, $00, $00
+    smpsFMChanHeader  Mus_GameOver_FM@ch0,  $00, $01
+    smpsFMChanHeader  Mus_GameOver_FM@ch1,  $00, $01
+    smpsFMChanHeader  Mus_GameOver_FM@ch2,  $00, $01
+    smpsFMChanHeader  Mus_GameOver_FM@ch3,  $00, $01
+    smpsFMChanHeader  Mus_GameOver_FM@ch4,  $0C, $03
+    smpsFMChanHeader  Mus_GameOver_FM@ch5,  $00, $08
+    smpsFMChanHeader  Mus_GameOver_FM@ch6,  $00, $08
+    smpsFMChanHeader  Mus_GameOver_FM@ch7,  $00, $08
+    smpsFMChanHeader  Mus_Silence@ch0, $00, $0F
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
@@ -2415,15 +2415,15 @@ Mus_WorldVictory_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($6A)  ;PAL: $4C
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_WorldVictory_FM@ch0,  $00, $02, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch1,  $00, $01, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch2,  $00, $01, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch3,  $00, $03, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch4,  $00, $00, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch5,  $0C, $02, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch6,  $00, $00, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch7,  $00, $04, $00, $00
-    smpsChanHeader  Mus_WorldVictory_FM@ch8,  $00, $07, $00, $00
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch0,  $00, $02
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch1,  $00, $01
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch2,  $00, $01
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch3,  $00, $03
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch4,  $00, $00
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch5,  $0C, $02
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch6,  $00, $00
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch7,  $00, $04
+    smpsFMChanHeader  Mus_WorldVictory_FM@ch8,  $00, $07
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
@@ -2519,15 +2519,15 @@ Mus_Cloud_FM:
     smpsHeader      $00, $09, $01, TempoFunc($9C)
 .ENDIF
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Cloud_FM@ch0,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch1,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch2,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch3,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch4,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch5,  $00, $04, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch6,  $00, $08, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch7,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Cloud_FM@ch8,  $00, $01, $00, $00
+    smpsFMChanHeader  Mus_Cloud_FM@ch0,  $00, $03
+    smpsFMChanHeader  Mus_Cloud_FM@ch1,  $00, $02
+    smpsFMChanHeader  Mus_Cloud_FM@ch2,  $00, $01
+    smpsFMChanHeader  Mus_Cloud_FM@ch3,  $00, $03
+    smpsFMChanHeader  Mus_Cloud_FM@ch4,  $00, $01
+    smpsFMChanHeader  Mus_Cloud_FM@ch5,  $00, $04
+    smpsFMChanHeader  Mus_Cloud_FM@ch6,  $00, $08
+    smpsFMChanHeader  Mus_Cloud_FM@ch7,  $00, $02
+    smpsFMChanHeader  Mus_Cloud_FM@ch8,  $00, $01
 
 .IF PALBUILD == $00
 ;   --- CHANNEL 0 DATA ---
@@ -2536,7 +2536,7 @@ Mus_Cloud_FM:
     smpsModSetup    $10, $01, $FE, $03
     smpsCall    Mus_Cloud_FM@ch0Call1
     .db nB5, $1A, nRst, $04
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     smpsChangeVol $FE
 @ch0LoopPoint:
 @ch0Jump2:
@@ -2630,11 +2630,11 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 2 DATA ---
 @ch2:
-    smpsVolEnv $07
+    smpsVolEnv FMVolEnv07
     smpsFMVoice $02
     .db nC5, $0A, nRst, $02, nC5, $0A, nRst, $02, nD5, $0A, nRst, $02, nD5, $0A, nRst, $02
     .db nF5, $05, nRst, $01, nF5, $05, nRst, $07, nG5, $1A, nRst, $04
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
     smpsChangeVol $02
 @ch2LoopPoint:
     .db nE5, $0C, $09, $03, $0C, $09, $03, nF5, $0C, $09, $03, $0C, $09, $03, nD5, $0C
@@ -2648,7 +2648,7 @@ Mus_Cloud_FM:
 @ch3:
     smpsFMVoice $02
     .db nRst, $60
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
 @ch3LoopPoint:
     .db nB4, $0C, $09, $03, $0C, $09, $03, nC5, $0C, $09, $03, nB4, $0C, $09, $03, $0C
     .db $0C, nBb4, $0C, $0C, nA4, $09, $03, nRst, $09, nA4, $03, nRst, $09, nG4, $0F, nC5
@@ -2659,11 +2659,11 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 4 DATA ---
 @ch4:
-    smpsVolEnv $07
+    smpsVolEnv FMVolEnv07
     smpsFMVoice $02
     .db nA4, $0A, nRst, $02, nA4, $0A, nRst, $02, nB4, $0A, nRst, $02, nB4, $0A, nRst, $02
     .db nC5, $05, nRst, $01, nC5, $05, nRst, $07, nD5, $1A, nRst, $04
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
     smpsChangeVol $02
 @ch4LoopPoint:
     smpsDetune $00
@@ -2696,7 +2696,7 @@ Mus_Cloud_FM:
     .db nRst, $06
     smpsCall    Mus_Cloud_FM@ch0Call1
     .db nB5, $18
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     smpsChangeVol $F9
     smpsTranspose   $0C
     smpsJump    Mus_Cloud_FM@ch0Jump2
@@ -2704,8 +2704,8 @@ Mus_Cloud_FM:
 ;   --- CHANNEL 7 DATA ---
 @ch7:
     .db nRst, $60
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
 @ch7LoopPoint:
     smpsCall    Mus_Cloud_FM@ch7Call1
     ;
@@ -2770,7 +2770,7 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 8 DATA ---
 @ch8:
-    smpsPatchEnv    $0F
+    smpsPatchEnv    PatchEnv0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
     .db nRst, $60
@@ -2822,7 +2822,7 @@ Mus_Cloud_FM:
     smpsCall    Mus_Cloud_FM@ch0Call1
     .db nB5, $0D, nRst, $02
     smpsChangeVol $FE
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
 @ch0LoopPoint:
 @ch0Jump2:
     .db nC4, $06
@@ -2913,13 +2913,13 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 2 DATA ---
 @ch2:
-    smpsVolEnv $07
+    smpsVolEnv FMVolEnv07
     smpsFMVoice $02
     .db nC5, $05, nRst, $01, nC5, $05, nRst, $01, nD5, $05, nRst, $01, nD5, $05, nRst, $01
     .db nF5, $02, nRst, $01, nF5, $02, nRst, $04, nG5, $0D, nRst, $02
     smpsChangeVol $02
 @ch2LoopPoint:
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
     .db nE5, $06, $04, $02, $06, $04, $02, nF5, $06, $04, $02, $06, $04, $02, nD5, $06
     .db $06, nCs5, $06, $06, nC5, $04, $02, nRst, $04, nC5, $02, nRst, $04, nB4, $08, nE5
     .db $06, $04, $02, $06, $04, $02, nD5, $06, $04, $02, $06, $04, $02, $06, $04, $02
@@ -2931,7 +2931,7 @@ Mus_Cloud_FM:
 @ch3:
     smpsFMVoice $02
     .db nRst, $30
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
 @ch3LoopPoint:
     .db nB4, $06, $04, $02, $06, $04, $02, nC5, $06, $04, $02, nB4, $06, $04, $02, $06
     .db $06, nBb4, $06, $06, nA4, $04, $02, nRst, $04, nA4, $02, nRst, $04, nG4, $08, nC5
@@ -2942,11 +2942,11 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 4 DATA ---
 @ch4:
-    smpsVolEnv $07
+    smpsVolEnv FMVolEnv07
     smpsFMVoice $02
     .db nA4, $05, nRst, $01, nA4, $05, nRst, $01, nB4, $05, nRst, $01, nB4, $05, nRst, $01
     .db nC5, $02, nRst, $01, nC5, $02, nRst, $04, nD5, $0D, nRst, $02
-    smpsVolEnv $08
+    smpsVolEnv FMVolEnv08
     smpsChangeVol $02
 @ch4LoopPoint:
     smpsDetune $00
@@ -2978,7 +2978,7 @@ Mus_Cloud_FM:
     .db nRst, $03
     smpsCall    Mus_Cloud_FM@ch0Call1
     .db nB5, $0C
-    smpsPatchEnv $0D
+    smpsPatchEnv PatchEnv0D
     smpsChangeVol $F9
     smpsTranspose   $0C
     smpsJump    Mus_Cloud_FM@ch0Jump2
@@ -2986,8 +2986,8 @@ Mus_Cloud_FM:
 ;   --- CHANNEL 7 DATA ---
 @ch7:
     .db nRst, $30
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
 @ch7LoopPoint:
     smpsCall    Mus_Cloud_FM@ch7Call1
 ;
@@ -3051,7 +3051,7 @@ Mus_Cloud_FM:
 
 ;   --- CHANNEL 8 DATA ---
 @ch8:
-    smpsPatchEnv    $0F
+    smpsPatchEnv    PatchEnv0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
     .db nRst, $30
@@ -3094,15 +3094,15 @@ Mus_Bowser_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8F)  ;PAL: $78, $47
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Bowser_FM@ch0,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch1,  $00, $01, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch3,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch4,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch5,  $00, $07, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch6,  $00, $05, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch7,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Bowser_FM@ch8,  $00, $01, $00, $00
+    smpsFMChanHeader  Mus_Bowser_FM@ch0,  $00, $02
+    smpsFMChanHeader  Mus_Bowser_FM@ch1,  $00, $01
+    smpsFMChanHeader  Mus_Bowser_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_Bowser_FM@ch3,  $00, $02
+    smpsFMChanHeader  Mus_Bowser_FM@ch4,  $00, $02
+    smpsFMChanHeader  Mus_Bowser_FM@ch5,  $00, $07
+    smpsFMChanHeader  Mus_Bowser_FM@ch6,  $00, $05
+    smpsFMChanHeader  Mus_Bowser_FM@ch7,  $00, $02
+    smpsFMChanHeader  Mus_Bowser_FM@ch8,  $00, $01
 
 ;   --- CHANNEL 5 (0) DATA ---
 @ch5:
@@ -3112,17 +3112,17 @@ Mus_Bowser_FM:
 ;   --- CHANNEL 0 DATA ---
 @ch0:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nRst, $0C
     .db nE3, nG3, nA3
     
     ;smpsChangeVol   $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nBb3, $30
-    smpsVolEnv $00
+    smpsVolEnv $0000
 @ch0LoopPoint:
     .db nRst, $27
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsChangeVol $01
     .db nE4, $02, nRst, $01
@@ -3140,13 +3140,13 @@ Mus_Bowser_FM:
     .db nRst, $0C, nA2, nC3, nD3
 
     ;smpsChangeVol   $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nEb3, $30
-    smpsVolEnv $00
+    smpsVolEnv $0000
 
     ;smpsChangeVol   $01
 @ch1LoopPoint:
-    smpsPatchEnv $11
+    smpsPatchEnv PatchEnv11
     ;smpsChangeVol $FF
     .db nA2, $0C, nE2, nA2, $09, nC3, $03
     smpsChangeVol $05
@@ -3171,29 +3171,29 @@ Mus_Bowser_FM:
 ;   --- CHANNEL 2 DATA ---
 @ch2:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nRst, $0C
     .db nC3, nE3, nFs3
 
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nG3, $30
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsStop
 
 ;   --- CHANNEL 3 DATA ---
 @ch3:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nRst, $0C
     .db nG2, nC3, nD3
 
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nEb3, $30
-    smpsVolEnv $00
+    smpsVolEnv $0000
 
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     ;smpsChangeVol $01 ;$02
     smpsFMVoice $02
     smpsModOff
@@ -3206,7 +3206,7 @@ Mus_Bowser_FM:
 
 ;   --- CHANNEL 4 DATA ---
 @ch4:
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsFMVoice $02
     .db nRst, $60
 @ch4LoopPoint:
@@ -3218,8 +3218,8 @@ Mus_Bowser_FM:
 
 ;   --- CHANNEL 6 DATA ---
 @ch6:
-    smpsPatchEnv $14
-    smpsVolEnv $04
+    smpsPatchEnv PatchEnv14
+    smpsVolEnv FMVolEnv04
     .db nRst, $30
     .db nEb4, $01, nRst
     smpsChangeVol $FF
@@ -3243,8 +3243,8 @@ Mus_Bowser_FM:
 
 ;   --- CHANNEL 7 DATA ---
 @ch7:
-    smpsPatchEnv $13
-    smpsVolEnv $03
+    smpsPatchEnv PatchEnv13
+    smpsVolEnv FMVolEnv03
     .db nRst, $0C, nRst, $54
 @ch7LoopPoint:
     smpsCall    Mus_Bowser_FM@ch7Call1
@@ -3294,7 +3294,7 @@ Mus_Bowser_FM:
 
 ;   --- CHANNEL 8 DATA ---
 @ch8:
-    smpsPatchEnv    $0F
+    smpsPatchEnv    PatchEnv0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
     .db nRst, $0C, nRst, $54
@@ -3338,39 +3338,39 @@ Mus_FinalBowser_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($8F)  ;PAL: $78, $47
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_FinalBowser_FM@ch0,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch1,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch2,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch3,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch4,  $00, $00, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch5,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch6,  $00, $0F, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch7,  $00, $02, $00, $00
-    smpsChanHeader  Mus_FinalBowser_FM@ch8,  $00, $05, $00, $00
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch0,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch1,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch2,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch3,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch4,  $00, $00
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch5,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch6,  $00, $0F
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch7,  $00, $02
+    smpsFMChanHeader  Mus_FinalBowser_FM@ch8,  $00, $05
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nG3, $09, nBb3, $03, nRst, $06
 
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nA3, $24
-    smpsVolEnv $00
+    smpsVolEnv $0000
     ;smpsChangeVol $01
 
     .db $06, $06, $06, $03, $03, nRst, nA3, nRst, nGs3, $09
 
     smpsChangeVol $01
 @ch0LoopPoint:
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nRst, $0C, nD4, $09, nCs4, $03, nRst, $0C, nA3, $09
     
     smpsModSetup    $10, $01, $FC, $FF
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nG3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $06
@@ -3379,15 +3379,15 @@ Mus_FinalBowser_FM:
     .db nD4, $09, nCs4, $03, nRst, $0C, nA3, $09
 
     smpsModOn
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nB3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $06
     .db nB2, $01, nRst, $1A
     ;
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $07
     smpsChangeVol $FB
     .db nFs4, $01, nRst, $02, nFs4, $01, nRst, $02
@@ -3431,14 +3431,14 @@ Mus_FinalBowser_FM:
     .db nA2, $09, nC3, $03, nRst, $06
     
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nB2, $24
-    smpsVolEnv $00
+    smpsVolEnv $0000
     ;smpsChangeVol $01
     
     .db $06, $06, $06, $03, $03, nRst, nB2, nRst, nBb2, $09
 
-    smpsPatchEnv $11
+    smpsPatchEnv PatchEnv11
     smpsChangeVol $FF
 @ch1LoopPoint:
     .db nA2, $09, nE2, $03, nRst, $06, nD3, $0C, nCs3, $06, nD3, $03, nE4, nE2, $06, nF2, $09
@@ -3455,13 +3455,13 @@ Mus_FinalBowser_FM:
 ;   --- CHANNEL 2 DATA ---
 @ch2:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nD3, $09, nF3, $03, nRst, $06
 
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nE3, $24
-    smpsVolEnv $00
+    smpsVolEnv $0000
     ;smpsChangeVol $01
     
     .db $06, $06, $06, $03, $03, nRst, nE3, nRst, nEb3, $09
@@ -3469,13 +3469,13 @@ Mus_FinalBowser_FM:
     smpsChangeVol $01
 @ch2LoopPoint:
     smpsDetune $00
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nRst, $0C, nA3, $09, $03, nRst, $0C, nE3, $09
     
     smpsModSetup    $10, $01, $FC, $FF
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nD3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $06
@@ -3484,9 +3484,9 @@ Mus_FinalBowser_FM:
     .db nA3, $09, $03, nRst, $0C, nE3, $09
     
     smpsModOn
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nFs3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $06
@@ -3494,7 +3494,7 @@ Mus_FinalBowser_FM:
     ;
     smpsDetune $01
     smpsFMVoice $07
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsChangeVol $FB
     .db nCs4, $01, nRst, $02, nCs4, $01, nRst, $02
     smpsChangeVol $FF
@@ -3534,28 +3534,28 @@ Mus_FinalBowser_FM:
 ;   --- CHANNEL 3 DATA ---
 @ch3:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nE3, $09, nG3, $03, nRst, $06
     
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nFs3, $24
-    smpsVolEnv $00
+    smpsVolEnv $0000
     ;smpsChangeVol $01
     
     .db $06, $06, $06, $03, $03, nRst, nFs3, nRst, nF3, $09
 
     smpsChangeVol $FE
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
 @ch3LoopPoint:
     smpsFMVoice $01
     .db nA2, $03, nB2, nD3, nE3, nRst, $06, nA2, $03, nB2, nD3, nE3, nRst, nA2, nRst, $06
     .db nA3
     
     smpsModSetup    $10, $01, $FC, $FF
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nGs3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $07
@@ -3565,9 +3565,9 @@ Mus_FinalBowser_FM:
     .db nA3
 
     smpsModOn
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nBb3, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $07
@@ -3619,9 +3619,9 @@ Mus_FinalBowser_FM:
     .db nD4
 
     smpsModSetup    $10, $01, $FC, $FF
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nCs4, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $07
@@ -3631,9 +3631,9 @@ Mus_FinalBowser_FM:
     .db nD4
     
     smpsModOn
-    smpsVolEnv $0A
+    smpsVolEnv FMVolEnv0A
     .db nEb4, $18
-    smpsVolEnv $00
+    smpsVolEnv $0000
     smpsModOff
 
     smpsChangeVol $07
@@ -3644,20 +3644,20 @@ Mus_FinalBowser_FM:
 ;   --- CHANNEL 5 DATA ---
 @ch5:
     smpsModSetup    $10, $01, $FF, $03
-    smpsPatchEnv $15
+    smpsPatchEnv PatchEnv15
     .db nC3, $09, nEb3, $03, nRst, $06
 
     ;smpsChangeVol $FF
-    smpsVolEnv $09
+    smpsVolEnv FMVolEnv09
     .db nD3, $24
-    smpsVolEnv $00
+    smpsVolEnv $0000
     ;smpsChangeVol $01
     
     .db $06, $06, $06, $03, $03, nRst, nD3, nRst, nCs3, $09
     smpsModOff
     smpsChangeVol $01
-    smpsPatchEnv $14
-    smpsVolEnv $04
+    smpsPatchEnv PatchEnv14
+    smpsVolEnv FMVolEnv04
 @ch5LoopPoint:
     .db nG4, $02, nRst, $01, nG4, $02, nRst, $01, nG4, $02, nRst, $01, nB4, $02, nRst, $01
     .db nG4, $02, nRst, $01, nB4, $02, nRst, $01, nG4, $02, nRst, $01, nG4, $02, nRst, $01
@@ -3672,8 +3672,8 @@ Mus_FinalBowser_FM:
 ;   --- CHANNEL 7 DATA ---
 @ch7:
     .db nRst, $60
-    smpsPatchEnv $13
-    smpsVolEnv $03
+    smpsPatchEnv PatchEnv13
+    smpsVolEnv FMVolEnv03
 @ch7LoopPoint:
     smpsCall    Mus_FinalBowser_FM@ch7Call1
     smpsCall    Mus_FinalBowser_FM@ch7Call1
@@ -3727,7 +3727,7 @@ Mus_FinalBowser_FM:
 
 ;   --- CHANNEL 8 DATA ---
 @ch8:
-    smpsPatchEnv    $0F
+    smpsPatchEnv    PatchEnv0F
     smpsFMVoice $10 ; UPLOAD CUSTOM INSTRUMENT
     smpsModSetup    $00, $01, $E4, $FF
     .db nRst, $36
@@ -3783,20 +3783,20 @@ Mus_Title_FM:
     ; MAIN HEADER
     smpsHeader      $00, $09, $01, TempoFunc($6A)
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Title_FM@ch0,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch1,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch2,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch3,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch4,  $00, $06, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch5,  $00, $00, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch6,  $00, $03, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch7,  $00, $02, $00, $00
-    smpsChanHeader  Mus_Title_FM@ch8,  $00, $04, $00, $00
+    smpsFMChanHeader  Mus_Title_FM@ch0,  $00, $00
+    smpsFMChanHeader  Mus_Title_FM@ch1,  $00, $03
+    smpsFMChanHeader  Mus_Title_FM@ch2,  $00, $03
+    smpsFMChanHeader  Mus_Title_FM@ch3,  $00, $03
+    smpsFMChanHeader  Mus_Title_FM@ch4,  $00, $06
+    smpsFMChanHeader  Mus_Title_FM@ch5,  $00, $00
+    smpsFMChanHeader  Mus_Title_FM@ch6,  $00, $03
+    smpsFMChanHeader  Mus_Title_FM@ch7,  $00, $02
+    smpsFMChanHeader  Mus_Title_FM@ch8,  $00, $04
 
 ;   --- CHANNEL 0 DATA ---
 @ch0:
     smpsFMVoice $01
-    smpsVolEnv  $06
+    smpsVolEnv  FMVolEnv06
 @ch0LoopPoint:
     .db nC3, $23, nRst, $01, nC3, $23, nRst, $01, nC3, $23, nRst, $01
     ;.db nG3, $07, nRst, $05
@@ -3893,79 +3893,79 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nE6, $20, nRst, $04, nEb6, $15, nRst, $03, nF6, $0A, nRst, $02
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nD6, $20, nRst, $04, nCs6, $20, nRst, $04
     smpsChangeVol $01
     .db nD6, $29, nRst, $01
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nD6, $20, nRst, $04, nG5, $15, nRst, $03, nF6, $0A, nRst, $02
     smpsChangeVol $01
     .db nE6, $29, nRst, $01
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nG6, $20, nRst, $04, nG6, $20, nRst, $04
     smpsChangeVol $01
     .db nG6, $20, nRst, $04
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nG6, $01, nRst, $05, nG5, $01, nRst, $05, nG6, $01, nRst, $05, nA6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nG6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nF6, $20, nRst, $04, nF6, $20, nRst, $04
     smpsChangeVol $01
     .db nF6, $20, nRst, $04
     ;
-    smpsPatchEnv $05
-    smpsVolEnv  $00
+    smpsPatchEnv PatchEnv05
+    smpsVolEnv  $0000
     .db nF6, $01, nRst, $05, nF5, $01, nRst, $05, nF6, $01, nRst, $05, nG6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nF6, $01, nRst, $05
     smpsChangeVol $FF
     ;
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     smpsFMVoice $01
     .db nE6, $20, nRst, $04, nA5, $0A, nRst, $02, nB5, $0A, nRst, $02, nF6, $0A, nRst, $02
     .db nE6, $0A, nRst, $02, nE6, $10, nRst, $02, nB5, $05, nRst, $01, nC6, $20, nRst, $04
@@ -3974,8 +3974,8 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 1 DATA ---
 @ch1:
-    smpsVolEnv  $06
-    smpsPatchEnv $01
+    smpsVolEnv  FMVolEnv06
+    smpsPatchEnv PatchEnv01
     .db nRst, $0C, nE6, $0B, nRst, $01, nE6, $0B, nRst, $0D, nF6, $0B, nRst, $01, nF6, $0B
     .db nRst, $0D, nG6, $0B, nRst, $01, nG6, $0B, nRst, $01, nF6, $07, nRst, $05
     ;smpsChangeVol $05
@@ -3996,7 +3996,7 @@ Mus_Title_FM:
     smpsChangeVol $FC ;FC
 
     smpsModSetup    $10, $01, $01, $02
-    smpsPatchEnv $00
+    smpsPatchEnv $0000
     smpsFMVoice $01
     .db nC3, $23, nRst, $01, nG2, $17, nRst, $01, nB2, $0B, nRst, $01, nC3, $23, nRst, $01
     .db nG2, $23, nRst, $01, nC3, $23, nRst, $01, nG2, $17, nRst, $01, nB2, $0B, nRst, $01
@@ -4012,7 +4012,7 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 2 DATA ---
 @ch2:
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
 @ch2LoopPoint:
     .db nRst, $0C
     smpsCall    Mus_Title_FM@ch2Call1
@@ -4082,7 +4082,7 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 3 DATA ---
 @ch3:
-    smpsPatchEnv $01
+    smpsPatchEnv PatchEnv01
 @ch3LoopPoint:
     .db nRst, $0C
     smpsCall    Mus_Title_FM@ch2Call3
@@ -4253,8 +4253,8 @@ Mus_Title_FM:
 ;   --- CHANNEL 5 DATA ---
 @ch5:
     smpsFMVoice $01
-    smpsVolEnv  $06
-    smpsPatchEnv $00
+    smpsVolEnv  FMVolEnv06
+    smpsPatchEnv $0000
     smpsModSetup    $10, $01, $01, $02
 @ch5LoopPoint:
     .db nRst, $7F, $11
@@ -4262,9 +4262,9 @@ Mus_Title_FM:
     smpsChangeVol $01
     .db nG5, $29, nRst, $01
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
@@ -4272,15 +4272,15 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nG5, $20, nRst, $04, nFs5, $15, nRst, $03, nA5, $0A, nRst, $02
     smpsChangeVol $01
     .db nG5, $29, nRst, $01
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
@@ -4288,15 +4288,15 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nG5, $20, nRst, $04, nFs5, $20, nRst, $04
     smpsChangeVol $01
     .db nG5, $29, nRst, $01
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nCs6, $01, nRst, $05
@@ -4304,15 +4304,15 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nG5, $20, nRst, $04, nF5, $15, nRst, $03, nB5, $0A, nRst, $02
     smpsChangeVol $01
     .db nC6, $29, nRst, $01
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nG5, $01, nRst, $05, nA5, $01, nRst, $05, nB5, $01, nRst, $05, nC6, $01, nRst, $05
     .db nD6, $01, nRst, $05
@@ -4320,15 +4320,15 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nE6, $20, nRst, $04, nD6, $20, nRst, $04
     smpsChangeVol $01
     .db nCs6, $20, nRst, $04
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nG6, $01, nRst, $05, nG5, $01, nRst, $05, nG6, $01, nRst, $05, nA6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nG6, $01, nRst, $05
@@ -4336,15 +4336,15 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nD6, $20, nRst, $04, nCs6, $20, nRst, $04
     smpsChangeVol $01
     .db nC6, $20, nRst, $04
     ;
-    smpsVolEnv  $00
+    smpsVolEnv  $0000
     smpsDetune $02
-    smpsPatchEnv $05
+    smpsPatchEnv PatchEnv05
     smpsChangeVol $01
     .db nF6, $01, nRst, $05, nF5, $01, nRst, $05, nF6, $01, nRst, $05, nG6, $01, nRst, $05
     .db nG5, $01, nRst, $05, nF6, $01, nRst, $05
@@ -4352,8 +4352,8 @@ Mus_Title_FM:
     ;
     smpsDetune $00
     smpsFMVoice $01
-    smpsPatchEnv $00
-    smpsVolEnv  $06
+    smpsPatchEnv $0000
+    smpsVolEnv  FMVolEnv06
     .db nC6, $20, nRst, $04, nF5, $0A, nRst, $02, nG5, $0A, nRst, $02, nC6, $0A, nRst, $02
     .db nC6, $0A, nRst, $02, nC6, $10, nRst, $02, nF5, $05, nRst, $01, nE5, $20, nRst, $04
     smpsJump    Mus_Title_FM@ch5LoopPoint
@@ -4391,25 +4391,25 @@ Mus_Title_FM:
     smpsJump    Mus_Title_FM@ch6LoopPoint
 
 @ch6Call1:  ; 3
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $0C
 
-    smpsVolEnv  $00
-    smpsPatchEnv    $0F
+    smpsVolEnv  $0000
+    smpsPatchEnv    PatchEnv0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2, nD2
     smpsRet
 
 @ch6Call2:  ; 2
-    smpsVolEnv  $03
-    smpsPatchEnv    $13
+    smpsVolEnv  FMVolEnv03
+    smpsPatchEnv    PatchEnv13
     smpsModSetup    $00, $02, $E8, $FF
     .db nC3, $0C
 
-    smpsVolEnv  $00
-    smpsPatchEnv    $0F
+    smpsVolEnv  $0000
+    smpsPatchEnv    PatchEnv0F
     smpsModSetup    $00, $01, $E4, $FF
     .db nD2, $06, nD2, nD2, $0C
     smpsRet
@@ -4424,8 +4424,8 @@ Mus_Title_FM:
 
 ;   --- CHANNEL 7 DATA ---
 @ch7:
-    smpsPatchEnv $09
-    smpsVolEnv  $05
+    smpsPatchEnv PatchEnv09
+    smpsVolEnv  FMVolEnv05
 @ch7LoopPoint:
 @ch7Loop1:
     .db nBb7, $24
@@ -4442,7 +4442,7 @@ Mus_Title_FM:
 @ch8:
     smpsDetune $01
     smpsFMVoice $01
-    smpsVolEnv  $06
+    smpsVolEnv  FMVolEnv06
     .db nRst, $04
 
 @ch8LoopPoint:

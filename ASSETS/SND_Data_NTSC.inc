@@ -8,16 +8,16 @@ Mus_Water:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $40  ; $40, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Water@ch0,  $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Water@ch1,  $00, $00, $00, $0A  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Water@ch2,  $00, $00, $00, $0A  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Water@ch3,  $00, $02, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Water@ch0,  $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Water@ch1,  $00, $00, PSGEnv0A  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Water@ch2,  $00, $00, PSGEnv0A  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Water@ch3,  $00, $02, $0000     ; NOISE     (CH3)
 @ch0:
     .db nRst, $60
     .db nG1, $0C
-    smpsPSGVoice $00
+    smpsPSGVoice $0000
     .db $24
-    smpsPSGVoice $0E
+    smpsPSGVoice PSGEnv0E
 
 @ch0Loop1:
     .db nC1, $0C, nG1, nC2, nB0, nG1, nB1, nC1, nG1, nC2, nE1, nG1, nC2
@@ -35,11 +35,11 @@ Mus_Water:
     .db nF2, nCs1, nA1, nF2, nC1, nA1, nF2, nB0, nG1, nF2, nC1, nG1, nE2
     
     .db nG1, $0C, $0C, $0C
-    smpsPSGVoice $00
+    smpsPSGVoice $0000
     .db nF1, $1E
     .db nB0, $06
     .db nC1, $24
-    smpsPSGVoice $0E
+    smpsPSGVoice PSGEnv0E
     smpsJump Mus_Water@ch0
 
 @ch1:
@@ -74,10 +74,10 @@ Mus_Overworld:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $55  ; $55, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Overworld@ch0,  $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Overworld@ch1,  $00, $00, $00, $07  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Overworld@ch2,  $00, $00, $00, $07  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Overworld@ch3,  $00, $02, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Overworld@ch0,  $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Overworld@ch1,  $00, $00, PSGEnv07  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Overworld@ch2,  $00, $00, PSGEnv07  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Overworld@ch3,  $00, $02, $0000     ; NOISE     (CH3)
     ; CHANNEL 0 DATA
 @ch0:
     smpsCall Mus_Overworld@ch0Call1
@@ -307,10 +307,10 @@ Mus_Underground:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $55  ; $55, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Underground@ch0,    $18, $0F, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $00, $00  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Underground@ch0,    $00, $00, $00, $07  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Underground@ch3,    $00, $02, $00, $0E  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Underground@ch0,    $18, $0F, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $0000     ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Underground@ch0,    $00, $00, PSGEnv07  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Underground@ch3,    $00, $02, PSGEnv0E  ; NOISE     (CH3)
     ; CHANNEL 0/2 DATA
 @ch0:
     .db nC2, $06, nC3, nA1, nA2, nBb1, nBb2, $2A
@@ -345,10 +345,10 @@ Mus_Castle:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $33  ; $33, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Castle@ch0,     $00, $03, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Castle@ch1,     $00, $00, $00, $07  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Castle@ch2,     $00, $00, $00, $07  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Castle@ch0,     $00, $03, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Castle@ch1,     $00, $00, PSGEnv07  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Castle@ch2,     $00, $00, PSGEnv07  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $0000     ; NOISE     (CH3)
     ; CHANNEL 0 DATA
 @ch0:
     .db nEb1, $40, nD1, $20, nFs1, nF1, $40, nE1, $20, nBb1, nA1, nE1, nEb1, nE1
@@ -390,10 +390,10 @@ Mus_Invincible:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $80  ; $80, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Invincible@ch0, $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Invincible@ch1, $00, $00, $00, $09  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Invincible@ch2, $00, $00, $00, $09  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Invincible@ch3, $00, $02, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Invincible@ch0, $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Invincible@ch1, $00, $00, PSGEnv09  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Invincible@ch2, $00, $00, PSGEnv09  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Invincible@ch3, $00, $02, $0000     ; NOISE     (CH3)
 @ch0:
     .db nD1, $0C, nA1, $09, nD2, $0F, nA1, $06, nD2
     .db nC1, $0C, nG1, $09, nC2, $0F, nG1, $06, nC2
@@ -419,10 +419,10 @@ Mus_PipeIntro:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $55  ; $55, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_PipeIntro@ch0,  $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_PipeIntro@ch1,  $00, $00, $00, $07  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_PipeIntro@ch2,  $00, $00, $00, $07  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_PipeIntro@ch3,  $00, $02, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_PipeIntro@ch0,  $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_PipeIntro@ch1,  $00, $00, PSGEnv07  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_PipeIntro@ch2,  $00, $00, PSGEnv07  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_PipeIntro@ch3,  $00, $02, $0000     ; NOISE     (CH3)
 @ch0:
     smpsCall Mus_Overworld@ch0Call1
     smpsStop
@@ -443,10 +443,10 @@ Mus_LevelVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_LevelVictory@ch0,   $00, $03, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_LevelVictory@ch1,   $00, $00, $00, $08  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_LevelVictory@ch2,   $00, $00, $00, $08  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_LevelVictory@ch0,   $00, $03, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_LevelVictory@ch1,   $00, $00, PSGEnv08  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_LevelVictory@ch2,   $00, $00, PSGEnv08  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $0000     ; NOISE     (CH3)
 @ch0:
     .db nRst, $18
     .db nC1, $08, nE1, nG1, nE2, $18, nC2, $08, nRst, $28
@@ -473,10 +473,10 @@ Mus_Death:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_Death@ch0,      $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_Death@ch1,      $00, $00, $00, $0B  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_Death@ch2,      $00, $00, $00, $0C  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_Death@ch0,      $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_Death@ch1,      $00, $00, PSGEnv0B  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_Death@ch2,      $00, $00, PSGEnv0C  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $0000     ; NOISE     (CH3)
 @ch0:
     .db nRst, $24
     .db nG1, $1B, $09, $0C, nA1, nB1, nC2, $12, nG1, nC1, $24
@@ -485,7 +485,7 @@ Mus_Death:
     smpsModSetup    $00, $01, $10, $FF
     .db nBb2, $03, nB2, nC3, $1E
     smpsModSetup    $00, $01, $12, $FF
-    smpsPSGVoice    $0C
+    smpsPSGVoice    PSGEnv0C
     .db nG2, $09, nD3, $12, $09, $0C, nC3, nB2, nG2, $09, nE2, $12, $09, nC2, $0B
     smpsStop
 @ch2:
@@ -499,13 +499,13 @@ Mus_GameOver:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_GameOver@ch0,   $00, $03, $00, $0E  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_GameOver@ch1,   $00, $00, $00, $0A  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_GameOver@ch2,   $00, $00, $00, $0A  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_GameOver@ch0,   $00, $03, PSGEnv0E  ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_GameOver@ch1,   $00, $00, PSGEnv0A  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_GameOver@ch2,   $00, $00, PSGEnv0A  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,    $00, $0F, $0000     ; NOISE     (CH3)
 @ch0:
     .db nG1, $1B, nE1
-    smpsPSGVoice $00
+    smpsPSGVoice $0000
     .db nC1, $12, nF1, $24, nCs1, $36, nC1
     smpsStop
 @ch1:
@@ -522,10 +522,10 @@ Mus_WorldVictory:
     ; MAIN HEADER
     smpsHeader      $00, $04, $01, $00
     ; CHANNEL HEADERS
-    smpsChanHeader  Mus_WorldVictory@ch0,   $00, $03, $00, $00  ; TRIANGLE  (CH2)
-    smpsChanHeader  Mus_WorldVictory@ch1,   $00, $00, $00, $0D  ; PULSE 1   (CH0)
-    smpsChanHeader  Mus_WorldVictory@ch2,   $00, $00, $00, $0D  ; PULSE 2   (CH1)
-    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $00, $00  ; NOISE     (CH3)
+    smpsChanHeader  Mus_WorldVictory@ch0,   $00, $03, $0000     ; TRIANGLE  (CH2)
+    smpsChanHeader  Mus_WorldVictory@ch1,   $00, $00, PSGEnv0D  ; PULSE 1   (CH0)
+    smpsChanHeader  Mus_WorldVictory@ch2,   $00, $00, PSGEnv0D  ; PULSE 2   (CH1)
+    smpsChanHeader  Mus_Silence@ch0,        $00, $0F, $0000     ; NOISE     (CH3)
     ; CHANNEL 0 DATA
 @ch0:
     .db nC1, $34, nRst, $04, nC1, $0C, nRst, $04, nC1, nRst, nC1, nRst, nC1, nRst

@@ -104,7 +104,7 @@ JumpEngine:
     PUSH HL                     ;put new address onto the stack
     EXX                         ;switch back to normal regs
     RET                         ;"return" to new address
-    .db $00
+    .db $00                     ; FILL
 
 ;-------------------------------------------------------------------------------------
 ;   VDP VECTOR
@@ -128,7 +128,7 @@ VdpVector:
     POP AF
     EI                              ;enable Z80 interrupts
     RET                             ;return from H-INT
-
+    .dsb $10, $00                   ; FILL
 
 ;-------------------------------------------------------------------------------------
 ;   PAUSE BUTTON VECTOR

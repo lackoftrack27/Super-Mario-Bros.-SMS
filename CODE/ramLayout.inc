@@ -1212,4 +1212,6 @@
 ;
     EnemyGFXBank:                   dsb $01
     EnemyVRAMMapOffset:             dsb $01
+;
+    SndFMAttenuation:               dsb $01
 .ENDS

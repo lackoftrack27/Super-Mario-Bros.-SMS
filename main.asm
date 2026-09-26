@@ -149,6 +149,8 @@ Start:
     JR Z, @VDPInit
     LD A, ($C000)
     LD (MemoryControlValue), A
+    XOR A
+    LD (SndFMAttenuation), A
     LD A, $A5
     LD (WarmBootValidation + $01), A
 @VDPInit:

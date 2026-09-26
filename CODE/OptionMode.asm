@@ -88,7 +88,7 @@ OptionsCheckJoypad:
     ; ONLY DO SOUND DEBUG IF FLAG IS SET
     LD A, (Temp_Bytes + $02)
     OR A
-    JR NZ, OptionCheckPause_Debug
+    JP NZ, OptionCheckPause_Debug
     ; --- BUTTON UP/DOWN PROCESS ---
     LD A, (HL)
     AND A, bitValue(SMS_BTN_UP) | bitValue(SMS_BTN_DOWN)
@@ -103,7 +103,7 @@ OptionsCheckJoypad:
     LD A, SNDID_BEEP                ;do beep sfx
     LD (SFXTrack0.SoundQueue), A
     LD (PlayerGfxOffset_Old + $01), A   ;invalidate old player gfx offset to refresh
-    JP OptionUpdateSettings
+    JR OptionUpdateSettings
 
     ; --- BUTTON 1 PROCESS ---
 OptionCheckBtn1:
@@ -114,170 +114,22 @@ OptionCheckBtn1:
     LD (Temp_Bytes + $01), A
     LD A, SNDID_BEEP                ;do beep sfx
     LD (SFXTrack0.SoundQueue), A
-    JP OptionUpdateSettings
+    JR OptionUpdateSettings
 
     ; --- BUTTON 2 PROCESS ---
 OptionCheckBtn2:
     LD A, (FMDetectedFlag)          ;skip if FM addon isn't detected
     OR A
-    JR Z, OptionCheckPause_Debug
+    JP Z, OptionCheckPause_Debug
     LD A, (SavedJoypad1Bits)        ;skip if button 2 isn't being pressed
     AND A, bitValue(SMS_BTN_2)
-    JR Z, OptionCheckPause_Debug
+    JP Z, OptionCheckPause_Debug
     LD A, (OptionBitflags)          ;toggle FM flag
     XOR A, bitValue(OPTFLAG_FM)
     LD (OptionBitflags), A
     LD A, SNDID_BEEP                ;do beep sfx
     LD (SFXTrack0.SoundQueue), A
-    JP OptionUpdateSettings
-
-    ; --- PAUSE BUTTON PROCESS ---
-OptionCheckPause_Debug:
-    ; PAUSE BUTTON LOGIC
-    LD A, (SavedJoypad1Bits)
-    AND A, bitValue(SMS_BTN_START)
-    JR Z, @CheckSndFlag
-        ; TOGGLE SOUND TEST FLAG
-    LD A, (Temp_Bytes + $02)
-    XOR A, $01
-    LD (Temp_Bytes + $02), A
-    JR NZ, @EnterSoundTest
-    ; EXIT SOUND TEST
-        ; STOP ALL SOUND
-    CALL SndStopAll         ; PSG, CLEARS FLAGS
-    CALL SilenceAllSound    ; FM, CLEARS FLAGS (ALSO REDUNDANTLY STOPS PSG)
-        ; RESET MUSHROOM SELECTOR
-    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
-    RST setVDPAddress
-    LD B, $08
-    XOR A
-    CALL MemsetVRAM8
-    JP OptionUpdateSettings
-
-@EnterSoundTest:
-    ; START SOUND TEST
-        ; RESET SOUND ID
-    XOR A
-    LD (Temp_Bytes + $03), A
-        ; SET SELECTOR FOR SOUND TEST
-    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
-    RST setVDPAddress
-    LD A, <MUSHROOM_TILE
-    OUT (VDPDATA_PORT), A
-    LD A, >MUSHROOM_TILE
-    OUT (VDPDATA_PORT), A
-        ; DRAW SOUND ID
-    LD HL, Temp_Bytes + $03
-    JR @DrawSndID
-
-@CheckSndFlag:
-    LD A, (Temp_Bytes + $02)
-    OR A
-    JP Z, OptionUpdateSettings
-@PauseControllerChk:
-    LD A, (OptionBitflags)
-    AND A, bitValue(OPTFLAG_FM)
-    LD B, $0E + $13   ; PSG LIMIT
-    JR Z, +
-    LD B, $16 + $13   ; FM LIMIT
-+:
-    LD HL, Temp_Bytes + $03
-    LD A, (SavedJoypad1Bits)
-    ; BUTTON 1 CHECK    [Play Music]
-    BIT SMS_BTN_1, A
-    JR NZ, @PlaySndID 
-    ; BUTTON 2 CHECK    [Stop Music]
-    BIT SMS_BTN_2, A
-    JR Z, +
-    LD A, SNDID_SILENCE
-    JR @OverrideID
-+:
-    ; RIGHT CHECK       [Increment ID]
-    BIT SMS_BTN_RIGHT, A
-    JR Z, +
-    INC (HL)
-    JR @DrawSndID
-+:
-    ; LEFT CHECK        [Decrement ID]
-    BIT SMS_BTN_LEFT, A
-    JR Z, +
-    DEC (HL)
-    JR @DrawSndID
-+:
-    ; UP CHECK          [Set Hurry Up]
-    BIT SMS_BTN_UP, A
-    JP Z, OptionDrawPlayer
-    LD A, SNDID_HURRYUP
-    JR @OverrideID
-
-@DrawSndID:
-    ; GATE SND ID
-    LD A, (HL)
-    CP A, B
-    JR C, +
-    LD (HL), $00
-+:
-    OR A
-    JP P, +
-    DEC B
-    LD (HL), B
-+:
-    ; DRAW SND ID
-    EX DE, HL
-    LD HL, VRAM_ADR_NAMETBL + $0588 + OPTION_OFFSET | VRAMWRITE
-    RST setVDPAddress
-        ; LEFT DIGIT
-    LD A, (DE)
-    AND A, $F0
-    RRCA
-    RRCA
-    RRCA
-    RRCA
-    ADD A, <DIGIT_TILE_START
-    OUT (VDPDATA_PORT), A
-    LD A, (IX + 0)                  ;vdp delay
-    LD A, $01
-    OUT (VDPDATA_PORT), A
-        ; RIGHT DIGIT
-    LD A, (DE)
-    AND A, $0F
-    ADD A, <DIGIT_TILE_START
-    OUT (VDPDATA_PORT), A
-    LD A, (IX + 0)                  ;vdp delay
-    LD A, $01
-    OUT (VDPDATA_PORT), A
-    JP OptionDrawPlayer
-
-@PlaySndID:
-    ; PLAY SND ID
-    LD A, (HL)
-    ADD A, $81                      ;SND START
-    CP A, SNDID_FMDUPS+$03          ;layered SFX (Noise)
-    JR NC, @LayeredNoiseID
-    CP A, SNDID_FMDUPS              ;layered SFX (Tone)
-    JR NC, @LayeredToneID
-    CP A, SNDID_WATER               ;PSG/FM music
-    JR NC, @OverrideID
-    CP A, SNDID_SHATTER             ;Noise SFX (Brick shatter)
-    JR Z, @NoiseID
-    CP A, SNDID_FLAME               ;Tone SFX
-    JR NZ, @ToneID
-    JR @NoiseID                     ;Noise SFX (Flame)
-
-@LayeredNoiseID:
-    ADD A, $0E
-@NoiseID:
-    LD (SFXTrack2.SoundQueue), A
-    JP OptionDrawPlayer
-@LayeredToneID:
-    ADD A, $0E
-@ToneID:
-    LD (SFXTrack0.SoundQueue), A
-    JP OptionDrawPlayer
-@OverrideID:
-    LD (MusicTrack0.SoundQueue), A
-    JP OptionDrawPlayer
-; ---
+    ; FALL THROUGH
 
 OptionUpdateSettings:
     LD A, (OptionBitflags)          ;set values depending on bit 0 of option bit flags
@@ -351,3 +203,188 @@ OptionNMIWait:
     OR A
     JR NZ, OptionNMIWait
     JP OptionsLoop
+
+
+
+; --------
+.SECTION "Sound Test Routines" BANK BANK_SLOT2 SLOT 2 RETURNORG
+    ; --- PAUSE BUTTON PROCESS ---
+OptionCheckPause_Debug:
+    ; PAUSE BUTTON LOGIC
+    LD A, (SavedJoypad1Bits)
+    AND A, bitValue(SMS_BTN_START)
+    JR Z, @CheckSndFlag
+        ; TOGGLE SOUND TEST FLAG
+    LD A, (Temp_Bytes + $02)
+    XOR A, $01
+    LD (Temp_Bytes + $02), A
+    JR NZ, @EnterSoundTest
+    ; EXIT SOUND TEST
+        ; STOP ALL SOUND
+    CALL SndStopAll         ; PSG, CLEARS FLAGS
+    CALL SilenceAllSound    ; FM, CLEARS FLAGS (ALSO REDUNDANTLY STOPS PSG)
+        ; RESET MUSHROOM SELECTOR
+    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+    LD B, $08
+    XOR A
+    CALL MemsetVRAM8
+        ; CLEAR FM ATTENUATION
+    LD HL, VRAM_ADR_NAMETBL + $0308 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+    LD B, $04
+    XOR A
+    CALL MemsetVRAM8
+    JP OptionUpdateSettings
+
+@EnterSoundTest:
+    ; START SOUND TEST
+        ; RESET SOUND ID
+    XOR A
+    LD (Temp_Bytes + $03), A
+        ; SET SELECTOR FOR SOUND TEST
+    LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+    LD A, <MUSHROOM_TILE
+    OUT (VDPDATA_PORT), A
+    LD A, >MUSHROOM_TILE
+    OUT (VDPDATA_PORT), A
+        ; DRAW SOUND ID
+    LD HL, Temp_Bytes + $03
+    JR @DrawSndID
+
+@CheckSndFlag:
+    LD A, (Temp_Bytes + $02)
+    OR A
+    JP Z, OptionUpdateSettings
+@PauseControllerChk:
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_FM)
+    LD B, $0E + $13   ; PSG LIMIT
+    JR Z, +
+    LD B, $16 + $13   ; FM LIMIT
++:
+    LD HL, Temp_Bytes + $03
+    LD A, (SavedJoypad1Bits)
+    ; BUTTON 1 CHECK    [Play Music]
+    BIT SMS_BTN_1, A
+    JR NZ, @PlaySndID 
+    ; BUTTON 2 CHECK    [Stop Music]
+    BIT SMS_BTN_2, A
+    JR Z, +
+    LD A, SNDID_SILENCE
+    JP @OverrideID
++:
+    ; RIGHT CHECK       [Increment ID]
+    BIT SMS_BTN_RIGHT, A
+    JR Z, +
+    INC (HL)
+    JR @DrawSndID
++:
+    ; LEFT CHECK        [Decrement ID]
+    BIT SMS_BTN_LEFT, A
+    JR Z, +
+    DEC (HL)
+    JR @DrawSndID
++:
+    ; UP CHECK          [Set Hurry Up]
+    BIT SMS_BTN_UP, A
+    JR Z, +
+    LD A, SNDID_HURRYUP
+    JR @OverrideID
++:
+    ; DOWN CHECK        [FM Attenuation]
+    BIT SMS_BTN_DOWN, A
+    JP Z, OptionDrawPlayer
+    LD HL, SndFMAttenuation
+    INC (HL)
+    LD A, (HL)
+    CP A, $10
+    JR C, @DrawFMAtt
+    LD (HL), $00
+    JR @DrawFMAtt
+
+@DrawSndID:
+    ; GATE SND ID
+    LD A, (HL)
+    CP A, B
+    JR C, +
+    LD (HL), $00
++:
+    RLCA
+    JR NC, +
+    DEC B
+    LD (HL), B
++:
+    ; DRAW SND ID
+    EX DE, HL
+    LD HL, VRAM_ADR_NAMETBL + $0588 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+        ; LEFT DIGIT
+    LD A, (DE)
+    AND A, $F0
+    RRCA
+    RRCA
+    RRCA
+    RRCA
+    ADD A, <DIGIT_TILE_START
+    CALL OptionSndVDPWrite
+        ; RIGHT DIGIT
+    LD A, (DE)
+    AND A, $0F
+    ADD A, <DIGIT_TILE_START
+    CALL OptionSndVDPWrite
+@DrawFMAtt:
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_FM)
+    JP Z, OptionDrawPlayer
+    ; DRAW FM ATTENUATION
+    LD HL, VRAM_ADR_NAMETBL + $0308 + OPTION_OFFSET | VRAMWRITE
+    RST setVDPAddress
+        ; LEFT DIGIT
+    LD A, <DIGIT_TILE_START
+    CALL OptionSndVDPWrite
+        ; RIGHT DIGIT
+    LD A, (SndFMAttenuation)
+    ADD A, <DIGIT_TILE_START
+    CALL OptionSndVDPWrite
+    JP OptionDrawPlayer
+
+@PlaySndID:
+    ; PLAY SND ID
+    LD A, (HL)
+    ADD A, $81                      ;SND START
+    CP A, SNDID_FMDUPS+$03          ;layered SFX (Noise)
+    JR NC, @LayeredNoiseID
+    CP A, SNDID_FMDUPS              ;layered SFX (Tone)
+    JR NC, @LayeredToneID
+    CP A, SNDID_WATER               ;PSG/FM music
+    JR NC, @OverrideID
+    CP A, SNDID_SHATTER             ;Noise SFX (Brick shatter)
+    JR Z, @NoiseID
+    CP A, SNDID_FLAME               ;Tone SFX
+    JR NZ, @ToneID
+    JR @NoiseID                     ;Noise SFX (Flame)
+
+@LayeredNoiseID:
+    ADD A, $0E
+@NoiseID:
+    LD (SFXTrack2.SoundQueue), A
+    JP OptionDrawPlayer
+@LayeredToneID:
+    ADD A, $0E
+@ToneID:
+    LD (SFXTrack0.SoundQueue), A
+    JP OptionDrawPlayer
+@OverrideID:
+    LD (MusicTrack0.SoundQueue), A
+    JP OptionDrawPlayer
+
+OptionSndVDPWrite:
+    OUT (VDPDATA_PORT), A
+    LD A, (IX + 0)                  ;vdp delay
+    LD A, $01
+    OUT (VDPDATA_PORT), A
+    RET
+.ENDS
+; --------

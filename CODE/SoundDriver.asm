@@ -1116,7 +1116,18 @@ SndProcessQueueMusicFM:
     LDI             ; DataPointer
     LDI             ; DataPointer + $01
     LDI             ; Transpose
-    LDI             ; Volume
+    ;LDI             ; Volume
+
+    ; ADD USER ATTENUATION TO FM VOLUME
+    LD A, (SndFMAttenuation)
+    ADD A, (HL)
+    CP A, $10
+    JR C, +
+    LD A, $0F
++:
+    LD (DE), A
+    INC L
+
     XOR A
     LD E, <FMTrack0.SavedDuration
     LD (DE), A      ; SavedDuration

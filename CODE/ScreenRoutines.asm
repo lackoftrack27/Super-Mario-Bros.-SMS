@@ -326,6 +326,9 @@ PlayerColors:
 .ENDS
 
 GetBackgroundColor:
+    LD HL, ScreenRoutineTask        ;increment to next subtask and plod on through
+    INC (HL)
+;
     LD A, (BackgroundColorCtrl)     ;check background color control
     OR A
     JR Z, NoBGColor                 ;if not set, increment task and fetch palette
@@ -337,8 +340,8 @@ GetBackgroundColor:
     LD HL, BGColorCtrl_Addr         ;for NES GFX, put appropriate palette into vram
     addAToHL8_M
     LD A, (HL)
-    LD (VRAM_Buffer_AddrCtrl), A    ;note that if set to 5-7, $0301 will not be read
-    JR NoBGColor
+    LD (VRAM_Buffer_AddrCtrl), A    ;note that if set to 5-7, VRAM_Buffer1 will not be read
+    RET                             ;since it won't be read, don't bother with updating BG color and player palette
 +:
     ADD A, A                        ;else, load appropriate palette into fade buffer
     LD HL, FadeTable
@@ -352,9 +355,6 @@ GetBackgroundColor:
     LDIR
 ;
 NoBGColor:
-    LD HL, ScreenRoutineTask        ;increment to next subtask and plod on through
-    INC (HL)
-;
     LD HL, (VRAM_Buffer1_Ptr)
     LD A, (BackgroundColorCtrl)     ;if this value is four or greater, it will be set
     OR A
@@ -441,6 +441,12 @@ GetPlayerColors_NES:
     ; FALL THROUGH
     
 SavePlayerColors:
+    LD HL, PlayerNESColorOffset     ;check if player's palette are already set to calculated palette
+    LD A, (HL)
+    CP A, E
+    RET Z                           ;if so, exit
+    LD (HL), E                      ;else, save new offset and continue
+;
     LD HL, SpritePaletteCopy + $02  ;save player colors to sprite palette RAM copy
     EX DE, HL                       ;do backwards so next routine can iterate through
     LDD                             ;PlayerColors normally

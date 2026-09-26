@@ -973,6 +973,7 @@
     PowerUpTilePtr:                 dsb $02
     PowerUpVDPAddr:                 dsb $02
     Player_SprAttrib:               dsb $01 ; only controls palette for player
+    PlayerNESColorOffset:           dsb $01
     HidePlayerFlag:                 dsb $01
     WarpZoneControl:                dsb $01
     FireworksCounter:               dsb $01

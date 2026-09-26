@@ -677,6 +677,8 @@ CyclePlayerPalette_NES:
     ADD A, <SpritePaletteCopy
     LD E, A
     LD D, >SpritePaletteCopy
+    XOR A                               ;reset color offset to force player palette refresh when cycling is over
+    LD (PlayerNESColorOffset), A
     JP WritePlayerClrStripeCmd          ;create stripe command (don't save player colors)
 
 ResetPalFireFlower:
@@ -693,7 +695,7 @@ ResetPalFireFlower:
     CALL SavePlayerColors
     JP DonePlayerTask                   ;do sub to init timer control and run player control routine
 
-ResetPalStar:
+;ResetPalStar:
 ;     LD A, (Player_SprAttrib)
 ;     AND A, %00000011
 ;     RET Z

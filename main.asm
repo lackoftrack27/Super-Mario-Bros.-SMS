@@ -183,7 +183,6 @@ Start:
 ;   WARM BOOT RAM INIT.
     XOR A
     LD (OptionBitflags), A
-    LD (PaletteFadeFlag), A
     LD (PaletteFadeWriteFlag), A
     LD HL, WarmBootOffset
     CALL InitializeMemory
@@ -241,9 +240,6 @@ Start:
     LD A, (FMDetectedFlag)
     OR A
     CALL NZ, SndStopAllFM@WriteFM
-;   RESET GRAPHIC & SOUND BITFLAGS
-    XOR A
-    LD (OptionBitflags), A
 .IF INSTANTBOOT != $00
     LD HL, SndChannelProcessMUS
     LD (MusicRoutine), HL
@@ -540,15 +536,15 @@ NonMaskableInterrupt:
     LD HL, VRAM_Buffer1
     LD (VRAM_Buffer1_Ptr), HL
 +:
-    LD (HL), $00                    ;clear buffer header
     XOR A
+    LD (HL), A                      ;clear buffer header
     LD (VRAM_Buffer_AddrCtrl), A    ;reinit address control to VRAM_Buffer1
     LD (Buffer2SuppressFlag), A     ;clear flag used for coin/axe removal
 NametableUpdateRet:
 ;   TILE STREAMING                  ;[CPU TIME: 22 LINES MAX]
     LD A, (PowerUpTileAmount)       ;stream power-up tiles if needed (only in new GFX mode)
     OR A
-    CALL NZ, StreamPowerUpTile
+    CALL NZ, StreamPowerUpTiles
     LD HL, (PlayerGfxOffset_Old)
     LD DE, (PlayerGfxOffset)
     OR A
@@ -556,7 +552,7 @@ NametableUpdateRet:
     LD B, $00                       ;assume player isn't trying to update, flag clear
     JP Z, StreamAnimatedBGTiles     ;if player isn't updating, stream BG tiles
     LD B, $01                       ;player is trying to update, flag set
-    LD A, (BGTileQueue0.UpdateFlag) ;else, check if any BG updates are stalled
+    LD A, (BGTileQueue0.UpdateFlag) ;check if any BG updates are stalled
     LD HL, BGTileQueue1.UpdateFlag
     OR A, (HL)
     LD L, <BGTileQueue2.UpdateFlag
@@ -1474,7 +1470,7 @@ CarryOne:
 ;-------------------------------------------------------------------------------------
 
 ;   [CPU TIME: 3 LINES MAX]
-StreamPowerUpTile:
+StreamPowerUpTiles:
 ;   SET BANK
     LD A, :Tiles_SPR_PowerUp
     LD (MAPPER_SLOT2), A
@@ -1663,7 +1659,7 @@ StreamPlayerTiles:
 ;   HL - BGTileQueue0 Ptr/Tile Data Ptr
 ;   IX - Offset into OUTI Block
 
-;   [CPU TIME: ~15 LINES]
+;   [CPU TIME: ~15 LINES MAX]
 StreamAnimatedBGTiles:
 ;   EXIT IF ON NES GFX
     LD A, (OptionBitflags)

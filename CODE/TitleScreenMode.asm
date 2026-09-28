@@ -27,7 +27,7 @@ InitializeGame:
 ;
     LD A, $18                       ;set demo timer
     LD (DemoTimer), A
-    LD A, $04
+    LD A, $04                       ;set to 4, screen is 'faded out' at startup
     LD (PaletteFadeFlag), A
 ;
     CALL LoadAreaPointer

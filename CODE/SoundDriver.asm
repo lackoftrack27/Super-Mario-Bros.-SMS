@@ -1126,7 +1126,7 @@ SndProcessQueueMusicFM:
     LD A, $0F
 +:
     LD (DE), A
-    INC L
+    INC HL
 
     XOR A
     LD E, <FMTrack0.SavedDuration

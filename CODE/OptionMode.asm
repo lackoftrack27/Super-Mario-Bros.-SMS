@@ -179,15 +179,12 @@ OptionUpdateSettings:
 @DrawSelector:
     LD HL, VRAM_ADR_NAMETBL + $0044 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
-    LD BC, $0100 + VDPDATA_PORT
-    OUT (C), E
-    LD A, (IX + 0)                  ;vdp delay
-    OUT (C), B
+    LD A, E
+    CALL OptionSndVDPWrite
     LD HL, VRAM_ADR_NAMETBL + $00C4 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
-    OUT (C), D
-    LD A, (IX + 0)                  ;vdp delay
-    OUT (C), B
+    LD A, D
+    CALL OptionSndVDPWrite
 ; ---
     ; FALL THROUGH
 
@@ -246,9 +243,7 @@ OptionCheckPause_Debug:
     LD HL, VRAM_ADR_NAMETBL + $0584 + OPTION_OFFSET | VRAMWRITE
     RST setVDPAddress
     LD A, <MUSHROOM_TILE
-    OUT (VDPDATA_PORT), A
-    LD A, >MUSHROOM_TILE
-    OUT (VDPDATA_PORT), A
+    CALL OptionSndVDPWrite
         ; DRAW SOUND ID
     LD HL, Temp_Bytes + $03
     JR @DrawSndID
@@ -291,10 +286,13 @@ OptionCheckPause_Debug:
     BIT SMS_BTN_UP, A
     JR Z, +
     LD A, SNDID_HURRYUP
-    JR @OverrideID
+    JP @OverrideID
 +:
     ; DOWN CHECK        [FM Attenuation]
     BIT SMS_BTN_DOWN, A
+    JP Z, OptionDrawPlayer
+    LD A, (OptionBitflags)
+    AND A, bitValue(OPTFLAG_FM)
     JP Z, OptionDrawPlayer
     LD HL, SndFMAttenuation
     INC (HL)

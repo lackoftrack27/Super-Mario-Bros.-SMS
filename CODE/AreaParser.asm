@@ -663,13 +663,10 @@ BlockBuffValues:
 ;-------------------------------------------------------------------------------------
 ;$00(IXL) - used to store area object identifier
 ;$07(IXH) - used as adder to find proper area object code
-; B/C   = X/Y
-
 
 ProcessAreaData:
     LD HL, AreaObjectLength_03              ;start at the end of area object buffer
 ProcADLoop:
-    LD (ObjectOffset), HL
     XOR A                                   ;reset flag
     LD (BehindAreaParserFlag), A
     ; Get current area object data
@@ -687,17 +684,17 @@ ProcADLoop:
     ; Get second byte and check for page select bit
     INC E
     LD A, (DE)                              ;get second byte of area object
+    LD C, A                                 ;save second byte into C
     ADD A, A                                ;check for page select bit (d7), branch if not set
     JR NC, Chk1Row13
     LD A, (AreaObjectPageSel)               ;check page select
     OR A
     JR NZ, Chk1Row13
-    PUSH HL
-    LD HL, AreaObjectPageSel
-    LD (HL), $01                            ;if not already set, set it now
-    DEC L                                   ;AreaObjectPageLoc
-    INC (HL)                                ;and increment page location
-    POP HL
+    LD A, $01                               ;if not already set, set it now
+    LD (AreaObjectPageSel), A
+    LD A, (AreaObjectPageLoc)               ;and increment page location
+    INC A
+    LD (AreaObjectPageLoc), A
     ; Check object row position
 Chk1Row13:
     DEC E
@@ -705,21 +702,17 @@ Chk1Row13:
     AND A, $0F                              ;mask out high nybble
     CP A, $0D                               ;row 13?
     JR NZ, Chk1Row14
-    INC E                                   ;if so, reread second byte of level object
-    LD A, (DE)
-    DEC E                                   ;decrement to get ready to read first byte
+    LD A, C                                 ;get back second byte of level object
     AND A, %01000000                        ;check for d6 set (if not, object is page control)
     JR NZ, CheckRear
     LD A, (AreaObjectPageSel)               ;if page select is set, do not reread
     OR A
     JR NZ, CheckRear
     ; Set new page location from lower 5 bits
-    INC E                                   ;if d6 not set, reread second byte
-    LD A, (DE)
+    LD A, C                                 ;if d6 not set, reread second byte
     AND A, %00011111                        ;mask out all but 5 LSB and store in page control
     LD (AreaObjectPageLoc), A
-    LD A, (AreaObjectPageSel)               ;increment page select
-    INC A
+    LD A, $01                               ;increment page select (it's always 0 here)
     LD (AreaObjectPageSel), A
     ; Skip to next object
     JP NextAObj
@@ -737,16 +730,20 @@ CheckRear:
     CP A, B
     JR C, SetBehind                         ;if so branch
 RdyDecode:
+    LD (ObjectOffset), HL
     CALL DecodeAreaData                     ;do sub and do not turn on flag
+    LD HL, (ObjectOffset)
     JP ChkLength
 SetBehind:
     LD A, $01                               ;turn on flag if object is behind renderer
     LD (BehindAreaParserFlag), A
 NextAObj:
-    CALL IncAreaObjOffset                   ;increment buffer offset and move on
+    LD A, E                                 ;E = AreaDataOffset
+    ADD A, $02                              ;increment buffer offset
+    LD (AreaDataOffset), A
+    XOR A                                   ;reset page select
+    LD (AreaObjectPageSel), A
 ChkLength:
-    LD HL, (ObjectOffset)                   ;get buffer offset
-    LD L, <AreaObjectLength
     LD A, (HL)                              ;check object length for anything stored here
     OR A
     JP M, ProcLoopb                         ;if not, branch to handle loopback
@@ -756,21 +753,20 @@ ProcLoopb:
     BIT 6, H
     JP NZ, ProcADLoop                       ;and loopback unless exceeded buffer
 ;
-    LD A, (BehindAreaParserFlag)            ;check for flag set if objects were behind renderer
-    OR A
-    JP NZ, ProcessAreaData                  ;branch if true to load more level data, otherwise
-    LD A, (BackloadingFlag)                 ;check for flag set if starting right of page $00
-    OR A
-    JP NZ, ProcessAreaData                  ;branch if true to load more level data, otherwise leave
+    LD HL, BackloadingFlag                  ;check for flag set if objects were behind renderer
+    LD A, (HL)
+    INC L                                   ;BehindAreaParserFlag
+    OR A, (HL)                              ;check for flag set if starting right of page $00
+    JP NZ, ProcessAreaData                  ;branch if either are true to load more level data
     RET
 
-IncAreaObjOffset:
-    LD A, (AreaDataOffset)      ;increment offset of level pointer
-    ADD A, $02
-    LD (AreaDataOffset), A
-    XOR A                       ;reset page select
-    LD (AreaObjectPageSel), A
-    RET
+; IncAreaObjOffset:
+;     LD A, (AreaDataOffset)      ;increment offset of level pointer
+;     ADD A, $02
+;     LD (AreaDataOffset), A
+;     XOR A                       ;reset page select
+;     LD (AreaObjectPageSel), A
+;     RET
 
 ; ON ENTRY: X = ObjectOffset
 ; B/C   = X/Y
@@ -797,56 +793,52 @@ Chk1stB:
 ;   Extract row from low nybble
     AND A, $0F                              ;otherwise, mask out low nybble
 ;   Determine base offset for object type lookup
-    LD B, $10                               ;load offset of 16 for special row 15
-    CP A, $0F                               ;row 15?
-    JR Z, ChkRow14                          ;if so, keep the offset of 16
-    LD B, $08                               ;otherwise load offset of 8 for special row 12
-    CP A, $0C                               ;row 12?
-    JR Z, ChkRow14                          ;if so, keep the offset value of 8
-    LD B, $00                               ;otherwise nullify value by default
-;   Handle rows
-ChkRow14:
-    LD IXH, B                               ;store whatever value we just loaded here
-    ;LD HL, (ObjectOffset)
-    CP A, $0E                               ;row 14?
-    JR NZ, ChkRow13 
-    LD IXH, $00                             ;if so, load offset with $00
-    LD A, $4A ;LD A, $2E                               ;and load A with another value
+    CP A, $0C
+    JR C, SmallOrLargeObj
+    JR Z, Row12
+    CP A, $0E
+    JR Z, Row14
+    CP A, $0D
+    JR Z, Row13
+    LD IXH, $10                             ;offset of 16 for special row 15
+    JP SpecObj
+
+SmallOrLargeObj:
+;   rows $00-$0b - small or large object
+    INC E
+    LD A, (DE)                              ;get second byte of level object
+    AND A, %01110000                        ;mask out all but d6-d4
+    JR NZ, LrgObj                           ;if any bits set, branch to handle large object
+;   Get Normal Object's ID
+    LD IXH, $16                             ;otherwise set offset of 22 for small object
+    LD A, (DE)                              ;reload second byte of level object
+    AND A, %00001111                        ;mask out higher nybble and jump
+    JP NormObj
+
+Row14:
+    LD IXH, $00                             ;load offset with $00
+    LD A, $4A ;LD A, $2E                    ;and load A with another value
     JP NormObj                              ;unconditional branch
-ChkRow13:
-    CP A, $0D                               ;row 13?
-    JR NZ, ChkSRows
-    LD IXH, $22                             ;if so, load offset with 34
-    ; Check if this is a page control object (d6 clear)                     
+
+Row13:
+    LD IXH, $22                             ;load offset with 34
+;   Check if this is a page control object (d6 clear)
     INC E
     LD A, (DE)                              ;get next byte
     BIT 6, A                                ;mask out all but d6 (page control obj bit)
     RET Z                                   ;if d6 clear, branch to leave (we handled this earlier)
-    ; Check for loop command (low nybble = 0x4B with d6 set)
-    AND A, %01111111                        ;mask out d7
-    CP A, $4B                               ;check for loop command in low nybble
-    JR NZ, Mask2MSB                         ;(plus d6 set for object other than page control)
+
+    AND A, %00111111                        ;d6 is known set here, so masking d7/d6 off turns the $4b/$cb loop command
+    CP A, $0B                               ;test into a compare against $0b
+    JP NZ, NormObj
     LD A, $01
     LD (LoopCommand), A                     ;if loop command, set loop command flag
-Mask2MSB:
-    LD A, (DE)
-    AND A, %00111111                        ;mask out d7 and d6
-    JP NormObj                              ;and jump
-;   Get Object ID
-ChkSRows:
-    CP A, $0C                               ;row 12-15?
-    JR NC, SpecObj
-    INC E
-    LD A, (DE)                               ;if not, get second byte of level object
-    AND A, %01110000                        ;mask out all but d6-d4
-    JR NZ, LrgObj                           ;if any bits set, branch to handle large object
-    ; Get Normal Object's ID
-    LD IXH, $16                             ;otherwise set offset of 24 for small object
-    LD A, (DE)                              ;reload second byte of level object
-    AND A, %00001111                        ;mask out higher nybble and jump
+    LD A, $0B
     JP NormObj
-    ; Get Large Object's ID
+
+;   Get Large Object's ID
 LrgObj:
+    LD IXH, $00                             ;large objects sit at the base of the table
     CP A, $70                               ;check for vertical pipe object
     JR NZ, MoveAOId
     LD A, (DE)
@@ -855,9 +847,12 @@ LrgObj:
     JR Z, MoveAOId
     XOR A                                   ;otherwise, nullify value for warp pipe
     JP NormObj
-    ; Get Special Object's ID
+
+;   Get Special Object's ID (rows 12 and 15)
+Row12:
+    LD IXH, $08                             ;offset of 8 for special row 12
 SpecObj:
-    INC E                                   ;branch here for rows 12-15
+    INC E
     LD A, (DE)
     AND A, %01110000                        ;get next byte and mask out all but d6-d4
 MoveAOId:
@@ -919,7 +914,10 @@ StrAObj:
     LD L, <AreaObjOffsetBuffer              ;if so, load area obj offset and store in buffer
     LD A, (AreaDataOffset)
     LD (HL), A
-    CALL IncAreaObjOffset                   ;do sub to increment to next object data
+    ADD A, $02                              ;increment to next object data
+    LD (AreaDataOffset), A
+    XOR A                                   ;reset page select
+    LD (AreaObjectPageSel), A
 ;   Execute object code
 RunAObj:
     LD A, IXL                               ;get stored value and add offset to it
@@ -1914,18 +1912,15 @@ Hole_Water:
 ;--------------------------------
 
 QuestionBlockRow_High:
-    LD A, $03                           ;start on the fourth row
+    LD B, <MetatileBuffer + $03         ;start on the fourth row
     JP QuestionBlockRow_Low@SaveRow
 
 QuestionBlockRow_Low:
-    LD A, $07                           ;start on the eighth row
+    LD B, <MetatileBuffer + $07         ;start on the eighth row
 @SaveRow:
-    PUSH AF                             ;save whatever row to the stack for now
     CALL ChkLrgObjLength                ;get low nybble and save as length
-    POP AF
-    ;LD B, A                             ;render question boxes with coins
-    LD HL, MetatileBuffer
-    addAToHL8_M
+    LD H, >MetatileBuffer               ;render question boxes with coins
+    LD L, B
     LD (HL), MT_QBLK_COIN
     RET
 
@@ -2129,12 +2124,12 @@ RowOfSolidBlocks_0:
     addAToDE8_M
     LD A, (DE)                          ;get metatile
 GetRow:
-    PUSH AF                             ;store metatile here
+    LD B, A                             ;store metatile here
     CALL ChkLrgObjLength                ;get row number, load length
 DrawRow:
+    LD A, B
     LD B, IXH
     LD C, $00                           ;set vertical height of 1
-    POP AF
     JP RenderUnderPart                  ;render object
 
 ColumnOfBricks:
@@ -2150,9 +2145,9 @@ ColumnOfSolidBlocks:
     addAToDE8_M
     LD A, (DE)                          ;get metatile
 GetRow2:
-    PUSH AF                             ;save metatile to stack for now
+    LD B, A                             ;store metatile here
     CALL GetLrgObjAttrib                ;get length and row
-    POP AF                              ;restore metatile
+    LD A, B                             ;restore metatile
     LD B, IXH                           ;get starting row
     JP RenderUnderPart                  ;now render the column
 
@@ -2316,7 +2311,7 @@ DrawQBlk:
     addAToDE8_M
     LD A, (DE)                          ;get appropriate metatile for brick (question block
 DrawQBlkHiddenSpecial:
-    PUSH AF                             ;if branched to here from question block routine)
+    LD B, A                             ;if branched to here from question block routine)
     CALL GetLrgObjAttrib                ;get row from location byte
     JP DrawRow                          ;now render the object
 
@@ -2384,7 +2379,7 @@ NoWhirlP:
 ; A = tile number to draw
 RenderUnderPart:
     LD E, A                             ;save metatile id to E
-    LD A, B                             ;calculate offset into MetatileBuffer
+    LD A, B                             ;calculate offset into MetatileBuffer 
     LD HL, MetatileBuffer
     addAToHL8_M
 @loop:
@@ -2426,7 +2421,7 @@ WaitOneRow:
     INC L
     INC B
     LD A, B
-    CP A, $0D                           ;stop rendering if we're at the bottom of the screen
+    CP A, $0D                           ;stop rendering if we're at the bottom of the screen  
     RET NC
     DEC C                               ;decrement, and stop rendering if there is no more length
     JP P, RenderUnderPart@loop
@@ -2437,6 +2432,7 @@ WaitOneRow:
 ChkLrgObjLength:
     CALL GetLrgObjAttrib            ;get row location and size (length if branched to from here)
 
+;   A, C, HL
 ChkLrgObjFixedLength:
     LD L, <AreaObjectLength
     LD A, (HL)                      ;check for set length counter
@@ -2446,10 +2442,10 @@ ChkLrgObjFixedLength:
     SCF                             ;set carry flag if just starting
     RET
 
+;   A, C, DE, HL, IXH 
 GetLrgObjAttrib:
-    LD L, <AreaObjOffsetBuffer      ;get offset saved from area obj decoding routine
-    LD A, (HL)
-    LD E, A                         ;get first byte of level object
+    LD L, <AreaObjOffsetBuffer      ;get offset saved from area obj decoding routine                    
+    LD E, (HL)                      ;get first byte of level object
     LD D, >AreaDataBank
     LD A, (DE)
     AND A, %00001111

@@ -562,6 +562,17 @@ NametableUpdateRet:
     JP StreamPlayerTiles            ;else, update player
 TileStreamRet:
 .IF LINEMODE == LINE224P
+;   WAIT UNTIL HBLANK
+    IN A, (VDPLINE_PORT)            ;get current line        
+    INC A
+    LD B, A
+-:
+    IN A, (VDPLINE_PORT)            ;wait until next line is hit (we want to be at a consistent starting point)
+    CP A, B
+    JR NZ, -
+    LD B, $0B                       ;another delay to wait until hblank area...
+-:
+    DJNZ -                          ;this is done to hide as much artifacts as possible when re-enabling the screen
 ;   TURN OFF SCREEN IF FLAG IS CLEAR
     LD A, (DisableScreenFlag)       ;VDP transfers can extend past vblank in 224p mode
     OR A, %10100000 | MODE_CTRL2    ;conditionally change screen AFTER all transfers have been made

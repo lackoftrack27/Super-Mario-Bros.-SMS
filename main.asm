@@ -23,7 +23,7 @@
 
 ;-------------------------------------------------------------------------------------
 ;   SDSC TAG AND SMS HEADER
-.SDSCTAG 1.00, sdscName, sdscDesc, sdscAuth
+.SDSCTAG 1.10, sdscName, sdscDesc, sdscAuth
 
 ;-------------------------------------------------------------------------------------
 ;   SET BANK
@@ -275,7 +275,7 @@ MainGameInit:
     LD A, ASSET_SPRCOMM
     CALL AssetLoader
     LD (MAPPER_SLOT2), A
-    CALL zx7_decompressVRAM
+    CALL zx7_decompressVRAM    
 .IF BOOTPALTILES != $00
 ;   LOAD PALETTE AND OVERWORLD TILE DATA ON BOOTUP (DEBUG)
     LD A, BANK_SLOT2
@@ -2302,10 +2302,10 @@ TitleScreenData:
     .db $07
 
 
-;   "V1.00"
+;   "V1.10"
     .dw swapBytes(xyToNameTbl_M(22, 13))
     .db StripeCount($0A)
-    .dw $08B7, BG_MACRO($0101), $08B8, BG_MACRO($0100), BG_MACRO($0100)
+    .dw $08B7, BG_MACRO($0101), $08B8, BG_MACRO($0101), BG_MACRO($0100)
 ;   TERMINATOR
     .db $00
 .ENDS
@@ -2377,10 +2377,10 @@ TitleScreenData_NES:
     .dw BG_MACRO($0100)
 
 
-;   "V1.00"
+;   "V1.10"
     .dw swapBytes(xyToNameTbl_M(22, 13))
     .db StripeCount($0A)
-    .dw $00B7, BG_MACRO($0101), $00B8, BG_MACRO($0100), BG_MACRO($0100)
+    .dw $00B7, BG_MACRO($0101), $00B8, BG_MACRO($0101), BG_MACRO($0100)
 ;   TERMINATOR
     .db $00
 .ENDS

@@ -3026,6 +3026,10 @@ VAHandl:
     NEG                                         ;otherwise get two's compliment of second part
 AddVA:
     ADD A, IXL                                  ;add vertical coordinate relative to screen to the second data
+.IF LINEMODE == LINE240P
+    CP A, YPOS_OFFSCREEN_LOGICAL                ;check if vertical coordinate is still onscreen
+    JR NC, OffscrFbr                            ;if not, set offscreen
+.ENDIF
 SetVFbr:
     LD IXL, A                                   ;also store here for now
     SUB A, SMS_PIXELYOFFSET

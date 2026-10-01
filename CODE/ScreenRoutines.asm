@@ -289,6 +289,8 @@ GetAreaPalette:
     addAToHL8_M
     LD A, (HL)
     LD (VRAM_Buffer_AddrCtrl), A    ;store offset into buffer control
+    XOR A                           ;mario's palette is always written here
+    LD (PlayerNESColorOffset), A    ;force later update in case the player is luigi
     RET
 +:
     LD A, (AreaType)                ;else, load appropriate palette to fade buffer
